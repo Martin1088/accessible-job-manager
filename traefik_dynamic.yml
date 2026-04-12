@@ -1,0 +1,14 @@
+http:
+  middlewares:
+    error-pages-mw:
+      errors:
+        status:
+          - "500-599"
+        service: error-pages
+        query: "/500.html"
+
+  services:
+    error-pages:
+      loadBalancer:
+        servers:
+          - url: "http://error-pages"
