@@ -44,12 +44,10 @@ public class CoverLetterService {
     }
 
     private void replacePlaceholders(XWPFParagraph paragraph, Map<String, String> replacements) {
-        // POI splits runs at arbitrary points, so we work on the full paragraph text
-        // and rewrite all runs.
         List<XWPFRun> runs = paragraph.getRuns();
         if (runs.isEmpty()) return;
 
-        // Assemble full paragraph text
+        // Merge all runs into the first one first
         StringBuilder full = new StringBuilder();
         for (XWPFRun run : runs) {
             String text = run.getText(0);
@@ -57,8 +55,11 @@ public class CoverLetterService {
         }
 
         String result = full.toString();
-        boolean changed = false;
 
+        // Only process if paragraph contains a placeholder
+        if (!result.contains("«")) return;
+
+        boolean changed = false;
         for (Map.Entry<String, String> entry : replacements.entrySet()) {
             String token = "«" + entry.getKey() + "»";
             if (result.contains(token)) {
@@ -69,7 +70,7 @@ public class CoverLetterService {
 
         if (!changed) return;
 
-        // Write result back: put everything in first run, clear the rest
+        // Write back to first run, clear the rest
         runs.get(0).setText(result, 0);
         for (int i = 1; i < runs.size(); i++) {
             runs.get(i).setText("", 0);

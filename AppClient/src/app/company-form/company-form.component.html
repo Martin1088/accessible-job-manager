@@ -1,0 +1,45 @@
+<main id="main-content">
+  <h1>{{ isEditMode ? 'Edit Company' : 'New Company' }}</h1>
+
+  <app-status-message [message]="errorMessage" type="error" />
+
+  <div (keydown.enter)="save()">
+    <div>
+      <label for="name">Company Name *</label>
+      <input id="name" [(ngModel)]="company.name" required aria-required="true" />
+    </div>
+
+    <div>
+      <label for="street">Street</label>
+      <input id="street" [(ngModel)]="company.street" />
+    </div>
+
+    <div>
+      <label for="city">City</label>
+      <input id="city" [(ngModel)]="company.city" />
+    </div>
+
+    <div>
+      <label for="position">Position</label>
+      <input id="position" [(ngModel)]="company.position" />
+    </div>
+
+    <div>
+      <label for="contact">Contact</label>
+      <input id="contact" [(ngModel)]="company.contact" />
+    </div>
+
+    <div>
+      <label for="website">Website</label>
+      <input id="website" type="url" [(ngModel)]="company.website" />
+    </div>
+
+    <div>
+      <label for="notes">Notes</label>
+      <textarea id="notes" [(ngModel)]="company.notes" rows="4"></textarea>
+    </div>
+
+    <button (click)="save()">{{ isEditMode ? 'Update' : 'Create' }}</button>
+    <button (click)="cancel()">Cancel</button>
+  </div>
+</main>

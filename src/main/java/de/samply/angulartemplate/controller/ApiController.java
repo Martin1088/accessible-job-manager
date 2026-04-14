@@ -9,6 +9,8 @@ import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2Aut
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 import de.samply.angulartemplate.dto.CoverLetterRequest;
@@ -52,20 +54,25 @@ public class ApiController {
         return client.getAccessToken().getTokenValue();
     }
 
-    @PostMapping(value = "/cover-letter/fill", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/cover-letter/fill")
     public ResponseEntity<byte[]> fillCoverLetter(
-            @RequestPart("template") MultipartFile template,
-            @RequestPart("data")     CoverLetterRequest data) throws IOException {
+            @RequestBody        byte[] template,
+            @RequestParam("company")   String company,
+            @RequestParam("street")    String street,
+            @RequestParam("city")      String city,
+            @RequestParam("position")  String position,
+            @RequestParam("contact")   String contact) throws IOException {
 
         Map<String, String> replacements = Map.of(
-                "Unternehmen",      data.company(),
-                "Straße",           data.street(),
-                "Ort",              data.city(),
-                "Stelle",           data.position(),
-                "Ansprechpartner",  data.contact()
+                "Unternehmen",     company,
+                "Straße",          street,
+                "Ort",             city,
+                "Stelle",          position,
+                "Ansprechpartner", contact
         );
 
-        byte[] filled = coverLetterService.fillTemplate(template.getInputStream(), replacements);
+        byte[] filled = coverLetterService.fillTemplate(
+                new ByteArrayInputStream(template), replacements);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,

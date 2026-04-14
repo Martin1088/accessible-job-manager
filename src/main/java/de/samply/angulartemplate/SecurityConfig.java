@@ -19,7 +19,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/public/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/public/**", "/api/cover-letter/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.ico", "/error",
@@ -32,6 +32,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/cover-letter/fill").permitAll()
                         .requestMatchers("/api/me").authenticated()
                         .anyRequest().authenticated()
                 )

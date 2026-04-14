@@ -31,3 +31,18 @@ build/
 
 ### VS Code ###
 .vscode/
+AppClient/node/
+.DS_Store
+
+# Gradle
+.gradle/
+build/
+
+# Gradle - cache and build state
+.gradle/9*/
+.gradle/buildOutputCleanup/
+.gradle/configuration-cache/
+.gradle/file-system.probe
+
+# Keep wrapper (optional - remove if you prefer not to commit it)
+!.gradle/wrapper/
