@@ -1,0 +1,15 @@
+<div class="d-flex flex-row justify-content-center">
+  <div class="card mx-auto border-info mb-3">
+    <div class="card-body">
+      <h3 class="card-title">Login</h3>
+      <div class="bg-info p-3 rounded border border-dark">
+        <nav aria-label="Login options">
+          <button (click)="login()">Login as User</button>
+          <button (click)="loginAsAdvisor()">Login as Advisor</button>
+          <button (click)="loginAsReviewer()">Login as Reviewer</button>
+        </nav>
+        <p *ngIf="error" role="alert">{{ error }}</p>
+      </div>
+    </div>
+  </div>
+</div>

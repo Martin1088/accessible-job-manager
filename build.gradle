@@ -16,9 +16,11 @@ repositories {
 
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:3.4.4')
+    implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.4.9'
 
     api libs.org.springframework.boot.spring.boot.starter.web
     api libs.org.projectlombok.lombok
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
     api libs.org.springframework.boot.spring.boot.starter.security
     api libs.org.springframework.boot.spring.boot.starter.oauth2.client
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -26,15 +28,15 @@ dependencies {
     runtimeOnly libs.org.springframework.boot.spring.boot.devtools
     testImplementation libs.org.springframework.boot.spring.boot.starter.test
     testImplementation libs.org.springframework.security.spring.security.test
-    implementation 'org.apache.poi:poi-ooxml:5.3.0'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
 }
 
 
 group = 'de.samply'
 version = '0.0.1-SNAPSHOT'
 description = 'Management Portal'
-java.sourceCompatibility = JavaVersion.VERSION_17
-java.targetCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_21
+java.targetCompatibility = JavaVersion.VERSION_21
 
 publishing {
     publications {
@@ -55,4 +57,22 @@ tasks.withType(Javadoc) {
 test {
     useJUnitPlatform()
     failOnNoDiscoveredTests = false
+    exclude '**/*'
 }
+
+def frontendDir = "$projectDir/AppClient"
+def staticDir = "$projectDir/src/main/resources/static"
+
+tasks.register('npmBuild', Exec) {
+    workingDir frontendDir
+    commandLine '/bin/sh', '-c', 'npm run build'
+}
+
+
+tasks.register('copyFrontend', Copy) {
+    dependsOn npmBuild
+    from "$frontendDir/dist/app-client/browser"
+    into staticDir
+}
+
+processResources.dependsOn copyFrontend

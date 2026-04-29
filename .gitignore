@@ -46,3 +46,8 @@ build/
 
 # Keep wrapper (optional - remove if you prefer not to commit it)
 !.gradle/wrapper/
+
+AppClient/package-lock.json
+out/
+src/main/resources/static
+src/main/resources/application.properties

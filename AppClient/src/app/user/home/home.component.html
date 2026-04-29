@@ -1,0 +1,22 @@
+<main id="main-content">
+  <h1>Job Manager</h1>
+  <p>Welcome! Where do you want to go?</p>
+  <p *ngIf="userName">You are logged in as {{ userName }}.</p>
+
+  <nav aria-label="Main navigation">
+    <ul>
+      <li>
+        <a routerLink="/companies">
+          <h2>Companies</h2>
+          <p>Manage companies you are applying to.</p>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/applications">
+          <h2>Applications</h2>
+          <p>Track your job applications and their status.</p>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</main>
