@@ -1,59 +1,62 @@
-form-wrapper {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.75rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-div {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-label {
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: #333;
-}
-
-input, textarea {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: border-color 0.15s;
+/* Skip link — visually hidden until focused */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: #005fcc;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 0 4px 4px;
+  text-decoration: none;
+  transition: top 0.1s;
 
   &:focus {
-    outline: none;
-    border-color: #005fcc;
-    box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.2);
+    top: 0;
+    outline: 3px solid #fff;
+    outline-offset: 2px;
   }
 }
 
-textarea {
-  resize: vertical;
+header {
+  background: #1a1a2e;
+  border-bottom: 3px solid #005fcc;
 }
 
-.actions {
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 1rem;
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 0;
+}
 
-  button:first-child {
-    background: #005fcc;
+nav a {
+  display: block;
+  padding: 0.9rem 1.25rem;
+  color: #c8d0e0;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -3px;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
     color: #fff;
-    &:hover { background: #004aaa; }
+    border-bottom-color: #4d9fff;
   }
 
-  button:last-child {
-    background: #e5e5e5;
-    color: #333;
-    &:hover { background: #d0d0d0; }
+  &:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: -3px;
+    border-radius: 2px;
+  }
+
+  &.active,
+  &[aria-current="page"] {
+    color: #fff;
+    border-bottom-color: #005fcc;
   }
 }

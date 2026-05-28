@@ -3,6 +3,7 @@ package de.samply.manager.controller;
 import de.samply.manager.dto.GrantAccessRequest;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentAccess;
+import de.samply.manager.model.DocumentType;
 import de.samply.manager.repository.DocumentAccessRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.UserProfileRepository;
@@ -14,6 +15,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +26,16 @@ public class DocumentAccessController {
     private final DocumentAccessRepository documentAccessRepository;
     private final DocumentRepository documentRepository;
     private final UserProfileRepository userProfileRepository;
+
+    @GetMapping
+    public List<Document> getMyDocuments(
+            @RequestParam(required = false) DocumentType type,
+            @AuthenticationPrincipal OidcUser user) {
+        if (type != null) {
+            return documentRepository.findByUserIdAndType(user.getSubject(), type);
+        }
+        return documentRepository.findByUserId(user.getSubject());
+    }
 
     // User grants a reviewer access to one of their documents
     @PostMapping("/{documentId}/access")

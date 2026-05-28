@@ -16,19 +16,19 @@ services:
     networks:
       - web
 
-  login-test:
-    container_name: login-course-app
+  accessible-job-manager:
+    container_name: accessible-job-manager
     build:
-      context: .
+      context: ../
       dockerfile: Dockerfile
     ports:
-      - "8080:8060"
+      - "8060:8060"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.login.rule=Host(`login.localhost`)"
       - "traefik.http.routers.login.entrypoints=web"
       - "traefik.http.routers.login.middlewares=error-pages-mw"
-      - "traefik.http.services.login.loadbalancer.server.port=8080"
+      - "traefik.http.services.login.loadbalancer.server.port=8060"
     networks:
       - web
 
@@ -41,6 +41,53 @@ services:
       - "traefik.http.services.error-pages.loadbalancer.server.port=80"
     networks:
       - web
+
+  postgres:
+    image: postgres:16
+    container_name: exporter-postgres
+    environment:
+      POSTGRES_DB: exporter
+      POSTGRES_USER: exporter
+      POSTGRES_PASSWORD: exporter
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - web
+
+  garage:
+    image: dxflrs/garage:v2.1.0
+    container_name: garage
+    volumes:
+      - ./garage/garage.toml:/etc/garage.toml
+      - ./meta:/var/lib/garage/meta
+      - ./garage-data:/var/lib/garage/data
+    restart: unless-stopped
+    ports:
+      - "3900:3900"   # S3
+      - "3901:3901"   # Admin API
+      - "3902:3902"
+      - "3903:3903"
+    networks:
+      - web
+
+  webui:
+    image: khairul169/garage-webui:latest
+    container_name: garage-webui
+    volumes:
+      - ./garage/garage.toml:/etc/garage.toml
+    ports:
+      - "3909:3909"
+    environment:
+      API_BASE_URL: "http://garage:3903"
+      S3_ENDPOINT_URL: "http://garage:3900"
+    networks:
+      - web
+
+volumes:
+  postgres-data: {}
 
 networks:
   web: {}

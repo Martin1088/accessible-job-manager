@@ -1,15 +1,12 @@
 <main id="main-content">
-  <h1>Companies</h1>
+  <h1>My Applications</h1>
 
   <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <button (click)="create()">+ Add Company</button>
-
   <app-data-table
-    caption="Company list"
+    caption="Applications overview"
     [columns]="columns"
     [rows]="rows"
-    [actions]="actions"
-    emptyMessage="No companies yet. Add one above.">
+    emptyMessage="No applications yet.">
   </app-data-table>
 </main>

@@ -1,10 +1,25 @@
+export type Gender = 'MALE' | 'FEMALE' | 'DIVERSE';
+
+export interface CompanyLocation {
+  id?: number;
+  street: string;
+  city: string;
+}
+
+export interface CompanyPosition {
+  id?: number;
+  title: string;
+  contactGender?: Gender;
+  contactTitle?: string;
+  contactLastName?: string;
+  email?: string;
+  website?: string;
+  notes?: string;
+}
+
 export interface Company {
   id?: number;
   name: string;
-  street: string;
-  city: string;
-  position: string;
-  contact: string;
-  website: string;
-  notes: string;
+  locations: CompanyLocation[];
+  positions: CompanyPosition[];
 }

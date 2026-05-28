@@ -1,7 +1,5 @@
 # accessible-job-manager – Status Audit
 
-**Purpose:** Take stock of the existing Spring Boot project (~40% complete), identify gaps, map remaining work to the 8-week learning curriculum, and prioritize for the remaining runway until July 2026.
-
 **Audit date:** _______________
 **Branch reviewed:** _______________
 **Estimated completion after audit:** _____ %
@@ -12,18 +10,16 @@
 
 ### Build & Versions
 
-- [ ] **Gradle version:** _______________ (`./gradlew --version`)
+- [X] **Gradle version:** Gradle 9.4.1 (`./gradlew --version`)
   - Current stable: Gradle 8.x – ideally 8.10+
   - Red flag: < 8.0, or `build.gradle` (Groovy) instead of `build.gradle.kts`
-- [ ] **Build script type:** Groovy (`build.gradle`) / Kotlin DSL (`build.gradle.kts`)
+- [X] **Build script type:** Groovy (`build.gradle`) / Kotlin DSL (`build.gradle.kts`)
   - Recommended for new projects: Kotlin DSL (type-safe, better IDE support, IDE-agnostic)
-- [ ] **Java version:** _______________ (in `build.gradle.kts` under `java { toolchain { ... } }`)
+- [X] **Java version:** 21 (in `build.gradle.kts` under `java { toolchain { ... } }`)
   - Expected: Java 21 LTS (Spring Boot 3.5+ supports 17, 21, 23; 21 is the market standard)
-  - Red flag: Java 17 still acceptable, Java 11 = upgrade immediately
-- [ ] **Spring Boot version:** _______________
+- [X] **Spring Boot version:** 3.4.4
   - Current stable: 3.5.x (as of May 2026)
-  - Red flag: < 3.2 (no `RestClient`, no `@ServiceConnection`, old Spring Security DSL)
-- [ ] **Spring Framework version (transitive):** _______________
+- [X] **Spring Framework version (transitive):** _______________
   - Expected: 6.2+ with Spring Boot 3.5
 
 ### Plugins

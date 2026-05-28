@@ -2,6 +2,8 @@ import { authGuard } from './core/guards/auth.guard';
 import {LoginComponent} from './login/login.component';
 import {CompanyFormComponent} from './user/company-form/company-form.component';
 import {CompanyListComponent} from './user/company-list/company-list.component';
+import {ApplicationListComponent} from './user/application-list/application-list.component';
+import {DocumentsComponent} from './user/documents/documents.component';
 import {HomeComponent} from './user/home/home.component';
 import {Routes} from '@angular/router';
 import {advisorGuard} from './core/guards/advisor.guard';
@@ -9,6 +11,8 @@ import {reviewerGuard} from './core/guards/reviewer.guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent, canActivate: [authGuard] },
+  { path: 'applications', component: ApplicationListComponent, canActivate: [authGuard] },
+  { path: 'documents', component: DocumentsComponent, canActivate: [authGuard] },
   { path: 'companies', component: CompanyListComponent, canActivate: [authGuard] },
   { path: 'companies/new', component: CompanyFormComponent, canActivate: [authGuard] },
   { path: 'companies/edit/:id', component: CompanyFormComponent, canActivate: [authGuard] },

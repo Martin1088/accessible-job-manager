@@ -3,41 +3,72 @@
 
   <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <div (keydown.enter)="save()">
+  <div>
     <div>
       <label for="name">Company Name *</label>
       <input id="name" [(ngModel)]="company.name" required aria-required="true"/>
     </div>
 
-    <div>
-      <label for="street">Street</label>
-      <input id="street" [(ngModel)]="company.street"/>
-    </div>
+    <section aria-labelledby="locations-heading">
+      <h2 id="locations-heading">Locations</h2>
+      <div *ngFor="let loc of company.locations; let i = index">
+        <fieldset>
+          <legend>Location {{ i + 1 }}</legend>
+          <div>
+            <label [for]="'street-' + i">Street</label>
+            <input [id]="'street-' + i" [(ngModel)]="loc.street" [name]="'street-' + i"/>
+          </div>
+          <div>
+            <label [for]="'city-' + i">City</label>
+            <input [id]="'city-' + i" [(ngModel)]="loc.city" [name]="'city-' + i"/>
+          </div>
+          <button type="button" (click)="removeLocation(i)" [attr.aria-label]="'Remove location ' + (i + 1)">Remove</button>
+        </fieldset>
+      </div>
+      <button type="button" (click)="addLocation()">+ Add Location</button>
+    </section>
 
-    <div>
-      <label for="city">City</label>
-      <input id="city" [(ngModel)]="company.city"/>
-    </div>
-
-    <div>
-      <label for="position">Position</label>
-      <input id="position" [(ngModel)]="company.position"/>
-    </div>
-
-    <div>
-      <label for="contact">Contact</label>
-      <input id="contact" [(ngModel)]="company.contact"/>
-    </div>
-
-    <div>
-      <label for="website">Website</label>
-      <input id="website" type="url" [(ngModel)]="company.website"/>
-    </div>
-
-    <div>
-      <label for="notes">Notes</label>
-      <textarea id="notes" [(ngModel)]="company.notes" rows="4"></textarea>
-    </div>
+    <section aria-labelledby="positions-heading">
+      <h2 id="positions-heading">Positions</h2>
+      <div *ngFor="let pos of company.positions; let i = index">
+        <fieldset>
+          <legend>Position {{ i + 1 }}</legend>
+          <div>
+            <label [for]="'title-' + i">Job Title</label>
+            <input [id]="'title-' + i" [(ngModel)]="pos.title" [name]="'title-' + i"/>
+          </div>
+          <div>
+            <label [for]="'contactGender-' + i">Contact Gender</label>
+            <select [id]="'contactGender-' + i" [(ngModel)]="pos.contactGender" [name]="'contactGender-' + i">
+              <option value="">-- Select --</option>
+              <option *ngFor="let g of genderOptions" [value]="g.value">{{ g.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label [for]="'contactTitle-' + i">Contact Title</label>
+            <input [id]="'contactTitle-' + i" [(ngModel)]="pos.contactTitle" [name]="'contactTitle-' + i"/>
+          </div>
+          <div>
+            <label [for]="'contactLastName-' + i">Contact Last Name</label>
+            <input [id]="'contactLastName-' + i" [(ngModel)]="pos.contactLastName" [name]="'contactLastName-' + i"/>
+          </div>
+          <div>
+            <label [for]="'email-' + i">Email</label>
+            <input [id]="'email-' + i" type="email" [(ngModel)]="pos.email" [name]="'email-' + i"/>
+          </div>
+          <div>
+            <label [for]="'website-' + i">Website</label>
+            <input [id]="'website-' + i" type="url" [(ngModel)]="pos.website" [name]="'website-' + i"/>
+          </div>
+          <div>
+            <label [for]="'notes-' + i">Notes</label>
+            <textarea [id]="'notes-' + i" [(ngModel)]="pos.notes" [name]="'notes-' + i" rows="3"></textarea>
+          </div>
+          <button type="button" (click)="removePosition(i)" [attr.aria-label]="'Remove position ' + (i + 1)">Remove</button>
+        </fieldset>
+      </div>
+      <button type="button" (click)="addPosition()">+ Add Position</button>
+    </section>
 
     <div class="actions">
       <button (click)="save()">{{ isEditMode ? 'Update' : 'Create' }}</button>

@@ -1,15 +1,28 @@
-<div class="d-flex flex-row justify-content-center">
-  <div class="card mx-auto border-info mb-3">
-    <div class="card-body">
-      <h3 class="card-title">Login</h3>
-      <div class="bg-info p-3 rounded border border-dark">
-        <nav aria-label="Login options">
-          <button (click)="login()">Login as User</button>
-          <button (click)="loginAsAdvisor()">Login as Advisor</button>
-          <button (click)="loginAsReviewer()">Login as Reviewer</button>
-        </nav>
-        <p *ngIf="error" role="alert">{{ error }}</p>
-      </div>
-    </div>
+<main id="main-content">
+  <div class="login-card">
+    <h1>Job Manager</h1>
+    <p class="subtitle">Sign in to continue</p>
+
+    <p role="alert" class="error" *ngIf="error">{{ error }}</p>
+
+    <nav aria-label="Login options">
+      <ul role="list" class="login-options">
+        <li>
+          <button type="button" (click)="login()" class="btn-primary">
+            Login as User
+          </button>
+        </li>
+        <li>
+          <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
+            Login as Advisor
+          </button>
+        </li>
+        <li>
+          <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
+            Login as Reviewer
+          </button>
+        </li>
+      </ul>
+    </nav>
   </div>
-</div>
+</main>

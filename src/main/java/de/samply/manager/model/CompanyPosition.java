@@ -17,7 +17,6 @@ public class CompanyPosition {
 
     private String title;
 
-    // Contact person (Ansprechpartner)
     @Enumerated(EnumType.STRING)
     private Gender contactGender;
     private String contactTitle;

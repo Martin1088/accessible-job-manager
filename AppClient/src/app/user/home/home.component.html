@@ -1,22 +1,52 @@
 <main id="main-content">
   <h1>Job Manager</h1>
-  <p>Welcome! Where do you want to go?</p>
-  <p *ngIf="userName">You are logged in as {{ userName }}.</p>
 
-  <nav aria-label="Main navigation">
-    <ul>
+  <!-- Profile card -->
+  <section aria-labelledby="profile-heading" *ngIf="profile">
+    <h2 id="profile-heading" class="sr-only">Your profile</h2>
+    <div class="profile-card">
+      <div class="profile-avatar" aria-hidden="true">
+        {{ profile.name.charAt(0).toUpperCase() }}
+      </div>
+      <dl class="profile-details">
+        <div>
+          <dt>Name</dt>
+          <dd>{{ profile.name }}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ profile.email }}</dd>
+        </div>
+        <div *ngIf="profile.groups?.length">
+          <dt>Roles</dt>
+          <dd>
+            <ul class="tag-list" aria-label="Assigned roles">
+              <li *ngFor="let g of profile.groups" class="tag">{{ g }}</li>
+            </ul>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <p role="alert" *ngIf="profileError">Could not load profile.</p>
+
+  <!-- Quick navigation -->
+  <section aria-labelledby="nav-heading">
+    <h2 id="nav-heading">Where do you want to go?</h2>
+    <ul class="quick-nav" role="list">
       <li>
         <a routerLink="/companies">
-          <h2>Companies</h2>
-          <p>Manage companies you are applying to.</p>
+          <span class="quick-nav__title">Companies</span>
+          <span class="quick-nav__desc">Manage companies you are applying to.</span>
         </a>
       </li>
       <li>
         <a routerLink="/applications">
-          <h2>Applications</h2>
-          <p>Track your job applications and their status.</p>
+          <span class="quick-nav__title">Applications</span>
+          <span class="quick-nav__desc">Track your job applications and their status.</span>
         </a>
       </li>
     </ul>
-  </nav>
+  </section>
 </main>

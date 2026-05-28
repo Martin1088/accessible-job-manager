@@ -1,16 +1,15 @@
-import {Router, RouterLink, RouterOutlet} from '@angular/router';
-import {catchError, firstValueFrom, Observable, of, throwError} from 'rxjs';
-import {HttpClient} from '@angular/common/http';
-import {AsyncPipe, JsonPipe, NgIf} from '@angular/common';
-import {Component, inject} from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { Component } from '@angular/core';
+import { AuthService } from './core/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, JsonPipe, NgIf, AsyncPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, NgIf],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  private router = inject(Router);
+  constructor(public auth: AuthService) {}
 }

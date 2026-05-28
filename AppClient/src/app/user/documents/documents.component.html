@@ -1,0 +1,17 @@
+<main id="main-content">
+  <div class="page-header">
+    <h1>Cover Letter Templates</h1>
+    <button type="button" class="btn-upload" (click)="uploadTemplate()">
+      <span aria-hidden="true">↑</span> Upload .docx
+    </button>
+  </div>
+
+  <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <app-data-table
+    caption="Cover letter templates"
+    [columns]="columns"
+    [rows]="rows"
+    emptyMessage="No cover letter templates uploaded yet.">
+  </app-data-table>
+</main>

@@ -8,9 +8,9 @@ export const advisorGuard = () => {
   const http = inject(HttpClient);
   const router = inject(Router);
 
-  return http.get<{ roles: string[] }>('/api/me').pipe(
+  return http.get<{ groups: string[] }>('/api/me').pipe(
     map(me => {
-      if (me.roles.includes('ADVISOR')) return true;
+      if (me.groups?.includes('ADVISOR')) return true;
       router.navigate(['/']);
       return false;
     }),

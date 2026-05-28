@@ -1,0 +1,132 @@
+main {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* visually hidden but available to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Profile card */
+.profile-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.profile-avatar {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: #005fcc;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-details {
+  margin: 0;
+
+  > div {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
+    align-items: baseline;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  dt {
+    font-weight: 600;
+    color: #555;
+    min-width: 4.5rem;
+
+    &::after { content: ':'; }
+  }
+
+  dd {
+    margin: 0;
+    color: #1a1a1a;
+  }
+}
+
+.tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tag {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #e8f0fb;
+  color: #003d99;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Quick navigation cards */
+.quick-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.25rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:hover {
+      border-color: #005fcc;
+      box-shadow: 0 2px 8px rgba(0, 95, 204, 0.12);
+    }
+
+    &:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.quick-nav__title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #005fcc;
+}
+
+.quick-nav__desc {
+  font-size: 0.875rem;
+  color: #555;
+}

@@ -10,25 +10,27 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/api")
 public class ApiController {
 
     @GetMapping("/login/as/{role}")
-    public RedirectView loginAs(@PathVariable String role, HttpSession session) {
+    public RedirectView loginAs(@PathVariable("role") String role, HttpSession session) {
         session.setAttribute("requested_role", role.toUpperCase());
         return new RedirectView("/oauth2/authorization/authentik");
     }
 
     @GetMapping("/me")
-    public Map<String, Object> me(@AuthenticationPrincipal OidcUser user) {
-        return Map.of(
+    public ResponseEntity<Map<String, Object>> me(@AuthenticationPrincipal OidcUser user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(Map.of(
                 "sub", user.getSubject(),
                 "name", user.getFullName(),
                 "email", user.getEmail(),
-                "groups", user.getUserInfo().getClaims().get("groups")
-        );
+                "groups", user.getUserInfo().getClaims().getOrDefault("groups", java.util.List.of())
+        ));
     }
 
     @GetMapping("token")

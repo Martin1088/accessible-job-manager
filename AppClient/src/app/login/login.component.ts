@@ -1,88 +1,46 @@
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import {catchError, firstValueFrom, Observable, of, throwError} from 'rxjs';
-import {HttpClient} from '@angular/common/http';
-import {Component} from '@angular/core';
+import { RouterModule, ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  wrong_role:    'Your account does not have the required role. Please try a different login option.',
+  access_denied: 'Access was denied. Please try again.',
+};
 
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [ CommonModule, RouterModule ],
+  imports: [CommonModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
-  me$?: Observable<any>;
-  token$?: Observable<any>;
+export class LoginComponent implements OnInit {
   error = '';
 
-  constructor(private http: HttpClient) {
-  }
+  constructor(private route: ActivatedRoute, private http: HttpClient) {}
 
-  login() {
-    window.location.href = '/oauth2/authorization/authentik';
-  }
-  loginAsAdvisor() {
-    window.location.href = '/api/login/as/advisor';
-  }
-  loginAsReviewer() {
-    window.location.href = '/api/login/as/reviewer';
-  }
-
-  whoAmI() {
-    this.error = '';
-    this.me$ = this.http.get('/api/me')
-      .pipe(
-        catchError(err => {
-          this.error = `Error ${err.status}: ${err.statusText}`;
-          return of(null);
-        })
-      );
-  }
-
-  getToken() {
-    this.error = '';
-    this.token$ = this.http.get('/api/token')
-      .pipe(
-        catchError(err => {
-          this.error = `Error ${err.status}: ${err.statusText}`;
-          return of(null);
-        })
-      );
-  }
-
-  async getAccessToken() {
-    this.error = '';
-    try {
-      const accessToken = await firstValueFrom(
-        this.http.get('/api/access_token', {responseType: 'text'})
-          .pipe(
-            catchError(err => {
-              this.error = `Error ${err.status}: ${err.statusText}`;
-              return throwError(() => err);
-            })
-          )
-      );
-      await navigator.clipboard.writeText(accessToken);
-      console.log('Token copied to clipboard:', accessToken);
-
-    } catch (err: any) {
-      this.error = `Error ${err.status || ''}: ${err.statusText || err.message || 'Clipboard or fetch failed'}`;
-      console.error(this.error);
+  ngOnInit(): void {
+    const code = this.route.snapshot.queryParamMap.get('error');
+    if (code) {
+      this.error = ERROR_MESSAGES[code] ?? `Login failed (${code}). Please try again.`;
     }
   }
 
-  logout() {
-    fetch('/logout', {
-      method: 'POST',
-      credentials: 'include'
-    }).then(() => window.location.href = '/');
+  login(): void {
+    window.location.href = '/oauth2/authorization/authentik';
   }
 
-  private readCookie(name: string): string {
-    return document.cookie
-      .split('; ')
-      .find(c => c.startsWith(name + '='))?.split('=')[1] ?? '';
+  loginAsAdvisor(): void {
+    window.location.href = '/api/login/as/advisor';
+  }
+
+  loginAsReviewer(): void {
+    window.location.href = '/api/login/as/reviewer';
+  }
+
+  logout(): void {
+    fetch('/logout', { method: 'POST', credentials: 'include' })
+      .then(() => window.location.href = '/');
   }
 }

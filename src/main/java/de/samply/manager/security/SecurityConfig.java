@@ -17,6 +17,8 @@ import java.util.List;
 public class SecurityConfig {
     @Autowired
     private RoleCheckSuccessHandler roleCheckSuccessHandler;
+    @Autowired
+    private GroupsGrantedAuthoritiesMapper groupsGrantedAuthoritiesMapper;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,11 +39,13 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/cover-letter/fill").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         .requestMatchers("/api/me").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
+                        .userInfoEndpoint(u -> u.userAuthoritiesMapper(groupsGrantedAuthoritiesMapper))
                         .successHandler(roleCheckSuccessHandler)
                 )
                 .exceptionHandling(ex -> ex

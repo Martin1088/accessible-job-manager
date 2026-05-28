@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import {Company} from '../../model/company';
-import {CompanyService} from '../../services/company.service';
-import {ActivatedRoute, Router} from '@angular/router';
-import {FormsModule} from '@angular/forms';
-import {CommonModule} from '@angular/common';
+import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
+import { CompanyService } from '../../services/company.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-company-form',
@@ -16,16 +16,18 @@ export class CompanyFormComponent implements OnInit {
 
   company: Company = {
     name: '',
-    street: '',
-    city: '',
-    position: '',
-    contact: '',
-    website: '',
-    notes: ''
+    locations: [],
+    positions: []
   };
   isEditMode = false;
   companyId?: number;
   errorMessage = '';
+
+  readonly genderOptions: { value: string; label: string }[] = [
+    { value: 'FEMALE', label: 'Female' },
+    { value: 'MALE', label: 'Male' },
+    { value: 'DIVERSE', label: 'Diverse' },
+  ];
 
   constructor(
     private companyService: CompanyService,
@@ -41,10 +43,26 @@ export class CompanyFormComponent implements OnInit {
       this.companyService.getAll().subscribe({
         next: (companies) => {
           const found = companies.find(c => c.id === this.companyId);
-          if (found) this.company = { ...found };
+          if (found) this.company = { ...found, locations: [...found.locations], positions: [...found.positions] };
         }
       });
     }
+  }
+
+  addLocation(): void {
+    this.company.locations.push({ street: '', city: '' });
+  }
+
+  removeLocation(index: number): void {
+    this.company.locations.splice(index, 1);
+  }
+
+  addPosition(): void {
+    this.company.positions.push({ title: '' });
+  }
+
+  removePosition(index: number): void {
+    this.company.positions.splice(index, 1);
   }
 
   save(): void {

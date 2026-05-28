@@ -1,7 +1,14 @@
-import {Component, OnInit} from '@angular/core';
-import {RouterLink} from '@angular/router';
-import {CommonModule} from '@angular/common';
-import {HttpClient} from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+
+interface UserProfile {
+  sub: string;
+  name: string;
+  email: string;
+  groups: string[];
+}
 
 @Component({
   selector: 'app-home',
@@ -10,14 +17,15 @@ import {HttpClient} from '@angular/common/http';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
-  userName = '';
+  profile: UserProfile | null = null;
+  profileError = false;
 
   constructor(private http: HttpClient) {}
 
-  ngOnInit() {
-    this.http.get<{ name: string }>('/api/me').subscribe(me => {
-      this.userName = me.name;
+  ngOnInit(): void {
+    this.http.get<UserProfile>('/api/me').subscribe({
+      next: (me) => this.profile = me,
+      error: () => this.profileError = true,
     });
   }
-
 }

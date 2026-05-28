@@ -1,1 +1,56 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header>
+  <!-- User nav -->
+  <nav aria-label="Main navigation" *ngIf="auth.isUser$ | async">
+    <ul role="list">
+      <li>
+        <a routerLink="/" routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: true }"
+           #rlaHome="routerLinkActive"
+           [attr.aria-current]="rlaHome.isActive ? 'page' : null">Home</a>
+      </li>
+      <li>
+        <a routerLink="/applications" routerLinkActive="active"
+           #rlaApps="routerLinkActive"
+           [attr.aria-current]="rlaApps.isActive ? 'page' : null">Applications</a>
+      </li>
+      <li>
+        <a routerLink="/documents" routerLinkActive="active"
+           #rlaDocs="routerLinkActive"
+           [attr.aria-current]="rlaDocs.isActive ? 'page' : null">Documents</a>
+      </li>
+      <li>
+        <a routerLink="/companies" routerLinkActive="active"
+           #rlaCompanies="routerLinkActive"
+           [attr.aria-current]="rlaCompanies.isActive ? 'page' : null">Companies</a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Advisor nav -->
+  <nav aria-label="Advisor navigation" *ngIf="auth.isAdvisor$ | async">
+    <ul role="list">
+      <li>
+        <a routerLink="/advisor" routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: true }"
+           #rlaAdvisor="routerLinkActive"
+           [attr.aria-current]="rlaAdvisor.isActive ? 'page' : null">Dashboard</a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Reviewer nav -->
+  <nav aria-label="Reviewer navigation" *ngIf="auth.isReviewer$ | async">
+    <ul role="list">
+      <li>
+        <a routerLink="/reviewer" routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: true }"
+           #rlaReviewer="routerLinkActive"
+           [attr.aria-current]="rlaReviewer.isActive ? 'page' : null">Dashboard</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
 <router-outlet></router-outlet>

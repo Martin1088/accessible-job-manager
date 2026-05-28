@@ -1,5 +1,5 @@
 package de.samply.manager.model;
 
-public enum Roles {
+public enum Role {
     ADVISOR,USER, REVIEWER
 }

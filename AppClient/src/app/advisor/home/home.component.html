@@ -1,18 +1,78 @@
 <main id="main-content">
   <h1>Advisor Dashboard</h1>
 
-  <section aria-labelledby="companies-heading">
-    <h2 id="companies-heading">Create Company</h2>
-    <!-- company form here -->
+  <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <!-- My Users -->
+  <section aria-labelledby="my-users-heading">
+    <h2 id="my-users-heading">My Users</h2>
+    <app-data-table
+      caption="Users assigned to you"
+      [columns]="userColumns"
+      [rows]="userRows"
+      emptyMessage="No users are assigned to you yet.">
+    </app-data-table>
   </section>
 
-  <section aria-labelledby="positions-heading">
-    <h2 id="positions-heading">Create Position</h2>
-    <!-- position form here -->
-  </section>
-
+  <!-- Create Suggestion -->
   <section aria-labelledby="suggest-heading">
-    <h2 id="suggest-heading">Suggest to User</h2>
-    <!-- user picker + suggestion form here -->
+    <h2 id="suggest-heading">Create Suggestion</h2>
+
+    <p role="status" class="success" *ngIf="formSuccess">Suggestion sent successfully.</p>
+    <p role="alert"  class="error"   *ngIf="formError">{{ formError }}</p>
+
+    <form (ngSubmit)="submitSuggestion()" #suggestionForm="ngForm" novalidate>
+      <div class="form-group">
+        <label for="targetUser">User *</label>
+        <select id="targetUser"
+                name="targetUserId"
+                [(ngModel)]="form.targetUserId"
+                required
+                aria-required="true">
+          <option value="" disabled>— Select user —</option>
+          <option *ngFor="let u of assignedUsers" [value]="u.userId">
+            {{ u.name }} ({{ u.email }})
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="position">Position *</label>
+        <select id="position"
+                name="companyPositionId"
+                [(ngModel)]="form.companyPositionId"
+                required
+                aria-required="true">
+          <option value="" disabled>— Select position —</option>
+          <option *ngFor="let p of positionOptions" [value]="p.id">
+            {{ p.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea id="message"
+                  name="message"
+                  [(ngModel)]="form.message"
+                  rows="4"
+                  placeholder="Optional note to the user…"></textarea>
+      </div>
+
+      <button type="submit" [disabled]="submitting">
+        {{ submitting ? 'Sending…' : 'Send Suggestion' }}
+      </button>
+    </form>
+  </section>
+
+  <!-- Suggestions Overview -->
+  <section aria-labelledby="suggestions-heading">
+    <h2 id="suggestions-heading">My Suggestions</h2>
+    <app-data-table
+      caption="Suggestions you have made"
+      [columns]="suggestionColumns"
+      [rows]="suggestionRows"
+      emptyMessage="No suggestions made yet.">
+    </app-data-table>
   </section>
 </main>

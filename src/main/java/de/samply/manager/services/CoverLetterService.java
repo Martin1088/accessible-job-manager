@@ -33,6 +33,21 @@ public class CoverLetterService {
         return out.toByteArray();
     }
 
+    public byte[] fillPersonalFields(InputStream templateStream,
+                                     Map<String, String> personalData) throws Exception {
+
+        WordprocessingMLPackage wordPackage =
+                WordprocessingMLPackage.load(templateStream);
+
+        Map<DataFieldName, String> mergeData = new HashMap<>();
+        personalData.forEach((k, v) ->
+                mergeData.put(new DataFieldName(k), v));
+        MailMerger.performMerge(wordPackage, mergeData, true);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        wordPackage.save(out);
+        return out.toByteArray();
+    }
+
     public String buildSalutation(CompanyPosition position) {
         return switch (position.getContactGender()) {
             case MALE   -> "Sehr geehrter Herr " + formatName(position);

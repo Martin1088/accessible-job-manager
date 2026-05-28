@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "user_profiles")
@@ -20,10 +22,29 @@ public class UserProfile {
     @Id
     private String userId;
 
+    @Enumerated(EnumType.STRING)
+    private Role role;
     private String name;
     private String email;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-}
 
+    @ManyToMany
+    @JoinTable(
+            name = "user_advisors",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "advisor_id")
+    )
+    @Builder.Default
+    private Set<UserProfile> advisors = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_reviewers",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "reviewer_id")
+    )
+    @Builder.Default
+    private Set<UserProfile> reviewers = new HashSet<>();
+}
