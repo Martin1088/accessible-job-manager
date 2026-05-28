@@ -50,4 +50,4 @@ build/
 AppClient/package-lock.json
 out/
 src/main/resources/static
-src/main/resources/application.properties
+src/main/resources/**
