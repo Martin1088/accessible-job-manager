@@ -23,6 +23,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8060:8060"
+    environment:
+      MANAGER_DB_URL: jdbc:postgresql://postgres:5432/exporter
+      MANAGER_DB_USER: exporter
+      MANAGER_DB_PASSWORD: exporter
+      OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/accessible-job-manager/
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.login.rule=Host(`login.localhost`)"

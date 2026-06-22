@@ -5,6 +5,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'org.springframework.boot' version '3.4.4'
 }
 
 repositories {
@@ -17,6 +18,7 @@ repositories {
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:3.4.4')
     implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.4.9'
+    implementation 'software.amazon.awssdk:s3:2.25.0'
 
     api libs.org.springframework.boot.spring.boot.starter.web
     api libs.org.projectlombok.lombok
