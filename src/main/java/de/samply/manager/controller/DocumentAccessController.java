@@ -7,14 +7,18 @@ import de.samply.manager.model.DocumentType;
 import de.samply.manager.repository.DocumentAccessRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.UserProfileRepository;
+import de.samply.manager.services.DocumentStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +30,7 @@ public class DocumentAccessController {
     private final DocumentAccessRepository documentAccessRepository;
     private final DocumentRepository documentRepository;
     private final UserProfileRepository userProfileRepository;
+    private final DocumentStorageService storageService;
 
     @GetMapping
     public List<Document> getMyDocuments(
@@ -35,6 +40,37 @@ public class DocumentAccessController {
             return documentRepository.findByUserIdAndType(user.getSubject(), type);
         }
         return documentRepository.findByUserId(user.getSubject());
+    }
+
+    @PostMapping("/upload")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Document upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("label") String label,
+            @RequestParam(value = "type", defaultValue = "COVER_LETTER_TEMPLATE") DocumentType type,
+            @AuthenticationPrincipal OidcUser user) throws IOException {
+
+        if (!type.accepts(file.getContentType())) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    type + " requires " + type.getAllowedMime());
+        }
+
+        String key = user.getSubject() + "/" + type.name().toLowerCase()
+                + "/" + UUID.randomUUID() + "." + type.getExtension();
+        storageService.upload(key, file.getInputStream(), file.getSize(), file.getContentType());
+
+        Document doc = Document.builder()
+                .userId(user.getSubject())
+                .type(type)
+                .label(label)
+                .filename(file.getOriginalFilename())
+                .mimeType(file.getContentType())
+                .storageKey(key)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        return documentRepository.save(doc);
     }
 
     // User grants a reviewer access to one of their documents

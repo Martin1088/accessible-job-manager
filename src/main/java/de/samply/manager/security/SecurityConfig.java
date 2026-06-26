@@ -38,10 +38,8 @@ public class SecurityConfig {
                                 "/styles*.css"
                         ).permitAll()
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-                        .requestMatchers("/api/me").authenticated()
+                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
@@ -49,8 +47,16 @@ public class SecurityConfig {
                         .successHandler(roleCheckSuccessHandler)
                 )
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) ->
-                                res.sendRedirect("/oauth2/authorization/authentik"))
+                        .authenticationEntryPoint((req, res, e) -> {
+                            String path = req.getRequestURI();
+                            String accept = req.getHeader("Accept");
+                            if (path.startsWith("/api/") ||
+                                    (accept != null && accept.contains("application/json"))) {
+                                res.sendError(401);
+                            } else {
+                                res.sendRedirect("/oauth2/authorization/authentik");
+                            }
+                        })
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")

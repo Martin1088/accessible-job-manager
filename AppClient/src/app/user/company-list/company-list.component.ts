@@ -18,21 +18,28 @@ export class CompanyListComponent implements OnInit {
   errorMessage = '';
 
   columns: TableColumn[] = [
-    { label: 'Name',      field: 'name',      sortable: true },
-    { label: 'Cities',    field: 'cities',    sortable: true },
-    { label: 'Positions', field: 'positions', sortable: true },
+    { label: 'Company',  field: 'name',          sortable: true },
+    { label: 'City',     field: 'city',           sortable: true },
+    { label: 'Position', field: 'positionTitle',  sortable: true },
   ];
 
   actions: TableAction[] = [
     {
+      label: 'Apply',
+      ariaLabel: (row) => `Apply for ${row.positionTitle} at ${row.name}`,
+      handler: (row) => this.router.navigate(['/applications'], {
+        queryParams: { positionId: row.positionId, companyName: row.name, positionTitle: row.positionTitle }
+      }),
+    },
+    {
       label: 'Edit',
       ariaLabel: (row) => `Edit ${row.name}`,
-      handler: (row) => this.router.navigate(['/companies/edit', row.id]),
+      handler: (row) => this.router.navigate(['/companies/edit', row.companyId]),
     },
     {
       label: 'Delete',
       ariaLabel: (row) => `Delete ${row.name}`,
-      handler: (row) => this.deleteCompany(row.id, row.name),
+      handler: (row) => this.deleteCompany(row.companyId, row.name),
     },
   ];
 
@@ -64,11 +71,14 @@ export class CompanyListComponent implements OnInit {
   }
 
   private toRows(companies: Company[]): any[] {
-    return companies.map(c => ({
-      id:        c.id,
-      name:      c.name,
-      cities:    c.locations.map(l => l.city).join(', '),
-      positions: c.positions.map(p => p.title).join(', '),
-    }));
+    return companies.flatMap(c =>
+      c.positions.map(p => ({
+        companyId:     c.id,
+        positionId:    p.id,
+        name:          c.name,
+        city:          c.locations.map(l => l.city).filter(Boolean).join(', ') || '—',
+        positionTitle: p.title,
+      }))
+    );
   }
 }

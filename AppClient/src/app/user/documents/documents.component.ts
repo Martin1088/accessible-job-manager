@@ -15,6 +15,7 @@ export class DocumentsComponent implements OnInit {
 
   rows: any[] = [];
   errorMessage = '';
+  uploading = false;
 
   columns: TableColumn[] = [
     { label: 'Label',    field: 'label',     sortable: true  },
@@ -37,7 +38,30 @@ export class DocumentsComponent implements OnInit {
     });
   }
 
-  uploadTemplate(): void {
-    // TODO: implement upload
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('label', file.name.replace(/\.docx$/i, ''));
+    formData.append('type', 'COVER_LETTER_TEMPLATE');
+
+    this.uploading = true;
+    this.errorMessage = '';
+
+    this.http.post<Document>('/api/documents/upload', formData).subscribe({
+      next: () => {
+        this.uploading = false;
+        input.value = '';
+        this.ngOnInit();
+      },
+      error: () => {
+        this.uploading = false;
+        input.value = '';
+        this.errorMessage = 'Upload failed. Only .docx files are accepted.';
+      },
+    });
   }
 }

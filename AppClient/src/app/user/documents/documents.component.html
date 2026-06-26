@@ -1,9 +1,13 @@
 <main id="main-content">
   <div class="page-header">
     <h1>Cover Letter Templates</h1>
-    <button type="button" class="btn-upload" (click)="uploadTemplate()">
-      <span aria-hidden="true">↑</span> Upload .docx
+    <button type="button" class="btn-upload" (click)="fileInput.click()" [disabled]="uploading">
+      <span aria-hidden="true">↑</span> {{ uploading ? 'Uploading…' : 'Upload .docx' }}
     </button>
+    <input #fileInput type="file"
+           accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+           style="display:none" tabindex="-1" aria-hidden="true"
+           (change)="onFileSelected($event)">
   </div>
 
   <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>

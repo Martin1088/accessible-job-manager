@@ -1,7 +1,41 @@
 <main id="main-content">
   <h1>My Applications</h1>
 
-  <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <section class="create-form" *ngIf="showForm" aria-labelledby="create-heading">
+    <h2 id="create-heading">New Application</h2>
+    <dl class="position-info">
+      <dt>Company</dt><dd>{{ newForm.companyName }}</dd>
+      <dt>Position</dt><dd>{{ newForm.positionTitle }}</dd>
+    </dl>
+
+    <form (ngSubmit)="submit()" #f="ngForm">
+      <div class="field">
+        <label for="status">Status</label>
+        <select id="status" name="status" [(ngModel)]="newForm.status" required>
+          <option *ngFor="let s of statusOptions" [value]="s">{{ statusLabel(s) }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="appliedDate">Applied date</label>
+        <input id="appliedDate" name="appliedDate" type="date" [(ngModel)]="newForm.appliedDate">
+      </div>
+
+      <div class="field">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" [(ngModel)]="newForm.notes" rows="3"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="submitting || f.invalid">
+          {{ submitting ? 'Saving…' : 'Create application' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+  </section>
 
   <app-data-table
     caption="Applications overview"
