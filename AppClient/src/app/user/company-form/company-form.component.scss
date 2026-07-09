@@ -40,6 +40,64 @@ textarea {
   resize: vertical;
 }
 
+.import-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+
+  button {
+    flex: 1;
+    padding: 0.45rem 1rem;
+    border: 1px solid #ccc;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    &:first-child { border-radius: 4px 0 0 4px; }
+    &:last-child  { border-radius: 0 4px 4px 0; border-left: none; }
+
+    &.active {
+      background: #005fcc;
+      color: #fff;
+      border-color: #005fcc;
+    }
+  }
+}
+
+.json-import {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px dashed #005fcc;
+  border-radius: 6px;
+  background: #f0f6ff;
+  margin-bottom: 1rem;
+
+  label { font-weight: 500; }
+
+  input[type="file"] {
+    width: auto;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .json-hint {
+    font-size: 0.78rem;
+    color: #666;
+    word-break: break-all;
+  }
+
+  .json-error {
+    color: #c0392b;
+    font-size: 0.85rem;
+  }
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;

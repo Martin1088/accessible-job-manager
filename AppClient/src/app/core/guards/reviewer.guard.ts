@@ -11,11 +11,11 @@ export const reviewerGuard = () => {
   return http.get<{ groups: string[] }>('/api/me').pipe(
     map(me => {
       if (me.groups?.includes('REVIEWER')) return true;
-      router.navigate(['/']);
+      router.navigate(['/forbidden']);
       return false;
     }),
     catchError(() => {
-      router.navigate(['/']);
+      router.navigate(['/forbidden']);
       return of(false);
     })
   );

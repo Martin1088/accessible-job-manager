@@ -1,0 +1,107 @@
+@startuml
+
+entity companies {
+    * id primary key
+    --
+    * name
+}
+
+entity company_locations {
+    * id primary key
+    --
+    * company_id foreign key
+    street
+    city
+    postcode
+    country
+}
+
+entity company_positions {
+    * id primary key
+    --
+    * company_id foreign key
+    title
+    contact_gender
+    contact_title
+    contact_last_name
+    email
+    website
+    notes
+}
+
+entity applications {
+    * id primary key
+    --
+    * user_id
+    * company_position_id foreign key
+    cover_letter_document_id foreign key
+    * status
+    applied_date
+    notes
+    created_at
+    updated_at
+}
+
+entity documents {
+    * id primary key
+    --
+    * user_id
+    * type
+    * label
+    * filename
+    * mime_type
+    * storage_key
+    created_at
+    updated_at
+}
+
+entity document_access {
+    * id primary key
+    --
+    document_id foreign key
+    reviewer_id
+    granted_by_user_id
+    granted_at
+}
+
+entity user_profiles {
+    * user_id primary key
+    --
+    role
+    name
+    email
+    created_at
+}
+
+entity user_advisors {
+    * user_id foreign key
+    * advisor_id foreign key
+}
+
+entity user_reviewers {
+    * user_id foreign key
+    * reviewer_id foreign key
+}
+
+entity suggestions {
+    * id primary key
+    --
+    advisor_id
+    user_profile_id foreign key
+    company_position_id foreign key
+    message
+    status
+    created_at
+}
+
+companies "1" -- "n" company_locations
+companies "1" -- "n" company_positions
+applications "n" -- "1" company_positions
+applications "n" -- "0..1" documents
+document_access "n" -- "1" documents
+suggestions "n" -- "1" user_profiles
+suggestions "n" -- "1" company_positions
+user_profiles "1" -- "n" user_advisors
+user_profiles "1" -- "n" user_reviewers
+
+@enduml

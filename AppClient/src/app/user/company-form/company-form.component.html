@@ -3,6 +3,18 @@
 
   <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
 
+  <div class="import-toggle" *ngIf="!isEditMode">
+    <button type="button" [class.active]="!importMode" (click)="importMode = false">Manual</button>
+    <button type="button" [class.active]="importMode" (click)="importMode = true">Import JSON</button>
+  </div>
+
+  <div class="json-import" *ngIf="importMode">
+    <label for="json-upload">Select a <code>.json</code> file — it will fill the form below.</label>
+    <input id="json-upload" type="file" accept=".json,application/json" (change)="onJsonFileSelected($event)"/>
+    <span class="json-hint">Expected format: <code>&#123;"name":"…","locations":[&#123;"street":"…","city":"…"&#125;],"positions":[&#123;"title":"…"&#125;]&#125;</code></span>
+    <span class="json-error" *ngIf="jsonError" role="alert">{{ jsonError }}</span>
+  </div>
+
   <div>
     <div>
       <label for="name">Company Name *</label>
@@ -21,6 +33,14 @@
           <div>
             <label [for]="'city-' + i">City</label>
             <input [id]="'city-' + i" [(ngModel)]="loc.city" [name]="'city-' + i"/>
+          </div>
+          <div>
+            <label [for]="'postcode-' + i">Postcode</label>
+            <input [id]="'postcode-' + i" [(ngModel)]="loc.postcode" [name]="'postcode-' + i"/>
+          </div>
+          <div>
+            <label [for]="'country-' + i">Country</label>
+            <input [id]="'country-' + i" [(ngModel)]="loc.country" [name]="'country-' + i"/>
           </div>
           <button type="button" (click)="removeLocation(i)" [attr.aria-label]="'Remove location ' + (i + 1)">Remove</button>
         </fieldset>

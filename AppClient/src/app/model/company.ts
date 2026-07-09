@@ -4,6 +4,8 @@ export interface CompanyLocation {
   id?: number;
   street: string;
   city: string;
+  postcode?: string;
+  country?: string;
 }
 
 export interface CompanyPosition {

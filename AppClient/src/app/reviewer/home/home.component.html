@@ -1,1 +1,53 @@
-<p>home works!</p>
+<main id="main-content">
+  <h1>Reviewer Dashboard</h1>
+
+  <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <section aria-labelledby="users-heading">
+    <h2 id="users-heading">Users requesting review</h2>
+
+    <p role="status" *ngIf="users.length === 0">No users have shared documents with you yet.</p>
+
+    <ul class="user-list" role="list" *ngIf="users.length > 0">
+      <li *ngFor="let user of users" class="user-card">
+        <div class="user-header">
+          <div class="avatar" aria-hidden="true">{{ user.name.charAt(0).toUpperCase() }}</div>
+          <div class="user-info">
+            <strong>{{ user.name }}</strong>
+            <span>{{ user.email }}</span>
+          </div>
+        </div>
+
+        <table class="doc-table" [attr.aria-label]="'Documents shared by ' + user.name">
+          <caption class="sr-only">Documents shared by {{ user.name }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Label</th>
+              <th scope="col">File</th>
+              <th scope="col">Type</th>
+              <th scope="col">Granted</th>
+              <th scope="col">Download</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let doc of user.documents">
+              <td>{{ doc.label }}</td>
+              <td>{{ doc.filename }}</td>
+              <td>{{ doc.type }}</td>
+              <td>{{ doc.grantedAt }}</td>
+              <td>
+                <button type="button"
+                        class="btn-download"
+                        (click)="download(doc)"
+                        [disabled]="downloading[doc.id]"
+                        [attr.aria-label]="'Download ' + doc.label">
+                  {{ downloading[doc.id] ? '…' : 'Download' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+    </ul>
+  </section>
+</main>

@@ -22,22 +22,26 @@ public class CompanyService {
         this.companyRepository = companyRepository;
     }
 
-    public List<CompanyDto> getAllCompanies() {
-        return companyRepository.findAll()
+    public List<CompanyDto> getAllCompanies(String userId) {
+        return companyRepository.findByUserId(userId)
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    public CompanyDto createCompany(CompanyDto dto) {
+    public CompanyDto createCompany(CompanyDto dto, String userId) {
         Company company = toEntity(dto);
+        company.setUserId(userId);
         return toDto(companyRepository.save(company));
     }
 
     @Transactional
-    public CompanyDto updateCompany(Long id, CompanyDto dto) {
+    public CompanyDto updateCompany(Long id, CompanyDto dto, String userId) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Company not found: " + id));
+        if (!company.getUserId().equals(userId))
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN);
         company.setName(dto.getName());
 
         company.getLocations().clear();
@@ -57,7 +61,12 @@ public class CompanyService {
         return toDto(companyRepository.save(company));
     }
 
-    public void deleteCompany(Long id) {
+    public void deleteCompany(Long id, String userId) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Company not found: " + id));
+        if (!company.getUserId().equals(userId))
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN);
         companyRepository.deleteById(id);
     }
 

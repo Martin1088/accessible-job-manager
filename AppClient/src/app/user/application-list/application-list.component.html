@@ -37,10 +37,44 @@
     </form>
   </section>
 
-  <app-data-table
-    caption="Applications overview"
-    [columns]="columns"
-    [rows]="rows"
-    emptyMessage="No applications yet.">
-  </app-data-table>
+  <div role="region" aria-label="Applications overview" class="table-wrapper">
+    <table>
+      <caption>Applications overview</caption>
+      <thead>
+        <tr>
+          <th scope="col" *ngFor="let col of columns" [attr.aria-sort]="ariaSort(col.field)">
+            <button type="button" (click)="sortBy(col.field)" [attr.aria-label]="col.label">
+              {{ col.label }} <span aria-hidden="true">{{ sortIcon(col.field) }}</span>
+            </button>
+          </th>
+          <th scope="col">Cover letter</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="sortedRows.length === 0">
+          <td [attr.colspan]="columns.length + 1">
+            <span role="status">No applications yet.</span>
+          </td>
+        </tr>
+        <tr *ngFor="let row of sortedRows">
+          <td *ngFor="let col of columns">{{ row[col.field] }}</td>
+          <td class="cover-letter-cell">
+            <label [for]="'tpl-' + row.id" class="sr-only">Template for {{ row.companyName }}</label>
+            <select [id]="'tpl-' + row.id" [(ngModel)]="selectedTemplate[row.id]"
+                    [disabled]="templates.length === 0" [name]="'tpl-' + row.id">
+              <option value="" disabled selected>— select template —</option>
+              <option *ngFor="let t of templates" [value]="t.id">{{ t.label }}</option>
+            </select>
+            <button type="button"
+                    class="btn-download"
+                    [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
+                    (click)="downloadCoverLetter(row.id)"
+                    [attr.aria-label]="'Download cover letter for ' + row.companyName">
+              {{ downloading[row.id] ? '…' : 'Download PDF' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </main>

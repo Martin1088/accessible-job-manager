@@ -22,6 +22,8 @@ export class CompanyFormComponent implements OnInit {
   isEditMode = false;
   companyId?: number;
   errorMessage = '';
+  importMode = false;
+  jsonError = '';
 
   readonly genderOptions: { value: string; label: string }[] = [
     { value: 'FEMALE', label: 'Female' },
@@ -81,5 +83,26 @@ export class CompanyFormComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/companies']);
+  }
+
+  onJsonFileSelected(event: Event): void {
+    this.jsonError = '';
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result as string);
+        this.company = {
+          name: parsed.name ?? '',
+          locations: Array.isArray(parsed.locations) ? parsed.locations : [],
+          positions: Array.isArray(parsed.positions) ? parsed.positions : [],
+        };
+        this.importMode = false;
+      } catch {
+        this.jsonError = 'Invalid JSON file.';
+      }
+    };
+    reader.readAsText(file);
   }
 }

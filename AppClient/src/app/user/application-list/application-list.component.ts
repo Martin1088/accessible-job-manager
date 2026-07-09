@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Application, ApplicationRequest, ApplicationStatus } from '../../model/application';
 import { ApplicationService } from '../../services/application.service';
-import { DataTableComponent, TableColumn } from '../../shared/data-table/data-table.component';
+import { Document } from '../../model/document';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT:                'Draft',
@@ -20,13 +21,16 @@ const STATUS_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-application-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './application-list.component.html',
   styleUrl: './application-list.component.scss',
 })
 export class ApplicationListComponent implements OnInit {
 
   rows: any[] = [];
+  templates: Document[] = [];
+  selectedTemplate: Record<number, string> = {};
+  downloading: Record<number, boolean> = {};
   errorMessage = '';
   submitting = false;
 
@@ -41,21 +45,25 @@ export class ApplicationListComponent implements OnInit {
   };
   showForm = false;
 
+  sortField: string | null = null;
+  sortDir: 'asc' | 'desc' | null = null;
+
   readonly statusOptions: ApplicationStatus[] = [
     'DRAFT', 'SENT', 'INTERVIEW_SCHEDULED', 'INTERVIEW_DONE',
     'OFFER_RECEIVED', 'ACCEPTED', 'REJECTED', 'WITHDRAWN',
   ];
 
-  columns: TableColumn[] = [
-    { label: 'Company',   field: 'companyName',    sortable: true },
-    { label: 'Position',  field: 'positionTitle',  sortable: true },
-    { label: 'Status',    field: 'statusLabel',    sortable: true },
-    { label: 'Applied',   field: 'appliedDate',    sortable: true },
-    { label: 'Notes',     field: 'notes',          sortable: false },
+  readonly columns = [
+    { label: 'Company',  field: 'companyName'  },
+    { label: 'Position', field: 'positionTitle' },
+    { label: 'Status',   field: 'statusLabel'  },
+    { label: 'Applied',  field: 'appliedDate'  },
+    { label: 'Notes',    field: 'notes'        },
   ];
 
   constructor(
     private applicationService: ApplicationService,
+    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
   ) {}
@@ -71,6 +79,7 @@ export class ApplicationListComponent implements OnInit {
       }
     });
     this.loadApplications();
+    this.loadTemplates();
   }
 
   submit(): void {
@@ -101,8 +110,67 @@ export class ApplicationListComponent implements OnInit {
     this.router.navigate([], { queryParams: {} });
   }
 
+  get sortedRows(): any[] {
+    if (!this.sortField || !this.sortDir) return this.rows;
+    const field = this.sortField;
+    const dir = this.sortDir === 'asc' ? 1 : -1;
+    return [...this.rows].sort((a, b) => {
+      const av = (a[field] ?? '').toString().toLowerCase();
+      const bv = (b[field] ?? '').toString().toLowerCase();
+      return av < bv ? -dir : av > bv ? dir : 0;
+    });
+  }
+
+  sortBy(field: string): void {
+    if (this.sortField === field) {
+      if (this.sortDir === 'asc') this.sortDir = 'desc';
+      else if (this.sortDir === 'desc') { this.sortDir = null; this.sortField = null; }
+      else this.sortDir = 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDir = 'asc';
+    }
+  }
+
+  sortIcon(field: string): string {
+    if (this.sortField !== field) return '↕';
+    return this.sortDir === 'asc' ? '↑' : '↓';
+  }
+
+  ariaSort(field: string): string {
+    if (this.sortField !== field) return 'none';
+    return this.sortDir === 'asc' ? 'ascending' : 'descending';
+  }
+
+  downloadCoverLetter(appId: number): void {
+    const docId = this.selectedTemplate[appId];
+    if (!docId) return;
+    this.downloading[appId] = true;
+    this.http.post(`/api/cover-letter/${appId}/fill/${docId}`, null, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const row = this.rows.find(r => r.id === appId);
+        const name = `Anschreiben_${(row?.companyName ?? 'cover_letter').replace(/\s+/g, '_')}.pdf`;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = name; a.click();
+        URL.revokeObjectURL(url);
+        this.downloading[appId] = false;
+      },
+      error: () => {
+        this.errorMessage = 'Failed to generate cover letter.';
+        this.downloading[appId] = false;
+      },
+    });
+  }
+
   statusLabel(s: string): string {
     return STATUS_LABELS[s] ?? s;
+  }
+
+  private loadTemplates(): void {
+    this.http.get<Document[]>('/api/documents', { params: { type: 'COVER_LETTER_TEMPLATE' } }).subscribe({
+      next: (docs) => this.templates = docs,
+    });
   }
 
   private loadApplications(): void {

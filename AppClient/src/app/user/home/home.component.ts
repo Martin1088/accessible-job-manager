@@ -1,14 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-
-interface UserProfile {
-  sub: string;
-  name: string;
-  email: string;
-  groups: string[];
-}
+import { Router } from '@angular/router';
+import { AuthService, UserMe } from '../../core/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -17,14 +11,19 @@ interface UserProfile {
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
-  profile: UserProfile | null = null;
+  profile: UserMe | null = null;
   profileError = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {
-    this.http.get<UserProfile>('/api/me').subscribe({
-      next: (me) => this.profile = me,
+    this.auth.me$.subscribe({
+      next: (me) => {
+        if (!me) { this.profileError = true; return; }
+        if (me.groups.includes('ADVISOR'))  { this.router.navigate(['/advisor']);   return; }
+        if (me.groups.includes('REVIEWER')) { this.router.navigate(['/reviewer']);  return; }
+        this.profile = me;
+      },
       error: () => this.profileError = true,
     });
   }

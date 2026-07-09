@@ -48,13 +48,14 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> {
-                            String path = req.getRequestURI();
                             String accept = req.getHeader("Accept");
-                            if (path.startsWith("/api/") ||
-                                    (accept != null && accept.contains("application/json"))) {
-                                res.sendError(401);
-                            } else {
+                            boolean browserRequest = accept != null
+                                    && accept.contains("text/html")
+                                    && !accept.equals("application/json");
+                            if (browserRequest) {
                                 res.sendRedirect("/oauth2/authorization/authentik");
+                            } else {
+                                res.sendError(401);
                             }
                         })
                 )

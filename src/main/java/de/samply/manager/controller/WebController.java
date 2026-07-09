@@ -20,4 +20,9 @@ public class WebController {
     public String spaLevel3() {
         return "forward:/index.html";
     }
+
+    @RequestMapping(value = "/{path1:[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}/{path4:[^\\.]*}")
+    public String spaLevel4() {
+        return "forward:/index.html";
+    }
 }

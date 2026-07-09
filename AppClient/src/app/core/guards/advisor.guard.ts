@@ -11,11 +11,11 @@ export const advisorGuard = () => {
   return http.get<{ groups: string[] }>('/api/me').pipe(
     map(me => {
       if (me.groups?.includes('ADVISOR')) return true;
-      router.navigate(['/']);
+      router.navigate(['/forbidden']);
       return false;
     }),
     catchError(() => {
-      router.navigate(['/']);
+      router.navigate(['/forbidden']);
       return of(false);
     })
   );

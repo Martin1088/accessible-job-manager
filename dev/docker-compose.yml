@@ -28,6 +28,7 @@ services:
       MANAGER_DB_USER: exporter
       MANAGER_DB_PASSWORD: exporter
       OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/accessible-job-manager/
+      GOTENBERG_URL: http://gotenberg:3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     labels:
@@ -61,6 +62,15 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - web
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
     networks:
       - web
 

@@ -12,8 +12,17 @@ public class CompanyLocation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String street;
+
+    @Column(nullable = false)
     private String city;
+
+    @Column
+    private String postcode;
+
+    @Column
+    private String country;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)

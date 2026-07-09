@@ -12,6 +12,27 @@
 
   <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
+  <section class="upload-form" *ngIf="showUploadForm" aria-labelledby="upload-heading">
+    <h2 id="upload-heading">New template</h2>
+    <p class="upload-filename">File: <strong>{{ pendingFile?.name }}</strong></p>
+    <div class="field">
+      <label for="doc-label">Label <span aria-hidden="true">*</span></label>
+      <input id="doc-label" name="doc-label" type="text"
+             [(ngModel)]="pendingLabel" required
+             aria-required="true"
+             placeholder="e.g. Standard cover letter EN"/>
+    </div>
+    <div class="upload-actions">
+      <button type="button" class="btn-primary" (click)="confirmUpload()"
+              [disabled]="uploading || !pendingLabel.trim()">
+        {{ uploading ? 'Uploading…' : 'Upload' }}
+      </button>
+      <button type="button" class="btn-cancel" (click)="cancelUpload()" [disabled]="uploading">
+        Cancel
+      </button>
+    </div>
+  </section>
+
   <app-data-table
     caption="Cover letter templates"
     [columns]="columns"
