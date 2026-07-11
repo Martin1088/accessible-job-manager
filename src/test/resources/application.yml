@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+  security:
+    oauth2:
+      client:
+        registration:
+          authentik:
+            client-id: test-client
+            client-secret: test-secret
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost/callback
+            scope: openid, profile, email
+        provider:
+          authentik:
+            authorization-uri: http://localhost:9000/auth
+            token-uri: http://localhost:9000/token
+            user-info-uri: http://localhost:9000/userinfo
+            jwk-set-uri: http://localhost:9000/jwks
+            user-name-attribute: sub
+
+s3:
+  endpoint: http://localhost:3900
+  bucket: test-bucket
+  access-key: test
+  secret-key: test
