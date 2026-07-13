@@ -5,6 +5,18 @@ import { HttpClient } from '@angular/common/http';
 import { DataTableComponent, TableColumn } from '../../shared/data-table/data-table.component';
 import { Document } from '../../model/document';
 
+function yearOf(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const y = parseInt(iso.substring(0, 4), 10);
+  return isNaN(y) ? null : y;
+}
+
+function monthOf(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const m = parseInt(iso.substring(5, 7), 10);
+  return isNaN(m) ? null : m;
+}
+
 @Component({
   selector: 'app-documents',
   standalone: true,
@@ -14,13 +26,21 @@ import { Document } from '../../model/document';
 })
 export class DocumentsComponent implements OnInit {
 
-  rows: any[] = [];
+  allRows: any[] = [];
   errorMessage = '';
   uploading = false;
 
   pendingFile: File | null = null;
   pendingLabel = '';
   showUploadForm = false;
+
+  filterYear: number | '' = '';
+  filterMonth: number | '' = '';
+
+  readonly months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
 
   columns: TableColumn[] = [
     { label: 'Label',    field: 'label',     sortable: true  },
@@ -30,14 +50,48 @@ export class DocumentsComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
+  get availableYears(): number[] {
+    const years = new Set<number>();
+    const current = new Date().getFullYear();
+    years.add(current - 1);
+    years.add(current);
+    years.add(current + 1);
+    this.allRows.forEach(r => {
+      const y = yearOf(r.rawCreatedAt);
+      if (y) years.add(y);
+    });
+    return [...years].sort((a, b) => a - b);
+  }
+
+  get filterActive(): boolean {
+    return this.filterYear !== '' || this.filterMonth !== '';
+  }
+
+  clearFilter(): void {
+    this.filterYear = '';
+    this.filterMonth = '';
+  }
+
+  get filteredRows(): any[] {
+    if (!this.filterActive) return this.allRows;
+    return this.allRows.filter(r => {
+      const iso = r.rawCreatedAt;
+      if (!iso) return false;
+      if (this.filterYear !== '' && yearOf(iso) !== Number(this.filterYear)) return false;
+      if (this.filterMonth !== '' && monthOf(iso) !== Number(this.filterMonth)) return false;
+      return true;
+    });
+  }
+
   ngOnInit(): void {
     this.http.get<Document[]>('/api/documents', {
       params: { type: 'COVER_LETTER_TEMPLATE' },
     }).subscribe({
-      next: (docs) => this.rows = docs.map(d => ({
-        label:     d.label,
-        filename:  d.filename,
-        createdAt: d.createdAt ? d.createdAt.substring(0, 10) : '—',
+      next: (docs) => this.allRows = docs.map(d => ({
+        label:        d.label,
+        filename:     d.filename,
+        createdAt:    d.createdAt ? d.createdAt.substring(0, 10) : '—',
+        rawCreatedAt: d.createdAt ?? null,
       })),
       error: () => this.errorMessage = 'Failed to load templates.',
     });

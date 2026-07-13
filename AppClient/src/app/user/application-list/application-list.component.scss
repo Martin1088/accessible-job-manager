@@ -84,13 +84,53 @@ main {
   white-space: nowrap; border: 0;
 }
 
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  select {
+    padding: 0.4rem 0.65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: #fff;
+    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
 .table-wrapper {
   overflow-x: auto;
 
   table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 0.9rem;
+
+    col.col-company  { width: 13%; }
+    col.col-position { width: 18%; }
+    col.col-status   { width: 10%; }
+    col.col-applied  { width: 10%; }
+    col.col-notes    { width: 19%; }
+    col.col-cover    { width: 30%; }
 
     caption {
       text-align: left;
@@ -104,6 +144,8 @@ main {
       border-bottom: 1px solid #e2e8f0;
       text-align: left;
       vertical-align: middle;
+      overflow: hidden;
+      word-break: break-word;
     }
 
     th {

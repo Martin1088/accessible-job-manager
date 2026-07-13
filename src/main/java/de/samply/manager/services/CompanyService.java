@@ -6,20 +6,28 @@ import de.samply.manager.dto.CompanyPositionDto;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
+import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.CompanyRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final ApplicationRepository applicationRepository;
 
-    public CompanyService(CompanyRepository companyRepository) {
+    public CompanyService(CompanyRepository companyRepository, ApplicationRepository applicationRepository) {
         this.companyRepository = companyRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     public List<CompanyDto> getAllCompanies(String userId) {
@@ -51,11 +59,31 @@ public class CompanyService {
                     .forEach(company.getLocations()::add);
         }
 
-        company.getPositions().clear();
+        Map<Long, CompanyPosition> existingById = company.getPositions().stream()
+                .collect(Collectors.toMap(CompanyPosition::getId, p -> p));
+        Set<Long> incomingIds = dto.getPositions() == null ? Set.of() :
+                dto.getPositions().stream()
+                        .map(CompanyPositionDto::getId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+
+        for (Long existingId : existingById.keySet()) {
+            if (!incomingIds.contains(existingId) && applicationRepository.existsByCompanyPositionId(existingId)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Cannot remove a position that has associated applications");
+            }
+        }
+
+        company.getPositions().removeIf(p -> !incomingIds.contains(p.getId()));
+
         if (dto.getPositions() != null) {
-            dto.getPositions().stream()
-                    .map(p -> toPositionEntity(p, company))
-                    .forEach(company.getPositions()::add);
+            for (CompanyPositionDto pdto : dto.getPositions()) {
+                if (pdto.getId() != null && existingById.containsKey(pdto.getId())) {
+                    applyPositionFields(pdto, existingById.get(pdto.getId()));
+                } else {
+                    company.getPositions().add(toPositionEntity(pdto, company));
+                }
+            }
         }
 
         return toDto(companyRepository.save(company));
@@ -101,6 +129,7 @@ public class CompanyService {
         dto.setEmail(p.getEmail());
         dto.setWebsite(p.getWebsite());
         dto.setNotes(p.getNotes());
+        dto.setCreatedAt(p.getCreatedAt());
         return dto;
     }
 
@@ -128,8 +157,7 @@ public class CompanyService {
         return l;
     }
 
-    private CompanyPosition toPositionEntity(CompanyPositionDto dto, Company company) {
-        CompanyPosition p = new CompanyPosition();
+    private void applyPositionFields(CompanyPositionDto dto, CompanyPosition p) {
         p.setTitle(dto.getTitle());
         p.setContactGender(dto.getContactGender());
         p.setContactTitle(dto.getContactTitle());
@@ -137,6 +165,11 @@ public class CompanyService {
         p.setEmail(dto.getEmail());
         p.setWebsite(dto.getWebsite());
         p.setNotes(dto.getNotes());
+    }
+
+    private CompanyPosition toPositionEntity(CompanyPositionDto dto, Company company) {
+        CompanyPosition p = new CompanyPosition();
+        applyPositionFields(dto, p);
         p.setCompany(company);
         return p;
     }

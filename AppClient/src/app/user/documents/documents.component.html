@@ -1,4 +1,4 @@
-<main id="main-content">
+<main id="main-content" tabindex="-1">
   <div class="page-header">
     <h1>Cover Letter Templates</h1>
     <button type="button" class="btn-upload" (click)="fileInput.click()" [disabled]="uploading">
@@ -33,10 +33,31 @@
     </div>
   </section>
 
+  <div class="filter-bar" role="search" aria-label="Filter templates by upload date">
+    <div class="filter-group">
+      <label for="filter-year">Year</label>
+      <select id="filter-year" [(ngModel)]="filterYear">
+        <option [value]="''">All years</option>
+        <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filter-month">Month</label>
+      <select id="filter-month" [(ngModel)]="filterMonth">
+        <option [value]="''">All months</option>
+        <option *ngFor="let m of months; let i = index" [value]="i + 1">{{ m }}</option>
+      </select>
+    </div>
+    <button type="button" class="btn-cancel" (click)="clearFilter()" *ngIf="filterActive"
+            aria-label="Clear date filter">
+      Clear filter
+    </button>
+  </div>
+
   <app-data-table
     caption="Cover letter templates"
     [columns]="columns"
-    [rows]="rows"
+    [rows]="filteredRows"
     emptyMessage="No cover letter templates uploaded yet.">
   </app-data-table>
 </main>

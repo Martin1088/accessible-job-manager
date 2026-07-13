@@ -7,6 +7,25 @@ import { Application, ApplicationRequest, ApplicationStatus } from '../../model/
 import { ApplicationService } from '../../services/application.service';
 import { Document } from '../../model/document';
 
+function yearOf(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const y = parseInt(iso.substring(0, 4), 10);
+  return isNaN(y) ? null : y;
+}
+
+function monthOf(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const m = parseInt(iso.substring(5, 7), 10);
+  return isNaN(m) ? null : m;
+}
+
+function matchesFilter(iso: string | null | undefined, filterYear: number | '', filterMonth: number | ''): boolean {
+  if (!iso) return false;
+  if (filterYear !== '' && yearOf(iso) !== Number(filterYear)) return false;
+  if (filterMonth !== '' && monthOf(iso) !== Number(filterMonth)) return false;
+  return true;
+}
+
 const STATUS_LABELS: Record<string, string> = {
   DRAFT:                'Draft',
   SENT:                 'Sent',
@@ -47,6 +66,14 @@ export class ApplicationListComponent implements OnInit {
 
   sortField: string | null = null;
   sortDir: 'asc' | 'desc' | null = null;
+
+  filterYear: number | '' = '';
+  filterMonth: number | '' = '';
+
+  readonly months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
 
   readonly statusOptions: ApplicationStatus[] = [
     'DRAFT', 'SENT', 'INTERVIEW_SCHEDULED', 'INTERVIEW_DONE',
@@ -110,11 +137,39 @@ export class ApplicationListComponent implements OnInit {
     this.router.navigate([], { queryParams: {} });
   }
 
+  get availableYears(): number[] {
+    const years = new Set<number>();
+    const current = new Date().getFullYear();
+    years.add(current - 1);
+    years.add(current);
+    years.add(current + 1);
+    this.rows.forEach(r => {
+      const y = yearOf(r.createdAt);
+      if (y) years.add(y);
+    });
+    return [...years].sort((a, b) => a - b);
+  }
+
+  get filterActive(): boolean {
+    return this.filterYear !== '' || this.filterMonth !== '';
+  }
+
+  clearFilter(): void {
+    this.filterYear = '';
+    this.filterMonth = '';
+  }
+
   get sortedRows(): any[] {
-    if (!this.sortField || !this.sortDir) return this.rows;
+    let source = this.rows;
+
+    if (this.filterActive) {
+      source = source.filter(r => matchesFilter(r.createdAt, this.filterYear, this.filterMonth));
+    }
+
+    if (!this.sortField || !this.sortDir) return source;
     const field = this.sortField;
     const dir = this.sortDir === 'asc' ? 1 : -1;
-    return [...this.rows].sort((a, b) => {
+    return [...source].sort((a, b) => {
       const av = (a[field] ?? '').toString().toLowerCase();
       const bv = (b[field] ?? '').toString().toLowerCase();
       return av < bv ? -dir : av > bv ? dir : 0;
@@ -188,6 +243,7 @@ export class ApplicationListComponent implements OnInit {
       statusLabel:   STATUS_LABELS[a.status] ?? a.status,
       appliedDate:   a.appliedDate ?? '—',
       notes:         a.notes ?? '',
+      createdAt:     a.createdAt ?? null,
     }));
   }
 }

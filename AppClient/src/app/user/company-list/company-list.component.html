@@ -1,14 +1,35 @@
-<main id="main-content">
+<main id="main-content" tabindex="-1">
   <h1>Companies</h1>
 
   <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
 
   <button (click)="create()">+ Add Company</button>
 
+  <div class="filter-bar" role="search" aria-label="Filter positions by date added">
+    <div class="filter-group">
+      <label for="filter-year">Year</label>
+      <select id="filter-year" [(ngModel)]="filterYear">
+        <option [value]="''">All years</option>
+        <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filter-month">Month</label>
+      <select id="filter-month" [(ngModel)]="filterMonth">
+        <option [value]="''">All months</option>
+        <option *ngFor="let m of months; let i = index" [value]="i + 1">{{ m }}</option>
+      </select>
+    </div>
+    <button type="button" class="btn-clear" (click)="clearFilter()" *ngIf="filterActive"
+            aria-label="Clear date filter">
+      Clear filter
+    </button>
+  </div>
+
   <app-data-table
     caption="Company list"
     [columns]="columns"
-    [rows]="rows"
+    [rows]="filteredRows"
     [actions]="actions"
     emptyMessage="No companies yet. Add one above.">
   </app-data-table>

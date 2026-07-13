@@ -3,6 +3,8 @@ package de.samply.manager.dto;
 import de.samply.manager.model.Gender;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class CompanyPositionDto {
     private Long id;
@@ -13,4 +15,5 @@ public class CompanyPositionDto {
     private String email;
     private String website;
     private String notes;
+    private LocalDateTime createdAt;
 }

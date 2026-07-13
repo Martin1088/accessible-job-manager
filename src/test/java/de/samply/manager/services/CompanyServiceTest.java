@@ -2,6 +2,7 @@ package de.samply.manager.services;
 
 import de.samply.manager.dto.CompanyDto;
 import de.samply.manager.model.Company;
+import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.CompanyRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +21,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CompanyServiceTest {
 
-    @Mock  CompanyRepository repo;
+    @Mock CompanyRepository repo;
+    @Mock ApplicationRepository applicationRepo;
     @InjectMocks CompanyService service;
 
     // ── getAllCompanies ───────────────────────────────────────────────────────

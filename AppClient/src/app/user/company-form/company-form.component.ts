@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -71,7 +72,11 @@ export class CompanyFormComponent implements OnInit {
     if (this.isEditMode && this.companyId) {
       this.companyService.update(this.companyId, this.company).subscribe({
         next: () => this.router.navigate(['/companies']),
-        error: () => this.errorMessage = 'Failed to update company.'
+        error: (err: HttpErrorResponse) => {
+          this.errorMessage = err.status === 409
+            ? (err.error ?? 'Cannot remove a position that has associated applications.')
+            : 'Failed to update company.';
+        }
       });
     } else {
       this.companyService.create(this.company).subscribe({

@@ -1,4 +1,4 @@
-<main id="main-content">
+<main id="main-content" tabindex="-1">
   <h1>My Applications</h1>
 
   <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
@@ -37,9 +37,38 @@
     </form>
   </section>
 
+  <div class="filter-bar" role="search" aria-label="Filter applications by date">
+    <div class="filter-group">
+      <label for="filter-year">Year</label>
+      <select id="filter-year" [(ngModel)]="filterYear">
+        <option [value]="''">All years</option>
+        <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filter-month">Month</label>
+      <select id="filter-month" [(ngModel)]="filterMonth">
+        <option [value]="''">All months</option>
+        <option *ngFor="let m of months; let i = index" [value]="i + 1">{{ m }}</option>
+      </select>
+    </div>
+    <button type="button" class="btn-secondary" (click)="clearFilter()" *ngIf="filterActive"
+            aria-label="Clear date filter">
+      Clear filter
+    </button>
+  </div>
+
   <div role="region" aria-label="Applications overview" class="table-wrapper">
     <table>
       <caption>Applications overview</caption>
+      <colgroup>
+        <col class="col-company">
+        <col class="col-position">
+        <col class="col-status">
+        <col class="col-applied">
+        <col class="col-notes">
+        <col class="col-cover">
+      </colgroup>
       <thead>
         <tr>
           <th scope="col" *ngFor="let col of columns" [attr.aria-sort]="ariaSort(col.field)">

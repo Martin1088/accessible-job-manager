@@ -33,7 +33,9 @@ nav ul {
 }
 
 nav a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.9rem 1.25rem;
   color: #c8d0e0;
   text-decoration: none;
@@ -58,5 +60,30 @@ nav a {
   &[aria-current="page"] {
     color: #fff;
     border-bottom-color: #005fcc;
+  }
+
+  kbd {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-family: inherit;
+    font-weight: 400;
+    color: #6b7a99;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 3px;
+    padding: 0.05rem 0.3rem;
+    line-height: 1.4;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  &:hover kbd,
+  &:focus-visible kbd {
+    color: #a0b0cc;
+    background: rgba(255,255,255,0.12);
+  }
+
+  &.active kbd,
+  &[aria-current="page"] kbd {
+    color: #7090c0;
   }
 }
