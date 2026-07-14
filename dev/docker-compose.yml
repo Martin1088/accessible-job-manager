@@ -24,9 +24,9 @@ services:
     ports:
       - "8060:8060"
     environment:
-      MANAGER_DB_URL: jdbc:postgresql://postgres:5432/exporter
-      MANAGER_DB_USER: exporter
-      MANAGER_DB_PASSWORD: exporter
+      MANAGER_DB_URL: jdbc:postgresql://postgres:5432/manager
+      MANAGER_DB_USER: manager
+      MANAGER_DB_PASSWORD: manager
       OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/accessible-job-manager/
       GOTENBERG_URL: http://gotenberg:3000
     extra_hosts:
@@ -52,11 +52,11 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: exporter-postgres
+    container_name: manager-postgres
     environment:
-      POSTGRES_DB: exporter
-      POSTGRES_USER: exporter
-      POSTGRES_PASSWORD: exporter
+      POSTGRES_DB: manager
+      POSTGRES_USER: manager
+      POSTGRES_PASSWORD: manager
     ports:
       - "5432:5432"
     volumes:
