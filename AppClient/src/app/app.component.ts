@@ -25,12 +25,24 @@ export class AppComponent implements OnInit {
     'c': '/companies',
   };
 
+  // Windows screen readers (JAWS/NVDA) reserve bare letter keys for their own
+  // browse-mode quick navigation, so they never reach this handler there.
+  // macOS/VoiceOver doesn't intercept plain letters the same way, so bare
+  // keys stay usable on that platform.
+  readonly isWindows = /Win/i.test(navigator.userAgent);
+
   @HostListener('document:keydown', ['$event'])
   onKeydown(e: KeyboardEvent): void {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const tag = (e.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    const route = this.userShortcuts[e.key];
+
+    if (this.isWindows) {
+      if (!e.altKey || !e.shiftKey || e.ctrlKey || e.metaKey) return;
+    } else {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    }
+
+    const route = this.userShortcuts[e.key.toLowerCase()];
     if (route) {
       e.preventDefault();
       this.router.navigate([route]);

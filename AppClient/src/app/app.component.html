@@ -9,32 +9,32 @@
            [routerLinkActiveOptions]="{ exact: true }"
            #rlaHome="routerLinkActive"
            [attr.aria-current]="rlaHome.isActive ? 'page' : null"
-           aria-keyshortcuts="h">
-          Home <kbd aria-hidden="true">h</kbd>
+           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+H' : 'h'">
+          Home <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+H' : 'h' }}</kbd>
         </a>
       </li>
       <li>
         <a routerLink="/applications" routerLinkActive="active"
            #rlaApps="routerLinkActive"
            [attr.aria-current]="rlaApps.isActive ? 'page' : null"
-           aria-keyshortcuts="a">
-          Applications <kbd aria-hidden="true">a</kbd>
+           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+A' : 'a'">
+          Applications <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+A' : 'a' }}</kbd>
         </a>
       </li>
       <li>
         <a routerLink="/documents" routerLinkActive="active"
            #rlaDocs="routerLinkActive"
            [attr.aria-current]="rlaDocs.isActive ? 'page' : null"
-           aria-keyshortcuts="d">
-          Documents <kbd aria-hidden="true">d</kbd>
+           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+D' : 'd'">
+          Documents <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+D' : 'd' }}</kbd>
         </a>
       </li>
       <li>
         <a routerLink="/companies" routerLinkActive="active"
            #rlaCompanies="routerLinkActive"
            [attr.aria-current]="rlaCompanies.isActive ? 'page' : null"
-           aria-keyshortcuts="c">
-          Companies <kbd aria-hidden="true">c</kbd>
+           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+C' : 'c'">
+          Companies <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+C' : 'c' }}</kbd>
         </a>
       </li>
     </ul>
