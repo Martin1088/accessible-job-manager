@@ -32,7 +32,7 @@ public class DocumentStorageService {
         return key;
     }
 
-    public ResponseInputStream<GetObjectResponse> download(String key) {
+    public InputStream download(String key) {
         return s3Client.getObject(
                 GetObjectRequest.builder()
                         .bucket(props.bucket())
