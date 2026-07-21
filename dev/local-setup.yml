@@ -18,7 +18,9 @@ services:
 
   accessible-job-manager:
     container_name: accessible-job-manager
-    image: ghcr.io/martin1088/accessible-job-manager:sha-116d2ad
+    build:
+      context: ../
+      dockerfile: Dockerfile
     ports:
       - "8060:8060"
     environment:
