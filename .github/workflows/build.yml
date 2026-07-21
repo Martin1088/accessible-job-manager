@@ -31,15 +31,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # ./gradlew build shells out to `npm run build` (via the npmBuild task),
-      # which needs node_modules/.bin/ng on PATH already.
       - name: Install frontend dependencies
         working-directory: AppClient
         run: npm ci
 
-      # Runs backend unit tests (via the `test` task) and, through the
-      # npmBuild/copyFrontend tasks wired into processResources, also
-      # produces the Angular production build.
       - name: Build with Gradle
         run: ./gradlew build --no-daemon
 
@@ -73,9 +68,6 @@ jobs:
     name: Build & push Docker image
     runs-on: ubuntu-latest
     needs: [build, frontend-tests]
-    # Only publish from the two long-lived branches, and only on a real
-    # push to them (not on PRs, which may come from forks without
-    # package-write access).
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     permissions:
       contents: read
@@ -95,16 +87,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # GHCR image names must be lowercase; the GitHub username/repo
-      # here isn't (Martin1088), so github.repository can't be used as-is.
       - name: Compute lowercase image name
         id: image
         run: echo "name=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
-      # Tags produced per push:
-      #   - <branch>        floating pointer to the latest build of that branch (main / develop)
-      #   - sha-<short-sha> immutable, traceable to the exact commit
-      #   - latest          only on main (the default branch)
       - name: Extract metadata (tags/labels)
         id: meta
         uses: docker/metadata-action@v5
