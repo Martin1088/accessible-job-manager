@@ -1,31 +1,23 @@
 <main id="main-content" tabindex="-1">
   <h1>Job Manager</h1>
 
-  <!-- Profile card -->
-  <section aria-labelledby="profile-heading" *ngIf="profile">
-    <h2 id="profile-heading" class="sr-only">Your profile</h2>
-    <div class="profile-card">
-      <div class="profile-avatar" aria-hidden="true">
-        {{ profile.name.charAt(0).toUpperCase() }}
+  <!-- Job posting import -->
+  <section aria-labelledby="job-import-heading" *ngIf="profile">
+    <h2 id="job-import-heading">Import a job posting</h2>
+    <div class="job-import-card">
+      <div class="field">
+        <label for="job-url">Job posting URL</label>
+        <input id="job-url" name="job-url" type="url" [(ngModel)]="jobUrl"
+               placeholder="https://example.com/careers/job-123"/>
       </div>
-      <dl class="profile-details">
-        <div>
-          <dt>Name</dt>
-          <dd>{{ profile.name }}</dd>
-        </div>
-        <div>
-          <dt>Email</dt>
-          <dd>{{ profile.email }}</dd>
-        </div>
-        <div *ngIf="profile.groups?.length">
-          <dt>Roles</dt>
-          <dd>
-            <ul class="tag-list" aria-label="Assigned roles">
-              <li *ngFor="let g of profile.groups" class="tag">{{ g }}</li>
-            </ul>
-          </dd>
-        </div>
-      </dl>
+      <div class="job-import-actions">
+        <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim()" (click)="searchJobPosting()">
+          Search
+        </button>
+        <button type="button" class="btn-primary" [disabled]="!jobUrl.trim()" (click)="submitAsCompany()">
+          Use for new company
+        </button>
+      </div>
     </div>
   </section>
 

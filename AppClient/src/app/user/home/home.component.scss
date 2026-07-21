@@ -16,11 +16,8 @@ main {
   border: 0;
 }
 
-/* Profile card */
-.profile-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 1.25rem;
+/* Job posting import */
+.job-import-card {
   background: #fff;
   border-radius: 8px;
   padding: 1.25rem 1.5rem;
@@ -28,63 +25,56 @@ main {
   margin-bottom: 2rem;
 }
 
-.profile-avatar {
-  flex-shrink: 0;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+
+  label { font-size: 0.875rem; font-weight: 500; }
+
+  input {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
+.job-import-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-primary {
+  padding: 0.5rem 1.2rem;
   background: #005fcc;
   color: #fff;
-  font-size: 1.4rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.profile-details {
-  margin: 0;
-
-  > div {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.35rem;
-    font-size: 0.95rem;
-    align-items: baseline;
-
-    &:last-child { margin-bottom: 0; }
-  }
-
-  dt {
-    font-weight: 600;
-    color: #555;
-    min-width: 4.5rem;
-
-    &::after { content: ':'; }
-  }
-
-  dd {
-    margin: 0;
-    color: #1a1a1a;
-  }
-}
-
-.tag-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.tag {
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  background: #e8f0fb;
-  color: #003d99;
-  font-size: 0.8rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
   font-weight: 500;
+  cursor: pointer;
+  &:hover:not(:disabled) { background: #004aaa; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+}
+
+.btn-secondary {
+  padding: 0.5rem 1.2rem;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  &:hover:not(:disabled) { background: #f1f5f9; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
 }
 
 /* Quick navigation cards */
