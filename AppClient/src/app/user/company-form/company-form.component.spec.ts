@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 
 import { CompanyFormComponent } from './company-form.component';
 import { CompanyService } from '../../services/company.service';
@@ -23,9 +24,14 @@ describe('CompanyFormComponent', () => {
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => null } } }
-        }
+        },
+        provideTranslateService({ fallbackLang: 'en' })
       ]
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en', { COMPANIES: { JSON_INVALID: 'Invalid JSON file.' } });
+    translate.use('en');
 
     fixture = TestBed.createComponent(CompanyFormComponent);
     component = fixture.componentInstance;
