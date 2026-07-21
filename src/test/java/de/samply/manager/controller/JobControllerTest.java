@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.samply.manager.dto.CompanyDto;
 import de.samply.manager.security.GroupsGrantedAuthoritiesMapper;
 import de.samply.manager.security.RoleCheckSuccessHandler;
+import de.samply.manager.security.SecurityConfig;
 import de.samply.manager.services.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,7 +24,14 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+// @WebMvcTest only scans @Controller/@ControllerAdvice/Filter/etc by
+// default; SecurityConfig is a plain @Configuration bean and is not
+// picked up automatically, so without this import the slice falls back
+// to Spring Boot's default OAuth2-login security chain (session-based
+// CSRF repository, no /api/** CSRF exemption, default redirect-only
+// entry point) instead of the app's actual security rules.
 @WebMvcTest(JobController.class)
+@Import(SecurityConfig.class)
 class JobControllerTest {
 
     @Autowired MockMvc mvc;
