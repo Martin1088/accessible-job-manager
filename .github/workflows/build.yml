@@ -31,6 +31,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # ./gradlew build shells out to `npm run build` (via the npmBuild task),
+      # which needs node_modules/.bin/ng on PATH already.
+      - name: Install frontend dependencies
+        working-directory: AppClient
+        run: npm ci
+
       # Runs backend unit tests (via the `test` task) and, through the
       # npmBuild/copyFrontend tasks wired into processResources, also
       # produces the Angular production build.
