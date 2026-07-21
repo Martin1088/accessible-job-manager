@@ -176,6 +176,20 @@
     "ERROR_UPDATE": "Failed to update company.",
     "ERROR_CREATE": "Failed to create company."
   },
+  "HOME": {
+    "TITLE": "Job Manager",
+    "JOB_IMPORT_HEADING": "Import a job posting",
+    "JOB_URL_LABEL": "Job posting URL",
+    "JOB_URL_PLACEHOLDER": "https://example.com/careers/job-123",
+    "SEARCH": "Search",
+    "USE_FOR_NEW_COMPANY": "Use for new company",
+    "PROFILE_ERROR": "Could not load profile.",
+    "NAV_HEADING": "Where do you want to go?",
+    "NAV_COMPANIES_TITLE": "Companies",
+    "NAV_COMPANIES_DESC": "Manage companies you are applying to.",
+    "NAV_APPLICATIONS_TITLE": "Applications",
+    "NAV_APPLICATIONS_DESC": "Track your job applications and their status."
+  },
   "DOCUMENTS": {
     "TITLE": "Cover Letter Templates",
     "UPLOADING": "Uploading…",

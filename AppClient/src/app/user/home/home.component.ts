@@ -3,11 +3,12 @@ import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService, UserMe } from '../../core/auth.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, CommonModule, FormsModule],
+  imports: [RouterLink, CommonModule, FormsModule, TranslatePipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })

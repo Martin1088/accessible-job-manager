@@ -176,6 +176,20 @@
     "ERROR_UPDATE": "Bedrijf kon niet worden bijgewerkt.",
     "ERROR_CREATE": "Bedrijf kon niet worden aangemaakt."
   },
+  "HOME": {
+    "TITLE": "Job Manager",
+    "JOB_IMPORT_HEADING": "Vacature importeren",
+    "JOB_URL_LABEL": "URL van de vacature",
+    "JOB_URL_PLACEHOLDER": "https://voorbeeld.nl/vacatures/job-123",
+    "SEARCH": "Zoeken",
+    "USE_FOR_NEW_COMPANY": "Gebruiken voor nieuw bedrijf",
+    "PROFILE_ERROR": "Profiel kon niet worden geladen.",
+    "NAV_HEADING": "Waar wilt u naartoe?",
+    "NAV_COMPANIES_TITLE": "Bedrijven",
+    "NAV_COMPANIES_DESC": "Beheer bedrijven waarbij u solliciteert.",
+    "NAV_APPLICATIONS_TITLE": "Sollicitaties",
+    "NAV_APPLICATIONS_DESC": "Volg uw sollicitaties en hun status."
+  },
   "DOCUMENTS": {
     "TITLE": "Motivatiebriefsjablonen",
     "UPLOADING": "Uploaden…",

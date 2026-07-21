@@ -176,6 +176,20 @@
     "ERROR_UPDATE": "Unternehmen konnte nicht aktualisiert werden.",
     "ERROR_CREATE": "Unternehmen konnte nicht erstellt werden."
   },
+  "HOME": {
+    "TITLE": "Job Manager",
+    "JOB_IMPORT_HEADING": "Stellenanzeige importieren",
+    "JOB_URL_LABEL": "URL der Stellenanzeige",
+    "JOB_URL_PLACEHOLDER": "https://beispiel.de/karriere/job-123",
+    "SEARCH": "Suchen",
+    "USE_FOR_NEW_COMPANY": "Für neues Unternehmen verwenden",
+    "PROFILE_ERROR": "Profil konnte nicht geladen werden.",
+    "NAV_HEADING": "Wohin möchten Sie?",
+    "NAV_COMPANIES_TITLE": "Unternehmen",
+    "NAV_COMPANIES_DESC": "Verwalten Sie Unternehmen, bei denen Sie sich bewerben.",
+    "NAV_APPLICATIONS_TITLE": "Bewerbungen",
+    "NAV_APPLICATIONS_DESC": "Verfolgen Sie Ihre Bewerbungen und deren Status."
+  },
   "DOCUMENTS": {
     "TITLE": "Anschreiben-Vorlagen",
     "UPLOADING": "Wird hochgeladen…",
