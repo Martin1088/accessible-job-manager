@@ -1,66 +1,78 @@
 <main id="main-content" tabindex="-1">
-  <h1>My Applications</h1>
+  <h1>{{ 'APPLICATIONS.TITLE' | translate }}</h1>
 
   <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <section class="create-form" *ngIf="showForm" aria-labelledby="create-heading">
-    <h2 id="create-heading">New Application</h2>
+    <h2 id="create-heading">{{ (editingId ? 'APPLICATIONS.EDIT_HEADING' : 'APPLICATIONS.CREATE_HEADING') | translate }}</h2>
     <dl class="position-info">
-      <dt>Company</dt><dd>{{ newForm.companyName }}</dd>
-      <dt>Position</dt><dd>{{ newForm.positionTitle }}</dd>
+      <dt>{{ 'APPLICATIONS.COMPANY' | translate }}</dt><dd>{{ newForm.companyName }}</dd>
+      <dt>{{ 'APPLICATIONS.POSITION' | translate }}</dt><dd>{{ newForm.positionTitle }}</dd>
     </dl>
 
-    <form (ngSubmit)="submit()" #f="ngForm">
+    <form (ngSubmit)="editingId ? saveEdit() : submit()" #f="ngForm">
       <div class="field">
-        <label for="status">Status</label>
+        <label for="status">{{ 'APPLICATIONS.FIELD_STATUS' | translate }}</label>
         <select id="status" name="status" [(ngModel)]="newForm.status" required>
           <option *ngFor="let s of statusOptions" [value]="s">{{ statusLabel(s) }}</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="appliedDate">Applied date</label>
+        <label for="appliedDate">{{ 'APPLICATIONS.FIELD_APPLIED_DATE' | translate }}</label>
         <input id="appliedDate" name="appliedDate" type="date" [(ngModel)]="newForm.appliedDate">
       </div>
 
       <div class="field">
-        <label for="notes">Notes</label>
+        <label for="notes">{{ 'APPLICATIONS.FIELD_NOTES' | translate }}</label>
         <textarea id="notes" name="notes" [(ngModel)]="newForm.notes" rows="3"></textarea>
       </div>
 
       <div class="form-actions">
         <button type="submit" class="btn-primary" [disabled]="submitting || f.invalid">
-          {{ submitting ? 'Saving…' : 'Create application' }}
+          {{ (submitting ? 'APPLICATIONS.SAVING' : (editingId ? 'APPLICATIONS.SAVE' : 'APPLICATIONS.CREATE')) | translate }}
         </button>
-        <button type="button" class="btn-secondary" (click)="cancel()">Cancel</button>
+        <button type="button" class="btn-secondary" (click)="cancel()">{{ 'COMMON.CANCEL' | translate }}</button>
       </div>
     </form>
   </section>
 
-  <div class="filter-bar" role="search" aria-label="Filter applications by date">
+  <div class="filter-bar" role="search" [attr.aria-label]="'APPLICATIONS.FILTER_ARIA' | translate">
     <div class="filter-group">
-      <label for="filter-year">Year</label>
+      <label for="search-field">{{ 'APPLICATIONS.SEARCH_FIELD_LABEL' | translate }}</label>
+      <select id="search-field" [(ngModel)]="searchField">
+        <option *ngFor="let f of searchFields" [value]="f.value">{{ f.label | translate }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="search-term">{{ 'APPLICATIONS.SEARCH_LABEL' | translate }}</label>
+      <input id="search-term" type="search" [(ngModel)]="searchTerm"
+             [attr.placeholder]="'APPLICATIONS.SEARCH_PLACEHOLDER' | translate"
+             [attr.aria-label]="'APPLICATIONS.SEARCH_ARIA' | translate"/>
+    </div>
+    <div class="filter-group">
+      <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
       <select id="filter-year" [(ngModel)]="filterYear">
-        <option [value]="''">All years</option>
+        <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
         <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
       </select>
     </div>
     <div class="filter-group">
-      <label for="filter-month">Month</label>
+      <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
       <select id="filter-month" [(ngModel)]="filterMonth">
-        <option [value]="''">All months</option>
-        <option *ngFor="let m of months; let i = index" [value]="i + 1">{{ m }}</option>
+        <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
+        <option *ngFor="let i of monthIndexes" [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
       </select>
     </div>
     <button type="button" class="btn-secondary" (click)="clearFilter()" *ngIf="filterActive"
-            aria-label="Clear date filter">
-      Clear filter
+            [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
+      {{ 'COMMON.CLEAR_FILTER' | translate }}
     </button>
   </div>
 
-  <div role="region" aria-label="Applications overview" class="table-wrapper">
+  <div role="region" [attr.aria-label]="'APPLICATIONS.TABLE_CAPTION' | translate" class="table-wrapper">
     <table>
-      <caption>Applications overview</caption>
+      <caption>{{ 'APPLICATIONS.TABLE_CAPTION' | translate }}</caption>
       <colgroup>
         <col class="col-company">
         <col class="col-position">
@@ -68,38 +80,73 @@
         <col class="col-applied">
         <col class="col-notes">
         <col class="col-cover">
+        <col class="col-actions">
       </colgroup>
       <thead>
         <tr>
           <th scope="col" *ngFor="let col of columns" [attr.aria-sort]="ariaSort(col.field)">
-            <button type="button" (click)="sortBy(col.field)" [attr.aria-label]="col.label">
-              {{ col.label }} <span aria-hidden="true">{{ sortIcon(col.field) }}</span>
+            <button type="button" (click)="sortBy(col.field)" [attr.aria-label]="col.label | translate">
+              {{ col.label | translate }} <span aria-hidden="true">{{ sortIcon(col.field) }}</span>
             </button>
           </th>
-          <th scope="col">Cover letter</th>
+          <th scope="col">{{ 'APPLICATIONS.COL_COVER' | translate }}</th>
+          <th scope="col">{{ 'TABLE.ACTIONS' | translate }}</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngIf="sortedRows.length === 0">
-          <td [attr.colspan]="columns.length + 1">
-            <span role="status">No applications yet.</span>
+          <td [attr.colspan]="columns.length + 2">
+            <span role="status">{{ 'APPLICATIONS.EMPTY' | translate }}</span>
           </td>
         </tr>
         <tr *ngFor="let row of sortedRows">
-          <td *ngFor="let col of columns">{{ row[col.field] }}</td>
+          <td *ngFor="let col of columns">
+            <ng-container *ngIf="col.field !== 'statusLabel'; else statusCell">{{ row[col.field] }}</ng-container>
+            <ng-template #statusCell>
+              <div class="status-cell">
+                <label [for]="'status-' + row.id" class="sr-only">{{ 'APPLICATIONS.CHANGE_STATUS_ARIA' | translate: { company: row.companyName } }}</label>
+                <select [id]="'status-' + row.id" [(ngModel)]="statusDraft[row.id]" [name]="'status-' + row.id">
+                  <option *ngFor="let s of statusOptions" [value]="s">{{ statusLabel(s) }}</option>
+                </select>
+                <button type="button"
+                        [disabled]="statusDraft[row.id] === row.status || updatingStatus[row.id]"
+                        (click)="applyStatusChange(row)"
+                        [attr.aria-label]="'APPLICATIONS.UPDATE_STATUS_ARIA' | translate: { company: row.companyName }">
+                  {{ (updatingStatus[row.id] ? 'APPLICATIONS.SAVING' : 'APPLICATIONS.UPDATE_STATUS') | translate }}
+                </button>
+              </div>
+            </ng-template>
+          </td>
           <td class="cover-letter-cell">
-            <label [for]="'tpl-' + row.id" class="sr-only">Template for {{ row.companyName }}</label>
+            <label [for]="'tpl-' + row.id" class="sr-only">{{ 'APPLICATIONS.TEMPLATE_FOR' | translate: { company: row.companyName } }}</label>
             <select [id]="'tpl-' + row.id" [(ngModel)]="selectedTemplate[row.id]"
                     [disabled]="templates.length === 0" [name]="'tpl-' + row.id">
-              <option value="" disabled selected>— select template —</option>
+              <option value="" disabled selected>{{ 'APPLICATIONS.SELECT_TEMPLATE' | translate }}</option>
               <option *ngFor="let t of templates" [value]="t.id">{{ t.label }}</option>
             </select>
             <button type="button"
                     class="btn-download"
                     [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
                     (click)="downloadCoverLetter(row.id)"
-                    [attr.aria-label]="'Download cover letter for ' + row.companyName">
-              {{ downloading[row.id] ? '…' : 'Download PDF' }}
+                    [attr.aria-label]="'APPLICATIONS.DOWNLOAD_ARIA' | translate: { company: row.companyName }">
+              {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_PDF') | translate }}
+            </button>
+            <button type="button"
+                    class="btn-download"
+                    [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
+                    (click)="downloadCoverLetterWord(row.id)"
+                    [attr.aria-label]="'APPLICATIONS.DOWNLOAD_WORD_ARIA' | translate: { company: row.companyName }">
+              {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_WORD') | translate }}
+            </button>
+          </td>
+          <td class="actions-cell">
+            <button type="button" (click)="startEdit(row)"
+                    [attr.aria-label]="'APPLICATIONS.ACTION_EDIT_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
+              {{ 'APPLICATIONS.ACTION_EDIT' | translate }}
+            </button>
+            <button type="button" (click)="deleteApplication(row)"
+                    [attr.aria-label]="'APPLICATIONS.ACTION_DELETE_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
+              {{ 'APPLICATIONS.ACTION_DELETE' | translate }}
             </button>
           </td>
         </tr>

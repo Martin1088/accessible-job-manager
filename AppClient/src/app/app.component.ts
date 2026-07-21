@@ -1,19 +1,23 @@
 import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
 import { AsyncPipe, NgIf, DOCUMENT } from '@angular/common';
 import { Component, HostListener, Inject, OnInit } from '@angular/core';
+import { CdkMenuModule } from '@angular/cdk/menu';
+import { TranslatePipe } from '@ngx-translate/core';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './core/auth.service';
+import { LanguageService } from './core/language.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, NgIf],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, NgIf, CdkMenuModule, TranslatePipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
   constructor(
     public auth: AuthService,
+    public language: LanguageService,
     private router: Router,
     @Inject(DOCUMENT) private document: Document,
   ) {}
@@ -50,6 +54,8 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.language.init();
+
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {
@@ -61,5 +67,13 @@ export class AppComponent implements OnInit {
           }
         });
       });
+  }
+
+  logout(): void {
+    this.auth.logout();
+  }
+
+  onLanguageChange(e: Event): void {
+    this.language.use((e.target as HTMLSelectElement).value);
   }
 }

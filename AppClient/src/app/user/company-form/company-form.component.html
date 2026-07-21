@@ -1,98 +1,98 @@
 <main id="main-content" tabindex="-1">
-  <h1>{{ isEditMode ? 'Edit Company' : 'New Company' }}</h1>
+  <h1>{{ (isEditMode ? 'COMPANIES.EDIT_TITLE' : 'COMPANIES.NEW_TITLE') | translate }}</h1>
 
   <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
 
   <div class="import-toggle" *ngIf="!isEditMode">
-    <button type="button" [class.active]="!importMode" (click)="importMode = false">Manual</button>
-    <button type="button" [class.active]="importMode" (click)="importMode = true">Import JSON</button>
+    <button type="button" [class.active]="!importMode" (click)="importMode = false">{{ 'COMPANIES.MANUAL' | translate }}</button>
+    <button type="button" [class.active]="importMode" (click)="importMode = true">{{ 'COMPANIES.IMPORT_JSON' | translate }}</button>
   </div>
 
   <div class="json-import" *ngIf="importMode">
-    <label for="json-upload">Select a <code>.json</code> file — it will fill the form below.</label>
+    <label for="json-upload">{{ 'COMPANIES.JSON_LABEL' | translate }}</label>
     <input id="json-upload" type="file" accept=".json,application/json" (change)="onJsonFileSelected($event)"/>
-    <span class="json-hint">Expected format: <code>&#123;"name":"…","locations":[&#123;"street":"…","city":"…"&#125;],"positions":[&#123;"title":"…"&#125;]&#125;</code></span>
+    <span class="json-hint">{{ 'COMPANIES.JSON_HINT' | translate }} <code>&#123;"name":"…","locations":[&#123;"street":"…","city":"…"&#125;],"positions":[&#123;"title":"…"&#125;]&#125;</code></span>
     <span class="json-error" *ngIf="jsonError" role="alert">{{ jsonError }}</span>
   </div>
 
   <div>
     <div>
-      <label for="name">Company Name *</label>
+      <label for="name">{{ 'COMPANIES.NAME_LABEL' | translate }}</label>
       <input id="name" [(ngModel)]="company.name" required aria-required="true"/>
     </div>
 
     <section aria-labelledby="locations-heading">
-      <h2 id="locations-heading">Locations</h2>
+      <h2 id="locations-heading">{{ 'COMPANIES.LOCATIONS_HEADING' | translate }}</h2>
       <div *ngFor="let loc of company.locations; let i = index">
         <fieldset>
-          <legend>Location {{ i + 1 }}</legend>
+          <legend>{{ 'COMPANIES.LOCATION_LEGEND' | translate: { n: i + 1 } }}</legend>
           <div>
-            <label [for]="'street-' + i">Street</label>
+            <label [for]="'street-' + i">{{ 'COMPANIES.STREET' | translate }}</label>
             <input [id]="'street-' + i" [(ngModel)]="loc.street" [name]="'street-' + i"/>
           </div>
           <div>
-            <label [for]="'city-' + i">City</label>
+            <label [for]="'city-' + i">{{ 'COMPANIES.CITY' | translate }}</label>
             <input [id]="'city-' + i" [(ngModel)]="loc.city" [name]="'city-' + i"/>
           </div>
           <div>
-            <label [for]="'postcode-' + i">Postcode</label>
+            <label [for]="'postcode-' + i">{{ 'COMPANIES.POSTCODE' | translate }}</label>
             <input [id]="'postcode-' + i" [(ngModel)]="loc.postcode" [name]="'postcode-' + i"/>
           </div>
           <div>
-            <label [for]="'country-' + i">Country</label>
+            <label [for]="'country-' + i">{{ 'COMPANIES.COUNTRY' | translate }}</label>
             <input [id]="'country-' + i" [(ngModel)]="loc.country" [name]="'country-' + i"/>
           </div>
-          <button type="button" (click)="removeLocation(i)" [attr.aria-label]="'Remove location ' + (i + 1)">Remove</button>
+          <button type="button" (click)="removeLocation(i)" [attr.aria-label]="'COMPANIES.REMOVE_LOCATION_ARIA' | translate: { n: i + 1 }">{{ 'COMPANIES.REMOVE' | translate }}</button>
         </fieldset>
       </div>
-      <button type="button" (click)="addLocation()">+ Add Location</button>
+      <button type="button" (click)="addLocation()">{{ 'COMPANIES.ADD_LOCATION' | translate }}</button>
     </section>
 
     <section aria-labelledby="positions-heading">
-      <h2 id="positions-heading">Positions</h2>
+      <h2 id="positions-heading">{{ 'COMPANIES.POSITIONS_HEADING' | translate }}</h2>
       <div *ngFor="let pos of company.positions; let i = index">
         <fieldset>
-          <legend>Position {{ i + 1 }}</legend>
+          <legend>{{ 'COMPANIES.POSITION_LEGEND' | translate: { n: i + 1 } }}</legend>
           <div>
-            <label [for]="'title-' + i">Job Title</label>
+            <label [for]="'title-' + i">{{ 'COMPANIES.JOB_TITLE' | translate }}</label>
             <input [id]="'title-' + i" [(ngModel)]="pos.title" [name]="'title-' + i"/>
           </div>
           <div>
-            <label [for]="'contactGender-' + i">Contact Gender</label>
+            <label [for]="'contactGender-' + i">{{ 'COMPANIES.CONTACT_GENDER' | translate }}</label>
             <select [id]="'contactGender-' + i" [(ngModel)]="pos.contactGender" [name]="'contactGender-' + i">
-              <option value="">-- Select --</option>
-              <option *ngFor="let g of genderOptions" [value]="g.value">{{ g.label }}</option>
+              <option value="">{{ 'COMPANIES.SELECT_PLACEHOLDER' | translate }}</option>
+              <option *ngFor="let g of genderOptions" [value]="g.value">{{ g.label | translate }}</option>
             </select>
           </div>
           <div>
-            <label [for]="'contactTitle-' + i">Contact Title</label>
+            <label [for]="'contactTitle-' + i">{{ 'COMPANIES.CONTACT_TITLE' | translate }}</label>
             <input [id]="'contactTitle-' + i" [(ngModel)]="pos.contactTitle" [name]="'contactTitle-' + i"/>
           </div>
           <div>
-            <label [for]="'contactLastName-' + i">Contact Last Name</label>
+            <label [for]="'contactLastName-' + i">{{ 'COMPANIES.CONTACT_LAST_NAME' | translate }}</label>
             <input [id]="'contactLastName-' + i" [(ngModel)]="pos.contactLastName" [name]="'contactLastName-' + i"/>
           </div>
           <div>
-            <label [for]="'email-' + i">Email</label>
+            <label [for]="'email-' + i">{{ 'COMPANIES.EMAIL' | translate }}</label>
             <input [id]="'email-' + i" type="email" [(ngModel)]="pos.email" [name]="'email-' + i"/>
           </div>
           <div>
-            <label [for]="'website-' + i">Website</label>
+            <label [for]="'website-' + i">{{ 'COMPANIES.WEBSITE' | translate }}</label>
             <input [id]="'website-' + i" type="url" [(ngModel)]="pos.website" [name]="'website-' + i"/>
           </div>
           <div>
-            <label [for]="'notes-' + i">Notes</label>
+            <label [for]="'notes-' + i">{{ 'COMPANIES.NOTES' | translate }}</label>
             <textarea [id]="'notes-' + i" [(ngModel)]="pos.notes" [name]="'notes-' + i" rows="3"></textarea>
           </div>
-          <button type="button" (click)="removePosition(i)" [attr.aria-label]="'Remove position ' + (i + 1)">Remove</button>
+          <button type="button" (click)="removePosition(i)" [attr.aria-label]="'COMPANIES.REMOVE_POSITION_ARIA' | translate: { n: i + 1 }">{{ 'COMPANIES.REMOVE' | translate }}</button>
         </fieldset>
       </div>
-      <button type="button" (click)="addPosition()">+ Add Position</button>
+      <button type="button" (click)="addPosition()">{{ 'COMPANIES.ADD_POSITION' | translate }}</button>
     </section>
 
     <div class="actions">
-      <button (click)="save()">{{ isEditMode ? 'Update' : 'Create' }}</button>
-      <button (click)="cancel()">Cancel</button>
+      <button (click)="save()">{{ (isEditMode ? 'COMPANIES.UPDATE' : 'COMPANIES.CREATE') | translate }}</button>
+      <button (click)="cancel()">{{ 'COMMON.CANCEL' | translate }}</button>
     </div>
   </div>
 </main>

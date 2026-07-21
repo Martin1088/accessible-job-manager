@@ -16,7 +16,7 @@ public class UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
 
-    public UserProfileDto findOrCreate(String userId, String name, String email, List<String> groups) {
+    public UserProfileDto findOrCreate(String userId, String name, String email) {
         UserProfile profile = userProfileRepository.findById(userId)
                 .orElseGet(() -> userProfileRepository.save(
                         UserProfile.builder()
@@ -26,13 +26,13 @@ public class UserProfileService {
                                 .role(Role.USER)
                                 .build()
                 ));
-        return toDto(profile, groups);
+        return toDto(profile);
     }
 
     public UserProfileDto getProfile(String userId) {
         UserProfile profile = userProfileRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
-        return toDto(profile, List.of());
+        return toDto(profile);
     }
 
     public UserProfileDto addAdvisor(String userId, String advisorId) {
@@ -44,7 +44,7 @@ public class UserProfileService {
         }
 
         user.getAdvisors().add(advisor);
-        return toDto(userProfileRepository.save(user), List.of());
+        return toDto(userProfileRepository.save(user));
     }
 
     public UserProfileDto addReviewer(String userId, String reviewerId) {
@@ -56,7 +56,7 @@ public class UserProfileService {
         }
 
         user.getReviewers().add(reviewer);
-        return toDto(userProfileRepository.save(user), List.of());
+        return toDto(userProfileRepository.save(user));
     }
 
     public void removeAdvisor(String userId, String advisorId) {
@@ -73,7 +73,7 @@ public class UserProfileService {
 
     public List<UserProfileDto> findAllByRole(Role role) {
         return userProfileRepository.findAllByRole(role).stream()
-                .map(p -> toDto(p, List.of()))
+                .map(this::toDto)
                 .toList();
     }
 
@@ -82,13 +82,12 @@ public class UserProfileService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
     }
 
-    private UserProfileDto toDto(UserProfile profile, List<String> groups) {
+    private UserProfileDto toDto(UserProfile profile) {
         return new UserProfileDto(
                 profile.getUserId(),
                 profile.getName(),
                 profile.getEmail(),
                 profile.getRole(),
-                groups,
                 profile.getAdvisors().stream()
                         .map(a -> new UserProfileDto.AdvisorDto(a.getUserId(), a.getName(), a.getEmail()))
                         .toList(),

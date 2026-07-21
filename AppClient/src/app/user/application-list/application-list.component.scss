@@ -105,7 +105,7 @@ main {
     letter-spacing: 0.04em;
   }
 
-  select {
+  select, input[type="search"] {
     padding: 0.4rem 0.65rem;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
@@ -114,6 +114,8 @@ main {
     background: #fff;
     &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
   }
+
+  input[type="search"] { min-width: 12rem; }
 }
 
 .table-wrapper {
@@ -125,12 +127,13 @@ main {
     border-collapse: collapse;
     font-size: 0.9rem;
 
-    col.col-company  { width: 13%; }
-    col.col-position { width: 18%; }
-    col.col-status   { width: 10%; }
-    col.col-applied  { width: 10%; }
-    col.col-notes    { width: 19%; }
-    col.col-cover    { width: 30%; }
+    col.col-company  { width: 10%; }
+    col.col-position { width: 14%; }
+    col.col-status   { width: 16%; }
+    col.col-applied  { width: 8%; }
+    col.col-notes    { width: 12%; }
+    col.col-cover    { width: 26%; }
+    col.col-actions  { width: 14%; }
 
     caption {
       text-align: left;
@@ -175,17 +178,67 @@ main {
 
 .cover-letter-cell {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
   min-width: 280px;
 
   select {
-    flex: 1;
+    flex: 1 1 100%;
     padding: 0.4rem 0.6rem;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     font-size: 0.85rem;
     font-family: inherit;
+    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
+.status-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+
+  select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+
+  button {
+    padding: 0.35rem 0.75rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: #005fcc;
+    color: #fff;
+    &:hover:not(:disabled) { background: #004aaa; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
+.actions-cell {
+  white-space: nowrap;
+
+  button {
+    padding: 0.35rem 0.75rem;
+    margin-right: 0.4rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: #e5e5e5;
+    color: #1a1a1a;
+    &:last-child { margin-right: 0; }
+    &:hover { background: #d8d8d8; }
     &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
   }
 }

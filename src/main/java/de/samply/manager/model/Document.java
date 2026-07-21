@@ -28,6 +28,10 @@ public class Document {
     @Column(nullable = false)
     private DocumentType type;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Language language;
+
     @Column(nullable = false)
     private String label;
 

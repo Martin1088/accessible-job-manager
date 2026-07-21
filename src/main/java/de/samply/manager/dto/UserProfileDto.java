@@ -10,7 +10,6 @@ public record UserProfileDto(
         String name,
         String email,
         Role role,
-        List<String> groups,
         List<AdvisorDto> advisors,
         List<ReviewerDto> reviewers
 ) {

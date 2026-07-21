@@ -6,22 +6,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class WebController {
 
-    @RequestMapping(value = "/{path:[^\\.]*}")
+    @RequestMapping(value = "/{path:(?!api$)[^\\.]*}")
     public String spa() {
         return "forward:/index.html";
     }
 
-    @RequestMapping(value = "/{path1:[^\\.]*}/{path2:[^\\.]*}")
+    @RequestMapping(value = "/{path1:(?!api$)[^\\.]*}/{path2:[^\\.]*}")
     public String spaLevel2() {
         return "forward:/index.html";
     }
 
-    @RequestMapping(value = "/{path1:[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}")
+    @RequestMapping(value = "/{path1:(?!api$)[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}")
     public String spaLevel3() {
         return "forward:/index.html";
     }
 
-    @RequestMapping(value = "/{path1:[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}/{path4:[^\\.]*}")
+    @RequestMapping(value = "/{path1:(?!api$)[^\\.]*}/{path2:[^\\.]*}/{path3:[^\\.]*}/{path4:[^\\.]*}")
     public String spaLevel4() {
         return "forward:/index.html";
     }

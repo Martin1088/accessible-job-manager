@@ -4,6 +4,7 @@ import { CompanyService } from '../../services/company.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
 
 function yearOf(iso: string | null | undefined): number | null {
@@ -20,7 +21,7 @@ function monthOf(iso: string | null | undefined): number | null {
 
 @Component({
   selector: 'app-company-list',
-  imports: [CommonModule, FormsModule, DataTableComponent],
+  imports: [CommonModule, FormsModule, DataTableComponent, TranslatePipe],
   templateUrl: './company-list.component.html',
   styleUrl: './company-list.component.scss'
 })
@@ -33,39 +34,46 @@ export class CompanyListComponent implements OnInit {
   filterYear: number | '' = '';
   filterMonth: number | '' = '';
 
-  readonly months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+  searchField = 'all';
+  searchTerm = '';
+
+  readonly searchFields = [
+    { value: 'all',           label: 'COMPANIES.SEARCH_ALL' },
+    { value: 'name',          label: 'COMPANIES.COL_NAME' },
+    { value: 'city',          label: 'COMPANIES.COL_CITY' },
+    { value: 'positionTitle', label: 'COMPANIES.COL_POSITION' },
   ];
 
+  readonly monthIndexes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
   columns: TableColumn[] = [
-    { label: 'Company',  field: 'name',          sortable: true },
-    { label: 'City',     field: 'city',           sortable: true },
-    { label: 'Position', field: 'positionTitle',  sortable: true },
-    { label: 'Added',    field: 'positionDate',   sortable: true },
+    { label: 'COMPANIES.COL_NAME',     field: 'name',          sortable: true },
+    { label: 'COMPANIES.COL_CITY',     field: 'city',          sortable: true },
+    { label: 'COMPANIES.COL_POSITION', field: 'positionTitle', sortable: true },
+    { label: 'COMPANIES.COL_ADDED',    field: 'positionDate',  sortable: true },
   ];
 
   actions: TableAction[] = [
     {
-      label: 'Apply',
-      ariaLabel: (row) => `Apply for ${row.positionTitle} at ${row.name}`,
+      label: 'COMPANIES.ACTION_APPLY',
+      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_APPLY_ARIA', { position: row.positionTitle, company: row.name }),
       handler: (row) => this.router.navigate(['/applications'], {
         queryParams: { positionId: row.positionId, companyName: row.name, positionTitle: row.positionTitle }
       }),
     },
     {
-      label: 'Edit',
-      ariaLabel: (row) => `Edit ${row.name}`,
+      label: 'COMPANIES.ACTION_EDIT',
+      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_EDIT_ARIA', { company: row.name }),
       handler: (row) => this.router.navigate(['/companies/edit', row.companyId]),
     },
     {
-      label: 'Delete',
-      ariaLabel: (row) => `Delete ${row.name}`,
+      label: 'COMPANIES.ACTION_DELETE',
+      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_DELETE_ARIA', { company: row.name }),
       handler: (row) => this.deleteCompany(row.companyId, row.name),
     },
   ];
 
-  constructor(private companyService: CompanyService, private router: Router) {}
+  constructor(private companyService: CompanyService, private router: Router, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.companyService.getAll().subscribe({
@@ -73,7 +81,7 @@ export class CompanyListComponent implements OnInit {
         this.companies = data;
         this.allRows = this.toRows(data);
       },
-      error: () => this.errorMessage = 'Failed to load companies.'
+      error: () => this.errorMessage = this.translate.instant('COMPANIES.ERROR_LOAD')
     });
   }
 
@@ -91,23 +99,42 @@ export class CompanyListComponent implements OnInit {
   }
 
   get filterActive(): boolean {
-    return this.filterYear !== '' || this.filterMonth !== '';
+    return this.filterYear !== '' || this.filterMonth !== '' || this.searchTerm.trim() !== '';
   }
 
   clearFilter(): void {
     this.filterYear = '';
     this.filterMonth = '';
+    this.searchField = 'all';
+    this.searchTerm = '';
+  }
+
+  private matchesSearch(row: any, term: string): boolean {
+    const fields = this.searchField === 'all'
+      ? ['name', 'city', 'positionTitle']
+      : [this.searchField];
+    return fields.some(f => (row[f] ?? '').toString().toLowerCase().includes(term));
   }
 
   get filteredRows(): any[] {
-    if (!this.filterActive) return this.allRows;
-    return this.allRows.filter(r => {
-      const iso = r.rawCreatedAt;
-      if (!iso) return true; // include rows with unknown date
-      if (this.filterYear !== '' && yearOf(iso) !== Number(this.filterYear)) return false;
-      if (this.filterMonth !== '' && monthOf(iso) !== Number(this.filterMonth)) return false;
-      return true;
-    });
+    let source = this.allRows;
+
+    if (this.filterYear !== '' || this.filterMonth !== '') {
+      source = source.filter(r => {
+        const iso = r.rawCreatedAt;
+        if (!iso) return true; // include rows with unknown date
+        if (this.filterYear !== '' && yearOf(iso) !== Number(this.filterYear)) return false;
+        if (this.filterMonth !== '' && monthOf(iso) !== Number(this.filterMonth)) return false;
+        return true;
+      });
+    }
+
+    const term = this.searchTerm.trim().toLowerCase();
+    if (term) {
+      source = source.filter(r => this.matchesSearch(r, term));
+    }
+
+    return source;
   }
 
   create(): void {
@@ -115,13 +142,13 @@ export class CompanyListComponent implements OnInit {
   }
 
   private deleteCompany(id: number, name: string): void {
-    if (!confirm(`Delete ${name}?`)) return;
+    if (!confirm(this.translate.instant('COMPANIES.CONFIRM_DELETE', { name }))) return;
     this.companyService.delete(id).subscribe({
       next: () => {
         this.companies = this.companies.filter(c => c.id !== id);
         this.allRows = this.toRows(this.companies);
       },
-      error: () => this.errorMessage = 'Failed to delete company.'
+      error: () => this.errorMessage = this.translate.instant('COMPANIES.ERROR_DELETE')
     });
   }
 

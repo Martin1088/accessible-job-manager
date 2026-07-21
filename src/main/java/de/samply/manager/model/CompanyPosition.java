@@ -25,6 +25,9 @@ public class CompanyPosition {
     private String contactTitle;
     private String contactLastName;
 
+    @Enumerated(EnumType.STRING)
+    private Language applyLanguage;
+
     private String email;
     private String website;
     private String notes;

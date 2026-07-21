@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export interface TableColumn {
   label: string;
@@ -18,11 +19,14 @@ type SortDirection = 'asc' | 'desc' | null;
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './data-table.component.html',
   styleUrl: './data-table.component.scss'
 })
 export class DataTableComponent implements OnChanges {
+  // caption / columns[].label / emptyMessage / actions[].label are translation
+  // keys, not display text — this component translates them itself so callers
+  // stay reactive to language switches without any extra plumbing.
   @Input() caption = '';
   @Input() columns: TableColumn[] = [];
   @Input() rows: any[] = [];
@@ -32,6 +36,8 @@ export class DataTableComponent implements OnChanges {
   sortedRows: any[] = [];
   sortField: string | null = null;
   sortDirection: SortDirection = null;
+
+  constructor(private translate: TranslateService) {}
 
   ngOnChanges(): void {
     this.sortedRows = [...this.rows];
@@ -70,9 +76,11 @@ export class DataTableComponent implements OnChanges {
   }
 
   sortLabel(col: TableColumn): string {
-    if (this.sortField !== col.field) return `Sort by ${col.label}`;
-    if (this.sortDirection === 'asc') return `${col.label} sorted ascending, click for descending`;
-    if (this.sortDirection === 'desc') return `${col.label} sorted descending, click to clear`;
-    return `Sort by ${col.label}`;
+    const column = this.translate.instant(col.label);
+    if (this.sortField === col.field) {
+      if (this.sortDirection === 'asc') return this.translate.instant('TABLE.SORTED_ASC', { column });
+      if (this.sortDirection === 'desc') return this.translate.instant('TABLE.SORTED_DESC', { column });
+    }
+    return this.translate.instant('TABLE.SORT_BY', { column });
   }
 }

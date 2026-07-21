@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -18,7 +17,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export class LoginComponent implements OnInit {
   error = '';
 
-  constructor(private route: ActivatedRoute, private http: HttpClient) {}
+  constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     const code = this.route.snapshot.queryParamMap.get('error');
@@ -37,10 +36,5 @@ export class LoginComponent implements OnInit {
 
   loginAsReviewer(): void {
     window.location.href = '/api/login/as/reviewer';
-  }
-
-  logout(): void {
-    fetch('/logout', { method: 'POST', credentials: 'include' })
-      .then(() => window.location.href = '/');
   }
 }

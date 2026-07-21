@@ -1,9 +1,11 @@
 package de.samply.manager.controller;
 
 import de.samply.manager.dto.GrantAccessRequest;
+import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.model.DocumentType;
+import de.samply.manager.model.Language;
 import de.samply.manager.repository.DocumentAccessRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.UserProfileRepository;
@@ -48,6 +50,7 @@ public class DocumentAccessController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("label") String label,
             @RequestParam(value = "type", defaultValue = "COVER_LETTER_TEMPLATE") DocumentType type,
+            @RequestParam(value = "language", defaultValue = "ENGLISH") Language language,
             @AuthenticationPrincipal OidcUser user) throws IOException {
 
         if (!type.accepts(file.getContentType())) {
@@ -62,6 +65,7 @@ public class DocumentAccessController {
         Document doc = Document.builder()
                 .userId(user.getSubject())
                 .type(type)
+                .language(language)
                 .label(label)
                 .filename(file.getOriginalFilename())
                 .mimeType(file.getContentType())
@@ -71,6 +75,44 @@ public class DocumentAccessController {
                 .build();
 
         return documentRepository.save(doc);
+    }
+
+    @PatchMapping("/{documentId}")
+    public Document update(
+            @PathVariable UUID documentId,
+            @RequestBody UpdateDocumentRequest request,
+            @AuthenticationPrincipal OidcUser user) {
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (!document.getUserId().equals(user.getSubject())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        if (request.label() != null) document.setLabel(request.label());
+        if (request.language() != null) document.setLanguage(request.language());
+        document.setUpdatedAt(LocalDateTime.now());
+
+        return documentRepository.save(document);
+    }
+
+    @DeleteMapping("/{documentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal OidcUser user) {
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (!document.getUserId().equals(user.getSubject())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        documentAccessRepository.deleteAll(documentAccessRepository.findByDocumentId(documentId));
+        storageService.delete(document.getStorageKey());
+        documentRepository.delete(document);
     }
 
     // User grants a reviewer access to one of their documents
