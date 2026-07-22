@@ -25,7 +25,7 @@ services:
       MANAGER_DB_URL: jdbc:postgresql://postgres:5432/manager
       MANAGER_DB_USER: manager
       MANAGER_DB_PASSWORD: manager
-      OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/accessible-job-manager/
+      OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/access-job-manager/
       GOTENBERG_URL: http://gotenberg:3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
