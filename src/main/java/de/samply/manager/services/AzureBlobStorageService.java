@@ -12,12 +12,12 @@ import java.time.Duration;
 @ConditionalOnProperty(name = "storage.provider", havingValue = "garage", matchIfMissing = true)
 public class AzureBlobStorageService implements StorageService{
     @Override
-    public void put(String key, InputStream data, long size, String contentType) {
-
+    public String upload(String key, InputStream data, long contentLength, String contentType) {
+        return "";
     }
 
     @Override
-    public InputStream get(Value.Str key) {
+    public InputStream download(String key) {
         return null;
     }
 

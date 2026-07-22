@@ -7,8 +7,8 @@ import java.net.URI;
 import java.time.Duration;
 
 public interface StorageService {
-    void put(String  key, InputStream data, long size, String  contentType);
-    InputStream get(Value.Str key);
+    String upload(String  key, InputStream data, long contentLength, String contentType);
+    InputStream download(String key);
     URI presignedGet(String key, Duration ttl);
     void delete(String key);
 }
