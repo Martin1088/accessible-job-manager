@@ -39,12 +39,16 @@ gotenberg:
   url: ${GOTENBERG_URL:http://localhost:3000}
 
 storage:
+  provider: ${STORAGE_PROVIDER:s3}
   s3:
     endpoint: ${S3_ENDPOINT:http://localhost:3900}
     region: ${REGION:garage}
     bucket: ${S3_BUCKET:job-manager}
     access-key: ${ACCESS_KEY:GK671d588f544252fc82ebfdf7}
     secret-key: ${SECRET_KEY:f50541d1c15b75814e2c9c758dc42ff4302d3002391ca3e60db305e642a569a0}
+  azure:
+    connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
+    container: ${AZURE_STORAGE_CONTAINER:documents}
 
 server:
   port: 8060

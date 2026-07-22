@@ -19,7 +19,7 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "storage.provider", havingValue = "azure")
+@ConditionalOnProperty(name = "storage.provider", havingValue = "s3", matchIfMissing = true)
 public class GarageStorageService implements StorageService{
     private final S3Client s3Client;
     private final S3Presigner presigner;

@@ -9,7 +9,7 @@ import de.samply.manager.model.Language;
 import de.samply.manager.repository.DocumentAccessRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.UserProfileRepository;
-import de.samply.manager.services.DocumentStorageService;
+import de.samply.manager.services.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +32,7 @@ public class DocumentAccessController {
     private final DocumentAccessRepository documentAccessRepository;
     private final DocumentRepository documentRepository;
     private final UserProfileRepository userProfileRepository;
-    private final DocumentStorageService storageService;
+    private final StorageService storageService;
 
     @GetMapping
     public List<Document> getMyDocuments(
