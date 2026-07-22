@@ -50,7 +50,6 @@ build/
 AppClient/package-lock.json
 out/
 src/main/resources/static
-src/main/resources/**
 
 dev/meta
 dev/garage-data
