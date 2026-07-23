@@ -1,0 +1,110 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--providers.file.filename=/etc/traefik/dynamic.yml"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik_dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - web
+
+  accessible-job-manager:
+    container_name: accessible-job-manager
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    ports:
+      - "8060:8060"
+    environment:
+      MANAGER_DB_URL: jdbc:postgresql://postgres:5432/manager
+      MANAGER_DB_USER: manager
+      MANAGER_DB_PASSWORD: manager
+      OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/accessible-job-manager/
+      GOTENBERG_URL: http://gotenberg:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.login.rule=Host(`login.localhost`)"
+      - "traefik.http.routers.login.entrypoints=web"
+      - "traefik.http.routers.login.middlewares=error-pages-mw"
+      - "traefik.http.services.login.loadbalancer.server.port=8060"
+    networks:
+      - web
+
+  error-pages:
+    image: nginx:alpine
+    volumes:
+      - ./error-pages:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.error-pages.loadbalancer.server.port=80"
+    networks:
+      - web
+
+  postgres:
+    image: postgres:16
+    container_name: manager-postgres
+    environment:
+      POSTGRES_DB: manager
+      POSTGRES_USER: manager
+      POSTGRES_PASSWORD: manager
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - web
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - web
+
+  garage:
+    image: dxflrs/garage:v2.1.0
+    container_name: garage
+    volumes:
+      - ./garage/garage.toml:/etc/garage.toml
+      - ./meta:/var/lib/garage/meta
+      - ./garage-data:/var/lib/garage/data
+    restart: unless-stopped
+    ports:
+      - "3900:3900"   # S3
+      - "3901:3901"   # Admin API
+      - "3902:3902"
+      - "3903:3903"
+    networks:
+      - web
+
+  webui:
+    image: khairul169/garage-webui:latest
+    container_name: garage-webui
+    volumes:
+      - ./garage/garage.toml:/etc/garage.toml
+    ports:
+      - "3909:3909"
+    environment:
+      API_BASE_URL: "http://garage:3903"
+      S3_ENDPOINT_URL: "http://garage:3900"
+    networks:
+      - web
+
+volumes:
+  postgres-data: {}
+
+networks:
+  web: {}

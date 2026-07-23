@@ -24,6 +24,10 @@ public class CoverLetterService {
     private final RestClient restClient;
     private final String gotenbergUrl;
 
+    @Value("${salutation.male:Mr}")   private String salutationMale;
+    @Value("${salutation.female:Mrs}") private String salutationFemale;
+    @Value("${salutation.team:HR Team}") private String salutationTeam;
+
     public CoverLetterService(@Value("${gotenberg.url}") String gotenbergUrl) {
         this.gotenbergUrl = gotenbergUrl;
         this.restClient = RestClient.create();
@@ -74,11 +78,11 @@ public class CoverLetterService {
     }
 
     public String buildSalutation(CompanyPosition position) {
-        if (position.getContactGender() == null) return "HR Team";
+        if (position.getContactGender() == null) return salutationTeam;
         return switch (position.getContactGender()) {
-            case MALE   -> "Mr" + formatName(position);
-            case FEMALE -> "Mrs" + formatName(position);
-            case TEAM   -> "HR Team";
+            case MALE   -> salutationMale + " " + formatName(position);
+            case FEMALE -> salutationFemale + " " + formatName(position);
+            case TEAM   -> salutationTeam;
         };
     }
 

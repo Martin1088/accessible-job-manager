@@ -1,50 +1,42 @@
-<main id="main-content">
-  <h1>Job Manager</h1>
+<main id="main-content" tabindex="-1">
+  <h1>{{ 'HOME.TITLE' | translate }}</h1>
 
-  <!-- Profile card -->
-  <section aria-labelledby="profile-heading" *ngIf="profile">
-    <h2 id="profile-heading" class="sr-only">Your profile</h2>
-    <div class="profile-card">
-      <div class="profile-avatar" aria-hidden="true">
-        {{ profile.name.charAt(0).toUpperCase() }}
+  <!-- Job posting import -->
+  <section aria-labelledby="job-import-heading" *ngIf="profile">
+    <h2 id="job-import-heading">{{ 'HOME.JOB_IMPORT_HEADING' | translate }}</h2>
+    <div class="job-import-card">
+      <div class="field">
+        <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }}</label>
+        <input id="job-url" name="job-url" type="url" [(ngModel)]="jobUrl"
+               [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"/>
       </div>
-      <dl class="profile-details">
-        <div>
-          <dt>Name</dt>
-          <dd>{{ profile.name }}</dd>
-        </div>
-        <div>
-          <dt>Email</dt>
-          <dd>{{ profile.email }}</dd>
-        </div>
-        <div *ngIf="profile.groups?.length">
-          <dt>Roles</dt>
-          <dd>
-            <ul class="tag-list" aria-label="Assigned roles">
-              <li *ngFor="let g of profile.groups" class="tag">{{ g }}</li>
-            </ul>
-          </dd>
-        </div>
-      </dl>
+      <div class="job-import-actions">
+        <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim()" (click)="searchJobPosting()">
+          {{ 'HOME.SEARCH' | translate }}
+        </button>
+        <button type="button" class="btn-primary" [disabled]="!jobUrl.trim()" (click)="submitAsCompany()">
+          {{ 'HOME.USE_FOR_NEW_COMPANY' | translate }}
+        </button>
+      </div>
     </div>
   </section>
 
-  <p role="alert" *ngIf="profileError">Could not load profile.</p>
+  <p role="alert" *ngIf="profileError">{{ 'HOME.PROFILE_ERROR' | translate }}</p>
 
   <!-- Quick navigation -->
   <section aria-labelledby="nav-heading">
-    <h2 id="nav-heading">Where do you want to go?</h2>
+    <h2 id="nav-heading">{{ 'HOME.NAV_HEADING' | translate }}</h2>
     <ul class="quick-nav" role="list">
       <li>
         <a routerLink="/companies">
-          <span class="quick-nav__title">Companies</span>
-          <span class="quick-nav__desc">Manage companies you are applying to.</span>
+          <span class="quick-nav__title">{{ 'HOME.NAV_COMPANIES_TITLE' | translate }}</span>
+          <span class="quick-nav__desc">{{ 'HOME.NAV_COMPANIES_DESC' | translate }}</span>
         </a>
       </li>
       <li>
         <a routerLink="/applications">
-          <span class="quick-nav__title">Applications</span>
-          <span class="quick-nav__desc">Track your job applications and their status.</span>
+          <span class="quick-nav__title">{{ 'HOME.NAV_APPLICATIONS_TITLE' | translate }}</span>
+          <span class="quick-nav__desc">{{ 'HOME.NAV_APPLICATIONS_DESC' | translate }}</span>
         </a>
       </li>
     </ul>

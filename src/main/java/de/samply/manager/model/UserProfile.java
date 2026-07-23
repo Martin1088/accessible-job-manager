@@ -27,6 +27,9 @@ public class UserProfile {
     private String name;
     private String email;
 
+    @Enumerated(EnumType.STRING)
+    private Language language;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -17,4 +17,12 @@ export class ApplicationService {
   create(req: ApplicationRequest): Observable<Application> {
     return this.http.post<Application>(this.apiUrl, req);
   }
+
+  update(id: number, req: ApplicationRequest): Observable<Application> {
+    return this.http.put<Application>(`${this.apiUrl}/${id}`, req);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

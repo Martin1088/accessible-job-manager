@@ -9,10 +9,12 @@ import { CompanyListComponent } from './user/company-list/company-list.component
 import { ApplicationListComponent } from './user/application-list/application-list.component';
 import { DocumentsComponent } from './user/documents/documents.component';
 import { HomeComponent } from './user/home/home.component';
+import { ProfileComponent } from './user/profile/profile.component';
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'applications', component: ApplicationListComponent, canActivate: [authGuard, userGuard] },
   { path: 'documents',    component: DocumentsComponent,       canActivate: [authGuard, userGuard] },
   { path: 'companies',    component: CompanyListComponent,     canActivate: [authGuard, userGuard] },

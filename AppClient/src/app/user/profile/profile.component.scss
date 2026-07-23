@@ -1,0 +1,16 @@
+main {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.profile-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 1.5rem;
+  margin: 1.5rem 0 0;
+  font-size: 0.95rem;
+
+  dt { font-weight: 600; color: #64748b; }
+  dd { margin: 0; }
+}

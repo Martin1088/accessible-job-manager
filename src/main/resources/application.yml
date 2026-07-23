@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: accessible-job-manager
+  devtools:
+    add-properties: false
+  datasource:
+    url: ${MANAGER_DB_URL:jdbc:postgresql://localhost:5432/manager}
+    username: ${MANAGER_DB_USER:manager}
+    password: ${MANAGER_DB_PASSWORD:manager}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  data:
+    jpa:
+      repositories:
+        enabled: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 22MB
+  security:
+    oauth2:
+      client:
+        registration:
+          authentik:
+            client-id: ${OIDC_CLIENT_ID:crwWfMQ8Ml9hSqnhzIjUNX8xsB2Q4pedrR2QU4jh}
+            client-secret: ${OIDC_CLIENT_SECRET:Vfc6Ebg5P6FPUhxk6qX7BFsd1YCB4tE4ia1MFhLRsfGZ3U72lF2rjah8tx5Psk1nU5N13hIrr5qgymwzs5twZniMfE1rwUlxs8HUWvhkkaN4AXxo9ZTlJ1lKqxhCMQOw}
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+            scope: "openid, email, profile"
+            redirect-uri: ${OIDC_REDIRECT_URI:http://localhost:8060/login/oauth2/code/authentik}
+        provider:
+          authentik:
+            issuer-uri: ${OIDC_ISSUER_URI:http://localhost:9000/application/o/access-job-manager/}
+            authorization-uri: ${OIDC_AUTH_URI:http://localhost:9000/application/o/authorize/}
+
+gotenberg:
+  url: ${GOTENBERG_URL:http://localhost:3000}
+
+storage:
+  s3:
+    endpoint: ${S3_ENDPOINT:http://localhost:3900}
+    region: garage
+    bucket: ${S3_BUCKET:job-manager}
+    access-key: ${ACCESS_KEY:GK671d588f544252fc82ebfdf7}
+    secret-key: ${SECRET_KEY:f50541d1c15b75814e2c9c758dc42ff4302d3002391ca3e60db305e642a569a0}
+
+server:
+  port: 8060
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2.client: DEBUG
+    org.springframework.web.client: DEBUG
+    org.springframework.security.oauth2: TRACE
+job-manager:
+  metrics:
+    enabled: true
+    log-status-transitions: true
+salutation:
+  male: geehrter Herr
+  female: geehrte Frau
+  team: geehrtes HR Team

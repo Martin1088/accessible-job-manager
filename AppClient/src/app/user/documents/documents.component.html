@@ -1,8 +1,8 @@
-<main id="main-content">
+<main id="main-content" tabindex="-1">
   <div class="page-header">
-    <h1>Cover Letter Templates</h1>
+    <h1>{{ 'DOCUMENTS.TITLE' | translate }}</h1>
     <button type="button" class="btn-upload" (click)="fileInput.click()" [disabled]="uploading">
-      <span aria-hidden="true">↑</span> {{ uploading ? 'Uploading…' : 'Upload .docx' }}
+      <span aria-hidden="true">↑</span> {{ (uploading ? 'DOCUMENTS.UPLOADING' : 'DOCUMENTS.UPLOAD') | translate }}
     </button>
     <input #fileInput type="file"
            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -13,30 +13,70 @@
   <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <section class="upload-form" *ngIf="showUploadForm" aria-labelledby="upload-heading">
-    <h2 id="upload-heading">New template</h2>
-    <p class="upload-filename">File: <strong>{{ pendingFile?.name }}</strong></p>
+    <h2 id="upload-heading">{{ (editingId ? 'DOCUMENTS.EDIT_TEMPLATE_HEADING' : 'DOCUMENTS.NEW_TEMPLATE_HEADING') | translate }}</h2>
+    <p class="upload-filename" *ngIf="!editingId">{{ 'DOCUMENTS.FILE_LABEL' | translate }} <strong>{{ pendingFile?.name }}</strong></p>
     <div class="field">
-      <label for="doc-label">Label <span aria-hidden="true">*</span></label>
+      <label for="doc-label">{{ 'DOCUMENTS.LABEL_FIELD' | translate }} <span aria-hidden="true">*</span></label>
       <input id="doc-label" name="doc-label" type="text"
              [(ngModel)]="pendingLabel" required
              aria-required="true"
-             placeholder="e.g. Standard cover letter EN"/>
+             [attr.placeholder]="'DOCUMENTS.LABEL_PLACEHOLDER' | translate"/>
+    </div>
+    <div class="field">
+      <label for="doc-language">{{ 'DOCUMENTS.LANGUAGE_FIELD' | translate }}</label>
+      <select id="doc-language" name="doc-language" [(ngModel)]="pendingLanguage">
+        <option *ngFor="let l of languageOptions" [value]="l.value">{{ l.label | translate }}</option>
+      </select>
     </div>
     <div class="upload-actions">
-      <button type="button" class="btn-primary" (click)="confirmUpload()"
+      <button type="button" class="btn-primary" (click)="editingId ? saveEdit() : confirmUpload()"
               [disabled]="uploading || !pendingLabel.trim()">
-        {{ uploading ? 'Uploading…' : 'Upload' }}
+        {{ (uploading ? 'DOCUMENTS.UPLOADING' : (editingId ? 'DOCUMENTS.SAVE_ACTION' : 'DOCUMENTS.UPLOAD_ACTION')) | translate }}
       </button>
       <button type="button" class="btn-cancel" (click)="cancelUpload()" [disabled]="uploading">
-        Cancel
+        {{ 'COMMON.CANCEL' | translate }}
       </button>
     </div>
   </section>
 
+  <div class="filter-bar" role="search" [attr.aria-label]="'DOCUMENTS.FILTER_ARIA' | translate">
+    <div class="filter-group">
+      <label for="search-field">{{ 'DOCUMENTS.SEARCH_FIELD_LABEL' | translate }}</label>
+      <select id="search-field" [(ngModel)]="searchField">
+        <option *ngFor="let f of searchFields" [value]="f.value">{{ f.label | translate }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="search-term">{{ 'DOCUMENTS.SEARCH_LABEL' | translate }}</label>
+      <input id="search-term" type="search" [(ngModel)]="searchTerm"
+             [attr.placeholder]="'DOCUMENTS.SEARCH_PLACEHOLDER' | translate"
+             [attr.aria-label]="'DOCUMENTS.SEARCH_ARIA' | translate"/>
+    </div>
+    <div class="filter-group">
+      <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
+      <select id="filter-year" [(ngModel)]="filterYear">
+        <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
+        <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
+      <select id="filter-month" [(ngModel)]="filterMonth">
+        <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
+        <option *ngFor="let i of monthIndexes" [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+      </select>
+    </div>
+    <button type="button" class="btn-cancel" (click)="clearFilter()" *ngIf="filterActive"
+            [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
+      {{ 'COMMON.CLEAR_FILTER' | translate }}
+    </button>
+  </div>
+
   <app-data-table
-    caption="Cover letter templates"
+    caption="DOCUMENTS.TABLE_CAPTION"
     [columns]="columns"
-    [rows]="rows"
-    emptyMessage="No cover letter templates uploaded yet.">
+    [rows]="filteredRows"
+    [actions]="actions"
+    emptyMessage="DOCUMENTS.EMPTY">
   </app-data-table>
 </main>

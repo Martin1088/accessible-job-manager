@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-company-form',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, TranslatePipe],
   templateUrl: './company-form.component.html',
   styleUrl: './company-form.component.scss',
   standalone: true,
@@ -25,16 +27,19 @@ export class CompanyFormComponent implements OnInit {
   importMode = false;
   jsonError = '';
 
+  // Values are translation keys, translated via the `translate` pipe in the
+  // template so the options stay in sync when the language is switched.
   readonly genderOptions: { value: string; label: string }[] = [
-    { value: 'FEMALE', label: 'Female' },
-    { value: 'MALE', label: 'Male' },
-    { value: 'DIVERSE', label: 'Diverse' },
+    { value: 'FEMALE', label: 'COMPANIES.GENDER_FEMALE' },
+    { value: 'MALE', label: 'COMPANIES.GENDER_MALE' },
+    { value: 'DIVERSE', label: 'COMPANIES.GENDER_DIVERSE' },
   ];
 
   constructor(
     private companyService: CompanyService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -71,12 +76,16 @@ export class CompanyFormComponent implements OnInit {
     if (this.isEditMode && this.companyId) {
       this.companyService.update(this.companyId, this.company).subscribe({
         next: () => this.router.navigate(['/companies']),
-        error: () => this.errorMessage = 'Failed to update company.'
+        error: (err: HttpErrorResponse) => {
+          this.errorMessage = err.status === 409
+            ? (err.error ?? this.translate.instant('COMPANIES.ERROR_UPDATE_CONFLICT'))
+            : this.translate.instant('COMPANIES.ERROR_UPDATE');
+        }
       });
     } else {
       this.companyService.create(this.company).subscribe({
         next: () => this.router.navigate(['/companies']),
-        error: () => this.errorMessage = 'Failed to create company.'
+        error: () => this.errorMessage = this.translate.instant('COMPANIES.ERROR_CREATE')
       });
     }
   }
@@ -100,7 +109,7 @@ export class CompanyFormComponent implements OnInit {
         };
         this.importMode = false;
       } catch {
-        this.jsonError = 'Invalid JSON file.';
+        this.jsonError = this.translate.instant('COMPANIES.JSON_INVALID');
       }
     };
     reader.readAsText(file);

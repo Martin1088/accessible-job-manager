@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Data
 @ToString(exclude = "company")
@@ -22,6 +25,9 @@ public class CompanyPosition {
     private String contactTitle;
     private String contactLastName;
 
+    @Enumerated(EnumType.STRING)
+    private Language applyLanguage;
+
     private String email;
     private String website;
     private String notes;
@@ -29,4 +35,7 @@ public class CompanyPosition {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }

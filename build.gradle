@@ -15,6 +15,8 @@ repositories {
     }
 }
 
+configurations { mockitoAgent }
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -33,8 +35,12 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly libs.org.springframework.boot.spring.boot.devtools
     testImplementation libs.org.springframework.boot.spring.boot.starter.test
+    testRuntimeOnly 'com.h2database:h2'
     testImplementation libs.org.springframework.security.spring.security.test
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
+    mockitoAgent(platform('org.springframework.boot:spring-boot-dependencies:3.4.4'))
+    mockitoAgent('org.mockito:mockito-core') { transitive = false }
 }
 
 
@@ -63,22 +69,29 @@ tasks.withType(Javadoc) {
 test {
     useJUnitPlatform()
     failOnNoDiscoveredTests = false
-    exclude '**/*'
+    exclude '**/AngularTemplateApplicationTests.class'
+    jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}", "-Dnet.bytebuddy.experimental=true"
 }
 
 def frontendDir = "$projectDir/AppClient"
 def staticDir = "$projectDir/src/main/resources/static"
 
+// `npm run build` runs `ng build` with outputPath set (in angular.json) to
+// write directly into src/main/resources/static, then moves the browser/
+// subfolder contents up a level. There's no separate dist/ copy step to do
+// afterwards - a previous copyFrontend Copy task pointed at a dist/ path
+// that's never populated anymore and was always a NO-SOURCE no-op.
+//
+// outputs.dir is declared explicitly so Gradle (in particular the
+// configuration cache) knows this Exec task writes into staticDir and
+// correctly invalidates processResources' snapshot of src/main/resources
+// afterwards. Without it, application.yml was intermittently missing from
+// the built jar because processResources could reuse a stale, pre-npm-build
+// snapshot of that directory.
 tasks.register('npmBuild', Exec) {
     workingDir frontendDir
     commandLine '/bin/sh', '-c', 'npm run build'
+    outputs.dir(staticDir)
 }
 
-
-tasks.register('copyFrontend', Copy) {
-    dependsOn npmBuild
-    from "$frontendDir/dist/app-client/browser"
-    into staticDir
-}
-
-processResources.dependsOn copyFrontend
+processResources.dependsOn npmBuild

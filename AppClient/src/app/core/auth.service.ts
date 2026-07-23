@@ -25,4 +25,9 @@ export class AuthService {
   readonly isUser$     = this.me$.pipe(
     map(me => !!me && !me?.groups?.includes('ADVISOR') && !me?.groups?.includes('REVIEWER'))
   );
+
+  logout(): void {
+    fetch('/logout', { method: 'POST', credentials: 'include' })
+      .then(() => window.location.href = '/');
+  }
 }

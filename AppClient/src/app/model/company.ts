@@ -17,6 +17,7 @@ export interface CompanyPosition {
   email?: string;
   website?: string;
   notes?: string;
+  createdAt?: string;
 }
 
 export interface Company {

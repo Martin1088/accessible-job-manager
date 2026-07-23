@@ -1,18 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService, UserMe } from '../../core/auth.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, FormsModule, TranslatePipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
   profile: UserMe | null = null;
   profileError = false;
+
+  jobUrl = '';
 
   constructor(private auth: AuthService, private router: Router) {}
 
@@ -26,5 +30,13 @@ export class HomeComponent implements OnInit {
       },
       error: () => this.profileError = true,
     });
+  }
+
+  searchJobPosting(): void {
+    // TODO: fetch and parse the job posting at this.jobUrl
+  }
+
+  submitAsCompany(): void {
+    // TODO: navigate to /companies/new prefilled from the parsed posting
   }
 }

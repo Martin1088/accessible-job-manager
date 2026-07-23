@@ -1,15 +1,48 @@
-<main id="main-content">
-  <h1>Companies</h1>
+<main id="main-content" tabindex="-1">
+  <h1>{{ 'COMPANIES.TITLE' | translate }}</h1>
 
   <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <button (click)="create()">+ Add Company</button>
+  <button (click)="create()">{{ 'COMPANIES.ADD' | translate }}</button>
+
+  <div class="filter-bar" role="search" [attr.aria-label]="'COMPANIES.FILTER_ARIA' | translate">
+    <div class="filter-group">
+      <label for="search-field">{{ 'COMPANIES.SEARCH_FIELD_LABEL' | translate }}</label>
+      <select id="search-field" [(ngModel)]="searchField">
+        <option *ngFor="let f of searchFields" [value]="f.value">{{ f.label | translate }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="search-term">{{ 'COMPANIES.SEARCH_LABEL' | translate }}</label>
+      <input id="search-term" type="search" [(ngModel)]="searchTerm"
+             [attr.placeholder]="'COMPANIES.SEARCH_PLACEHOLDER' | translate"
+             [attr.aria-label]="'COMPANIES.SEARCH_ARIA' | translate"/>
+    </div>
+    <div class="filter-group">
+      <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
+      <select id="filter-year" [(ngModel)]="filterYear">
+        <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
+        <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
+      <select id="filter-month" [(ngModel)]="filterMonth">
+        <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
+        <option *ngFor="let i of monthIndexes" [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+      </select>
+    </div>
+    <button type="button" class="btn-clear" (click)="clearFilter()" *ngIf="filterActive"
+            [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
+      {{ 'COMMON.CLEAR_FILTER' | translate }}
+    </button>
+  </div>
 
   <app-data-table
-    caption="Company list"
+    caption="COMPANIES.TABLE_CAPTION"
     [columns]="columns"
-    [rows]="rows"
+    [rows]="filteredRows"
     [actions]="actions"
-    emptyMessage="No companies yet. Add one above.">
+    emptyMessage="COMPANIES.EMPTY">
   </app-data-table>
 </main>

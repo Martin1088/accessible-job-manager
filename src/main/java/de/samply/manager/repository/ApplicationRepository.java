@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     List<Application> findByUserId(String userId);
+
+    boolean existsByCompanyPositionId(Long companyPositionId);
 }
