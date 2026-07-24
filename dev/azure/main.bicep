@@ -15,10 +15,16 @@
 // feststeht (siehe Output oidcRedirectUri). Vorgehen: einmal mit einem Platzhalter
 // deployen, den echten Wert aus dem Output in Authentik als Redirect-URI eintragen,
 // danach erneut mit --parameters oidcRedirectUri='<echter Wert>' deployen.
+//
+// Postgres laeuft als Azure Database for PostgreSQL Flexible Server (managed).
+// Das Erstellen des Servers dauert beim ersten Deployment ca. 10-15 Minuten.
 // ---------------------------------------------------------------------------
 
 @description('Region fuer alle Ressourcen')
 param location string = resourceGroup().location
+
+@description('Region fuer den PostgreSQL Flexible Server. Getrennt von "location", weil manche Subscriptions (z.B. Trial) PostgreSQL Flexible Server in bestimmten Regionen sperren (Fehler "LocationIsOfferRestricted") - Server bleibt trotzdem oeffentlich erreichbar, nur mit minimal hoeherer Latenz.')
+param pgLocation string = 'westeurope'
 
 @description('Praefix fuer Ressourcennamen')
 param prefix string = 'ajm'
@@ -50,7 +56,7 @@ param appImage string = 'ghcr.io/martin1088/accessible-job-manager:latest'
 param appMinReplicas int = 0
 
 // ---------------------------------------------------------------------------
-// Storage: Account + File Share (Postgres-Daten) + Blob Container (Dokumente)
+// Storage: Account + Blob Container (Dokumente)
 // ---------------------------------------------------------------------------
 
 var storageName = '${prefix}${uniqueString(resourceGroup().id)}'
@@ -66,19 +72,6 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
     supportsHttpsTrafficOnly: true
-  }
-}
-
-resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2023-05-01' = {
-  parent: storage
-  name: 'default'
-}
-
-resource pgShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-05-01' = {
-  parent: fileService
-  name: 'pgdata'
-  properties: {
-    shareQuota: 8
   }
 }
 
@@ -128,79 +121,56 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
-// File Share im Environment registrieren
-resource envStorage 'Microsoft.App/managedEnvironments/storages@2024-03-01' = {
-  parent: env
-  name: 'pgdata'
+// ---------------------------------------------------------------------------
+// Postgres (managed: Azure Database for PostgreSQL Flexible Server)
+//
+// Oeffentlicher Zugriff + "AllowAzureServices"-Firewallregel: Container Apps
+// im Consumption-Plan haben keine feste ausgehende IP, daher kein VNet-Setup
+// noetig. Fuer produktive Daten waere private Netzwerkanbindung vorzuziehen.
+// ---------------------------------------------------------------------------
+
+resource pgFlex 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
+  name: '${prefix}-pg-${uniqueString(resourceGroup().id, pgLocation)}'
+  location: pgLocation
+  sku: {
+    name: 'Standard_B1ms'
+    tier: 'Burstable'
+  }
   properties: {
-    azureFile: {
-      accountName: storage.name
-      accountKey: storage.listKeys().keys[0].value
-      shareName: pgShare.name
-      accessMode: 'ReadWrite'
+    version: '16'
+    administratorLogin: 'manager'
+    administratorLoginPassword: pgPassword
+    storage: {
+      storageSizeGB: 32
+    }
+    backup: {
+      backupRetentionDays: 7
+      geoRedundantBackup: 'Disabled'
+    }
+    highAvailability: {
+      mode: 'Disabled'
+    }
+    network: {
+      publicNetworkAccess: 'Enabled'
     }
   }
 }
 
-// ---------------------------------------------------------------------------
-// Postgres (Container, internes TCP-Ingress)
-// ---------------------------------------------------------------------------
-
-resource postgres 'Microsoft.App/containerApps@2024-03-01' = {
-  name: '${prefix}-postgres'
-  location: location
+resource pgFlexFirewall 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2024-08-01' = {
+  parent: pgFlex
+  name: 'AllowAzureServices'
   properties: {
-    managedEnvironmentId: env.id
-    configuration: {
-      ingress: {
-        external: false
-        targetPort: 5432
-        transport: 'tcp'
-      }
-      secrets: [
-        {
-          name: 'pg-password'
-          value: pgPassword
-        }
-      ]
-    }
-    template: {
-      containers: [
-        {
-          name: 'postgres'
-          image: 'postgres:16'
-          resources: {
-            cpu: json('0.5')
-            memory: '1.0Gi'
-          }
-          env: [
-            { name: 'POSTGRES_DB', value: 'manager' }
-            { name: 'POSTGRES_USER', value: 'manager' }
-            { name: 'POSTGRES_PASSWORD', secretRef: 'pg-password' }
-            // Unterverzeichnis noetig: Azure Files legt Metadaten im Mount-Root ab
-            { name: 'PGDATA', value: '/var/lib/postgresql/data/pgdata' }
-          ]
-          volumeMounts: [
-            {
-              volumeName: 'pgdata'
-              mountPath: '/var/lib/postgresql/data'
-            }
-          ]
-        }
-      ]
-      volumes: [
-        {
-          name: 'pgdata'
-          storageName: envStorage.name
-          storageType: 'AzureFile'
-        }
-      ]
-      scale: {
-        // Zwingend 1/1: zwei Instanzen auf demselben Volume korrumpieren die DB
-        minReplicas: 1
-        maxReplicas: 1
-      }
-    }
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
+  }
+}
+
+resource pgFlexDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' = {
+  parent: pgFlex
+  name: 'manager'
+  properties: {
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
   }
 }
 
@@ -246,6 +216,9 @@ resource gotenberg 'Microsoft.App/containerApps@2024-03-01' = {
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: '${prefix}-app'
   location: location
+  dependsOn: [
+    pgFlexDb
+  ]
   properties: {
     managedEnvironmentId: env.id
     configuration: {
@@ -282,7 +255,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             {
               name: 'MANAGER_DB_URL'
-              value: 'jdbc:postgresql://${postgres.name}:5432/manager'
+              value: 'jdbc:postgresql://${pgFlex.properties.fullyQualifiedDomainName}:5432/manager?sslmode=require'
             }
             { name: 'MANAGER_DB_USER', value: 'manager' }
             { name: 'MANAGER_DB_PASSWORD', secretRef: 'pg-password' }
@@ -313,3 +286,4 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
 output appUrl string = 'https://${app.properties.configuration.ingress.fqdn}'
 output storageAccountName string = storage.name
 output oidcRedirectUri string = 'https://${app.properties.configuration.ingress.fqdn}/login/oauth2/code/authentik'
+output pgFlexFqdn string = pgFlex.properties.fullyQualifiedDomainName
