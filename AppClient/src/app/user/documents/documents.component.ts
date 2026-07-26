@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
@@ -32,6 +32,7 @@ function monthOf(iso: string | null | undefined): number | null {
   standalone: true,
   imports: [FormsModule, DataTableComponent, TranslatePipe],
   templateUrl: './documents.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './documents.component.scss',
 })
 export class DocumentsComponent implements OnInit {

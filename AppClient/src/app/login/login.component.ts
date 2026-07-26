@@ -1,6 +1,6 @@
 
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 const ERROR_MESSAGES: Record<string, string> = {
   wrong_role:    'Your account does not have the required role. Please try a different login option.',
@@ -12,6 +12,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   selector: 'app-login',
   imports: [RouterModule],
   templateUrl: './login.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {

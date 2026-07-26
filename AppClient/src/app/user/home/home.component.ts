@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,7 @@ import { AuthService, UserMe } from '../../core/auth.service';
   selector: 'app-home',
   imports: [RouterLink, FormsModule, TranslatePipe],
   templateUrl: './home.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {

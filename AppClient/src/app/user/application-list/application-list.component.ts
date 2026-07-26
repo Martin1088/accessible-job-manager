@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
@@ -33,6 +33,7 @@ function matchesFilter(iso: string | null | undefined, filterYear: number | '', 
   standalone: true,
   imports: [FormsModule, TranslatePipe],
   templateUrl: './application-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './application-list.component.scss',
 })
 export class ApplicationListComponent implements OnInit {

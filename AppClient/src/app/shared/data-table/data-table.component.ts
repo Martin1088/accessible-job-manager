@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, ChangeDetectionStrategy } from '@angular/core';
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -21,6 +21,7 @@ type SortDirection = 'asc' | 'desc' | null;
   standalone: true,
   imports: [TranslatePipe],
   templateUrl: './data-table.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './data-table.component.scss'
 })
 export class DataTableComponent implements OnChanges {

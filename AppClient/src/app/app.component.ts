@@ -1,6 +1,6 @@
 import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
-import { Component, HostListener, Inject, OnInit, DOCUMENT } from '@angular/core';
+import { Component, HostListener, Inject, OnInit, DOCUMENT, ChangeDetectionStrategy } from '@angular/core';
 import { CdkMenuModule } from '@angular/cdk/menu';
 import { TranslatePipe } from '@ngx-translate/core';
 import { filter } from 'rxjs/operators';
@@ -12,6 +12,7 @@ import { LanguageService } from './core/language.service';
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, CdkMenuModule, TranslatePipe],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {

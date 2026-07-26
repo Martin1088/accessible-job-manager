@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Company } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { Router } from '@angular/router';
@@ -23,6 +23,7 @@ function monthOf(iso: string | null | undefined): number | null {
   selector: 'app-company-list',
   imports: [FormsModule, DataTableComponent, TranslatePipe],
   templateUrl: './company-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './company-list.component.scss'
 })
 export class CompanyListComponent implements OnInit {

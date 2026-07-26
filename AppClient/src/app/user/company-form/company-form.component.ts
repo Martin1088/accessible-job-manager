@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
@@ -12,6 +12,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
   imports: [FormsModule, TranslatePipe],
   templateUrl: './company-form.component.html',
   styleUrl: './company-form.component.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class CompanyFormComponent implements OnInit {
