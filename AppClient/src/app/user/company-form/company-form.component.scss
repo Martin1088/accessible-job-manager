@@ -29,10 +29,9 @@ input, textarea {
   font-family: inherit;
   transition: border-color 0.15s;
 
-  &:focus {
-    outline: none;
-    border-color: #005fcc;
-    box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.2);
+  &:focus-visible {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
   }
 }
 

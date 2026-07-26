@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DataTableComponent, TableColumn } from '../../shared/data-table/data-table.component';
 import { Company } from '../../model/company';
 
@@ -26,16 +28,10 @@ interface PositionOption {
   label: string;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING:  'Pending',
-  ACCEPTED: 'Accepted',
-  REJECTED: 'Rejected',
-};
-
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent],
+  imports: [CommonModule, FormsModule, DataTableComponent, TranslatePipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -44,8 +40,8 @@ export class HomeComponent implements OnInit {
   // My Users
   userRows: any[] = [];
   userColumns: TableColumn[] = [
-    { label: 'Name',  field: 'name',  sortable: true },
-    { label: 'Email', field: 'email', sortable: true },
+    { label: 'ADVISOR.COL_NAME',  field: 'name',  sortable: true },
+    { label: 'ADVISOR.COL_EMAIL', field: 'email', sortable: true },
   ];
 
   // Suggestion form
@@ -57,18 +53,23 @@ export class HomeComponent implements OnInit {
   submitting = false;
 
   // Suggestions overview
+  private suggestions: SuggestionDto[] = [];
   suggestionRows: any[] = [];
   suggestionColumns: TableColumn[] = [
-    { label: 'User',     field: 'user',     sortable: true },
-    { label: 'Company',  field: 'company',  sortable: true },
-    { label: 'Position', field: 'position', sortable: true },
-    { label: 'Status',   field: 'status',   sortable: true },
-    { label: 'Date',     field: 'date',     sortable: true },
+    { label: 'ADVISOR.COL_USER',     field: 'user',     sortable: true },
+    { label: 'ADVISOR.COL_COMPANY',  field: 'company',  sortable: true },
+    { label: 'ADVISOR.COL_POSITION', field: 'position', sortable: true },
+    { label: 'ADVISOR.COL_STATUS',   field: 'status',   sortable: true },
+    { label: 'ADVISOR.COL_DATE',     field: 'date',     sortable: true },
   ];
 
   errorMessage = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private translate: TranslateService) {
+    this.translate.onLangChange.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.suggestionRows = this.toSuggestionRows(this.suggestions);
+    });
+  }
 
   ngOnInit(): void {
     this.loadMyUsers();
@@ -82,7 +83,7 @@ export class HomeComponent implements OnInit {
         this.assignedUsers = users;
         this.userRows = users.map(u => ({ name: u.name, email: u.email }));
       },
-      error: () => this.errorMessage = 'Failed to load users.',
+      error: () => this.errorMessage = this.translate.instant('ADVISOR.ERROR_LOAD_USERS'),
     });
   }
 
@@ -102,16 +103,21 @@ export class HomeComponent implements OnInit {
   private loadSuggestions(): void {
     this.http.get<SuggestionDto[]>('/api/advisor/suggestions').subscribe({
       next: (list) => {
-        this.suggestionRows = list.map(s => ({
-          user:     s.targetUserName,
-          company:  s.companyName,
-          position: s.positionTitle,
-          status:   STATUS_LABELS[s.status] ?? s.status,
-          date:     s.createdAt ? s.createdAt.substring(0, 10) : '—',
-        }));
+        this.suggestions = list;
+        this.suggestionRows = this.toSuggestionRows(list);
       },
-      error: () => this.errorMessage = 'Failed to load suggestions.',
+      error: () => this.errorMessage = this.translate.instant('ADVISOR.ERROR_LOAD_SUGGESTIONS'),
     });
+  }
+
+  private toSuggestionRows(list: SuggestionDto[]): any[] {
+    return list.map(s => ({
+      user:     s.targetUserName,
+      company:  s.companyName,
+      position: s.positionTitle,
+      status:   this.translate.instant('ADVISOR.STATUS_' + s.status),
+      date:     s.createdAt ? s.createdAt.substring(0, 10) : '—',
+    }));
   }
 
   submitSuggestion(): void {
@@ -119,7 +125,7 @@ export class HomeComponent implements OnInit {
     this.formSuccess = false;
 
     if (!this.form.targetUserId || !this.form.companyPositionId) {
-      this.formError = 'Please select a user and a position.';
+      this.formError = this.translate.instant('ADVISOR.ERROR_SELECT_REQUIRED');
       return;
     }
 
@@ -136,7 +142,7 @@ export class HomeComponent implements OnInit {
         this.loadSuggestions();
       },
       error: () => {
-        this.formError = 'Failed to create suggestion. Please try again.';
+        this.formError = this.translate.instant('ADVISOR.ERROR_CREATE_SUGGESTION');
         this.submitting = false;
       },
     });
