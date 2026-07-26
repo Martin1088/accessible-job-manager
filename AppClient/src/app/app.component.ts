@@ -1,6 +1,6 @@
 import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
-import { AsyncPipe, NgIf, DOCUMENT } from '@angular/common';
-import { Component, HostListener, Inject, OnInit } from '@angular/core';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { Component, HostListener, Inject, OnInit, DOCUMENT } from '@angular/core';
 import { CdkMenuModule } from '@angular/cdk/menu';
 import { TranslatePipe } from '@ngx-translate/core';
 import { filter } from 'rxjs/operators';
