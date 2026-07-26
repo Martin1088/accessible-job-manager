@@ -91,8 +91,17 @@ def staticDir = "$projectDir/src/main/resources/static"
 // snapshot of that directory.
 tasks.register('npmBuild', Exec) {
     workingDir frontendDir
-    commandLine '/bin/sh', '-c', 'npm run build'
+    inputs.dir("$frontendDir/src")
+    inputs.dir("$frontendDir/public")
+    inputs.files(
+        "$frontendDir/package.json",
+        "$frontendDir/package-lock.json",
+        "$frontendDir/angular.json",
+        "$frontendDir/tsconfig.json",
+        "$frontendDir/tsconfig.app.json"
+    )
     outputs.dir(staticDir)
+    commandLine '/bin/sh', '-c', 'npm run build'
 }
 
 processResources.dependsOn npmBuild
