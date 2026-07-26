@@ -5,71 +5,87 @@
       <span aria-hidden="true">↑</span> {{ (uploading ? 'DOCUMENTS.UPLOADING' : 'DOCUMENTS.UPLOAD') | translate }}
     </button>
     <input #fileInput type="file"
-           accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-           style="display:none" tabindex="-1" aria-hidden="true"
-           (change)="onFileSelected($event)">
+      accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      style="display:none" tabindex="-1" aria-hidden="true"
+      (change)="onFileSelected($event)">
   </div>
 
-  <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  @if (errorMessage) {
+    <p role="alert" class="error">{{ errorMessage }}</p>
+  }
 
-  <section class="upload-form" *ngIf="showUploadForm" aria-labelledby="upload-heading">
-    <h2 id="upload-heading">{{ (editingId ? 'DOCUMENTS.EDIT_TEMPLATE_HEADING' : 'DOCUMENTS.NEW_TEMPLATE_HEADING') | translate }}</h2>
-    <p class="upload-filename" *ngIf="!editingId">{{ 'DOCUMENTS.FILE_LABEL' | translate }} <strong>{{ pendingFile?.name }}</strong></p>
-    <div class="field">
-      <label for="doc-label">{{ 'DOCUMENTS.LABEL_FIELD' | translate }} <span aria-hidden="true">*</span></label>
-      <input id="doc-label" name="doc-label" type="text"
-             [(ngModel)]="pendingLabel" required
-             aria-required="true"
-             [attr.placeholder]="'DOCUMENTS.LABEL_PLACEHOLDER' | translate"/>
-    </div>
-    <div class="field">
-      <label for="doc-language">{{ 'DOCUMENTS.LANGUAGE_FIELD' | translate }}</label>
-      <select id="doc-language" name="doc-language" [(ngModel)]="pendingLanguage">
-        <option *ngFor="let l of languageOptions" [value]="l.value">{{ l.label | translate }}</option>
-      </select>
-    </div>
-    <div class="upload-actions">
-      <button type="button" class="btn-primary" (click)="editingId ? saveEdit() : confirmUpload()"
-              [disabled]="uploading || !pendingLabel.trim()">
-        {{ (uploading ? 'DOCUMENTS.UPLOADING' : (editingId ? 'DOCUMENTS.SAVE_ACTION' : 'DOCUMENTS.UPLOAD_ACTION')) | translate }}
-      </button>
-      <button type="button" class="btn-cancel" (click)="cancelUpload()" [disabled]="uploading">
-        {{ 'COMMON.CANCEL' | translate }}
-      </button>
-    </div>
-  </section>
+  @if (showUploadForm) {
+    <section class="upload-form" aria-labelledby="upload-heading">
+      <h2 id="upload-heading">{{ (editingId ? 'DOCUMENTS.EDIT_TEMPLATE_HEADING' : 'DOCUMENTS.NEW_TEMPLATE_HEADING') | translate }}</h2>
+      @if (!editingId) {
+        <p class="upload-filename">{{ 'DOCUMENTS.FILE_LABEL' | translate }} <strong>{{ pendingFile?.name }}</strong></p>
+      }
+      <div class="field">
+        <label for="doc-label">{{ 'DOCUMENTS.LABEL_FIELD' | translate }} <span aria-hidden="true">*</span></label>
+        <input id="doc-label" name="doc-label" type="text"
+          [(ngModel)]="pendingLabel" required
+          aria-required="true"
+          [attr.placeholder]="'DOCUMENTS.LABEL_PLACEHOLDER' | translate"/>
+      </div>
+      <div class="field">
+        <label for="doc-language">{{ 'DOCUMENTS.LANGUAGE_FIELD' | translate }}</label>
+        <select id="doc-language" name="doc-language" [(ngModel)]="pendingLanguage">
+          @for (l of languageOptions; track l) {
+            <option [value]="l.value">{{ l.label | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="upload-actions">
+        <button type="button" class="btn-primary" (click)="editingId ? saveEdit() : confirmUpload()"
+          [disabled]="uploading || !pendingLabel.trim()">
+          {{ (uploading ? 'DOCUMENTS.UPLOADING' : (editingId ? 'DOCUMENTS.SAVE_ACTION' : 'DOCUMENTS.UPLOAD_ACTION')) | translate }}
+        </button>
+        <button type="button" class="btn-cancel" (click)="cancelUpload()" [disabled]="uploading">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </section>
+  }
 
   <div class="filter-bar" role="search" [attr.aria-label]="'DOCUMENTS.FILTER_ARIA' | translate">
     <div class="filter-group">
       <label for="search-field">{{ 'DOCUMENTS.SEARCH_FIELD_LABEL' | translate }}</label>
       <select id="search-field" [(ngModel)]="searchField">
-        <option *ngFor="let f of searchFields" [value]="f.value">{{ f.label | translate }}</option>
+        @for (f of searchFields; track f) {
+          <option [value]="f.value">{{ f.label | translate }}</option>
+        }
       </select>
     </div>
     <div class="filter-group">
       <label for="search-term">{{ 'DOCUMENTS.SEARCH_LABEL' | translate }}</label>
       <input id="search-term" type="search" [(ngModel)]="searchTerm"
-             [attr.placeholder]="'DOCUMENTS.SEARCH_PLACEHOLDER' | translate"
-             [attr.aria-label]="'DOCUMENTS.SEARCH_ARIA' | translate"/>
+        [attr.placeholder]="'DOCUMENTS.SEARCH_PLACEHOLDER' | translate"
+        [attr.aria-label]="'DOCUMENTS.SEARCH_ARIA' | translate"/>
     </div>
     <div class="filter-group">
       <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
       <select id="filter-year" [(ngModel)]="filterYear">
         <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
-        <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+        @for (y of availableYears; track y) {
+          <option [value]="y">{{ y }}</option>
+        }
       </select>
     </div>
     <div class="filter-group">
       <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
       <select id="filter-month" [(ngModel)]="filterMonth">
         <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
-        <option *ngFor="let i of monthIndexes" [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+        @for (i of monthIndexes; track i) {
+          <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+        }
       </select>
     </div>
-    <button type="button" class="btn-cancel" (click)="clearFilter()" *ngIf="filterActive"
-            [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
-      {{ 'COMMON.CLEAR_FILTER' | translate }}
-    </button>
+    @if (filterActive) {
+      <button type="button" class="btn-cancel" (click)="clearFilter()"
+        [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
+        {{ 'COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    }
   </div>
 
   <app-data-table

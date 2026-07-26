@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -30,7 +30,7 @@ function monthOf(iso: string | null | undefined): number | null {
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent, TranslatePipe],
+  imports: [FormsModule, DataTableComponent, TranslatePipe],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.scss',
 })

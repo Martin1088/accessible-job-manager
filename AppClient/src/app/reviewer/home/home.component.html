@@ -1,53 +1,62 @@
 <main id="main-content" tabindex="-1">
   <h1>{{ 'REVIEWER.TITLE' | translate }}</h1>
 
-  <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  @if (errorMessage) {
+    <p role="alert" class="error">{{ errorMessage }}</p>
+  }
 
   <section aria-labelledby="users-heading">
     <h2 id="users-heading">{{ 'REVIEWER.USERS_HEADING' | translate }}</h2>
 
-    <p role="status" *ngIf="users.length === 0">{{ 'REVIEWER.EMPTY' | translate }}</p>
+    @if (users.length === 0) {
+      <p role="status">{{ 'REVIEWER.EMPTY' | translate }}</p>
+    }
 
-    <ul class="user-list" role="list" *ngIf="users.length > 0">
-      <li *ngFor="let user of users" class="user-card">
-        <div class="user-header">
-          <div class="avatar" aria-hidden="true">{{ user.name.charAt(0).toUpperCase() }}</div>
-          <div class="user-info">
-            <strong>{{ user.name }}</strong>
-            <span>{{ user.email }}</span>
-          </div>
-        </div>
-
-        <table class="doc-table" [attr.aria-label]="'REVIEWER.DOC_CAPTION' | translate: { name: user.name }">
-          <caption class="sr-only">{{ 'REVIEWER.DOC_CAPTION' | translate: { name: user.name } }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{{ 'REVIEWER.COL_LABEL' | translate }}</th>
-              <th scope="col">{{ 'REVIEWER.COL_FILE' | translate }}</th>
-              <th scope="col">{{ 'REVIEWER.COL_TYPE' | translate }}</th>
-              <th scope="col">{{ 'REVIEWER.COL_GRANTED' | translate }}</th>
-              <th scope="col">{{ 'REVIEWER.COL_DOWNLOAD' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let doc of user.documents">
-              <td>{{ doc.label }}</td>
-              <td>{{ doc.filename }}</td>
-              <td>{{ doc.type }}</td>
-              <td>{{ doc.grantedAt }}</td>
-              <td>
-                <button type="button"
+    @if (users.length > 0) {
+      <ul class="user-list" role="list">
+        @for (user of users; track user) {
+          <li class="user-card">
+            <div class="user-header">
+              <div class="avatar" aria-hidden="true">{{ user.name.charAt(0).toUpperCase() }}</div>
+              <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>{{ user.email }}</span>
+              </div>
+            </div>
+            <table class="doc-table" [attr.aria-label]="'REVIEWER.DOC_CAPTION' | translate: { name: user.name }">
+              <caption class="sr-only">{{ 'REVIEWER.DOC_CAPTION' | translate: { name: user.name } }}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'REVIEWER.COL_LABEL' | translate }}</th>
+                  <th scope="col">{{ 'REVIEWER.COL_FILE' | translate }}</th>
+                  <th scope="col">{{ 'REVIEWER.COL_TYPE' | translate }}</th>
+                  <th scope="col">{{ 'REVIEWER.COL_GRANTED' | translate }}</th>
+                  <th scope="col">{{ 'REVIEWER.COL_DOWNLOAD' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (doc of user.documents; track doc) {
+                  <tr>
+                    <td>{{ doc.label }}</td>
+                    <td>{{ doc.filename }}</td>
+                    <td>{{ doc.type }}</td>
+                    <td>{{ doc.grantedAt }}</td>
+                    <td>
+                      <button type="button"
                         class="btn-download"
                         (click)="download(doc)"
                         [disabled]="downloading[doc.id]"
                         [attr.aria-label]="'REVIEWER.DOWNLOAD_ARIA' | translate: { label: doc.label }">
-                  {{ (downloading[doc.id] ? 'REVIEWER.DOWNLOADING' : 'REVIEWER.DOWNLOAD') | translate }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </li>
-    </ul>
+                        {{ (downloading[doc.id] ? 'REVIEWER.DOWNLOADING' : 'REVIEWER.DOWNLOAD') | translate }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </li>
+        }
+      </ul>
+    }
   </section>
 </main>

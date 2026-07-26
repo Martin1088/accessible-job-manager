@@ -1,7 +1,9 @@
 <main id="main-content" tabindex="-1">
   <h1>{{ 'COMPANIES.TITLE' | translate }}</h1>
 
-  <div role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
+  @if (errorMessage) {
+    <div role="alert">{{ errorMessage }}</div>
+  }
 
   <button (click)="create()">{{ 'COMPANIES.ADD' | translate }}</button>
 
@@ -9,33 +11,41 @@
     <div class="filter-group">
       <label for="search-field">{{ 'COMPANIES.SEARCH_FIELD_LABEL' | translate }}</label>
       <select id="search-field" [(ngModel)]="searchField">
-        <option *ngFor="let f of searchFields" [value]="f.value">{{ f.label | translate }}</option>
+        @for (f of searchFields; track f) {
+          <option [value]="f.value">{{ f.label | translate }}</option>
+        }
       </select>
     </div>
     <div class="filter-group">
       <label for="search-term">{{ 'COMPANIES.SEARCH_LABEL' | translate }}</label>
       <input id="search-term" type="search" [(ngModel)]="searchTerm"
-             [attr.placeholder]="'COMPANIES.SEARCH_PLACEHOLDER' | translate"
-             [attr.aria-label]="'COMPANIES.SEARCH_ARIA' | translate"/>
+        [attr.placeholder]="'COMPANIES.SEARCH_PLACEHOLDER' | translate"
+        [attr.aria-label]="'COMPANIES.SEARCH_ARIA' | translate"/>
     </div>
     <div class="filter-group">
       <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
       <select id="filter-year" [(ngModel)]="filterYear">
         <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
-        <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+        @for (y of availableYears; track y) {
+          <option [value]="y">{{ y }}</option>
+        }
       </select>
     </div>
     <div class="filter-group">
       <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
       <select id="filter-month" [(ngModel)]="filterMonth">
         <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
-        <option *ngFor="let i of monthIndexes" [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+        @for (i of monthIndexes; track i) {
+          <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+        }
       </select>
     </div>
-    <button type="button" class="btn-clear" (click)="clearFilter()" *ngIf="filterActive"
-            [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
-      {{ 'COMMON.CLEAR_FILTER' | translate }}
-    </button>
+    @if (filterActive) {
+      <button type="button" class="btn-clear" (click)="clearFilter()"
+        [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
+        {{ 'COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    }
   </div>
 
   <app-data-table

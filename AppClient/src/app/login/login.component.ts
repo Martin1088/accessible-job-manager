@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Component, OnInit } from '@angular/core';
 
@@ -10,7 +10,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })

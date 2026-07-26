@@ -1,5 +1,5 @@
 import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, HostListener, Inject, OnInit, DOCUMENT } from '@angular/core';
 import { CdkMenuModule } from '@angular/cdk/menu';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -10,7 +10,7 @@ import { LanguageService } from './core/language.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, NgIf, CdkMenuModule, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, CdkMenuModule, TranslatePipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

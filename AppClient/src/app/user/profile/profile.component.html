@@ -1,19 +1,16 @@
 <main id="main-content" tabindex="-1">
   <h1>{{ 'PROFILE.TITLE' | translate }}</h1>
 
-  <ng-container *ngIf="auth.me$ | async as me; else loading">
+  @if (auth.me$ | async; as me) {
     <dl class="profile-info">
       <dt>{{ 'PROFILE.NAME' | translate }}</dt>
       <dd>{{ me.name }}</dd>
-
       <dt>{{ 'PROFILE.EMAIL' | translate }}</dt>
       <dd>{{ me.email }}</dd>
-
       <dt>{{ 'PROFILE.ROLES' | translate }}</dt>
       <dd>{{ me.groups.length ? me.groups.join(', ') : ('PROFILE.ROLE_USER' | translate) }}</dd>
     </dl>
-  </ng-container>
-  <ng-template #loading>
+  } @else {
     <p role="status">{{ 'PROFILE.LOADING' | translate }}</p>
-  </ng-template>
+  }
 </main>

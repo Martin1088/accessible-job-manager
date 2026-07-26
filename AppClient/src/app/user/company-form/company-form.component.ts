@@ -4,12 +4,12 @@ import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-company-form',
-  imports: [FormsModule, CommonModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe],
   templateUrl: './company-form.component.html',
   styleUrl: './company-form.component.scss',
   standalone: true,

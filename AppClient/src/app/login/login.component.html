@@ -3,7 +3,9 @@
     <h1>Job Manager</h1>
     <p class="subtitle">Sign in to continue</p>
 
-    <p role="alert" class="error" *ngIf="error">{{ error }}</p>
+    @if (error) {
+      <p role="alert" class="error">{{ error }}</p>
+    }
 
     <nav aria-label="Login options">
       <ul role="list" class="login-options">

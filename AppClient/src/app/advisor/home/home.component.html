@@ -1,7 +1,9 @@
 <main id="main-content" tabindex="-1">
   <h1>{{ 'ADVISOR.TITLE' | translate }}</h1>
 
-  <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  @if (errorMessage) {
+    <p role="alert" class="error">{{ errorMessage }}</p>
+  }
 
   <!-- My Users -->
   <section aria-labelledby="my-users-heading">
@@ -18,45 +20,53 @@
   <section aria-labelledby="suggest-heading">
     <h2 id="suggest-heading">{{ 'ADVISOR.SUGGEST_HEADING' | translate }}</h2>
 
-    <p role="status" class="success" *ngIf="formSuccess">{{ 'ADVISOR.SUGGESTION_SUCCESS' | translate }}</p>
-    <p role="alert"  class="error"   *ngIf="formError">{{ formError }}</p>
+    @if (formSuccess) {
+      <p role="status" class="success">{{ 'ADVISOR.SUGGESTION_SUCCESS' | translate }}</p>
+    }
+    @if (formError) {
+      <p role="alert"  class="error"  >{{ formError }}</p>
+    }
 
     <form (ngSubmit)="submitSuggestion()" #suggestionForm="ngForm" novalidate>
       <div class="form-group">
         <label for="targetUser">{{ 'ADVISOR.FIELD_USER' | translate }}</label>
         <select id="targetUser"
-                name="targetUserId"
-                [(ngModel)]="form.targetUserId"
-                required
-                aria-required="true">
+          name="targetUserId"
+          [(ngModel)]="form.targetUserId"
+          required
+          aria-required="true">
           <option value="" disabled>{{ 'ADVISOR.SELECT_USER_PLACEHOLDER' | translate }}</option>
-          <option *ngFor="let u of assignedUsers" [value]="u.userId">
-            {{ u.name }} ({{ u.email }})
-          </option>
+          @for (u of assignedUsers; track u) {
+            <option [value]="u.userId">
+              {{ u.name }} ({{ u.email }})
+            </option>
+          }
         </select>
       </div>
 
       <div class="form-group">
         <label for="position">{{ 'ADVISOR.FIELD_POSITION' | translate }}</label>
         <select id="position"
-                name="companyPositionId"
-                [(ngModel)]="form.companyPositionId"
-                required
-                aria-required="true">
+          name="companyPositionId"
+          [(ngModel)]="form.companyPositionId"
+          required
+          aria-required="true">
           <option value="" disabled>{{ 'ADVISOR.SELECT_POSITION_PLACEHOLDER' | translate }}</option>
-          <option *ngFor="let p of positionOptions" [value]="p.id">
-            {{ p.label }}
-          </option>
+          @for (p of positionOptions; track p) {
+            <option [value]="p.id">
+              {{ p.label }}
+            </option>
+          }
         </select>
       </div>
 
       <div class="form-group">
         <label for="message">{{ 'ADVISOR.FIELD_MESSAGE' | translate }}</label>
         <textarea id="message"
-                  name="message"
-                  [(ngModel)]="form.message"
-                  rows="4"
-                  [attr.placeholder]="'ADVISOR.MESSAGE_PLACEHOLDER' | translate"></textarea>
+          name="message"
+          [(ngModel)]="form.message"
+          rows="4"
+        [attr.placeholder]="'ADVISOR.MESSAGE_PLACEHOLDER' | translate"></textarea>
       </div>
 
       <button type="submit" [disabled]="submitting">

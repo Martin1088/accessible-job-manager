@@ -2,26 +2,30 @@
   <h1>{{ 'HOME.TITLE' | translate }}</h1>
 
   <!-- Job posting import -->
-  <section aria-labelledby="job-import-heading" *ngIf="profile">
-    <h2 id="job-import-heading">{{ 'HOME.JOB_IMPORT_HEADING' | translate }}</h2>
-    <div class="job-import-card">
-      <div class="field">
-        <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }}</label>
-        <input id="job-url" name="job-url" type="url" [(ngModel)]="jobUrl"
-               [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"/>
+  @if (profile) {
+    <section aria-labelledby="job-import-heading">
+      <h2 id="job-import-heading">{{ 'HOME.JOB_IMPORT_HEADING' | translate }}</h2>
+      <div class="job-import-card">
+        <div class="field">
+          <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }}</label>
+          <input id="job-url" name="job-url" type="url" [(ngModel)]="jobUrl"
+            [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"/>
+        </div>
+        <div class="job-import-actions">
+          <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim()" (click)="searchJobPosting()">
+            {{ 'HOME.SEARCH' | translate }}
+          </button>
+          <button type="button" class="btn-primary" [disabled]="!jobUrl.trim()" (click)="submitAsCompany()">
+            {{ 'HOME.USE_FOR_NEW_COMPANY' | translate }}
+          </button>
+        </div>
       </div>
-      <div class="job-import-actions">
-        <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim()" (click)="searchJobPosting()">
-          {{ 'HOME.SEARCH' | translate }}
-        </button>
-        <button type="button" class="btn-primary" [disabled]="!jobUrl.trim()" (click)="submitAsCompany()">
-          {{ 'HOME.USE_FOR_NEW_COMPANY' | translate }}
-        </button>
-      </div>
-    </div>
-  </section>
+    </section>
+  }
 
-  <p role="alert" *ngIf="profileError">{{ 'HOME.PROFILE_ERROR' | translate }}</p>
+  @if (profileError) {
+    <p role="alert">{{ 'HOME.PROFILE_ERROR' | translate }}</p>
+  }
 
   <!-- Quick navigation -->
   <section aria-labelledby="nav-heading">

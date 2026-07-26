@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Company } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
@@ -21,7 +21,7 @@ function monthOf(iso: string | null | undefined): number | null {
 
 @Component({
   selector: 'app-company-list',
-  imports: [CommonModule, FormsModule, DataTableComponent, TranslatePipe],
+  imports: [FormsModule, DataTableComponent, TranslatePipe],
   templateUrl: './company-list.component.html',
   styleUrl: './company-list.component.scss'
 })

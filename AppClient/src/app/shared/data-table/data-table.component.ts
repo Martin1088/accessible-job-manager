@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export interface TableColumn {
@@ -19,7 +19,7 @@ type SortDirection = 'asc' | 'desc' | null;
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './data-table.component.html',
   styleUrl: './data-table.component.scss'
 })
