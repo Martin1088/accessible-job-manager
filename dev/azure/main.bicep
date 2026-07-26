@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// accessible-job-manager - Demo-Deployment auf Azure Container Apps
+// accessible-job-manager - demo deployment to Azure Container Apps
 //
 // Deployment:
 //   az group create -n ajm-demo -l germanywestcentral
@@ -11,25 +11,25 @@
 //                    oidcAuthUri='https://.../application/o/authorize/' \
 //                    oidcRedirectUri='https://<expected-app-fqdn>/login/oauth2/code/authentik'
 //
-// oidcRedirectUri haengt vom FQDN der App ab, der erst nach dem ersten Deployment
-// feststeht (siehe Output oidcRedirectUri). Vorgehen: einmal mit einem Platzhalter
-// deployen, den echten Wert aus dem Output in Authentik als Redirect-URI eintragen,
-// danach erneut mit --parameters oidcRedirectUri='<echter Wert>' deployen.
+// oidcRedirectUri depends on the app's FQDN, which is only known after the
+// first deployment (see output oidcRedirectUri). Workflow: deploy once with a
+// placeholder, register the real value from the output as the redirect URI in
+// Authentik, then deploy again with --parameters oidcRedirectUri='<real value>'.
 //
-// Postgres laeuft als Azure Database for PostgreSQL Flexible Server (managed).
-// Das Erstellen des Servers dauert beim ersten Deployment ca. 10-15 Minuten.
+// Postgres runs as Azure Database for PostgreSQL Flexible Server (managed).
+// Provisioning the server takes about 10-15 minutes on the first deployment.
 // ---------------------------------------------------------------------------
 
-@description('Region fuer alle Ressourcen')
+@description('Region for all resources')
 param location string = resourceGroup().location
 
-@description('Region fuer den PostgreSQL Flexible Server. Getrennt von "location", weil manche Subscriptions (z.B. Trial) PostgreSQL Flexible Server in bestimmten Regionen sperren (Fehler "LocationIsOfferRestricted") - Server bleibt trotzdem oeffentlich erreichbar, nur mit minimal hoeherer Latenz.')
+@description('Region for the PostgreSQL Flexible Server. Kept separate from "location" because some subscriptions (e.g. trial) block PostgreSQL Flexible Server in certain regions (error "LocationIsOfferRestricted") - the server is still publicly reachable, just with slightly higher latency.')
 param pgLocation string = 'westeurope'
 
-@description('Praefix fuer Ressourcennamen')
+@description('Prefix for resource names')
 param prefix string = 'ajm'
 
-@description('Postgres-Passwort')
+@description('Postgres password')
 @secure()
 param pgPassword string
 
@@ -40,23 +40,23 @@ param oidcClientId string
 @secure()
 param oidcClientSecret string
 
-@description('OIDC Redirect URI (login/oauth2/code/authentik unter der App-FQDN)')
+@description('OIDC Redirect URI (login/oauth2/code/authentik under the app FQDN)')
 param oidcRedirectUri string
 
-@description('OIDC Issuer URI (Authentik oder Entra ID)')
+@description('OIDC Issuer URI (Authentik or Entra ID)')
 param oidcIssuerUri string
 
-@description('OIDC Authorization URI (Authorize-Endpoint)')
+@description('OIDC Authorization URI (authorize endpoint)')
 param oidcAuthUri string
 
-@description('Container-Image der Anwendung')
+@description('Container image of the application')
 param appImage string = 'ghcr.io/martin1088/accessible-job-manager:latest'
 
-@description('Minimale Replicas der App. 0 = scale-to-zero (guenstiger, aber Cold Start)')
+@description('Minimum replicas of the app. 0 = scale-to-zero (cheaper, but cold start)')
 param appMinReplicas int = 0
 
 // ---------------------------------------------------------------------------
-// Storage: Account + Blob Container (Dokumente)
+// Storage: account + blob container (documents)
 // ---------------------------------------------------------------------------
 
 var storageName = '${prefix}${uniqueString(resourceGroup().id)}'
@@ -89,7 +89,7 @@ resource documentsContainer 'Microsoft.Storage/storageAccounts/blobServices/cont
 }
 
 // ---------------------------------------------------------------------------
-// Log Analytics (von Container Apps Environment benoetigt)
+// Log Analytics (required by the Container Apps environment)
 // ---------------------------------------------------------------------------
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
@@ -124,9 +124,9 @@ resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
 // ---------------------------------------------------------------------------
 // Postgres (managed: Azure Database for PostgreSQL Flexible Server)
 //
-// Oeffentlicher Zugriff + "AllowAzureServices"-Firewallregel: Container Apps
-// im Consumption-Plan haben keine feste ausgehende IP, daher kein VNet-Setup
-// noetig. Fuer produktive Daten waere private Netzwerkanbindung vorzuziehen.
+// Public access + "AllowAzureServices" firewall rule: Container Apps on the
+// Consumption plan have no fixed outbound IP, so no VNet setup is needed.
+// For production data, private networking would be preferable.
 // ---------------------------------------------------------------------------
 
 resource pgFlex 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
@@ -175,7 +175,7 @@ resource pgFlexDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-0
 }
 
 // ---------------------------------------------------------------------------
-// Gotenberg (PDF-Konvertierung, intern)
+// Gotenberg (PDF conversion, internal)
 // ---------------------------------------------------------------------------
 
 resource gotenberg 'Microsoft.App/containerApps@2024-03-01' = {
@@ -210,7 +210,7 @@ resource gotenberg 'Microsoft.App/containerApps@2024-03-01' = {
 }
 
 // ---------------------------------------------------------------------------
-// Anwendung (Spring Boot + Angular im JAR)
+// Application (Spring Boot + Angular in the JAR)
 // ---------------------------------------------------------------------------
 
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
