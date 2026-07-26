@@ -1,0 +1,157 @@
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem 4rem;
+}
+
+.guide-intro {
+  font-size: 1.05rem;
+  color: #374151;
+  max-width: 62ch;
+  margin: 0 0 1.5rem;
+}
+
+/* Signature element: this page reflects the roles actually on the signed-in
+   account, and offers a direct jump to the dashboard section(s) that apply. */
+.role-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  background: #eef4ff;
+  border: 1px solid #cfe0ff;
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.75rem;
+}
+
+.role-banner__label {
+  font-weight: 600;
+  color: #1a1a2e;
+  font-size: 0.9rem;
+}
+
+.role-chip {
+  background: #005fcc;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+}
+
+.role-banner__jump {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #005fcc;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; border-radius: 2px; }
+}
+
+.guide-toc {
+  margin-bottom: 2.5rem;
+
+  &__heading {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin: 0 0 0.6rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.6rem;
+  }
+
+  a {
+    display: block;
+    padding: 0.65rem 0.9rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #1a1a2e;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:hover { border-color: #005fcc; box-shadow: 0 2px 8px rgba(0, 95, 204, 0.12); }
+    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
+.guide-sections section {
+  margin-bottom: 2.5rem;
+  scroll-margin-top: 1rem;
+
+  h2 {
+    font-size: 1.3rem;
+    color: #1a1a2e;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.4rem;
+    margin: 0 0 0.9rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+    color: #1a1a2e;
+    margin: 1.25rem 0 0.5rem;
+  }
+
+  p {
+    color: #374151;
+    max-width: 68ch;
+    margin: 0 0 0.75rem;
+  }
+
+  ul {
+    margin: 0 0 0.75rem 1.25rem;
+    color: #374151;
+
+    li { margin-bottom: 0.35rem; }
+  }
+}
+
+.shortcut-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  margin: 0.75rem 0;
+
+  .shortcut-row {
+    display: contents;
+  }
+
+  dt { margin: 0; }
+  dd { margin: 0; color: #374151; }
+}
+
+kbd {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: #1a1a2e;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  line-height: 1.4;
+}
+
+.shortcut-note {
+  font-size: 0.85rem;
+  color: #64748b;
+}

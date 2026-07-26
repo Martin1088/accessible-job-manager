@@ -1,35 +1,35 @@
 <main id="main-content" tabindex="-1">
-  <h1>Advisor Dashboard</h1>
+  <h1>{{ 'ADVISOR.TITLE' | translate }}</h1>
 
   <p role="alert" class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
   <!-- My Users -->
   <section aria-labelledby="my-users-heading">
-    <h2 id="my-users-heading">My Users</h2>
+    <h2 id="my-users-heading">{{ 'ADVISOR.MY_USERS_HEADING' | translate }}</h2>
     <app-data-table
-      caption="Users assigned to you"
+      caption="ADVISOR.MY_USERS_CAPTION"
       [columns]="userColumns"
       [rows]="userRows"
-      emptyMessage="No users are assigned to you yet.">
+      emptyMessage="ADVISOR.MY_USERS_EMPTY">
     </app-data-table>
   </section>
 
   <!-- Create Suggestion -->
   <section aria-labelledby="suggest-heading">
-    <h2 id="suggest-heading">Create Suggestion</h2>
+    <h2 id="suggest-heading">{{ 'ADVISOR.SUGGEST_HEADING' | translate }}</h2>
 
-    <p role="status" class="success" *ngIf="formSuccess">Suggestion sent successfully.</p>
+    <p role="status" class="success" *ngIf="formSuccess">{{ 'ADVISOR.SUGGESTION_SUCCESS' | translate }}</p>
     <p role="alert"  class="error"   *ngIf="formError">{{ formError }}</p>
 
     <form (ngSubmit)="submitSuggestion()" #suggestionForm="ngForm" novalidate>
       <div class="form-group">
-        <label for="targetUser">User *</label>
+        <label for="targetUser">{{ 'ADVISOR.FIELD_USER' | translate }}</label>
         <select id="targetUser"
                 name="targetUserId"
                 [(ngModel)]="form.targetUserId"
                 required
                 aria-required="true">
-          <option value="" disabled>— Select user —</option>
+          <option value="" disabled>{{ 'ADVISOR.SELECT_USER_PLACEHOLDER' | translate }}</option>
           <option *ngFor="let u of assignedUsers" [value]="u.userId">
             {{ u.name }} ({{ u.email }})
           </option>
@@ -37,13 +37,13 @@
       </div>
 
       <div class="form-group">
-        <label for="position">Position *</label>
+        <label for="position">{{ 'ADVISOR.FIELD_POSITION' | translate }}</label>
         <select id="position"
                 name="companyPositionId"
                 [(ngModel)]="form.companyPositionId"
                 required
                 aria-required="true">
-          <option value="" disabled>— Select position —</option>
+          <option value="" disabled>{{ 'ADVISOR.SELECT_POSITION_PLACEHOLDER' | translate }}</option>
           <option *ngFor="let p of positionOptions" [value]="p.id">
             {{ p.label }}
           </option>
@@ -51,28 +51,28 @@
       </div>
 
       <div class="form-group">
-        <label for="message">Message</label>
+        <label for="message">{{ 'ADVISOR.FIELD_MESSAGE' | translate }}</label>
         <textarea id="message"
                   name="message"
                   [(ngModel)]="form.message"
                   rows="4"
-                  placeholder="Optional note to the user…"></textarea>
+                  [attr.placeholder]="'ADVISOR.MESSAGE_PLACEHOLDER' | translate"></textarea>
       </div>
 
       <button type="submit" [disabled]="submitting">
-        {{ submitting ? 'Sending…' : 'Send Suggestion' }}
+        {{ (submitting ? 'ADVISOR.SENDING' : 'ADVISOR.SEND_SUGGESTION') | translate }}
       </button>
     </form>
   </section>
 
   <!-- Suggestions Overview -->
   <section aria-labelledby="suggestions-heading">
-    <h2 id="suggestions-heading">My Suggestions</h2>
+    <h2 id="suggestions-heading">{{ 'ADVISOR.MY_SUGGESTIONS_HEADING' | translate }}</h2>
     <app-data-table
-      caption="Suggestions you have made"
+      caption="ADVISOR.SUGGESTIONS_CAPTION"
       [columns]="suggestionColumns"
       [rows]="suggestionRows"
-      emptyMessage="No suggestions made yet.">
+      emptyMessage="ADVISOR.SUGGESTIONS_EMPTY">
     </app-data-table>
   </section>
 </main>

@@ -53,3 +53,6 @@ src/main/resources/static
 
 dev/meta
 dev/garage-data
+
+# Claude Code - personal/machine-local settings (permission allowlists etc.)
+.claude/settings.local.json

@@ -6,7 +6,7 @@ import de.samply.manager.model.Document;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.services.CoverLetterService;
-import de.samply.manager.services.DocumentStorageService;
+import de.samply.manager.services.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,7 +29,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CoverLetterController {
     private final CoverLetterService coverLetterService;
-    private final DocumentStorageService storageService;
+    private final StorageService storageService;
     private final DocumentRepository documentRepository;
     private final ApplicationRepository applicationRepository;
 

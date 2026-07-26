@@ -1,5 +1,5 @@
 main {
-  max-width: 1280px;
+  max-width: 1600px;
   margin: 2rem auto;
   padding: 0 1rem;
 }
@@ -127,11 +127,11 @@ main {
     border-collapse: collapse;
     font-size: 0.9rem;
 
-    col.col-company  { width: 10%; }
+    col.col-company  { width: 9%; }
     col.col-position { width: 14%; }
     col.col-status   { width: 16%; }
-    col.col-applied  { width: 8%; }
-    col.col-notes    { width: 12%; }
+    col.col-applied  { width: 11%; }
+    col.col-notes    { width: 10%; }
     col.col-cover    { width: 26%; }
     col.col-actions  { width: 14%; }
 

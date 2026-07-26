@@ -82,6 +82,7 @@
     <ng-template #accountMenu>
       <div class="account-menu" cdkMenu [attr.aria-label]="'ACCOUNT.TRIGGER_LABEL' | translate">
         <a routerLink="/profile" cdkMenuItem>{{ 'ACCOUNT.PROFILE' | translate }}</a>
+        <a routerLink="/guide" cdkMenuItem>{{ 'ACCOUNT.GUIDE' | translate }}</a>
         <button type="button" cdkMenuItem (click)="logout()">{{ 'ACCOUNT.LOGOUT' | translate }}</button>
       </div>
     </ng-template>

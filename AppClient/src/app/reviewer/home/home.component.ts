@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 interface SharedDocument {
   id: string;
@@ -20,7 +21,7 @@ interface ReviewerUser {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -29,12 +30,12 @@ export class HomeComponent implements OnInit {
   downloading: Record<string, boolean> = {};
   errorMessage = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.http.get<ReviewerUser[]>('/api/reviewer/users').subscribe({
       next: (users) => this.users = users,
-      error: () => this.errorMessage = 'Failed to load users.',
+      error: () => this.errorMessage = this.translate.instant('REVIEWER.ERROR_LOAD_USERS'),
     });
   }
 
@@ -49,7 +50,7 @@ export class HomeComponent implements OnInit {
         this.downloading[doc.id] = false;
       },
       error: () => {
-        this.errorMessage = 'Download failed.';
+        this.errorMessage = this.translate.instant('REVIEWER.ERROR_DOWNLOAD');
         this.downloading[doc.id] = false;
       },
     });

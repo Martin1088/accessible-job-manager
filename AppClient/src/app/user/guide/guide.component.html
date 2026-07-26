@@ -1,0 +1,95 @@
+<main id="main-content" tabindex="-1">
+  <h1>{{ 'GUIDE.TITLE' | translate }}</h1>
+
+  <p class="guide-intro">{{ 'GUIDE.INTRO' | translate }}</p>
+
+  <div class="role-banner" *ngIf="auth.me$ | async">
+    <span class="role-banner__label">{{ 'GUIDE.ROLE_BANNER_LABEL' | translate }}</span>
+    <span class="role-chip" *ngIf="auth.isUser$ | async">{{ 'GUIDE.ROLE_USER' | translate }}</span>
+    <span class="role-chip" *ngIf="auth.isAdvisor$ | async">{{ 'GUIDE.ROLE_ADVISOR' | translate }}</span>
+    <span class="role-chip" *ngIf="auth.isReviewer$ | async">{{ 'GUIDE.ROLE_REVIEWER' | translate }}</span>
+    <a class="role-banner__jump" href="#advisor-guide" *ngIf="auth.isAdvisor$ | async">{{ 'GUIDE.JUMP_ADVISOR' | translate }}</a>
+    <a class="role-banner__jump" href="#reviewer-guide" *ngIf="auth.isReviewer$ | async">{{ 'GUIDE.JUMP_REVIEWER' | translate }}</a>
+  </div>
+
+  <nav class="guide-toc" [attr.aria-label]="'GUIDE.TOC_LABEL' | translate">
+    <p class="guide-toc__heading">{{ 'GUIDE.TOC_LABEL' | translate }}</p>
+    <ul role="list">
+      <li><a href="#getting-started">{{ 'GUIDE.TOC_OVERVIEW' | translate }}</a></li>
+      <li><a href="#companies-applications">{{ 'GUIDE.TOC_COMPANIES' | translate }}</a></li>
+      <li><a href="#cover-letters">{{ 'GUIDE.TOC_DOCUMENTS' | translate }}</a></li>
+      <li><a href="#shortcuts-accessibility">{{ 'GUIDE.TOC_SHORTCUTS' | translate }}</a></li>
+      <li *ngIf="auth.isAdvisor$ | async"><a href="#advisor-guide">{{ 'GUIDE.TOC_ADVISOR' | translate }}</a></li>
+      <li *ngIf="auth.isReviewer$ | async"><a href="#reviewer-guide">{{ 'GUIDE.TOC_REVIEWER' | translate }}</a></li>
+    </ul>
+  </nav>
+
+  <div class="guide-sections">
+    <section id="getting-started" aria-labelledby="getting-started-heading">
+      <h2 id="getting-started-heading">{{ 'GUIDE.OVERVIEW_HEADING' | translate }}</h2>
+      <p>{{ 'GUIDE.OVERVIEW_BODY_1' | translate }}</p>
+      <p>{{ 'GUIDE.OVERVIEW_BODY_2' | translate }}</p>
+    </section>
+
+    <section id="companies-applications" aria-labelledby="companies-applications-heading">
+      <h2 id="companies-applications-heading">{{ 'GUIDE.COMPANIES_HEADING' | translate }}</h2>
+      <p>{{ 'GUIDE.COMPANIES_BODY_1' | translate }}</p>
+      <p>{{ 'GUIDE.COMPANIES_BODY_2' | translate }}</p>
+    </section>
+
+    <section id="cover-letters" aria-labelledby="cover-letters-heading">
+      <h2 id="cover-letters-heading">{{ 'GUIDE.DOCUMENTS_HEADING' | translate }}</h2>
+      <p>{{ 'GUIDE.DOCUMENTS_BODY_1' | translate }}</p>
+      <p>{{ 'GUIDE.DOCUMENTS_BODY_2' | translate }}</p>
+    </section>
+
+    <section id="shortcuts-accessibility" aria-labelledby="shortcuts-accessibility-heading">
+      <h2 id="shortcuts-accessibility-heading">{{ 'GUIDE.SHORTCUTS_HEADING' | translate }}</h2>
+
+      <ng-container *ngIf="auth.isUser$ | async">
+        <h3>{{ 'GUIDE.KEYS_HEADING' | translate }}</h3>
+        <p>{{ 'GUIDE.SHORTCUTS_INTRO' | translate }}</p>
+
+        <dl class="shortcut-list">
+          <div class="shortcut-row">
+            <dt><kbd aria-hidden="true">h</kbd></dt>
+            <dd>{{ 'NAV.HOME' | translate }}</dd>
+          </div>
+          <div class="shortcut-row">
+            <dt><kbd aria-hidden="true">a</kbd></dt>
+            <dd>{{ 'NAV.APPLICATIONS' | translate }}</dd>
+          </div>
+          <div class="shortcut-row">
+            <dt><kbd aria-hidden="true">d</kbd></dt>
+            <dd>{{ 'NAV.DOCUMENTS' | translate }}</dd>
+          </div>
+          <div class="shortcut-row">
+            <dt><kbd aria-hidden="true">c</kbd></dt>
+            <dd>{{ 'NAV.COMPANIES' | translate }}</dd>
+          </div>
+        </dl>
+        <p class="shortcut-note">{{ 'GUIDE.SHORTCUTS_WINDOWS_NOTE' | translate }}</p>
+      </ng-container>
+
+      <h3>{{ 'GUIDE.A11Y_HEADING' | translate }}</h3>
+      <ul role="list">
+        <li>{{ 'GUIDE.A11Y_SKIP_LINK' | translate }}</li>
+        <li>{{ 'GUIDE.A11Y_LANDMARKS' | translate }}</li>
+        <li>{{ 'GUIDE.A11Y_SORT' | translate }}</li>
+        <li>{{ 'GUIDE.A11Y_ALERTS' | translate }}</li>
+        <li>{{ 'GUIDE.A11Y_LANGUAGE' | translate }}</li>
+      </ul>
+    </section>
+
+    <section id="advisor-guide" aria-labelledby="advisor-guide-heading" *ngIf="auth.isAdvisor$ | async">
+      <h2 id="advisor-guide-heading">{{ 'GUIDE.ADVISOR_HEADING' | translate }}</h2>
+      <p>{{ 'GUIDE.ADVISOR_BODY_1' | translate }}</p>
+      <p>{{ 'GUIDE.ADVISOR_BODY_2' | translate }}</p>
+    </section>
+
+    <section id="reviewer-guide" aria-labelledby="reviewer-guide-heading" *ngIf="auth.isReviewer$ | async">
+      <h2 id="reviewer-guide-heading">{{ 'GUIDE.REVIEWER_HEADING' | translate }}</h2>
+      <p>{{ 'GUIDE.REVIEWER_BODY_1' | translate }}</p>
+    </section>
+  </div>
+</main>
