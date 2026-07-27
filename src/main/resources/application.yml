@@ -63,6 +63,11 @@ job-manager:
   metrics:
     enabled: true
     log-status-transitions: true
+  security:
+    role-groups:
+      USER: User
+      ADVISOR: Advisor
+      REVIEWER: Reviewer
 salutation:
   male: geehrter Herr
   female: geehrte Frau

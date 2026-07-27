@@ -27,8 +27,8 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  login(): void {
-    window.location.href = '/oauth2/authorization/authentik';
+  loginAsUser(): void {
+    window.location.href = '/api/login/as/user';
   }
 
   loginAsAdvisor(): void {
