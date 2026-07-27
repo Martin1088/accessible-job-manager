@@ -1,5 +1,5 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, OnChanges, ChangeDetectionStrategy } from '@angular/core';
+
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export interface TableColumn {
@@ -19,8 +19,9 @@ type SortDirection = 'asc' | 'desc' | null;
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './data-table.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './data-table.component.scss'
 })
 export class DataTableComponent implements OnChanges {

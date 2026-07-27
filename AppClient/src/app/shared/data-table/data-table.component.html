@@ -4,48 +4,61 @@
 
     <thead>
       <tr>
-        <th
-          scope="col"
-          *ngFor="let col of columns"
+        @for (col of columns; track col) {
+          <th
+            scope="col"
           [attr.aria-sort]="sortField === col.field
             ? (sortDirection === 'asc' ? 'ascending' : 'descending')
             : 'none'">
+            @if (col.sortable) {
+              <button
+                type="button"
+                (click)="sortBy(col.field)"
+                [attr.aria-label]="sortLabel(col)">
+                {{ col.label | translate }}
+                <span aria-hidden="true">{{ sortIcon(col.field) }}</span>
+              </button>
+            }
+            @if (!col.sortable) {
+              <span>{{ col.label | translate }}</span>
+            }
+          </th>
+        }
 
-          <button
-            *ngIf="col.sortable"
-            type="button"
-            (click)="sortBy(col.field)"
-            [attr.aria-label]="sortLabel(col)">
-            {{ col.label | translate }}
-            <span aria-hidden="true">{{ sortIcon(col.field) }}</span>
-          </button>
-
-          <span *ngIf="!col.sortable">{{ col.label | translate }}</span>
-        </th>
-
-        <th scope="col" *ngIf="actions.length > 0">{{ 'TABLE.ACTIONS' | translate }}</th>
+        @if (actions.length > 0) {
+          <th scope="col">{{ 'TABLE.ACTIONS' | translate }}</th>
+        }
       </tr>
     </thead>
 
     <tbody>
-      <tr *ngIf="sortedRows.length === 0">
-        <td [attr.colspan]="columns.length + (actions.length > 0 ? 1 : 0)">
-          <span role="status">{{ emptyMessage | translate }}</span>
-        </td>
-      </tr>
+      @if (sortedRows.length === 0) {
+        <tr>
+          <td [attr.colspan]="columns.length + (actions.length > 0 ? 1 : 0)">
+            <span role="status">{{ emptyMessage | translate }}</span>
+          </td>
+        </tr>
+      }
 
-      <tr *ngFor="let row of sortedRows">
-        <td *ngFor="let col of columns">{{ row[col.field] }}</td>
-        <td *ngIf="actions.length > 0">
-          <button
-            *ngFor="let action of actions"
-            type="button"
-            (click)="action.handler(row)"
-            [attr.aria-label]="action.ariaLabel(row)">
-            {{ action.label | translate }}
-          </button>
-        </td>
-      </tr>
+      @for (row of sortedRows; track row) {
+        <tr>
+          @for (col of columns; track col) {
+            <td>{{ row[col.field] }}</td>
+          }
+          @if (actions.length > 0) {
+            <td>
+              @for (action of actions; track action) {
+                <button
+                  type="button"
+                  (click)="action.handler(row)"
+                  [attr.aria-label]="action.ariaLabel(row)">
+                  {{ action.label | translate }}
+                </button>
+              }
+            </td>
+          }
+        </tr>
+      }
     </tbody>
   </table>
 </div>

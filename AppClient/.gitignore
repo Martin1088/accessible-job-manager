@@ -11,6 +11,9 @@
 npm-debug.log
 yarn-error.log
 
+# Locally downloaded test browser (see @puppeteer/browsers install chrome@stable)
+/chrome
+
 # IDEs and editors
 .idea/
 .project

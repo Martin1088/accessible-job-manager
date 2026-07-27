@@ -1,6 +1,6 @@
-import { CommonModule } from '@angular/common';
+
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 const ERROR_MESSAGES: Record<string, string> = {
   wrong_role:    'Your account does not have the required role. Please try a different login option.',
@@ -10,8 +10,9 @@ const ERROR_MESSAGES: Record<string, string> = {
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './login.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
@@ -26,8 +27,8 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  login(): void {
-    window.location.href = '/oauth2/authorization/authentik';
+  loginAsUser(): void {
+    window.location.href = '/api/login/as/user';
   }
 
   loginAsAdvisor(): void {

@@ -144,7 +144,6 @@ public class CoverLetterController {
 
     @PostMapping(value = "/personalize")
     public ResponseEntity<byte[]> personalizeTemplate(
-            @RequestBody byte[] template,
             @RequestParam("senderName") String senderName,
             @RequestParam("senderStreet") String senderStreet,
             @RequestParam("senderPostalCode") String senderPostalCode,
@@ -159,8 +158,7 @@ public class CoverLetterController {
                 "senderEmail", senderEmail
         );
 
-        byte[] personalized = coverLetterService.fillPersonalFields(
-                new ByteArrayInputStream(template), personalData);
+        byte[] personalized = coverLetterService.createTemplateWithHeader(personalData);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,

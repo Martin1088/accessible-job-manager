@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth.service';
 
@@ -8,6 +8,7 @@ import { AuthService } from '../../core/auth.service';
   selector: 'app-guide',
   imports: [CommonModule, TranslatePipe],
   templateUrl: './guide.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './guide.component.scss'
 })
 export class GuideComponent {

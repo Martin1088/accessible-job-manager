@@ -1,5 +1,4 @@
-import { DOCUMENT } from '@angular/common';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, DOCUMENT } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 export const SUPPORTED_LANGS = ['en', 'de', 'nl'] as const;

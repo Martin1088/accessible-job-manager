@@ -3,10 +3,10 @@
 # ============================
 FROM eclipse-temurin:21-jdk-jammy AS builder
 
-# Install Node.js 20
+# Install Node.js 24
 RUN apt-get update && \
     apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 

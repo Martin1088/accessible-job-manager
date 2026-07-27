@@ -2,91 +2,97 @@
 
 <header>
   <!-- User nav -->
-  <nav [attr.aria-label]="'NAV.USER_LABEL' | translate" *ngIf="auth.isUser$ | async">
-    <ul role="list">
-      <li>
-        <a routerLink="/" routerLinkActive="active"
-           [routerLinkActiveOptions]="{ exact: true }"
-           #rlaHome="routerLinkActive"
-           [attr.aria-current]="rlaHome.isActive ? 'page' : null"
-           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+H' : 'h'">
-          {{ 'NAV.HOME' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+H' : 'h' }}</kbd>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/applications" routerLinkActive="active"
-           #rlaApps="routerLinkActive"
-           [attr.aria-current]="rlaApps.isActive ? 'page' : null"
-           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+A' : 'a'">
-          {{ 'NAV.APPLICATIONS' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+A' : 'a' }}</kbd>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/documents" routerLinkActive="active"
-           #rlaDocs="routerLinkActive"
-           [attr.aria-current]="rlaDocs.isActive ? 'page' : null"
-           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+D' : 'd'">
-          {{ 'NAV.DOCUMENTS' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+D' : 'd' }}</kbd>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/companies" routerLinkActive="active"
-           #rlaCompanies="routerLinkActive"
-           [attr.aria-current]="rlaCompanies.isActive ? 'page' : null"
-           [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+C' : 'c'">
-          {{ 'NAV.COMPANIES' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+C' : 'c' }}</kbd>
-        </a>
-      </li>
-    </ul>
-  </nav>
+  @if (auth.isUser$ | async) {
+    <nav [attr.aria-label]="'NAV.USER_LABEL' | translate">
+      <ul role="list">
+        <li>
+          <a routerLink="/" routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            #rlaHome="routerLinkActive"
+            [attr.aria-current]="rlaHome.isActive ? 'page' : null"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+H' : 'h'">
+            {{ 'NAV.HOME' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+H' : 'h' }}</kbd>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/applications" routerLinkActive="active"
+            #rlaApps="routerLinkActive"
+            [attr.aria-current]="rlaApps.isActive ? 'page' : null"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+A' : 'a'">
+            {{ 'NAV.APPLICATIONS' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+A' : 'a' }}</kbd>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/documents" routerLinkActive="active"
+            #rlaDocs="routerLinkActive"
+            [attr.aria-current]="rlaDocs.isActive ? 'page' : null"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+D' : 'd'">
+            {{ 'NAV.DOCUMENTS' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+D' : 'd' }}</kbd>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/companies" routerLinkActive="active"
+            #rlaCompanies="routerLinkActive"
+            [attr.aria-current]="rlaCompanies.isActive ? 'page' : null"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+C' : 'c'">
+            {{ 'NAV.COMPANIES' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+C' : 'c' }}</kbd>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  }
 
   <!-- Advisor nav -->
-  <nav [attr.aria-label]="'NAV.ADVISOR_LABEL' | translate" *ngIf="auth.isAdvisor$ | async">
-    <ul role="list">
-      <li>
-        <a routerLink="/advisor" routerLinkActive="active"
-           [routerLinkActiveOptions]="{ exact: true }"
-           #rlaAdvisor="routerLinkActive"
-           [attr.aria-current]="rlaAdvisor.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
-      </li>
-    </ul>
-  </nav>
+  @if (auth.isAdvisor$ | async) {
+    <nav [attr.aria-label]="'NAV.ADVISOR_LABEL' | translate">
+      <ul role="list">
+        <li>
+          <a routerLink="/advisor" routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            #rlaAdvisor="routerLinkActive"
+          [attr.aria-current]="rlaAdvisor.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
+        </li>
+      </ul>
+    </nav>
+  }
 
   <!-- Reviewer nav -->
-  <nav [attr.aria-label]="'NAV.REVIEWER_LABEL' | translate" *ngIf="auth.isReviewer$ | async">
-    <ul role="list">
-      <li>
-        <a routerLink="/reviewer" routerLinkActive="active"
-           [routerLinkActiveOptions]="{ exact: true }"
-           #rlaReviewer="routerLinkActive"
-           [attr.aria-current]="rlaReviewer.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
-      </li>
-    </ul>
-  </nav>
+  @if (auth.isReviewer$ | async) {
+    <nav [attr.aria-label]="'NAV.REVIEWER_LABEL' | translate">
+      <ul role="list">
+        <li>
+          <a routerLink="/reviewer" routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            #rlaReviewer="routerLinkActive"
+          [attr.aria-current]="rlaReviewer.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
+        </li>
+      </ul>
+    </nav>
+  }
 
   <!-- Account controls -->
-  <div class="account-bar" *ngIf="auth.me$ | async as me">
-    <div class="lang-switch">
-      <label for="lang-select" class="sr-only">{{ 'LANGUAGE.LABEL' | translate }}</label>
-      <select id="lang-select" [value]="language.current()" (change)="onLanguageChange($event)">
-        <option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
-        <option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
-        <option value="nl">{{ 'LANGUAGE.NL' | translate }}</option>
-      </select>
-    </div>
-
-    <button type="button" class="account-trigger" [cdkMenuTriggerFor]="accountMenu">
-      {{ me.name }}
-    </button>
-
-    <ng-template #accountMenu>
-      <div class="account-menu" cdkMenu [attr.aria-label]="'ACCOUNT.TRIGGER_LABEL' | translate">
-        <a routerLink="/profile" cdkMenuItem>{{ 'ACCOUNT.PROFILE' | translate }}</a>
-        <a routerLink="/guide" cdkMenuItem>{{ 'ACCOUNT.GUIDE' | translate }}</a>
-        <button type="button" cdkMenuItem (click)="logout()">{{ 'ACCOUNT.LOGOUT' | translate }}</button>
+  @if (auth.me$ | async; as me) {
+    <div class="account-bar">
+      <div class="lang-switch">
+        <label for="lang-select" class="sr-only">{{ 'LANGUAGE.LABEL' | translate }}</label>
+        <select id="lang-select" [value]="language.current()" (change)="onLanguageChange($event)">
+          <option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
+          <option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
+          <option value="nl">{{ 'LANGUAGE.NL' | translate }}</option>
+        </select>
       </div>
-    </ng-template>
-  </div>
+      <button type="button" class="account-trigger" [cdkMenuTriggerFor]="accountMenu">
+        {{ me.name }}
+      </button>
+      <ng-template #accountMenu>
+        <div class="account-menu" cdkMenu [attr.aria-label]="'ACCOUNT.TRIGGER_LABEL' | translate">
+          <a routerLink="/profile" cdkMenuItem>{{ 'ACCOUNT.PROFILE' | translate }}</a>
+          <a routerLink="/guide" cdkMenuItem>{{ 'ACCOUNT.GUIDE' | translate }}</a>
+          <button type="button" cdkMenuItem (click)="logout()">{{ 'ACCOUNT.LOGOUT' | translate }}</button>
+        </div>
+      </ng-template>
+    </div>
+  }
 </header>
 
 <div class="sr-only" role="status">{{ language.announcement() }}</div>
