@@ -65,9 +65,9 @@ job-manager:
     log-status-transitions: true
   security:
     role-groups:
-      USER: User
-      ADVISOR: Advisor
-      REVIEWER: Reviewer
+      USER: ${GROUP_USER:User}
+      ADVISOR: ${GROUP_ADVISOR:Advisor}
+      REVIEWER: ${GROUP_REVIEWER:Reviewer}
 salutation:
   male: geehrter Herr
   female: geehrte Frau
