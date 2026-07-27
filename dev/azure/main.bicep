@@ -18,6 +18,11 @@
 //
 // Postgres runs as Azure Database for PostgreSQL Flexible Server (managed).
 // Provisioning the server takes about 10-15 minutes on the first deployment.
+//
+// groupUser/groupAdvisor/groupReviewer must match whatever the OIDC provider
+// puts in the "groups" claim. For Entra ID with cloud-only security groups,
+// that is the group's Object ID (a GUID), not its display name - pass the
+// GUIDs explicitly, e.g. --parameters groupUser='<object-id>'.
 // ---------------------------------------------------------------------------
 
 @description('Region for all resources')
@@ -48,6 +53,15 @@ param oidcIssuerUri string
 
 @description('OIDC Authorization URI (authorize endpoint)')
 param oidcAuthUri string
+
+@description('Entra ID / Authentik group (name or object ID) required for the User role')
+param groupUser string = 'User'
+
+@description('Entra ID / Authentik group (name or object ID) required for the Advisor role')
+param groupAdvisor string = 'Advisor'
+
+@description('Entra ID / Authentik group (name or object ID) required for the Reviewer role')
+param groupReviewer string = 'Reviewer'
 
 @description('Container image of the application')
 param appImage string = 'ghcr.io/martin1088/accessible-job-manager:latest'
@@ -268,6 +282,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'STORAGE_PROVIDER', value: 'azure' }
             { name: 'AZURE_STORAGE_CONNECTION_STRING', secretRef: 'storage-connection' }
             { name: 'AZURE_STORAGE_CONTAINER', value: documentsContainer.name }
+            { name: 'GROUP_USER', value: groupUser }
+            { name: 'GROUP_ADVISOR', value: groupAdvisor }
+            { name: 'GROUP_REVIEWER', value: groupReviewer }
           ]
         }
       ]
