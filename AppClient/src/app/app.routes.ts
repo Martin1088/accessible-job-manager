@@ -11,10 +11,14 @@ import { DocumentsComponent } from './user/documents/documents.component';
 import { HomeComponent } from './user/home/home.component';
 import { ProfileComponent } from './user/profile/profile.component';
 import { GuideComponent } from './user/guide/guide.component';
+import { ImpressumComponent } from './legal/impressum/impressum.component';
+import { DataProtectionComponent } from './legal/data-protection/data-protection.component';
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent, canActivate: [authGuard] },
+  { path: 'impressum', component: ImpressumComponent },
+  { path: 'datenschutz', component: DataProtectionComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'guide', component: GuideComponent, canActivate: [authGuard] },
   { path: 'applications', component: ApplicationListComponent, canActivate: [authGuard, userGuard] },

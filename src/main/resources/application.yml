@@ -68,7 +68,3 @@ job-manager:
       USER: ${GROUP_USER:User}
       ADVISOR: ${GROUP_ADVISOR:Advisor}
       REVIEWER: ${GROUP_REVIEWER:Reviewer}
-salutation:
-  male: geehrter Herr
-  female: geehrte Frau
-  team: geehrtes HR Team

@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   traefik:
     image: traefik:v2.11
@@ -103,8 +101,20 @@ services:
     networks:
       - web
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    restart: unless-stopped
+    networks:
+      - web
+
 volumes:
   postgres-data: {}
+  ollama_models: {}
 
 networks:
   web: {}

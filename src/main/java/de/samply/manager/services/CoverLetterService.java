@@ -1,6 +1,9 @@
 package de.samply.manager.services;
 
 import de.samply.manager.model.CompanyPosition;
+import de.samply.manager.model.Gender;
+import de.samply.manager.model.Language;
+import jakarta.xml.bind.JAXBElement;
 import org.docx4j.jaxb.Context;
 import org.docx4j.model.fields.FieldUpdater;
 import org.docx4j.model.fields.merge.DataFieldName;
@@ -26,6 +29,7 @@ import org.docx4j.wml.STFldCharType;
 import org.docx4j.wml.SectPr;
 import org.docx4j.wml.Text;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -41,6 +46,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,13 +56,12 @@ public class CoverLetterService {
 
     private final RestClient restClient;
     private final String gotenbergUrl;
+    private final MessageSource messageSource;
 
-    @Value("${salutation.male:Mr}")   private String salutationMale;
-    @Value("${salutation.female:Mrs}") private String salutationFemale;
-    @Value("${salutation.team:HR Team}") private String salutationTeam;
-
-    public CoverLetterService(@Value("${gotenberg.url}") String gotenbergUrl) {
+    public CoverLetterService(@Value("${gotenberg.url}") String gotenbergUrl,
+                              MessageSource messageSource) {
         this.gotenbergUrl = gotenbergUrl;
+        this.messageSource = messageSource;
         this.restClient = RestClient.create();
     }
 
@@ -74,6 +79,44 @@ public class CoverLetterService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         wordPackage.save(out);
         return out.toByteArray();
+    }
+
+    /**
+     * Plain-text rendering of a filled cover letter's body paragraphs (recipient
+     * address, date, subject, greeting, letter text), for use as an email body.
+     * The sender block lives in the header/footer part and is deliberately
+     * excluded, since the sender is already implied by the email's From address.
+     */
+    public String extractPlainText(byte[] docxBytes) throws Exception {
+        WordprocessingMLPackage wordPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docxBytes));
+        Body body = wordPackage.getMainDocumentPart().getJaxbElement().getBody();
+
+        return body.getContent().stream()
+                .filter(P.class::isInstance)
+                .map(P.class::cast)
+                .map(this::paragraphText)
+                .filter(text -> !text.isEmpty())
+                .collect(Collectors.joining("\n\n"));
+    }
+
+    /**
+     * Concatenates a paragraph's visible run text, skipping field-code runs
+     * (<w:instrText>, e.g. " DATE \@ \"dd.MM.yyyy\" ") that sit alongside the
+     * literal cached result Word actually displays for live fields like DATE
+     * (MERGEFIELDs don't have this problem: MailMerger replaces them with
+     * plain literal runs, leaving no field code behind).
+     */
+    private String paragraphText(P paragraph) {
+        StringBuilder sb = new StringBuilder();
+        for (Object runObj : paragraph.getContent()) {
+            if (!(runObj instanceof R run)) continue;
+            for (Object item : run.getContent()) {
+                if (item instanceof JAXBElement<?> el && "instrText".equals(el.getName().getLocalPart())) continue;
+                Object value = item instanceof JAXBElement<?> el ? el.getValue() : item;
+                if (value instanceof Text text) sb.append(text.getValue());
+            }
+        }
+        return sb.toString().trim();
     }
 
     /**
@@ -121,7 +164,7 @@ public class CoverLetterService {
         content.add(paragraphOf(factory, greetingRuns));
 
         content.add(factory.createP());
-        content.add(factory.createP()); // placeholder for the letter text
+        content.add(factory.createP());
         content.add(factory.createP());
 
         SectPr sectPr = body.getSectPr();
@@ -260,12 +303,19 @@ public class CoverLetterService {
                 .body(byte[].class);
     }
 
-    public String buildSalutation(CompanyPosition position) {
-        if (position.getContactGender() == null) return salutationTeam;
-        return switch (position.getContactGender()) {
-            case MALE   -> salutationMale + " " + formatName(position);
-            case FEMALE -> salutationFemale + " " + formatName(position);
-            case TEAM   -> salutationTeam;
+    public String buildSalutation(CompanyPosition position, Language language) {
+        Gender gender = position.getContactGender() != null ? position.getContactGender() : Gender.TEAM;
+        Locale locale = toLocale(language);
+        String phrase = messageSource.getMessage("salutation." + gender.name(), null, locale);
+        return gender == Gender.TEAM ? phrase : phrase + " " + formatName(position);
+    }
+
+    private static Locale toLocale(Language language) {
+        if (language == null) return Locale.GERMAN;
+        return switch (language) {
+            case GERMAN -> Locale.GERMAN;
+            case ENGLISH -> Locale.ENGLISH;
+            case DUTCH -> Locale.forLanguageTag("nl");
         };
     }
 

@@ -98,3 +98,12 @@
 <div class="sr-only" role="status">{{ language.announcement() }}</div>
 
 <router-outlet></router-outlet>
+
+<footer>
+  <nav [attr.aria-label]="'FOOTER.LEGAL_LABEL' | translate">
+    <ul role="list">
+      <li><a routerLink="/impressum">{{ 'FOOTER.IMPRESSUM' | translate }}</a></li>
+      <li><a routerLink="/datenschutz">{{ 'FOOTER.DATA_PROTECTION' | translate }}</a></li>
+    </ul>
+  </nav>
+</footer>

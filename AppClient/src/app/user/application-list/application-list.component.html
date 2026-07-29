@@ -160,6 +160,13 @@
               [attr.aria-label]="'APPLICATIONS.DOWNLOAD_WORD_ARIA' | translate: { company: row.companyName }">
               {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_WORD') | translate }}
             </button>
+            <button type="button"
+              class="btn-download"
+              [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
+              (click)="emailCoverLetter(row.id)"
+              [attr.aria-label]="'APPLICATIONS.SEND_EMAIL_ARIA' | translate: { company: row.companyName }">
+              {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.SEND_EMAIL') | translate }}
+            </button>
           </td>
           <td class="actions-cell">
             <button type="button" (click)="startEdit(row)"

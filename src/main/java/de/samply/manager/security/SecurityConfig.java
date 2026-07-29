@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 "/styles*.css"
                         ).permitAll()
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
+                        .requestMatchers("/impressum", "/datenschutz").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()

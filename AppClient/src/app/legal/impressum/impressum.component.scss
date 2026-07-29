@@ -1,0 +1,40 @@
+main {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+section {
+  margin-top: 2rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  color: #1a1a2e;
+}
+
+.legal-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 1.5rem;
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+
+  dt { font-weight: 600; color: #64748b; }
+  dd { margin: 0; }
+
+  a { color: #005fcc; }
+}
+
+/* Marks facts that must be filled in with real details before this page
+   is used for a live/public deployment (see AppClient CLAUDE.md a11y rules
+   for definition-list usage — this stays a normal <dd>, just styled). */
+.placeholder {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  background: #fff7ed;
+  border: 1px dashed #c2620a;
+  border-radius: 4px;
+  color: #9a3412;
+  font-style: italic;
+}

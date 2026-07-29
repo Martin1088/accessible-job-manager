@@ -300,6 +300,28 @@ export class ApplicationListComponent implements OnInit {
     this.fetchCoverLetter(appId, '/word', 'docx');
   }
 
+  emailCoverLetter(appId: number): void {
+    const docId = this.selectedTemplate[appId];
+    if (!docId) return;
+    this.downloading[appId] = true;
+    this.http.post<{ to: string; subject: string; body: string }>(
+      `/api/cover-letter/${appId}/fill/${docId}/email`, null
+    ).subscribe({
+      next: (res) => {
+        const to = res.to ?? '';
+        const mailto = `mailto:${to}?subject=${encodeURIComponent(res.subject)}&body=${encodeURIComponent(res.body)}`;
+        window.location.href = mailto;
+        this.downloading[appId] = false;
+        const row = this.rows.find(r => r.id === appId);
+        if (row) this.markAppliedToday(row);
+      },
+      error: () => {
+        this.errorMessage = this.translate.instant('APPLICATIONS.ERROR_COVER_LETTER');
+        this.downloading[appId] = false;
+      },
+    });
+  }
+
   private fetchCoverLetter(appId: number, urlSuffix: string, extension: string): void {
     const docId = this.selectedTemplate[appId];
     if (!docId) return;

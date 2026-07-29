@@ -17,7 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CoverLetterServiceTest {
 
-    private final CoverLetterService service = new CoverLetterService("http://localhost:1234");
+    private final CoverLetterService service = new CoverLetterService(
+            "http://localhost:1234", new org.springframework.context.support.StaticMessageSource());
 
     private static final Map<String, String> PERSONAL_DATA = Map.of(
             "senderName", "Jane Doe",
@@ -93,5 +94,28 @@ class CoverLetterServiceTest {
 
         assertThat(bodyText).contains("Acme Corp", "Industrial Ave 5", "12345 Metropolis",
                 "Backend Developer", "geehrter Herr Schmidt");
+    }
+
+    @Test
+    void extractPlainText_returnsBodyTextWithoutSenderHeaderBlock() throws Exception {
+        byte[] template = service.createTemplateWithHeader(PERSONAL_DATA);
+
+        Map<String, String> replacements = Map.of(
+                "company", "Acme Corp",
+                "street", "Industrial Ave 5",
+                "city", "12345 Metropolis",
+                "position", "Backend Developer",
+                "contact", "geehrter Herr Schmidt",
+                "date", LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+        );
+        byte[] filled = service.fillTemplate(new ByteArrayInputStream(template), replacements);
+
+        String text = service.extractPlainText(filled);
+
+        assertThat(text).contains("Acme Corp", "Industrial Ave 5", "12345 Metropolis",
+                "Bewerbung als", "Backend Developer", "Sehr geehrter Herr Schmidt");
+        assertThat(text).doesNotContain("Jane Doe", "jane@example.com");
+        assertThat(text).doesNotContain("DATE", "\\@");
+        assertThat(text).contains(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
     }
 }
