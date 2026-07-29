@@ -55,8 +55,6 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.language.init();
-
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {

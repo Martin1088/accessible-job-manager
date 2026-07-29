@@ -1,3 +1,20 @@
+/* Full-height flex shell so short pages (e.g. the login page) still push
+   the footer to the bottom of the viewport instead of leaving it hidden
+   below the fold — the footer carries the Impressum/Datenschutz links,
+   which must stay reachable from every page without scrolling past a
+   near-empty gap. */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Skip link — visually hidden until focused */
 .skip-link {
   position: absolute;

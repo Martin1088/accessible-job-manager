@@ -71,16 +71,16 @@
   }
 
   <!-- Account controls -->
-  @if (auth.me$ | async; as me) {
-    <div class="account-bar">
-      <div class="lang-switch">
-        <label for="lang-select" class="sr-only">{{ 'LANGUAGE.LABEL' | translate }}</label>
-        <select id="lang-select" [value]="language.current()" (change)="onLanguageChange($event)">
-          <option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
-          <option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
-          <option value="nl">{{ 'LANGUAGE.NL' | translate }}</option>
-        </select>
-      </div>
+  <div class="account-bar">
+    <div class="lang-switch">
+      <label for="lang-select" class="sr-only">{{ 'LANGUAGE.LABEL' | translate }}</label>
+      <select id="lang-select" [value]="language.current()" (change)="onLanguageChange($event)">
+        <option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
+        <option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
+        <option value="nl">{{ 'LANGUAGE.NL' | translate }}</option>
+      </select>
+    </div>
+    @if (auth.me$ | async; as me) {
       <button type="button" class="account-trigger" [cdkMenuTriggerFor]="accountMenu">
         {{ me.name }}
       </button>
@@ -91,13 +91,15 @@
           <button type="button" cdkMenuItem (click)="logout()">{{ 'ACCOUNT.LOGOUT' | translate }}</button>
         </div>
       </ng-template>
-    </div>
-  }
+    }
+  </div>
 </header>
 
 <div class="sr-only" role="status">{{ language.announcement() }}</div>
 
-<router-outlet></router-outlet>
+<div class="app-content">
+  <router-outlet></router-outlet>
+</div>
 
 <footer>
   <nav [attr.aria-label]="'FOOTER.LEGAL_LABEL' | translate">

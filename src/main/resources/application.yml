@@ -38,6 +38,11 @@ spring:
 gotenberg:
   url: ${GOTENBERG_URL:http://localhost:3000}
 
+job-posting:
+  parser:
+    ollama-url: ${OLLAMA_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:qwen2.5:3b}
+
 storage:
   provider: ${STORAGE_PROVIDER:s3}
   s3:
