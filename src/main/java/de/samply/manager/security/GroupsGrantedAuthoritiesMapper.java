@@ -30,9 +30,10 @@ public class GroupsGrantedAuthoritiesMapper implements GrantedAuthoritiesMapper 
         Object groupsClaim = null;
 
         if (authority instanceof OidcUserAuthority oidc) {
-            groupsClaim = oidc.getUserInfo() != null
-                    ? oidc.getUserInfo().getClaim("groups")
-                    : oidc.getIdToken().getClaim("groups");
+            groupsClaim = oidc.getIdToken().getClaim("groups");
+            if (groupsClaim == null && oidc.getUserInfo() != null) {
+                groupsClaim = oidc.getUserInfo().getClaim("groups");
+            }
         } else if (authority instanceof OAuth2UserAuthority oauth2) {
             groupsClaim = oauth2.getAttributes().get("groups");
         }
