@@ -9,6 +9,7 @@ public enum DocumentType {
     CV                   ("application/pdf",                                                                    "pdf"),
     COVER_LETTER_TEMPLATE("application/vnd.openxmlformats-officedocument.wordprocessingml.document",            "docx"),
     CERTIFICATE          ("application/pdf",                                                                    "pdf"),
+    JOB_POSTING_SNAPSHOT ("application/pdf",                                                                    "pdf"),
     OTHER                ("application/pdf",                                                                    "pdf");
 
     private final String allowedMime;

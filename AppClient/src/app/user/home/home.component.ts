@@ -7,6 +7,13 @@ import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService, UserMe } from '../../core/auth.service';
 
+interface JobPostingExtraction {
+  title: string | null;
+  company: string | null;
+  location: string | null;
+  employmentType: string | null;
+}
+
 @Component({
   selector: 'app-home',
   imports: [RouterLink, FormsModule, TranslatePipe],
@@ -19,6 +26,9 @@ export class HomeComponent implements OnInit {
   profileError = false;
 
   jobUrl = '';
+  searchingJobPosting = false;
+  jobSearchError = false;
+  jobPosting: JobPostingExtraction | null = null;
 
   senderName = '';
   senderStreet = '';
@@ -45,7 +55,22 @@ export class HomeComponent implements OnInit {
   }
 
   searchJobPosting(): void {
-    // TODO: fetch and parse the job posting at this.jobUrl
+    if (!this.jobUrl.trim()) return;
+    this.searchingJobPosting = true;
+    this.jobSearchError = false;
+    this.jobPosting = null;
+    const params = new HttpParams().set('url', this.jobUrl.trim());
+
+    this.http.post<JobPostingExtraction>('/api/posting/overview', null, { params }).subscribe({
+      next: (result) => {
+        this.jobPosting = result;
+        this.searchingJobPosting = false;
+      },
+      error: () => {
+        this.jobSearchError = true;
+        this.searchingJobPosting = false;
+      },
+    });
   }
 
   submitAsCompany(): void {

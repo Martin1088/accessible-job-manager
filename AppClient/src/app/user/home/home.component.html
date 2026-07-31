@@ -12,13 +12,28 @@
             [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"/>
         </div>
         <div class="job-import-actions">
-          <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim()" (click)="searchJobPosting()">
-            {{ 'HOME.SEARCH' | translate }}
+          <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || searchingJobPosting" (click)="searchJobPosting()">
+            {{ (searchingJobPosting ? 'HOME.SEARCHING' : 'HOME.SEARCH') | translate }}
           </button>
           <button type="button" class="btn-primary" [disabled]="!jobUrl.trim()" (click)="submitAsCompany()">
             {{ 'HOME.USE_FOR_NEW_COMPANY' | translate }}
           </button>
         </div>
+        @if (jobSearchError) {
+          <p role="alert">{{ 'HOME.JOB_SEARCH_ERROR' | translate }}</p>
+        }
+        @if (jobPosting) {
+          <dl class="job-result">
+            <dt>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</dt>
+            <dd>{{ jobPosting.title ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+            <dt>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</dt>
+            <dd>{{ jobPosting.company ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+            <dt>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</dt>
+            <dd>{{ jobPosting.location ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+            <dt>{{ 'HOME.JOB_RESULT_EMPLOYMENT_TYPE' | translate }}</dt>
+            <dd>{{ jobPosting.employmentType ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+          </dl>
+        }
       </div>
     </section>
   }

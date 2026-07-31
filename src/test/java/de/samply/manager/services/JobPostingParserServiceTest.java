@@ -24,7 +24,7 @@ class JobPostingParserServiceTest {
             ""
     })
     void rejectsDisallowedOrMalformedUrls(String url) {
-        assertThatThrownBy(() -> service.parse(url))
+        assertThatThrownBy(() -> service.overview(url))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
                 .isEqualTo(400);

@@ -16,6 +16,8 @@ A full-stack job application tracking portal built with accessibility as a first
 | Storage    | Garage (S3-compatible)                              |
 | Proxy      | Traefik v2                                          |
 | Build      | Gradle 9 (Groovy DSL), Angular CLI 19               |
+| Job import | Ollama (local LLM, structured-output extraction)    |
+| i18n       | `@ngx-translate/core` (English, German, Dutch)      |
 
 ---
 
@@ -35,9 +37,13 @@ Roles are assigned via Authentik `groups` claim. The `GroupsGrantedAuthoritiesMa
 
 ### User
 - **Home** — profile card (name, email, roles), quick navigation; advisors/reviewers are redirected to their own dashboard automatically
-- **Applications** — table of all job applications with status labels; per-row template dropdown + one-click PDF cover letter download
+  - **Job posting import** — paste a job posting URL; the backend fetches the page and asks a local Ollama LLM to extract company, position, contact and location fields into a ready-to-review form
+  - **Personalized cover letter template** — fill in your name, address and email once to download a `.docx` template pre-filled with your sender details, ready to use as a mail-merge source for future applications
+- **Applications** — table of all job applications with status labels; per-row template dropdown, one-click PDF/Word cover letter download, and a "send as email" button that opens a `mailto:` link pre-filled with subject and body extracted from the generated cover letter
 - **Companies** — manage companies (per-user ownership) with nested locations (street, city, postcode, country) and positions (contact details, gender, email, website)
 - **Documents** — upload cover letter templates (`.docx`) with a custom label; label is editable before upload
+- **User Guide** — role-aware walkthrough of the app's features, linked from the account menu
+- **Profile** — view own account details (name, email, roles)
 
 ### Advisor
 - **My Users** — table of all users assigned to this advisor
@@ -48,9 +54,25 @@ Roles are assigned via Authentik `groups` claim. The `GroupsGrantedAuthoritiesMa
 
 ### Cover Letter Generation
 - User selects an uploaded `.docx` template and a target application
-- Backend fills mail-merge fields: `company`, `street`, `city`, `position`, `contact` (salutation), `date`
+- Backend fills mail-merge fields: `company`, `street`, `city`, `position`, `contact` (salutation, language-aware), `date`
 - Gotenberg (LibreOffice headless) converts the filled `.docx` to PDF
-- Endpoints: `POST /api/cover-letter/{applicationId}/fill/{documentId}` (PDF) and `.../word` (.docx)
+- Three output formats from the same template + application pairing:
+  - `POST /api/cover-letter/{applicationId}/fill/{documentId}` — PDF download
+  - `POST /api/cover-letter/{applicationId}/fill/{documentId}/word` — `.docx` download
+  - `POST /api/cover-letter/{applicationId}/fill/{documentId}/email` — returns `{to, subject, body}` with the cover letter's plain text extracted for use in a `mailto:` link
+- `POST /api/cover-letter/personalize` — generates a blank template pre-filled with the caller's own sender header (name, street, postal code, city, email)
+
+### Job Posting Import
+- `POST /api/posting/overview?url=...` fetches the given URL's visible text (via Jsoup) and sends it to a local Ollama model (`qwen2.5:3b` by default) with a structured-output prompt to extract job posting fields
+- Requires a locally running Ollama instance (`OLLAMA_URL`, default `http://localhost:11434`) — not part of the Docker Compose dev stack, must be started separately
+
+### Legal Pages
+- `/impressum` and `/datenschutz` — Impressum (§5 DDG) and GDPR-compliant Datenschutzerklärung, publicly reachable without login (including from the login page footer)
+- Both pages are trilingual (en/de/nl) and describe this app's actual data processing (Authentik login data, user-entered application data, uploaded documents, document-sharing grants, session cookie)
+
+### Internationalisation
+- Language picker (English/German/Dutch) visible on every page, including the login page, via `LanguageService` + `@ngx-translate/core`
+- Initial translation file is loaded via an Angular `APP_INITIALIZER` before first render, avoiding a flash of untranslated i18n keys
 
 ### Access Control
 - Routes `/companies`, `/applications`, `/documents` are guarded — advisors and reviewers are redirected to `/forbidden`
@@ -67,6 +89,7 @@ Roles are assigned via Authentik `groups` claim. The `GroupsGrantedAuthoritiesMa
 - Node 20+
 - Docker + Docker Compose
 - A running Authentik instance
+- Ollama running locally with a pulled model (only needed for job posting import, e.g. `ollama pull qwen2.5:3b`)
 
 ### 1. Start dev infrastructure
 
@@ -106,15 +129,24 @@ spring:
 
 The Authentik application must expose a `groups` claim on the OIDC token. Create groups named `Advisor` and `Reviewer`; users in neither group are treated as regular users (`USER`).
 
-### 3. Configure S3 (Garage)
+### 3. Configure document storage (S3 or Azure)
 
-Set the following environment variables (or edit `application.yml`):
+Set `STORAGE_PROVIDER` to `s3` (default, Garage) or `azure`.
+
+For S3/Garage:
 
 ```
 S3_ENDPOINT=http://localhost:3900
 S3_BUCKET=job-manager
 ACCESS_KEY=<garage-access-key>
 SECRET_KEY=<garage-secret-key>
+```
+
+For Azure Blob Storage:
+
+```
+STORAGE_PROVIDER=azure
+AZURE_STORAGE_CONNECTION_STRING=<your-connection-string>
 ```
 
 ### 4. Run the backend
@@ -163,6 +195,9 @@ The Angular build output is copied into `src/main/resources/static/` and served 
 | DELETE | `/api/documents/{id}/access/{reviewerId}`         | USER     | Revoke reviewer access                       |
 | POST   | `/api/cover-letter/{appId}/fill/{docId}`          | USER     | Generate filled PDF cover letter             |
 | POST   | `/api/cover-letter/{appId}/fill/{docId}/word`     | USER     | Generate filled .docx cover letter           |
+| POST   | `/api/cover-letter/{appId}/fill/{docId}/email`    | USER     | Get `{to, subject, body}` for a mailto link  |
+| POST   | `/api/cover-letter/personalize`                   | USER     | Generate a template with sender header filled|
+| POST   | `/api/posting/overview?url=`                      | USER     | Extract job posting fields from a URL (LLM)  |
 | GET    | `/api/advisor/my-users`                           | ADVISOR  | Users assigned to this advisor               |
 | POST   | `/api/advisor/suggestions`                        | ADVISOR  | Create a position suggestion                 |
 | GET    | `/api/advisor/suggestions`                        | ADVISOR  | All suggestions by this advisor              |
@@ -193,3 +228,38 @@ docker compose up -d --build
 ```
 
 Builds the full app (including Angular frontend), starts it behind Traefik and serves at `http://login.localhost`. Gotenberg runs as a sidecar for PDF generation.
+
+### Azure Deployment
+
+`dev/azure/main.bicep` provisions a demo deployment to Azure Container Apps. It creates:
+
+| Resource                              | Purpose                                                    |
+|----------------------------------------|-------------------------------------------------------------|
+| Storage Account + blob container       | Document storage (`STORAGE_PROVIDER=azure`)                |
+| Log Analytics workspace                | Required by the Container Apps environment                |
+| Container Apps environment             | Hosts the app and Gotenberg                                |
+| Azure Database for PostgreSQL Flexible Server | Managed Postgres (first deploy takes ~10-15 min)     |
+| Container App: `gotenberg`             | Internal-only, PDF conversion sidecar                      |
+| Container App: `app`                   | Public ingress, runs the `appImage` container (defaults to `ghcr.io/martin1088/accessible-job-manager:latest`) |
+
+Deploy with:
+
+```bash
+az group create -n ajm-demo -l germanywestcentral
+az deployment group create -g ajm-demo -f dev/azure/main.bicep \
+    --parameters pgPassword='<STRONG_PW>' \
+                 oidcClientId='<CLIENT_ID>' \
+                 oidcClientSecret='<CLIENT_SECRET>' \
+                 oidcIssuerUri='https://.../application/o/<slug>/' \
+                 oidcAuthUri='https://.../application/o/authorize/' \
+                 oidcRedirectUri='https://<expected-app-fqdn>/login/oauth2/code/authentik' \
+                 groupUser='<entraID_GUID>' \
+                 groupAdvisor='<entraID_GUID>' \
+                 groupReviewer='<entraID_GUID>'
+```
+
+Notes:
+- `oidcRedirectUri` depends on the app's FQDN, which is only known after the first deployment (see the `oidcRedirectUri` output). Deploy once with a placeholder, register the real value as the redirect URI in your OIDC provider (Authentik or Entra ID), then redeploy with the real `oidcRedirectUri`.
+- `groupUser` / `groupAdvisor` / `groupReviewer` must match whatever the OIDC provider puts in the `groups` claim. For Entra ID cloud-only security groups this is the group's **Object ID** (a GUID), not its display name — pass the GUIDs explicitly.
+- Postgres is publicly reachable with an `AllowAzureServices` firewall rule rather than a VNet, since Container Apps on the Consumption plan has no fixed outbound IP; consider private networking for real production data.
+- `appMinReplicas` defaults to `0` (scale-to-zero, cheaper but cold-starts on first request).

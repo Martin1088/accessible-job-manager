@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.ico", "/error",
                                 "/assets/**",
+                                "/i18n/**",
                                 "/*.js", "/*.css", "/*.map",
                                 "/runtime*.js",
                                 "/polyfills*.js",

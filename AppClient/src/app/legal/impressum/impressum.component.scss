@@ -25,16 +25,3 @@ h2 {
 
   a { color: #005fcc; }
 }
-
-/* Marks facts that must be filled in with real details before this page
-   is used for a live/public deployment (see AppClient CLAUDE.md a11y rules
-   for definition-list usage — this stays a normal <dd>, just styled). */
-.placeholder {
-  display: inline-block;
-  padding: 0.1rem 0.5rem;
-  background: #fff7ed;
-  border: 1px dashed #c2620a;
-  border-radius: 4px;
-  color: #9a3412;
-  font-style: italic;
-}

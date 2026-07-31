@@ -44,6 +44,10 @@ public class Document {
     @Column(nullable = false)
     private String storageKey;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_position_id")
+    private CompanyPosition companyPosition;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

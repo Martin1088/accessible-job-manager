@@ -67,7 +67,7 @@ public class JobPostingParserService {
         this.restClient = RestClient.builder().requestFactory(requestFactory).build();
     }
 
-    public JobPostingExtraction parse(String rawUrl) {
+    public JobPostingExtraction overview(String rawUrl) {
         URI uri = validate(rawUrl);
         String text = fetchVisibleText(uri);
         return extract(text);
