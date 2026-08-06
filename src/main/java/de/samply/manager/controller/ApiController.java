@@ -1,5 +1,6 @@
 package de.samply.manager.controller;
 
+import de.samply.manager.exception.ApiException;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -29,7 +30,7 @@ public class ApiController {
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(@AuthenticationPrincipal OidcUser user,
                                                   Authentication authentication) {
-        if (user == null) return ResponseEntity.status(401).build();
+        if (user == null) throw new ApiException.Unauthorized("Not authenticated");
         List<String> groups = authentication.getAuthorities().stream()
                 .map(a -> a.getAuthority())
                 .filter(a -> a.startsWith("ROLE_"))

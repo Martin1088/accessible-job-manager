@@ -1,15 +1,14 @@
 package de.samply.manager.controller;
 
 import de.samply.manager.dto.SuggestionStatusRequest;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Suggestion;
 import de.samply.manager.repository.SuggestionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -34,11 +33,11 @@ public class SuggestionController {
             @AuthenticationPrincipal OidcUser user) {
 
         Suggestion suggestion = suggestionRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         // Make sure only the target user can update it
         if (!suggestion.getTargetUser().getUserId().equals(user.getSubject())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         }
 
         suggestion.setStatus(request.status());

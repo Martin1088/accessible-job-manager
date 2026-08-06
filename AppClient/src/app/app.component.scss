@@ -98,7 +98,10 @@ header {
   padding: 0.4rem;
 
   a, button {
-    display: block;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
     width: 100%;
     text-align: left;
     padding: 0.5rem 0.7rem;
@@ -113,6 +116,19 @@ header {
 
     &:hover, &:focus-visible { background: #f1f5f9; }
     &:focus-visible { outline: 2px solid #005fcc; outline-offset: -2px; }
+  }
+
+  kbd {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-family: inherit;
+    font-weight: 400;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 0.05rem 0.3rem;
+    line-height: 1.4;
   }
 }
 

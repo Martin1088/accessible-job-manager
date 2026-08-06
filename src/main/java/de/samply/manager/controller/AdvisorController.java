@@ -2,6 +2,7 @@ package de.samply.manager.controller;
 
 import de.samply.manager.dto.SuggestionDto;
 import de.samply.manager.dto.SuggestionRequest;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Suggestion;
 import de.samply.manager.model.SuggestionStatus;
@@ -10,14 +11,12 @@ import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.SuggestionRepository;
 import de.samply.manager.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -50,10 +49,10 @@ public class AdvisorController {
             @AuthenticationPrincipal OidcUser advisor) {
 
         UserProfile targetUser = userProfileRepository.findById(request.targetUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new ApiException.NotFound("User not found"));
 
         CompanyPosition position = companyPositionRepository.findById(request.companyPositionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Position not found"));
+                .orElseThrow(() -> new ApiException.NotFound("Position not found"));
 
         Suggestion suggestion = new Suggestion();
         suggestion.setAdvisorId(advisor.getSubject());

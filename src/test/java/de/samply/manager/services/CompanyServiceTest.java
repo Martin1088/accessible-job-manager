@@ -1,6 +1,7 @@
 package de.samply.manager.services;
 
 import de.samply.manager.dto.CompanyDto;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Company;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.CompanyRepository;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -96,7 +96,7 @@ class CompanyServiceTest {
         when(repo.findById(1L)).thenReturn(Optional.of(company(1L, "u1", "Acme")));
 
         assertThatThrownBy(() -> service.deleteCompany(1L, "other"))
-                .isInstanceOf(ResponseStatusException.class);
+                .isInstanceOf(ApiException.Forbidden.class);
 
         verify(repo, never()).deleteById(any());
     }
@@ -117,7 +117,7 @@ class CompanyServiceTest {
         when(repo.findById(1L)).thenReturn(Optional.of(company(1L, "u1", "Acme")));
 
         assertThatThrownBy(() -> service.updateCompany(1L, new CompanyDto(), "intruder"))
-                .isInstanceOf(ResponseStatusException.class);
+                .isInstanceOf(ApiException.Forbidden.class);
 
         verify(repo, never()).save(any());
     }

@@ -10,8 +10,8 @@
             [routerLinkActiveOptions]="{ exact: true }"
             #rlaHome="routerLinkActive"
             [attr.aria-current]="rlaHome.isActive ? 'page' : null"
-            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+H' : 'h'">
-            {{ 'NAV.HOME' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+H' : 'h' }}</kbd>
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+O' : 'o'">
+            {{ 'NAV.DASHBOARD' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+O' : 'o' }}</kbd>
           </a>
         </li>
         <li>
@@ -87,7 +87,10 @@
       <ng-template #accountMenu>
         <div class="account-menu" cdkMenu [attr.aria-label]="'ACCOUNT.TRIGGER_LABEL' | translate">
           <a routerLink="/profile" cdkMenuItem>{{ 'ACCOUNT.PROFILE' | translate }}</a>
-          <a routerLink="/guide" cdkMenuItem>{{ 'ACCOUNT.GUIDE' | translate }}</a>
+          <a routerLink="/guide" cdkMenuItem
+            [attr.aria-keyshortcuts]="(isWindows ? 'Alt+Shift+H' : 'h') + ' Ctrl+Alt+H'">
+            {{ 'ACCOUNT.GUIDE' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+H' : 'h' }}</kbd> <kbd aria-hidden="true">Ctrl+Alt+H</kbd>
+          </a>
           <button type="button" cdkMenuItem (click)="logout()">{{ 'ACCOUNT.LOGOUT' | translate }}</button>
         </div>
       </ng-template>

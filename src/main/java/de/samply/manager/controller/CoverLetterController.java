@@ -1,6 +1,7 @@
 package de.samply.manager.controller;
 
 import de.samply.manager.dto.CoverLetterEmailDto;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Application;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
@@ -11,14 +12,12 @@ import de.samply.manager.services.CoverLetterService;
 import de.samply.manager.services.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
@@ -109,14 +108,14 @@ public class CoverLetterController {
 
     private FillContext loadAndValidate(Long applicationId, UUID documentId, OidcUser user) {
         Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+                .orElseThrow(() -> new ApiException.NotFound("Application not found"));
         if (!app.getUserId().equals(user.getSubject()))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
 
         Document doc = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
+                .orElseThrow(() -> new ApiException.NotFound("Document not found"));
         if (!doc.getUserId().equals(user.getSubject()))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
 
         CompanyPosition pos = app.getCompanyPosition();
         Map<String, String> replacements = Map.of(

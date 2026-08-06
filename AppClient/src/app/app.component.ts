@@ -24,10 +24,11 @@ export class AppComponent implements OnInit {
   ) {}
 
   private readonly userShortcuts: Record<string, string> = {
-    'h': '/',
+    'o': '/',
     'a': '/applications',
     'd': '/documents',
     'c': '/companies',
+    'h': '/guide',
   };
 
   // Windows screen readers (JAWS/NVDA) reserve bare letter keys for their own
@@ -40,6 +41,14 @@ export class AppComponent implements OnInit {
   onKeydown(e: KeyboardEvent): void {
     const tag = (e.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+    // Platform-independent alternate binding for the Guide/Help page, alongside the
+    // platform-gated bare-letter scheme below.
+    if (e.ctrlKey && e.altKey && !e.shiftKey && !e.metaKey && e.key.toLowerCase() === 'h') {
+      e.preventDefault();
+      this.router.navigate(['/guide']);
+      return;
+    }
 
     if (this.isWindows) {
       if (!e.altKey || !e.shiftKey || e.ctrlKey || e.metaKey) return;

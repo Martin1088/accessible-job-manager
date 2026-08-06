@@ -2,6 +2,7 @@ package de.samply.manager.controller;
 
 import de.samply.manager.dto.GrantAccessRequest;
 import de.samply.manager.dto.UpdateDocumentRequest;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.model.DocumentType;
@@ -17,7 +18,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -54,8 +54,7 @@ public class DocumentAccessController {
             @AuthenticationPrincipal OidcUser user) throws IOException {
 
         if (!type.accepts(file.getContentType())) {
-            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                    type + " requires " + type.getAllowedMime());
+            throw new ApiException.UnsupportedMediaType(type + " requires " + type.getAllowedMime());
         }
 
         String key = user.getSubject() + "/" + type.name().toLowerCase()
@@ -84,10 +83,10 @@ public class DocumentAccessController {
             @AuthenticationPrincipal OidcUser user) {
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         if (!document.getUserId().equals(user.getSubject())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         }
 
         if (request.label() != null) document.setLabel(request.label());
@@ -104,10 +103,10 @@ public class DocumentAccessController {
             @AuthenticationPrincipal OidcUser user) {
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         if (!document.getUserId().equals(user.getSubject())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         }
 
         documentAccessRepository.deleteAll(documentAccessRepository.findByDocumentId(documentId));
@@ -123,15 +122,15 @@ public class DocumentAccessController {
             @AuthenticationPrincipal OidcUser user) {
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         // Only document owner can grant access
         if (!document.getUserId().equals(user.getSubject())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         }
 
         if (documentAccessRepository.existsByDocumentIdAndReviewerId(documentId, request.reviewerId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Access already granted");
+            throw new ApiException.Conflict("Access already granted");
         }
 
         DocumentAccess access = new DocumentAccess();
@@ -150,10 +149,10 @@ public class DocumentAccessController {
             @AuthenticationPrincipal OidcUser user) {
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         if (!document.getUserId().equals(user.getSubject())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         }
 
         documentAccessRepository.findByDocumentId(documentId).stream()

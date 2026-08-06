@@ -1,10 +1,10 @@
 package de.samply.manager.services;
 
 import de.samply.manager.dto.UserProfileDto;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Role;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.UserProfileRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +31,7 @@ public class UserProfileService {
 
     public UserProfileDto getProfile(String userId) {
         UserProfile profile = userProfileRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new ApiException.NotFound("User not found: " + userId));
         return toDto(profile);
     }
 
@@ -40,7 +40,7 @@ public class UserProfileService {
         UserProfile advisor = findProfile(advisorId);
 
         if (advisor.getRole() != Role.ADVISOR) {
-            throw new IllegalArgumentException("User " + advisorId + " is not an advisor");
+            throw new ApiException.BadRequest("User " + advisorId + " is not an advisor");
         }
 
         user.getAdvisors().add(advisor);
@@ -52,7 +52,7 @@ public class UserProfileService {
         UserProfile reviewer = findProfile(reviewerId);
 
         if (reviewer.getRole() != Role.REVIEWER) {
-            throw new IllegalArgumentException("User " + reviewerId + " is not a reviewer");
+            throw new ApiException.BadRequest("User " + reviewerId + " is not a reviewer");
         }
 
         user.getReviewers().add(reviewer);
@@ -79,7 +79,7 @@ public class UserProfileService {
 
     private UserProfile findProfile(String userId) {
         return userProfileRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new ApiException.NotFound("User not found: " + userId));
     }
 
     private UserProfileDto toDto(UserProfile profile) {

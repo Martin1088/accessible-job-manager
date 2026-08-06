@@ -1,6 +1,7 @@
 package de.samply.manager.controller;
 
 import de.samply.manager.dto.ReviewerUserDto;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.DocumentAccessRepository;
@@ -8,14 +9,12 @@ import de.samply.manager.repository.UserProfileRepository;
 import de.samply.manager.services.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.*;
@@ -66,12 +65,12 @@ public class ReviewerController {
         boolean hasAccess = documentAccessRepository
                 .existsByDocumentIdAndReviewerId(documentId, reviewer.getSubject());
         if (!hasAccess)
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
 
         DocumentAccess access = documentAccessRepository.findByDocumentId(documentId).stream()
                 .filter(a -> a.getReviewerId().equals(reviewer.getSubject()))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         var doc = access.getDocument();
         byte[] bytes = storageService.download(doc.getStorageKey()).readAllBytes();

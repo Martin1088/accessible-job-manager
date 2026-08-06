@@ -3,15 +3,14 @@ package de.samply.manager.services;
 import de.samply.manager.dto.CompanyDto;
 import de.samply.manager.dto.CompanyLocationDto;
 import de.samply.manager.dto.CompanyPositionDto;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.CompanyRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -46,10 +45,9 @@ public class CompanyService {
     @Transactional
     public CompanyDto updateCompany(Long id, CompanyDto dto, String userId) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Company not found: " + id));
+                .orElseThrow(() -> new ApiException.NotFound("Company not found: " + id));
         if (!company.getUserId().equals(userId))
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         company.setName(dto.getName());
 
         company.getLocations().clear();
@@ -69,8 +67,7 @@ public class CompanyService {
 
         for (Long existingId : existingById.keySet()) {
             if (!incomingIds.contains(existingId) && applicationRepository.existsByCompanyPositionId(existingId)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Cannot remove a position that has associated applications");
+                throw new ApiException.Conflict("Cannot remove a position that has associated applications");
             }
         }
 
@@ -91,10 +88,9 @@ public class CompanyService {
 
     public void deleteCompany(Long id, String userId) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Company not found: " + id));
+                .orElseThrow(() -> new ApiException.NotFound("Company not found: " + id));
         if (!company.getUserId().equals(userId))
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         companyRepository.deleteById(id);
     }
 

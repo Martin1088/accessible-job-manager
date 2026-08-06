@@ -2,6 +2,7 @@ package de.samply.manager.controller;
 
 import de.samply.manager.dto.ApplicationDto;
 import de.samply.manager.dto.ApplicationRequest;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.metrics.StatusTransitionEvent;
 import de.samply.manager.model.Application;
 import de.samply.manager.model.ApplicationStatus;
@@ -16,7 +17,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,7 +46,7 @@ public class ApplicationController {
             @AuthenticationPrincipal OidcUser user) {
 
         CompanyPosition position = companyPositionRepository.findById(req.companyPositionId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Position not found"));
+                .orElseThrow(() -> new ApiException.NotFound("Position not found"));
 
         Application app = new Application();
         app.setUserId(user.getSubject());
@@ -68,10 +68,10 @@ public class ApplicationController {
             @AuthenticationPrincipal OidcUser user) {
 
         Application app = applicationRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         if (!app.getUserId().equals(user.getSubject())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         }
 
         if (req.status() != null && !req.status().equals(app.getStatus())) {
@@ -93,10 +93,10 @@ public class ApplicationController {
             @AuthenticationPrincipal OidcUser user) {
 
         Application app = applicationRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(ApiException.NotFound::new);
 
         if (!app.getUserId().equals(user.getSubject())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ApiException.Forbidden();
         }
 
         applicationRepository.delete(app);

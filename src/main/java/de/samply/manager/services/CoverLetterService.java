@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,12 +90,13 @@ public class CoverLetterService {
      */
     public String extractPlainText(byte[] docxBytes) throws Exception {
         WordprocessingMLPackage wordPackage = WordprocessingMLPackage.load(new ByteArrayInputStream(docxBytes));
-        Body body = wordPackage.getMainDocumentPart().getJaxbElement().getBody();
+        MainDocumentPart mainDocumentPart = wordPackage.getMainDocumentPart();
+        Body body = mainDocumentPart.getJaxbElement().getBody();
 
         return body.getContent().stream()
                 .filter(P.class::isInstance)
                 .map(P.class::cast)
-                .map(this::paragraphText)
+                .map(p -> paragraphText(p, mainDocumentPart))
                 .filter(text -> !text.isEmpty())
                 .collect(Collectors.joining("\n\n"));
     }
@@ -105,18 +107,48 @@ public class CoverLetterService {
      * literal cached result Word actually displays for live fields like DATE
      * (MERGEFIELDs don't have this problem: MailMerger replaces them with
      * plain literal runs, leaving no field code behind).
+     * <p>
+     * Runs inside a <w:hyperlink> aren't direct children of the paragraph -
+     * they're nested one level deeper in a {@link P.Hyperlink} wrapper - so
+     * they're handled separately and the resolved target URL is appended,
+     * since plain text has no other way to carry a link.
      */
-    private String paragraphText(P paragraph) {
+    private String paragraphText(P paragraph, MainDocumentPart mainDocumentPart) {
         StringBuilder sb = new StringBuilder();
-        for (Object runObj : paragraph.getContent()) {
-            if (!(runObj instanceof R run)) continue;
-            for (Object item : run.getContent()) {
-                if (item instanceof JAXBElement<?> el && "instrText".equals(el.getName().getLocalPart())) continue;
-                Object value = item instanceof JAXBElement<?> el ? el.getValue() : item;
-                if (value instanceof Text text) sb.append(text.getValue());
+        for (Object item : paragraph.getContent()) {
+            Object value = item instanceof JAXBElement<?> el ? el.getValue() : item;
+            if (value instanceof R run) {
+                appendRunText(run, sb);
+            } else if (value instanceof P.Hyperlink hyperlink) {
+                appendHyperlinkText(hyperlink, mainDocumentPart, sb);
             }
         }
         return sb.toString().trim();
+    }
+
+    private void appendRunText(R run, StringBuilder sb) {
+        for (Object item : run.getContent()) {
+            if (item instanceof JAXBElement<?> el && "instrText".equals(el.getName().getLocalPart())) continue;
+            Object value = item instanceof JAXBElement<?> el ? el.getValue() : item;
+            if (value instanceof Text text) sb.append(text.getValue());
+        }
+    }
+
+    private void appendHyperlinkText(P.Hyperlink hyperlink, MainDocumentPart mainDocumentPart, StringBuilder sb) {
+        int start = sb.length();
+        for (Object runObj : hyperlink.getContent()) {
+            if (runObj instanceof R run) appendRunText(run, sb);
+        }
+        String linkText = sb.substring(start);
+
+        String target = hyperlink.getId() == null ? null
+                : Optional.ofNullable(mainDocumentPart.getRelationshipsPart())
+                        .map(rp -> rp.getRelationshipByID(hyperlink.getId()))
+                        .map(Relationship::getTarget)
+                        .orElse(null);
+        if (target != null && !target.equals(linkText)) {
+            sb.append(" (").append(target).append(")");
+        }
     }
 
     /**
