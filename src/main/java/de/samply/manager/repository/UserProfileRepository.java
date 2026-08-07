@@ -1,6 +1,6 @@
 package de.samply.manager.repository;
 
-import de.samply.manager.model.Role;
+import de.samply.manager.types.Role;
 import de.samply.manager.model.UserProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

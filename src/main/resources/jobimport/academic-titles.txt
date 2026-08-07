@@ -1,0 +1,9 @@
+# Academic/professional titles that may appear between a salutation and a
+# contact's name (e.g. "Frau Dr. Mustermann"), one per line. Purely
+# optional filler for ContactBlockExtractor's name pattern - matching one
+# doesn't affect gender, which comes only from the salutation itself. Add
+# more titles/languages here, not in code.
+
+Prof. Dr
+Prof
+Dr

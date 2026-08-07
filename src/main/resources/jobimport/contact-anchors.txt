@@ -1,0 +1,13 @@
+# Phrases marking the start of a "contact person" section in a job
+# posting's body text, one per line. ContactBlockExtractor narrows its
+# search to the text following whichever of these occurs earliest. Add more
+# languages/phrasings here, not in code.
+
+Kontakt
+Ihr Kontakt
+Ansprechpartner
+Fragen
+Bei Fragen
+Your contact
+Contact
+Questions

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -22,6 +22,12 @@ interface JobPostingExtraction {
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
+  @ViewChild('jobUrlInput') jobUrlInput?: ElementRef<HTMLInputElement>;
+
+  // Same platform gating as AppComponent's global shortcuts: Windows screen readers
+  // reserve bare letters for their own browse-mode navigation.
+  readonly isWindows = /Win/i.test(navigator.userAgent);
+
   profile: UserMe | null = null;
   profileError = false;
 
@@ -39,6 +45,26 @@ export class HomeComponent implements OnInit {
   templateError = false;
 
   constructor(private auth: AuthService, private router: Router, private http: HttpClient) {}
+
+  // Page-scoped shortcut: jump focus into the job-posting search field.
+  // Distinct from AppComponent's route-navigation shortcuts.
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent): void {
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (!this.jobUrlInput) return;
+
+    if (this.isWindows) {
+      if (!e.altKey || !e.shiftKey || e.ctrlKey || e.metaKey) return;
+    } else {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    }
+
+    if (e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      this.jobUrlInput.nativeElement.focus();
+    }
+  }
 
   ngOnInit(): void {
     this.auth.me$.subscribe({

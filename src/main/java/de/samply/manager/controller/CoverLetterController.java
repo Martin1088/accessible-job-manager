@@ -5,7 +5,7 @@ import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Application;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
-import de.samply.manager.model.Language;
+import de.samply.manager.types.Language;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.services.CoverLetterService;

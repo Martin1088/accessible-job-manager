@@ -40,8 +40,14 @@ gotenberg:
 
 job-posting:
   parser:
+    provider: ${JOB_POSTING_LLM_PROVIDER:ollama}
     ollama-url: ${OLLAMA_URL:http://localhost:11434}
     model: ${OLLAMA_MODEL:qwen2.5:3b}
+    azure:
+      endpoint: ${AZURE_OPENAI_ENDPOINT:}
+      deployment: ${AZURE_OPENAI_DEPLOYMENT:}
+      api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
+      api-key: ${AZURE_OPENAI_API_KEY:}
 
 storage:
   provider: ${STORAGE_PROVIDER:s3}

@@ -7,9 +7,10 @@
       <h2 id="job-import-heading">{{ 'HOME.JOB_IMPORT_HEADING' | translate }}</h2>
       <div class="job-import-card">
         <div class="field">
-          <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }}</label>
-          <input id="job-url" name="job-url" type="url" [(ngModel)]="jobUrl"
-            [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"/>
+          <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+S' : 's' }}</kbd></label>
+          <input id="job-url" name="job-url" type="url" #jobUrlInput [(ngModel)]="jobUrl"
+            [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+S' : 's'"/>
         </div>
         <div class="job-import-actions">
           <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || searchingJobPosting" (click)="searchJobPosting()">

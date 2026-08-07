@@ -1,16 +1,10 @@
 package de.samply.manager.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.samply.manager.dto.JobPostingExtraction;
+import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
@@ -24,53 +18,48 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 
 /**
- * Fetches a job posting from a user-supplied URL and asks a local LLM (via
- * Ollama's /api/chat, structured-output mode) to extract the key fields.
+ * Fetches a job posting from a user-supplied URL (with SSRF-safe host
+ * validation and redirect handling) and hands the visible text to a
+ * JobPostingLlmClient to extract the key fields. Which LLM provider is used
+ * (Ollama, Azure OpenAI, ...) is decided by job-posting.parser.provider -
+ * see de.samply.manager.jobimport.llm.
  */
 @Service
 public class JobPostingParserService {
 
-    private static final String SYSTEM_PROMPT =
-            "Extract job posting fields. Only fill fields present in the text. " +
-            "Use null for missing. Extract values in the source language. " +
-            "Each field is a short value - a name or phrase, never a sentence or paragraph. " +
-            "'company' is only the employer's name, not an address, slogan, or description.";
-
     private static final int MAX_HTML_BYTES = 3_000_000;
     private static final int MAX_TEXT_CHARS = 8_000;
     private static final int MAX_REDIRECTS = 5;
-    private static final int MAX_FIELD_LENGTH = 200;
 
-    private final RestClient restClient;
-    private final ObjectMapper objectMapper;
+    private final JobPostingLlmClient llmClient;
     private final HttpClient httpClient;
-    private final String ollamaUrl;
-    private final String ollamaModel;
 
-    public JobPostingParserService(@Value("${job-posting.parser.ollama-url}") String ollamaUrl,
-                                   @Value("${job-posting.parser.model}") String ollamaModel,
-                                   ObjectMapper objectMapper) {
-        this.ollamaUrl = ollamaUrl;
-        this.ollamaModel = ollamaModel;
-        this.objectMapper = objectMapper;
+    public JobPostingParserService(JobPostingLlmClient llmClient) {
+        this.llmClient = llmClient;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
-
-        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
-        requestFactory.setReadTimeout(Duration.ofSeconds(120));
-        this.restClient = RestClient.builder().requestFactory(requestFactory).build();
     }
+
+    /** Resolved URL (post-redirects) plus the raw HTML fetched from it. */
+    public record FetchedPage(URI url, String html) {}
 
     public JobPostingExtraction overview(String rawUrl) {
         URI uri = validate(rawUrl);
-        String text = fetchVisibleText(uri);
-        return extract(text);
+        String text = visibleText(fetchHtml(uri));
+        return llmClient.extract(text);
+    }
+
+    /**
+     * Same fetch/redirect/SSRF-validation path as {@link #overview}, but
+     * returns the raw HTML instead of extracted+truncated text - for callers
+     * that need the parsed DOM themselves (e.g. reading JSON-LD script tags).
+     */
+    public FetchedPage fetchPage(String rawUrl) {
+        return fetchHtml(validate(rawUrl));
     }
 
     private URI validate(String rawUrl) {
@@ -118,7 +107,7 @@ public class JobPostingParserService {
         return bytes.length == 16 && (bytes[0] & 0xfe) == 0xfc;
     }
 
-    private String fetchVisibleText(URI uri) {
+    private FetchedPage fetchHtml(URI uri) {
         URI target = uri;
         for (int redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
             HttpRequest request = HttpRequest.newBuilder(target)
@@ -148,10 +137,14 @@ public class JobPostingParserService {
             }
 
             byte[] html = readBounded(response.body());
-            String text = Jsoup.parse(new String(html, StandardCharsets.UTF_8), target.toString()).text();
-            return text.length() > MAX_TEXT_CHARS ? text.substring(0, MAX_TEXT_CHARS) : text;
+            return new FetchedPage(target, new String(html, StandardCharsets.UTF_8));
         }
         throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Too many redirects");
+    }
+
+    private String visibleText(FetchedPage page) {
+        String text = Jsoup.parse(page.html(), page.url().toString()).text();
+        return text.length() > MAX_TEXT_CHARS ? text.substring(0, MAX_TEXT_CHARS) : text;
     }
 
     private byte[] readBounded(InputStream in) {
@@ -162,60 +155,4 @@ public class JobPostingParserService {
         }
     }
 
-    private JobPostingExtraction extract(String postingText) {
-        Map<String, Object> format = Map.of(
-                "type", "object",
-                "properties", Map.of(
-                        "title", Map.of("type", List.of("string", "null")),
-                        "company", Map.of("type", List.of("string", "null")),
-                        "location", Map.of("type", List.of("string", "null")),
-                        "employmentType", Map.of("type", List.of("string", "null"))
-                ),
-                "required", List.of("title", "company", "location", "employmentType")
-        );
-
-        Map<String, Object> body = Map.of(
-                "model", ollamaModel,
-                "stream", false,
-                "options", Map.of("temperature", 0),
-                "messages", List.of(
-                        Map.of("role", "system", "content", SYSTEM_PROMPT),
-                        Map.of("role", "user", "content", postingText)
-                ),
-                "format", format
-        );
-
-        String response;
-        try {
-            response = restClient.post()
-                    .uri(ollamaUrl + "/api/chat")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(body)
-                    .retrieve()
-                    .body(String.class);
-        } catch (RestClientException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Job posting extraction service unavailable");
-        }
-
-        try {
-            JsonNode root = objectMapper.readTree(response);
-            String content = root.path("message").path("content").asText();
-            JobPostingExtraction raw = objectMapper.readValue(content, JobPostingExtraction.class);
-            return new JobPostingExtraction(
-                    truncate(raw.title()), truncate(raw.company()),
-                    truncate(raw.location()), truncate(raw.employmentType()));
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not parse extraction result");
-        }
-    }
-
-    /**
-     * Small local models occasionally spill unrelated page text into a field
-     * instead of the short value it's meant to hold. Cap defensively so a
-     * runaway field can't silently violate a downstream varchar(255) column.
-     */
-    private static String truncate(String value) {
-        if (value == null || value.isBlank()) return null;
-        return value.length() > MAX_FIELD_LENGTH ? value.substring(0, MAX_FIELD_LENGTH) : value;
-    }
 }

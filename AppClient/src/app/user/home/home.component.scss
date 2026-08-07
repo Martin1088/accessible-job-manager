@@ -33,6 +33,19 @@ main {
 
   label { font-size: 0.875rem; font-weight: 500; }
 
+  kbd {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-family: inherit;
+    font-weight: 400;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 0.05rem 0.3rem;
+    line-height: 1.4;
+  }
+
   input {
     padding: 0.45rem 0.7rem;
     border: 1px solid #cbd5e1;

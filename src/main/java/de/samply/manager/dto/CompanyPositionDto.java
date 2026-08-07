@@ -1,7 +1,7 @@
 package de.samply.manager.dto;
 
-import de.samply.manager.model.Gender;
-import de.samply.manager.model.Language;
+import de.samply.manager.types.Gender;
+import de.samply.manager.types.Language;
 import lombok.Data;
 
 import java.time.LocalDateTime;

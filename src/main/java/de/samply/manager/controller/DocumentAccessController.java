@@ -6,7 +6,7 @@ import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.model.DocumentType;
-import de.samply.manager.model.Language;
+import de.samply.manager.types.Language;
 import de.samply.manager.repository.DocumentAccessRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.UserProfileRepository;

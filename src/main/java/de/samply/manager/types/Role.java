@@ -1,4 +1,4 @@
-package de.samply.manager.model;
+package de.samply.manager.types;
 
 public enum Role {
     ADVISOR,USER, REVIEWER

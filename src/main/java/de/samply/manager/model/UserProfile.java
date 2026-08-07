@@ -1,5 +1,7 @@
 package de.samply.manager.model;
 
+import de.samply.manager.types.Language;
+import de.samply.manager.types.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

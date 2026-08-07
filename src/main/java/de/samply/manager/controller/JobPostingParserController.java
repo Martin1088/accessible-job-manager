@@ -2,11 +2,15 @@ package de.samply.manager.controller;
 
 import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.dto.UpdateDocumentRequest;
+import de.samply.manager.jobimport.extractor.ExtractionDebugReport;
+import de.samply.manager.jobimport.extractor.JobPosting;
+import de.samply.manager.jobimport.extractor.JobPostingExtractionPipeline;
 import de.samply.manager.model.Document;
-import de.samply.manager.model.Language;
+import de.samply.manager.types.Language;
 import de.samply.manager.services.JobPostingParserService;
 import de.samply.manager.services.JobPostingSnapshotService;
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Jsoup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,10 +28,43 @@ public class JobPostingParserController {
 
     private final JobPostingParserService jobPostingParserService;
     private final JobPostingSnapshotService jobPostingSnapshotService;
+    private final JobPostingExtractionPipeline extractionPipeline;
 
     @PostMapping("/overview")
     public JobPostingExtraction parse(@RequestParam("url") String url) {
         return jobPostingParserService.overview(url);
+    }
+
+    /**
+     * Runs every FieldExtractor tier (JSON-LD, ATS-API, contact) against the
+     * given URL and reports each tier's raw output alongside the merged
+     * result - for manually testing/comparing the extractors against a real
+     * posting, without digging through logs.
+     */
+    @PostMapping("/extractors/test")
+    public ExtractionDebugReport testExtractors(
+            @RequestParam("url") String url,
+            @RequestParam(value = "boardHint", required = false) String boardHint) {
+        JobPostingParserService.FetchedPage page = jobPostingParserService.fetchPage(url);
+        org.jsoup.nodes.Document document = Jsoup.parse(page.html(), page.url().toString());
+        String plainText = document.text();
+        return extractionPipeline.runDebug(document, plainText, page.url().toString(), boardHint);
+    }
+
+    /**
+     * Production path: runs the FieldExtractor chain against the given URL
+     * and returns only the merged result (stops early once complete) - for
+     * the frontend to show the user what was found so they can review it
+     * before creating a company/position from it.
+     */
+    @PostMapping("/full-chain")
+    public JobPosting fullChain(
+            @RequestParam("url") String url,
+            @RequestParam(value = "boardHint", required = false) String boardHint) {
+        JobPostingParserService.FetchedPage page = jobPostingParserService.fetchPage(url);
+        org.jsoup.nodes.Document document = Jsoup.parse(page.html(), page.url().toString());
+        String plainText = document.text();
+        return extractionPipeline.run(document, plainText, page.url().toString(), boardHint);
     }
 
     @PostMapping("/snapshot")

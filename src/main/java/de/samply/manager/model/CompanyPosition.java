@@ -1,5 +1,7 @@
 package de.samply.manager.model;
 
+import de.samply.manager.types.Gender;
+import de.samply.manager.types.Language;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

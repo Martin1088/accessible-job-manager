@@ -2,7 +2,7 @@ package de.samply.manager.services;
 
 import de.samply.manager.dto.UserProfileDto;
 import de.samply.manager.exception.ApiException;
-import de.samply.manager.model.Role;
+import de.samply.manager.types.Role;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;

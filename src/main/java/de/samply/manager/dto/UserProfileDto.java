@@ -1,6 +1,6 @@
 package de.samply.manager.dto;
 
-import de.samply.manager.model.Role;
+import de.samply.manager.types.Role;
 
 import java.util.List;
 

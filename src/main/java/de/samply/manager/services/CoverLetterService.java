@@ -1,8 +1,8 @@
 package de.samply.manager.services;
 
 import de.samply.manager.model.CompanyPosition;
-import de.samply.manager.model.Gender;
-import de.samply.manager.model.Language;
+import de.samply.manager.types.Gender;
+import de.samply.manager.types.Language;
 import jakarta.xml.bind.JAXBElement;
 import org.docx4j.jaxb.Context;
 import org.docx4j.model.fields.FieldUpdater;

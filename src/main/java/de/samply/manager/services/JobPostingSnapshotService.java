@@ -3,7 +3,7 @@ package de.samply.manager.services;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
-import de.samply.manager.model.Language;
+import de.samply.manager.types.Language;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
 import org.springframework.beans.factory.annotation.Value;
