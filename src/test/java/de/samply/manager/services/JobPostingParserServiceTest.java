@@ -1,6 +1,5 @@
 package de.samply.manager.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
@@ -9,8 +8,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JobPostingParserServiceTest {
 
+    // Every case here is rejected by URL validation before the LLM client
+    // would ever be called, so a no-op stub is enough.
     private final JobPostingParserService service =
-            new JobPostingParserService("http://localhost:11434", "qwen2.5:3b", new ObjectMapper());
+            new JobPostingParserService(postingText -> null);
 
     @ParameterizedTest
     @ValueSource(strings = {
