@@ -1,5 +1,6 @@
 package de.samply.manager.services;
 
+import de.samply.manager.coverletter.CoverLetterLabels;
 import de.samply.manager.types.Language;
 import org.docx4j.TextUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
@@ -27,7 +28,7 @@ class WordCoverLetterServiceTest {
     }
 
     private final WordCoverLetterService service = new WordCoverLetterService(
-            "http://localhost:1234", MESSAGE_SOURCE);
+            "http://localhost:1234", new CoverLetterLabels(MESSAGE_SOURCE));
 
     private static final Map<String, String> PERSONAL_DATA = Map.of(
             "senderName", "Jane Doe",

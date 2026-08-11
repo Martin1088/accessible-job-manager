@@ -23,6 +23,7 @@ dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:3.4.4')
     annotationProcessor platform('org.springframework.boot:spring-boot-dependencies:3.4.4')
     implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.3'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.jsoup:jsoup:1.18.1'
     implementation 'software.amazon.awssdk:s3:2.25.0'
     implementation 'com.azure:azure-storage-blob:12.29.0'
@@ -38,6 +39,9 @@ dependencies {
     runtimeOnly libs.org.springframework.boot.spring.boot.devtools
     testImplementation libs.org.springframework.boot.spring.boot.starter.test
     testRuntimeOnly 'com.h2database:h2'
+    // Reads back the coordinates of the text Gotenberg printed, so the DIN 5008
+    // geometry can be asserted in millimetres instead of eyeballed in a viewer.
+    testImplementation 'org.apache.pdfbox:pdfbox:3.0.3'
     testImplementation libs.org.springframework.security.spring.security.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'

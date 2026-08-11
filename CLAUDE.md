@@ -57,7 +57,21 @@ Unauthenticated `text/html` requests are redirected to OAuth; API requests recei
 
 ### Cover letter generation
 
-`WordCoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `DocumentStorageService`.
+Two providers exist side by side. Both share `CoverLetterLabels` (salutations, subject/greeting prefixes, closing formula) so a contact is greeted identically whichever one is used.
+
+**.docx provider** — `WordCoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `DocumentStorageService`.
+
+**HTML provider** (`de.samply.manager.coverletter`, `/api/html/cover-letter`) — Thymeleaf → HTML → Gotenberg (`/forms/chromium/convert/html`). The pipeline is `CoverLetterTemplate` (editable data from the frontend) → `CoverLetterAssembler` → `CoverLetterModel` → `HtmlCoverLetterRenderer` or `TextCoverLetterRenderer`.
+
+Rules this split enforces, in order of how easily they are broken:
+
+- **The layout is a server invariant.** `templates/cover-letter/din5008.html` and its DIN 5008 measurements never leave the backend, so the geometry is a guarantee rather than a claim. The frontend edits blocks and style *values*; it never computes a millimetre.
+- **One logic, two output formats.** `?format=text` renders the linearized preview from the same assembled `CoverLetterModel` as `?format=pdf`. Never reimplement placeholder or layout logic in TypeScript to render a preview - preview and PDF would diverge.
+- **Sanitize, then substitute.** `MarkupSanitizer` reduces block markup to an inline subset (`b/strong/i/em/u/br/span/a`) *before* `PlaceholderResolver` inserts HTML-escaped values. The reverse order would let a company name containing angle brackets reach the template as markup.
+- **`StyleSettings` is untrusted input.** `StyleSettingsValidator` fills unset components with `StyleSettings.din5008FormB()` and rejects impossible geometry. Its `fontFamily` whitelist matters: that value is the only style setting written into the stylesheet as text, and the Thymeleaf CSS inlining used there is the unescaped `[(${...})]` form (the escaped `[[...]]` form emits CSS identifier escapes like `\32 4\.1mm`, which Chromium does not read as a length).
+- **`CssLengths` formats locale-free.** A `24,1mm` produced under a German default locale is an invalid CSS length and Chromium drops the declaration silently.
+
+`Din5008PdfGeometryTest` prints a letter through the dev Gotenberg and reads the text coordinates back with PDFBox, asserting each line lands in its DIN zone. It skips itself when Gotenberg is unreachable (`cd dev && docker compose up -d gotenberg`).
 
 ### Angular routing & guards
 

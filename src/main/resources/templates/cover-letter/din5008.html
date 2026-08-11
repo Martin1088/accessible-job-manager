@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title th:text="${letter.subject}">Cover letter</title>
+    <!--/*
+        Every length below comes from CssLengths (derived from the validated
+        StyleSettings) - there are deliberately no hard-coded measurements here, and
+        none in the frontend either.
+
+        Page 1 carries the DIN 5008 zones. They are built from normal-flow boxes with
+        fixed heights rather than page-absolute positioning, so that only this page
+        gets them while every following page simply inherits the @page margins.
+    */-->
+    <style th:inline="css">
+        @page {
+            size: [(${css.pageWidth})] [(${css.pageHeight})];
+            margin: [(${css.topMargin})] [(${css.rightMargin})] [(${css.bottomMargin})] [(${css.leftMargin})];
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: [(${css.fontFamily})];
+            font-size: [(${css.fontSize})];
+            line-height: [(${css.lineHeight})];
+            color: #000;
+            -webkit-print-color-adjust: exact;
+        }
+
+        p, ul {
+            margin: 0 0 [(${css.fontSize})] 0;
+        }
+
+        /* --- first page: address field, information block, folding marks --- */
+
+        .letterhead {
+            position: relative;
+            padding-top: [(${css.returnAddressGap})];
+        }
+
+        .return-address {
+            height: [(${css.returnAddressHeight})];
+            width: [(${css.addressFieldWidth})];
+            font-size: [(${css.smallFontSize})];
+            line-height: 1.2;
+        }
+
+        .return-address span {
+            border-bottom: 0.2mm solid #000;
+        }
+
+        .recipient {
+            height: [(${css.recipientHeight})];
+            width: [(${css.addressFieldWidth})];
+            line-height: 1.2;
+            font-style: normal; /* <address> is italic in the UA stylesheet */
+        }
+
+        .recipient p {
+            margin: 0;
+        }
+
+        .info-block {
+            position: absolute;
+            top: [(${css.infoBlockTop})];
+            left: [(${css.infoBlockLeft})];
+            width: [(${css.infoBlockWidth})];
+            line-height: 1.2;
+        }
+
+        .info-block p {
+            margin: 0;
+        }
+
+        .fold-mark {
+            position: absolute;
+            left: [(${css.foldMarkLeft})];
+            width: 5mm;
+            border-top: 0.2mm solid #000;
+        }
+
+        .fold-mark-first  { top: [(${css.firstFoldMark})]; }
+        .fold-mark-punch  { top: [(${css.punchMark})]; width: 8mm; }
+        .fold-mark-second { top: [(${css.secondFoldMark})]; }
+
+        /* --- letter body --- */
+
+        .subject-gap {
+            height: [(${css.subjectGap})];
+        }
+
+        .subject {
+            font-size: [(${css.fontSize})];
+            font-weight: bold;
+            margin: 0 0 [(${css.fontSize})] 0;
+        }
+
+        .block-heading {
+            font-size: [(${css.fontSize})];
+            font-weight: bold;
+            margin: 0 0 0.5em 0;
+        }
+
+        .letter-body ul {
+            padding-left: 6mm;
+        }
+
+        .closing {
+            margin-top: [(${css.fontSize})];
+            margin-bottom: 0;
+        }
+
+        .signature {
+            margin-top: 16mm;
+        }
+
+        .attachments {
+            margin-top: [(${css.fontSize})];
+        }
+
+        .attachments p,
+        .attachments ul {
+            margin: 0;
+        }
+
+        .attachments ul {
+            padding-left: 6mm;
+            list-style: none;
+        }
+    </style>
+</head>
+<body>
+
+<header class="letterhead">
+    <div class="return-address">
+        <span th:if="${!#strings.isEmpty(letter.returnAddressLine)}" th:text="${letter.returnAddressLine}"></span>
+    </div>
+
+    <address class="recipient">
+        <p th:each="line : ${letter.recipientLines}" th:text="${line}"></p>
+    </address>
+
+    <div class="info-block">
+        <p th:if="${!#strings.isEmpty(letter.infoLine)}" th:text="${letter.infoLine}"></p>
+    </div>
+
+    <th:block th:if="${letter.style.foldMarks}">
+        <div class="fold-mark fold-mark-first"></div>
+        <div class="fold-mark fold-mark-punch"></div>
+        <div class="fold-mark fold-mark-second"></div>
+    </th:block>
+</header>
+
+<div class="subject-gap"></div>
+
+<main>
+    <h1 class="subject" th:text="${letter.subject}"></h1>
+
+    <p class="greeting" th:text="${letter.greeting}"></p>
+
+    <div class="letter-body">
+        <th:block th:each="block : ${letter.blocks}">
+            <h2 class="block-heading"
+                th:if="${block.type.name() == 'HEADING'}"
+                th:utext="${block.html}"></h2>
+
+            <ul th:if="${block.type.name() == 'BULLET_LIST'}">
+                <li th:each="item : ${block.itemsHtml}" th:utext="${item}"></li>
+            </ul>
+
+            <p th:if="${block.type.name() == 'PARAGRAPH'}" th:utext="${block.html}"></p>
+        </th:block>
+    </div>
+
+    <p class="closing" th:text="${letter.closing}"></p>
+    <p class="signature" th:text="${letter.senderName}"></p>
+
+    <div class="attachments" th:if="${!letter.attachments.isEmpty()}">
+        <p th:text="${letter.attachmentsLabel}"></p>
+        <ul>
+            <li th:each="attachment : ${letter.attachments}" th:text="${attachment}"></li>
+        </ul>
+    </div>
+</main>
+
+</body>
+</html>

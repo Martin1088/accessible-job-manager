@@ -1,7 +1,7 @@
 package de.samply.manager.services;
 
+import de.samply.manager.coverletter.CoverLetterLabels;
 import de.samply.manager.model.CompanyPosition;
-import de.samply.manager.types.Gender;
 import de.samply.manager.types.Language;
 import jakarta.xml.bind.JAXBElement;
 import org.docx4j.jaxb.Context;
@@ -29,7 +29,6 @@ import org.docx4j.wml.STFldCharType;
 import org.docx4j.wml.SectPr;
 import org.docx4j.wml.Text;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -57,12 +55,12 @@ public class WordCoverLetterService {
 
     private final RestClient restClient;
     private final String gotenbergUrl;
-    private final MessageSource messageSource;
+    private final CoverLetterLabels labels;
 
     public WordCoverLetterService(@Value("${gotenberg.url}") String gotenbergUrl,
-                                  MessageSource messageSource) {
+                                  CoverLetterLabels labels) {
         this.gotenbergUrl = gotenbergUrl;
-        this.messageSource = messageSource;
+        this.labels = labels;
         this.restClient = RestClient.create();
     }
 
@@ -336,19 +334,10 @@ public class WordCoverLetterService {
     }
 
     public String buildSalutation(CompanyPosition position, Language language) {
-        Gender gender = position.getContactGender() != null ? position.getContactGender() : Gender.TEAM;
-        Locale locale = language != null ? language.locale() : Locale.GERMAN;
-        String phrase = messageSource.getMessage("salutation." + gender.name(), null, locale);
-        return gender == Gender.TEAM ? phrase : phrase + " " + formatName(position);
+        return labels.salutation(position, language);
     }
 
     public String label(String key, Language language) {
-        Locale locale = language != null ? language.locale() : Locale.GERMAN;
-        return messageSource.getMessage(key, null, locale);
-    }
-
-    private String formatName(CompanyPosition position) {
-        String title = position.getContactTitle() != null ? position.getContactTitle() + " " : "";
-        return title + position.getContactLastName();
+        return labels.label(key, language);
     }
 }
