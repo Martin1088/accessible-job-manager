@@ -305,7 +305,7 @@ export class ApplicationListComponent implements OnInit {
     if (!docId) return;
     this.downloading[appId] = true;
     this.http.post<{ to: string; subject: string; body: string }>(
-      `/api/cover-letter/${appId}/fill/${docId}/email`, null
+      `/api/word/cover-letter/${appId}/fill/${docId}/email`, null
     ).subscribe({
       next: (res) => {
         const to = res.to ?? '';
@@ -326,7 +326,7 @@ export class ApplicationListComponent implements OnInit {
     const docId = this.selectedTemplate[appId];
     if (!docId) return;
     this.downloading[appId] = true;
-    this.http.post(`/api/cover-letter/${appId}/fill/${docId}${urlSuffix}`, null, { responseType: 'blob' }).subscribe({
+    this.http.post(`/api/word/cover-letter/${appId}/fill/${docId}${urlSuffix}`, null, { responseType: 'blob' }).subscribe({
       next: (blob) => {
         const row = this.rows.find(r => r.id === appId);
         const name = `Anschreiben_${(row?.companyName ?? 'cover_letter').replace(/\s+/g, '_')}.${extension}`;

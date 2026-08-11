@@ -1,5 +1,6 @@
 package de.samply.manager.services;
 
+import de.samply.manager.types.Language;
 import org.docx4j.TextUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.HeaderPart;
@@ -7,18 +8,26 @@ import org.docx4j.wml.HdrFtrRef;
 import org.docx4j.wml.HeaderReference;
 import org.docx4j.wml.SectPr;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.support.StaticMessageSource;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CoverLetterServiceTest {
+class WordCoverLetterServiceTest {
 
-    private final CoverLetterService service = new CoverLetterService(
-            "http://localhost:1234", new org.springframework.context.support.StaticMessageSource());
+    private static final StaticMessageSource MESSAGE_SOURCE = new StaticMessageSource();
+    static {
+        MESSAGE_SOURCE.addMessage("coverLetter.subjectPrefix", Locale.GERMAN, "Bewerbung als");
+        MESSAGE_SOURCE.addMessage("coverLetter.greetingPrefix", Locale.GERMAN, "Sehr");
+    }
+
+    private final WordCoverLetterService service = new WordCoverLetterService(
+            "http://localhost:1234", MESSAGE_SOURCE);
 
     private static final Map<String, String> PERSONAL_DATA = Map.of(
             "senderName", "Jane Doe",
@@ -30,7 +39,7 @@ class CoverLetterServiceTest {
 
     @Test
     void createTemplateWithHeader_buildsHeaderAndMergeFieldSkeleton() throws Exception {
-        byte[] result = service.createTemplateWithHeader(PERSONAL_DATA);
+        byte[] result = service.createTemplateWithHeader(PERSONAL_DATA, Language.GERMAN);
 
         WordprocessingMLPackage doc = WordprocessingMLPackage.load(new ByteArrayInputStream(result));
 
@@ -76,7 +85,7 @@ class CoverLetterServiceTest {
 
     @Test
     void createTemplateWithHeader_producesTemplateThatFillTemplateCanMerge() throws Exception {
-        byte[] template = service.createTemplateWithHeader(PERSONAL_DATA);
+        byte[] template = service.createTemplateWithHeader(PERSONAL_DATA, Language.GERMAN);
 
         Map<String, String> replacements = Map.of(
                 "company", "Acme Corp",
@@ -98,7 +107,7 @@ class CoverLetterServiceTest {
 
     @Test
     void extractPlainText_returnsBodyTextWithoutSenderHeaderBlock() throws Exception {
-        byte[] template = service.createTemplateWithHeader(PERSONAL_DATA);
+        byte[] template = service.createTemplateWithHeader(PERSONAL_DATA, Language.GERMAN);
 
         Map<String, String> replacements = Map.of(
                 "company", "Acme Corp",

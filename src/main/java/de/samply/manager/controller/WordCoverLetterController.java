@@ -8,7 +8,7 @@ import de.samply.manager.model.Document;
 import de.samply.manager.types.Language;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.DocumentRepository;
-import de.samply.manager.services.CoverLetterService;
+import de.samply.manager.services.WordCoverLetterService;
 import de.samply.manager.services.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -26,25 +26,13 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/cover-letter")
+@RequestMapping("/api/word/cover-letter")
 @RequiredArgsConstructor
-public class CoverLetterController {
-    private final CoverLetterService coverLetterService;
+public class WordCoverLetterController {
+    private final WordCoverLetterService wordCoverLetterService;
     private final StorageService storageService;
     private final DocumentRepository documentRepository;
     private final ApplicationRepository applicationRepository;
-
-    private static final Map<Language, String> COVER_LETTER_FILE_LABEL = Map.of(
-            Language.GERMAN, "Anschreiben",
-            Language.ENGLISH, "Cover_Letter",
-            Language.DUTCH, "Sollicitatiebrief"
-    );
-
-    private static final Map<Language, String> APPLICATION_SUBJECT_PREFIX = Map.of(
-            Language.GERMAN, "Bewerbung als ",
-            Language.ENGLISH, "Application for ",
-            Language.DUTCH, "Sollicitatie voor "
-    );
 
     @PostMapping("/{applicationId}/fill/{documentId}")
     @Transactional(readOnly = true)
@@ -55,11 +43,11 @@ public class CoverLetterController {
 
         FillContext ctx = loadAndValidate(applicationId, documentId, user);
 
-        byte[] filled = coverLetterService.fillTemplate(
+        byte[] filled = wordCoverLetterService.fillTemplate(
                 storageService.download(ctx.doc().getStorageKey()), ctx.replacements());
-        byte[] pdf = coverLetterService.toPdf(filled);
+        byte[] pdf = wordCoverLetterService.toPdf(filled);
 
-        String baseName = coverLetterFileLabel(ctx.doc().getLanguage()) + "_" + ctx.pos().getCompany().getName().replaceAll("\\s+", "_");
+        String baseName = wordCoverLetterService.label("coverLetter.fileLabel", ctx.doc().getLanguage()) + "_" + ctx.pos().getCompany().getName().replaceAll("\\s+", "_");
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + baseName + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
@@ -75,10 +63,10 @@ public class CoverLetterController {
 
         FillContext ctx = loadAndValidate(applicationId, documentId, user);
 
-        byte[] filled = coverLetterService.fillTemplate(
+        byte[] filled = wordCoverLetterService.fillTemplate(
                 storageService.download(ctx.doc().getStorageKey()), ctx.replacements());
 
-        String baseName = coverLetterFileLabel(ctx.doc().getLanguage()) + "_" + ctx.pos().getCompany().getName().replaceAll("\\s+", "_");
+        String baseName = wordCoverLetterService.label("coverLetter.fileLabel", ctx.doc().getLanguage()) + "_" + ctx.pos().getCompany().getName().replaceAll("\\s+", "_");
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + baseName + ".docx")
                 .contentType(MediaType.parseMediaType(
@@ -95,11 +83,11 @@ public class CoverLetterController {
 
         FillContext ctx = loadAndValidate(applicationId, documentId, user);
 
-        byte[] filled = coverLetterService.fillTemplate(
+        byte[] filled = wordCoverLetterService.fillTemplate(
                 storageService.download(ctx.doc().getStorageKey()), ctx.replacements());
-        String body = coverLetterService.extractPlainText(filled);
-        String subject = APPLICATION_SUBJECT_PREFIX.getOrDefault(ctx.doc().getLanguage(), APPLICATION_SUBJECT_PREFIX.get(Language.GERMAN))
-                + ctx.pos().getTitle();
+        String body = wordCoverLetterService.extractPlainText(filled);
+        String subject = wordCoverLetterService.label("coverLetter.subjectPrefix", ctx.doc().getLanguage())
+                + " " + ctx.pos().getTitle();
 
         return ResponseEntity.ok(new CoverLetterEmailDto(ctx.pos().getEmail(), subject, body));
     }
@@ -123,14 +111,38 @@ public class CoverLetterController {
                 "street", pos.getCompany().getLocations().isEmpty() ? "" : pos.getCompany().getLocations().get(0).getStreet(),
                 "city", pos.getCompany().getLocations().isEmpty() ? "" : pos.getCompany().getLocations().get(0).getCity(),
                 "position", pos.getTitle(),
-                "contact", coverLetterService.buildSalutation(pos, doc.getLanguage()),
+                "contact", wordCoverLetterService.buildSalutation(pos, doc.getLanguage()),
                 "date", LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
         );
         return new FillContext(app, doc, pos, replacements);
     }
 
-    private static String coverLetterFileLabel(Language language) {
-        return COVER_LETTER_FILE_LABEL.getOrDefault(language, COVER_LETTER_FILE_LABEL.get(Language.GERMAN));
+    @PostMapping(value = "/personalize")
+    public ResponseEntity<byte[]> personalizeTemplate(
+            @RequestParam("senderName") String senderName,
+            @RequestParam("senderStreet") String senderStreet,
+            @RequestParam("senderPostalCode") String senderPostalCode,
+            @RequestParam("senderCity") String senderCity,
+            @RequestParam("senderEmail") String senderEmail,
+            @RequestParam(value = "language", defaultValue = "GERMAN") Language language) throws Exception {
+
+        Map<String, String> personalData = Map.of(
+                "senderName", senderName,
+                "senderStreet", senderStreet,
+                "senderPostalCode", senderPostalCode,
+                "senderCity", senderCity,
+                "senderEmail", senderEmail
+        );
+
+        byte[] personalized = wordCoverLetterService.createTemplateWithHeader(personalData, language);
+
+        String baseName = wordCoverLetterService.label("coverLetter.fileLabel", language) + "_personal";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=" + baseName + ".docx")
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .body(personalized);
     }
 
     @PostMapping(value = "/fill")
@@ -151,7 +163,7 @@ public class CoverLetterController {
                 "date", LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
         );
 
-        byte[] filled = coverLetterService.fillTemplate(
+        byte[] filled = wordCoverLetterService.fillTemplate(
                 new ByteArrayInputStream(template), replacements);
 
         return ResponseEntity.ok()
@@ -160,32 +172,6 @@ public class CoverLetterController {
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
                 .body(filled);
-    }
-
-    @PostMapping(value = "/personalize")
-    public ResponseEntity<byte[]> personalizeTemplate(
-            @RequestParam("senderName") String senderName,
-            @RequestParam("senderStreet") String senderStreet,
-            @RequestParam("senderPostalCode") String senderPostalCode,
-            @RequestParam("senderCity") String senderCity,
-            @RequestParam("senderEmail") String senderEmail) throws Exception {
-
-        Map<String, String> personalData = Map.of(
-                "senderName", senderName,
-                "senderStreet", senderStreet,
-                "senderPostalCode", senderPostalCode,
-                "senderCity", senderCity,
-                "senderEmail", senderEmail
-        );
-
-        byte[] personalized = coverLetterService.createTemplateWithHeader(personalData);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=Anschreiben_personal.docx")
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
-                .body(personalized);
     }
 
 }

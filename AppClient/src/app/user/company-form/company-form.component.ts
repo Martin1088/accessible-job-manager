@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,6 +28,13 @@ export class CompanyFormComponent implements OnInit {
   importMode = false;
   jsonError = '';
 
+  // Set when this form was opened from the dashboard's "Use for new company"
+  // action, so we know to generate a PDF snapshot of the source posting once
+  // the company (and its first position) has actually been saved. The
+  // snapshot is created in the background; it's viewable later from the
+  // company list's "View job posting" action rather than shown here.
+  private sourceJobUrl?: string;
+
   // Values are translation keys, translated via the `translate` pipe in the
   // template so the options stay in sync when the language is switched.
   readonly genderOptions: { value: string; label: string }[] = [
@@ -41,6 +48,7 @@ export class CompanyFormComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private translate: TranslateService,
+    private http: HttpClient,
   ) {}
 
   ngOnInit(): void {
@@ -54,7 +62,20 @@ export class CompanyFormComponent implements OnInit {
           if (found) this.company = { ...found, locations: [...found.locations], positions: [...found.positions] };
         }
       });
+      return;
     }
+
+    // Prefill from a parsed job posting, passed via router navigation state
+    // (e.g. the "Use for new company" action on the dashboard).
+    const prefill = history.state?.company as Company | undefined;
+    if (prefill) {
+      this.company = {
+        name: prefill.name ?? '',
+        locations: prefill.locations?.length ? [...prefill.locations] : [],
+        positions: prefill.positions?.length ? [...prefill.positions] : [],
+      };
+    }
+    this.sourceJobUrl = (history.state?.sourceJobUrl as string | undefined)?.trim() || undefined;
   }
 
   addLocation(): void {
@@ -85,7 +106,13 @@ export class CompanyFormComponent implements OnInit {
       });
     } else {
       this.companyService.create(this.company).subscribe({
-        next: () => this.router.navigate(['/companies']),
+        next: (created) => {
+          const positionId = created.positions?.[0]?.id;
+          if (this.sourceJobUrl && positionId) {
+            this.createSnapshot(positionId, this.sourceJobUrl);
+          }
+          this.router.navigate(['/companies']);
+        },
         error: () => this.errorMessage = this.translate.instant('COMPANIES.ERROR_CREATE')
       });
     }
@@ -93,6 +120,14 @@ export class CompanyFormComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/companies']);
+  }
+
+  // Best-effort: the company is already saved and the user has moved on by
+  // the time this resolves, so failures here aren't surfaced — they'd just
+  // mean no snapshot shows up under "View job posting" in the company list.
+  private createSnapshot(companyPositionId: number, url: string): void {
+    const params = new HttpParams().set('url', url).set('companyPositionId', companyPositionId);
+    this.http.post('/api/posting/snapshot', null, { params }).subscribe({ error: () => {} });
   }
 
   onJsonFileSelected(event: Event): void {

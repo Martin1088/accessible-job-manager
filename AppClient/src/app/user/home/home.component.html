@@ -13,27 +13,117 @@
             [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+S' : 's'"/>
         </div>
         <div class="job-import-actions">
-          <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || searchingJobPosting" (click)="searchJobPosting()">
-            {{ (searchingJobPosting ? 'HOME.SEARCHING' : 'HOME.SEARCH') | translate }}
+          <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || searchingJobPosting || searchingFullChain" (click)="searchJobPosting()">
+            {{ ((searchingJobPosting || searchingFullChain) ? 'HOME.SEARCHING' : 'HOME.SEARCH') | translate }}
           </button>
-          <button type="button" class="btn-primary" [disabled]="!jobUrl.trim()" (click)="submitAsCompany()">
-            {{ 'HOME.USE_FOR_NEW_COMPANY' | translate }}
+          <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || validatingSnapshot" (click)="previewSnapshot()">
+            {{ (validatingSnapshot ? 'HOME.SNAPSHOT_VALIDATING' : 'HOME.SNAPSHOT_PREVIEW') | translate }}
           </button>
         </div>
-        @if (jobSearchError) {
-          <p role="alert">{{ 'HOME.JOB_SEARCH_ERROR' | translate }}</p>
+
+        @if (snapshotValidateError) {
+          <p role="alert">{{ 'HOME.SNAPSHOT_VALIDATE_ERROR' | translate }}</p>
         }
-        @if (jobPosting) {
-          <dl class="job-result">
-            <dt>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</dt>
-            <dd>{{ jobPosting.title ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
-            <dt>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</dt>
-            <dd>{{ jobPosting.company ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
-            <dt>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</dt>
-            <dd>{{ jobPosting.location ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
-            <dt>{{ 'HOME.JOB_RESULT_EMPLOYMENT_TYPE' | translate }}</dt>
-            <dd>{{ jobPosting.employmentType ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
-          </dl>
+
+        <div class="job-result-columns">
+          <div>
+            <h3>{{ 'HOME.JOB_RESULT_OVERVIEW_HEADING' | translate }}</h3>
+            @if (jobSearchError) {
+              <p role="alert">{{ 'HOME.JOB_SEARCH_ERROR' | translate }}</p>
+            }
+            @if (jobPosting) {
+              <dl class="job-result">
+                <dt>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</dt>
+                <dd>{{ jobPosting.title ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</dt>
+                <dd>{{ jobPosting.company ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</dt>
+                <dd>{{ jobPosting.location ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.JOB_RESULT_EMPLOYMENT_TYPE' | translate }}</dt>
+                <dd>{{ jobPosting.employmentType ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+              </dl>
+            }
+          </div>
+
+          <div>
+            <h3>{{ 'HOME.JOB_RESULT_FULL_CHAIN_HEADING' | translate }}</h3>
+            @if (fullChainError) {
+              <p role="alert">{{ 'HOME.FULL_CHAIN_ERROR' | translate }}</p>
+            }
+            @if (fullChainResult) {
+              <dl class="job-result">
+                <dt>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</dt>
+                <dd>{{ fullChainResult.company?.positions?.[0]?.title ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</dt>
+                <dd>{{ fullChainResult.company?.name ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</dt>
+                <dd>{{ fullChainResult.company?.locations?.[0]?.city ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.JOB_RESULT_EMPLOYMENT_TYPE' | translate }}</dt>
+                <dd>{{ fullChainResult.employmentType ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.FULL_CHAIN_CONTACT_EMAIL' | translate }}</dt>
+                <dd>{{ fullChainResult.company?.positions?.[0]?.email ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.FULL_CHAIN_WEBSITE' | translate }}</dt>
+                <dd>{{ fullChainResult.company?.positions?.[0]?.website ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+                <dt>{{ 'HOME.FULL_CHAIN_DEADLINE' | translate }}</dt>
+                <dd>{{ fullChainResult.deadline ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+              </dl>
+            }
+          </div>
+        </div>
+
+        @if (hasAnyResult) {
+          <div class="merge-panel">
+            <h3 id="merge-heading">{{ 'HOME.MERGE_HEADING' | translate }}</h3>
+            @if (nameConflict || titleConflict || locationConflict) {
+              <p>{{ 'HOME.MERGE_CONFLICT_INTRO' | translate }}</p>
+
+              @if (nameConflict) {
+                <fieldset>
+                  <legend>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</legend>
+                  <label>
+                    <input type="radio" name="name-source" value="fullChain" [(ngModel)]="selectedSource.name"/>
+                    {{ fullChainResult?.company?.name }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_FULL_CHAIN' | translate }})</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="name-source" value="overview" [(ngModel)]="selectedSource.name"/>
+                    {{ jobPosting?.company }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_OVERVIEW' | translate }})</span>
+                  </label>
+                </fieldset>
+              }
+
+              @if (titleConflict) {
+                <fieldset>
+                  <legend>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</legend>
+                  <label>
+                    <input type="radio" name="title-source" value="fullChain" [(ngModel)]="selectedSource.title"/>
+                    {{ fullChainResult?.company?.positions?.[0]?.title }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_FULL_CHAIN' | translate }})</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="title-source" value="overview" [(ngModel)]="selectedSource.title"/>
+                    {{ jobPosting?.title }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_OVERVIEW' | translate }})</span>
+                  </label>
+                </fieldset>
+              }
+
+              @if (locationConflict) {
+                <fieldset>
+                  <legend>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</legend>
+                  <label>
+                    <input type="radio" name="location-source" value="fullChain" [(ngModel)]="selectedSource.location"/>
+                    {{ fullChainResult?.company?.locations?.[0]?.city }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_FULL_CHAIN' | translate }})</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="location-source" value="overview" [(ngModel)]="selectedSource.location"/>
+                    {{ jobPosting?.location }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_OVERVIEW' | translate }})</span>
+                  </label>
+                </fieldset>
+              }
+            }
+
+            <button type="button" class="btn-primary" (click)="submitAsCompany()">
+              {{ 'HOME.USE_FOR_NEW_COMPANY' | translate }}
+            </button>
+          </div>
         }
       </div>
     </section>
@@ -73,6 +163,14 @@
           <label for="sender-email">{{ 'HOME.SENDER_EMAIL_LABEL' | translate }}</label>
           <input id="sender-email" name="sender-email" type="email" required
             aria-required="true" [(ngModel)]="senderEmail"/>
+        </div>
+        <div class="field">
+          <label for="template-language">{{ 'HOME.TEMPLATE_LANGUAGE_LABEL' | translate }}</label>
+          <select id="template-language" name="template-language" [(ngModel)]="templateLanguage">
+            @for (opt of languageOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label | translate }}</option>
+            }
+          </select>
         </div>
         @if (templateError) {
           <p role="alert">{{ 'HOME.TEMPLATE_ERROR' | translate }}</p>

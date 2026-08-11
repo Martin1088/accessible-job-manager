@@ -53,14 +53,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-public class CoverLetterService {
+public class WordCoverLetterService {
 
     private final RestClient restClient;
     private final String gotenbergUrl;
     private final MessageSource messageSource;
 
-    public CoverLetterService(@Value("${gotenberg.url}") String gotenbergUrl,
-                              MessageSource messageSource) {
+    public WordCoverLetterService(@Value("${gotenberg.url}") String gotenbergUrl,
+                                  MessageSource messageSource) {
         this.gotenbergUrl = gotenbergUrl;
         this.messageSource = messageSource;
         this.restClient = RestClient.create();
@@ -157,7 +157,7 @@ public class CoverLetterService {
      * recipient address / date / subject / greeting as MERGEFIELDs in the body,
      * and an empty placeholder where the letter text goes.
      */
-    public byte[] createTemplateWithHeader(Map<String, String> personalData) throws Exception {
+    public byte[] createTemplateWithHeader(Map<String, String> personalData, Language language) throws Exception {
         WordprocessingMLPackage wordPackage = WordprocessingMLPackage.createPackage();
         ObjectFactory factory = Context.getWmlObjectFactory();
 
@@ -184,13 +184,13 @@ public class CoverLetterService {
         content.add(factory.createP());
         content.add(dateFieldParagraph(factory));
 
-        List<R> subjectRuns = new ArrayList<>(List.of(literalRun(factory, "Bewerbung als ")));
+        List<R> subjectRuns = new ArrayList<>(List.of(literalRun(factory, label("coverLetter.subjectPrefix", language) + " ")));
         subjectRuns.addAll(mergeFieldRuns(factory, "position", "«position»"));
         content.add(paragraphOf(factory, subjectRuns));
 
         content.add(factory.createP());
 
-        List<R> greetingRuns = new ArrayList<>(List.of(literalRun(factory, "Sehr ")));
+        List<R> greetingRuns = new ArrayList<>(List.of(literalRun(factory, label("coverLetter.greetingPrefix", language) + " ")));
         greetingRuns.addAll(mergeFieldRuns(factory, "contact", "«contact»"));
         greetingRuns.add(literalRun(factory, ","));
         content.add(paragraphOf(factory, greetingRuns));
@@ -337,18 +337,14 @@ public class CoverLetterService {
 
     public String buildSalutation(CompanyPosition position, Language language) {
         Gender gender = position.getContactGender() != null ? position.getContactGender() : Gender.TEAM;
-        Locale locale = toLocale(language);
+        Locale locale = language != null ? language.locale() : Locale.GERMAN;
         String phrase = messageSource.getMessage("salutation." + gender.name(), null, locale);
         return gender == Gender.TEAM ? phrase : phrase + " " + formatName(position);
     }
 
-    private static Locale toLocale(Language language) {
-        if (language == null) return Locale.GERMAN;
-        return switch (language) {
-            case GERMAN -> Locale.GERMAN;
-            case ENGLISH -> Locale.ENGLISH;
-            case DUTCH -> Locale.forLanguageTag("nl");
-        };
+    public String label(String key, Language language) {
+        Locale locale = language != null ? language.locale() : Locale.GERMAN;
+        return messageSource.getMessage(key, null, locale);
     }
 
     private String formatName(CompanyPosition position) {

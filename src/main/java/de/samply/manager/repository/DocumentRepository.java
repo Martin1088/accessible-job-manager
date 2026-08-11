@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
     List<Document> findByUserId(String userId);
     List<Document> findByUserIdAndType(String userId, DocumentType type);
+    List<Document> findByCompanyPositionIdAndTypeOrderByCreatedAtDesc(Long companyPositionId, DocumentType type);
 }

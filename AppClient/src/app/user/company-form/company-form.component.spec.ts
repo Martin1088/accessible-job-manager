@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
+import { provideHttpClient, withXhr } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 
@@ -25,7 +27,9 @@ describe('CompanyFormComponent', () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => null } } }
         },
-        provideTranslateService({ fallbackLang: 'en' })
+        provideTranslateService({ fallbackLang: 'en' }),
+        provideHttpClient(withXhr()),
+        provideHttpClientTesting(),
       ]
     }).compileComponents();
 

@@ -57,7 +57,7 @@ Unauthenticated `text/html` requests are redirected to OAuth; API requests recei
 
 ### Cover letter generation
 
-`CoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `DocumentStorageService`.
+`WordCoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `DocumentStorageService`.
 
 ### Angular routing & guards
 
@@ -67,6 +67,18 @@ Function-based guards in `AppClient/src/app/core/guards/`:
 - `userGuard` — rejects advisors and reviewers from user-only routes (`/companies`, `/applications`, `/documents`)
 
 Home components for each role redirect away if the role doesn't match (advisors → `/advisor`, reviewers → `/reviewer`).
+
+## Backend conventions
+
+### Error handling
+
+Services must throw `de.samply.manager.exception.ApiException` subtypes (`NotFound`, `Forbidden`, `Conflict`, `BadRequest`, `UnsupportedMediaType`, `Unauthorized`, `BadGateway`, `InternalServerError`) instead of constructing `ResponseStatusException` inline. `GlobalExceptionHandler` is the single place that maps exceptions to the `{status, error, message}` response body — add a new `@ExceptionHandler` there (or a new `ApiException` subtype) rather than handling errors ad hoc in a controller or service.
+
+### No hardcoded user-facing strings
+
+Error messages and other user-facing text belong in `src/main/resources/messages*.properties`, resolved via the injected `MessageSource` — never as string literals in Java. Two patterns are in use depending on whether the text varies by the `Language` enum:
+- **Language-dependent text** (e.g. cover letter labels, salutations): keyed the same across `messages.properties`/`messages_de.properties`/`messages_en.properties`/`messages_nl.properties`, resolved via `Language.locale()` (see `CoverLetterService.label(key, language)`).
+- **Locale-independent text** (e.g. API error messages, like `error.snapshot.*` in `JobPostingSnapshotService`): keyed only in the base `messages.properties`, resolved with `messageSource.getMessage(key, args, Locale.ROOT)` — Spring falls back to the base bundle when a locale-specific file lacks the key.
 
 ## Testing notes
 

@@ -64,4 +64,16 @@ public abstract class ApiException extends RuntimeException {
             super(HttpStatus.UNAUTHORIZED, message);
         }
     }
+
+    public static final class BadGateway extends ApiException {
+        public BadGateway(String message) {
+            super(HttpStatus.BAD_GATEWAY, message);
+        }
+    }
+
+    public static final class InternalServerError extends ApiException {
+        public InternalServerError(String message) {
+            super(HttpStatus.INTERNAL_SERVER_ERROR, message);
+        }
+    }
 }

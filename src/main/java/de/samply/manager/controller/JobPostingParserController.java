@@ -1,11 +1,11 @@
 package de.samply.manager.controller;
 
+import de.samply.manager.dto.DocumentDto;
 import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.jobimport.extractor.ExtractionDebugReport;
 import de.samply.manager.jobimport.extractor.JobPosting;
 import de.samply.manager.jobimport.extractor.JobPostingExtractionPipeline;
-import de.samply.manager.model.Document;
 import de.samply.manager.types.Language;
 import de.samply.manager.services.JobPostingParserService;
 import de.samply.manager.services.JobPostingSnapshotService;
@@ -19,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -67,15 +68,35 @@ public class JobPostingParserController {
         return extractionPipeline.run(document, plainText, page.url().toString(), boardHint);
     }
 
+    @PostMapping("/snapshot-validate")
+    public ResponseEntity<byte[]> validateSnapshot(
+            @RequestParam("url") String url,
+            @AuthenticationPrincipal OidcUser user) {
+        byte[] pdf = jobPostingSnapshotService.snapshotToPdf(url);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"job-posting-preview.pdf\"")
+                .body(pdf);
+    }
+
+    @GetMapping("/snapshot")
+    public List<DocumentDto> listSnapshots(
+            @RequestParam("companyPositionId") Long companyPositionId,
+            @AuthenticationPrincipal OidcUser user) {
+        return jobPostingSnapshotService.listForPosition(companyPositionId, user.getSubject()).stream()
+                .map(DocumentDto::from)
+                .toList();
+    }
+
     @PostMapping("/snapshot")
     @ResponseStatus(HttpStatus.CREATED)
-    public Document createSnapshot(
+    public DocumentDto createSnapshot(
             @RequestParam("url") String url,
             @RequestParam("companyPositionId") Long companyPositionId,
             @RequestParam(value = "label", defaultValue = "Job posting snapshot") String label,
             @RequestParam(value = "language", defaultValue = "GERMAN") Language language,
             @AuthenticationPrincipal OidcUser user) {
-        return jobPostingSnapshotService.save(url, companyPositionId, label, language, user.getSubject());
+        return DocumentDto.from(jobPostingSnapshotService.save(url, companyPositionId, label, language, user.getSubject()));
     }
 
     @GetMapping("/snapshot/{documentId}")
@@ -93,10 +114,10 @@ public class JobPostingParserController {
     }
 
     @PutMapping("/snapshot/{documentId}")
-    public Document updateSnapshot(
+    public DocumentDto updateSnapshot(
             @PathVariable UUID documentId,
             @RequestBody UpdateDocumentRequest request,
             @AuthenticationPrincipal OidcUser user) {
-        return jobPostingSnapshotService.update(documentId, user.getSubject(), request.label(), request.language());
+        return DocumentDto.from(jobPostingSnapshotService.update(documentId, user.getSubject(), request.label(), request.language()));
     }
 }

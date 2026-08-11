@@ -3,9 +3,14 @@ import { Company } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { Router } from '@angular/router';
 
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
+
+interface JobPostingSnapshot {
+  id: string;
+}
 
 function yearOf(iso: string | null | undefined): number | null {
   if (!iso) return null;
@@ -63,6 +68,11 @@ export class CompanyListComponent implements OnInit {
       }),
     },
     {
+      label: 'COMPANIES.ACTION_VIEW_JOB_POSTING',
+      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_VIEW_JOB_POSTING_ARIA', { position: row.positionTitle, company: row.name }),
+      handler: (row) => this.viewJobPosting(row.positionId),
+    },
+    {
       label: 'COMPANIES.ACTION_EDIT',
       ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_EDIT_ARIA', { company: row.name }),
       handler: (row) => this.router.navigate(['/companies/edit', row.companyId]),
@@ -74,7 +84,12 @@ export class CompanyListComponent implements OnInit {
     },
   ];
 
-  constructor(private companyService: CompanyService, private router: Router, private translate: TranslateService) {}
+  constructor(
+    private companyService: CompanyService,
+    private router: Router,
+    private translate: TranslateService,
+    private http: HttpClient,
+  ) {}
 
   ngOnInit(): void {
     this.companyService.getAll().subscribe({
@@ -150,6 +165,25 @@ export class CompanyListComponent implements OnInit {
         this.allRows = this.toRows(this.companies);
       },
       error: () => this.errorMessage = this.translate.instant('COMPANIES.ERROR_DELETE')
+    });
+  }
+
+  // Opens the most recently saved PDF snapshot of the job posting for this
+  // position in a new tab, if one was generated when the company was created
+  // from a parsed job posting.
+  private viewJobPosting(positionId: number | undefined): void {
+    if (!positionId) return;
+    this.errorMessage = '';
+    const params = new HttpParams().set('companyPositionId', positionId);
+    this.http.get<JobPostingSnapshot[]>('/api/posting/snapshot', { params }).subscribe({
+      next: (docs) => {
+        if (!docs.length) {
+          this.errorMessage = this.translate.instant('COMPANIES.NO_JOB_POSTING_FOUND');
+          return;
+        }
+        window.open(`/api/posting/snapshot/${docs[0].id}`, '_blank', 'noopener');
+      },
+      error: () => this.errorMessage = this.translate.instant('COMPANIES.ERROR_LOAD_JOB_POSTING'),
     });
   }
 
