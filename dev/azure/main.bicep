@@ -9,7 +9,15 @@
 //                    oidcClientSecret='<CLIENT_SECRET>' \
 //                    oidcIssuerUri='https://.../application/o/<slug>/' \
 //                    oidcAuthUri='https://.../application/o/authorize/' \
-//                    oidcRedirectUri='https://<expected-app-fqdn>/login/oauth2/code/authentik'
+//                    oidcRedirectUri='https://<expected-app-fqdn>/login/oauth2/code/authentik' \
+//                    azureOpenAiEndpoint='https://ajm-openai.openai.azure.com/' \
+//                    azureOpenAiApiKey='<AZURE_OPENAI_API_KEY>'
+//
+// azureOpenAiEndpoint/azureOpenAiApiKey wire up the job-posting LLM extractor
+// (jobPostingLlmProvider defaults to "azure" since no Ollama container is
+// deployed here). See dev/azure/deploy-gpt-4.1-mini.sh for provisioning the
+// deployment itself and check-openai-capacity.sh for picking a region/model
+// with available quota.
 //
 // oidcRedirectUri depends on the app's FQDN, which is only known after the
 // first deployment (see output oidcRedirectUri). Workflow: deploy once with a
@@ -68,6 +76,22 @@ param appImage string = 'ghcr.io/martin1088/accessible-job-manager:latest'
 
 @description('Minimum replicas of the app. 0 = scale-to-zero (cheaper, but cold start)')
 param appMinReplicas int = 0
+
+@description('Job posting LLM extractor provider. No Ollama container is deployed here, so this defaults to "azure"')
+param jobPostingLlmProvider string = 'azure'
+
+@description('Azure OpenAI resource endpoint, e.g. https://ajm-openai.openai.azure.com/. Leave empty if jobPostingLlmProvider is not "azure"')
+param azureOpenAiEndpoint string = ''
+
+@description('Azure OpenAI deployment name')
+param azureOpenAiDeployment string = 'gpt-4.1-mini'
+
+@description('Azure OpenAI API version')
+param azureOpenAiApiVersion string = '2024-08-01-preview'
+
+@description('Azure OpenAI API key')
+@secure()
+param azureOpenAiApiKey string = ''
 
 // ---------------------------------------------------------------------------
 // Storage: account + blob container (documents)
@@ -255,6 +279,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'oidc-client-secret'
           value: oidcClientSecret
         }
+        {
+          name: 'azure-openai-api-key'
+          value: azureOpenAiApiKey
+        }
       ]
     }
     template: {
@@ -285,6 +313,11 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'GROUP_USER', value: groupUser }
             { name: 'GROUP_ADVISOR', value: groupAdvisor }
             { name: 'GROUP_REVIEWER', value: groupReviewer }
+            { name: 'JOB_POSTING_LLM_PROVIDER', value: jobPostingLlmProvider }
+            { name: 'AZURE_OPENAI_ENDPOINT', value: azureOpenAiEndpoint }
+            { name: 'AZURE_OPENAI_DEPLOYMENT', value: azureOpenAiDeployment }
+            { name: 'AZURE_OPENAI_API_VERSION', value: azureOpenAiApiVersion }
+            { name: 'AZURE_OPENAI_API_KEY', secretRef: 'azure-openai-api-key' }
           ]
         }
       ]
