@@ -1,0 +1,78 @@
+main {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem 4rem;
+}
+
+.provider-switch {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem 1rem;
+  margin: 0 0 2rem;
+  background: #fff;
+
+  legend { font-size: 0.95rem; font-weight: 600; padding: 0 0.4rem; }
+
+  label {
+    display: block;
+    font-size: 0.9rem;
+    padding: 0.25rem 0;
+    cursor: pointer;
+  }
+
+  input:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+}
+
+.hint {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0.5rem 0 0;
+  max-width: 62ch;
+}
+
+.error {
+  color: #b3261e;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.template-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+
+  label { font-size: 0.875rem; font-weight: 500; }
+
+  input, select {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
+.btn-primary {
+  padding: 0.5rem 1.2rem;
+  background: #005fcc;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover:not(:disabled) { background: #004aaa; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+}

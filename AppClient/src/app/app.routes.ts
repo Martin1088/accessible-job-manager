@@ -24,6 +24,14 @@ export const routes: Routes = [
   { path: 'applications', component: ApplicationListComponent, canActivate: [authGuard, userGuard] },
   { path: 'documents',    component: DocumentsComponent,       canActivate: [authGuard, userGuard] },
   { path: 'companies',    component: CompanyListComponent,     canActivate: [authGuard, userGuard] },
+  {
+    // Lazy: this route owns the only reactive form in the app, so keeping
+    // ReactiveFormsModule out of the initial chunk keeps the app under budget.
+    path: 'cover-letter-template',
+    loadComponent: () => import('./user/cover-letter-template/cover-letter-template.component')
+      .then(m => m.CoverLetterTemplateComponent),
+    canActivate: [authGuard, userGuard]
+  },
   { path: 'companies/new',       component: CompanyFormComponent, canActivate: [authGuard, userGuard] },
   { path: 'companies/edit/:id',  component: CompanyFormComponent, canActivate: [authGuard, userGuard] },
   {

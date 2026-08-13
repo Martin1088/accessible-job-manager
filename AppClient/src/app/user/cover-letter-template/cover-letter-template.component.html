@@ -1,0 +1,80 @@
+<main id="main-content" tabindex="-1">
+  <h1>{{ 'COVER_LETTER_TEMPLATE.TITLE' | translate }}</h1>
+
+  @if (profileError) {
+    <p role="alert" class="error">{{ 'COVER_LETTER_TEMPLATE.PROFILE_ERROR' | translate }}</p>
+  }
+
+  <!--
+    A radio group rather than a tablist: radios are native, announce as "1 of 2" and
+    need no roving tabindex, which keeps the switch predictable under a screen reader.
+  -->
+  <fieldset class="provider-switch">
+    <legend>{{ 'COVER_LETTER_TEMPLATE.PROVIDER_LEGEND' | translate }}</legend>
+    <label>
+      <input type="radio" name="provider" value="HTML" [(ngModel)]="provider">
+      {{ 'COVER_LETTER_TEMPLATE.PROVIDER_HTML' | translate }}
+    </label>
+    <label>
+      <input type="radio" name="provider" value="WORD" [(ngModel)]="provider">
+      {{ 'COVER_LETTER_TEMPLATE.PROVIDER_WORD' | translate }}
+    </label>
+    <p class="hint">
+      {{ (provider === 'HTML' ? 'COVER_LETTER_TEMPLATE.PROVIDER_HTML_HELP'
+                              : 'COVER_LETTER_TEMPLATE.PROVIDER_WORD_HELP') | translate }}
+    </p>
+  </fieldset>
+
+  @if (provider === 'HTML') {
+    <section aria-labelledby="html-heading">
+      <h2 id="html-heading">{{ 'COVER_LETTER_TEMPLATE.HTML_HEADING' | translate }}</h2>
+      <app-cover-letter-form/>
+    </section>
+  } @else {
+    <section aria-labelledby="template-heading">
+      <h2 id="template-heading">{{ 'COVER_LETTER_TEMPLATE.HEADING' | translate }}</h2>
+      <p>{{ 'COVER_LETTER_TEMPLATE.INTRO' | translate }}</p>
+      <form class="template-card" (ngSubmit)="downloadTemplate()">
+        <div class="field">
+          <label for="sender-name">{{ 'COVER_LETTER_TEMPLATE.SENDER_NAME_LABEL' | translate }}</label>
+          <input id="sender-name" name="sender-name" type="text" required
+            aria-required="true" [(ngModel)]="senderName"/>
+        </div>
+        <div class="field">
+          <label for="sender-street">{{ 'COVER_LETTER_TEMPLATE.SENDER_STREET_LABEL' | translate }}</label>
+          <input id="sender-street" name="sender-street" type="text" required
+            aria-required="true" [(ngModel)]="senderStreet"/>
+        </div>
+        <div class="field">
+          <label for="sender-postal-code">{{ 'COVER_LETTER_TEMPLATE.SENDER_POSTAL_CODE_LABEL' | translate }}</label>
+          <input id="sender-postal-code" name="sender-postal-code" type="text" required
+            aria-required="true" [(ngModel)]="senderPostalCode"/>
+        </div>
+        <div class="field">
+          <label for="sender-city">{{ 'COVER_LETTER_TEMPLATE.SENDER_CITY_LABEL' | translate }}</label>
+          <input id="sender-city" name="sender-city" type="text" required
+            aria-required="true" [(ngModel)]="senderCity"/>
+        </div>
+        <div class="field">
+          <label for="sender-email">{{ 'COVER_LETTER_TEMPLATE.SENDER_EMAIL_LABEL' | translate }}</label>
+          <input id="sender-email" name="sender-email" type="email" required
+            aria-required="true" [(ngModel)]="senderEmail"/>
+        </div>
+        <div class="field">
+          <label for="template-language">{{ 'COVER_LETTER_TEMPLATE.LANGUAGE_LABEL' | translate }}</label>
+          <select id="template-language" name="template-language" [(ngModel)]="templateLanguage">
+            @for (opt of languageOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label | translate }}</option>
+            }
+          </select>
+        </div>
+        @if (templateError) {
+          <p role="alert" class="error">{{ 'COVER_LETTER_TEMPLATE.ERROR' | translate }}</p>
+        }
+        <button type="submit" class="btn-primary" [disabled]="!templateFormValid || downloadingTemplate">
+          {{ (downloadingTemplate ? 'COVER_LETTER_TEMPLATE.DOWNLOADING' : 'COVER_LETTER_TEMPLATE.DOWNLOAD') | translate }}
+        </button>
+      </form>
+    </section>
+  }
+</main>

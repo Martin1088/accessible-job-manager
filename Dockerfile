@@ -1,7 +1,7 @@
 # ============================
 # 1. Build stage
 # ============================
-FROM eclipse-temurin:21-jdk-jammy AS builder
+FROM eclipse-temurin:26-jdk-jammy AS builder
 
 # Install Node.js 24
 RUN apt-get update && \
@@ -29,7 +29,7 @@ RUN ./gradlew build -x test
 # ============================
 # 2. Runtime stage
 # ============================
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:26-jre-jammy
 
 WORKDIR /app
 

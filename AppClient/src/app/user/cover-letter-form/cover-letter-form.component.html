@@ -1,0 +1,246 @@
+<form [formGroup]="letter" (ngSubmit)="preview()" novalidate>
+
+  <!-- Focused on failed submit: a list of what to fix, each entry a link to the field. -->
+  @if (submitted && invalidFields.length) {
+    <div #errorSummary class="error-summary" tabindex="-1" aria-labelledby="error-summary-heading">
+      <h3 id="error-summary-heading">{{ 'COVER_LETTER_FORM.ERROR_SUMMARY_HEADING' | translate }}</h3>
+      <ul role="list">
+        @for (field of invalidFields; track field.id) {
+          <li><a [href]="'#' + field.id">{{ field.label | translate }}</a></li>
+        }
+      </ul>
+    </div>
+  }
+
+  @if (loadError) {
+    <p role="alert" class="error">{{ 'COVER_LETTER_FORM.LOAD_ERROR' | translate }}</p>
+  }
+
+  <fieldset>
+    <legend>{{ 'COVER_LETTER_FORM.RECIPIENT_LEGEND' | translate }}</legend>
+    <p id="application-help" class="hint">{{ 'COVER_LETTER_FORM.RECIPIENT_HELP' | translate }}</p>
+
+    <div class="field">
+      <label for="application-id">{{ 'COVER_LETTER_FORM.APPLICATION_LABEL' | translate }}</label>
+      <select id="application-id" formControlName="applicationId" required aria-required="true"
+        [attr.aria-invalid]="invalid('applicationId') ? 'true' : null"
+        [attr.aria-describedby]="describedBy('applicationId', 'application-help', 'application-id-error')">
+        <option [ngValue]="null">{{ 'COVER_LETTER_FORM.APPLICATION_PLACEHOLDER' | translate }}</option>
+        @for (application of applicationOptions; track application.id) {
+          <option [ngValue]="application.id">{{ application.companyName }} — {{ application.positionTitle }}</option>
+        }
+      </select>
+      @if (invalid('applicationId')) {
+        <p id="application-id-error" role="alert" class="error">{{ 'COVER_LETTER_FORM.APPLICATION_REQUIRED' | translate }}</p>
+      }
+    </div>
+
+    <p aria-live="polite" aria-atomic="true" class="derived">
+      @if (selectedApplication) {
+        {{ 'COVER_LETTER_FORM.RECIPIENT_DERIVED' | translate:{
+          company: selectedApplication.companyName,
+          position: selectedApplication.positionTitle
+        } }}
+      }
+    </p>
+  </fieldset>
+
+  <fieldset formGroupName="sender">
+    <legend>{{ 'COVER_LETTER_FORM.SENDER_LEGEND' | translate }}</legend>
+    <p id="sender-help" class="hint">{{ 'COVER_LETTER_FORM.SENDER_HELP' | translate }}</p>
+
+    <div class="field">
+      <label for="sender-name">{{ 'COVER_LETTER_FORM.SENDER_NAME_LABEL' | translate }}</label>
+      <input id="sender-name" type="text" formControlName="name" required aria-required="true"
+        autocomplete="name"
+        [attr.aria-invalid]="invalid('sender.name') ? 'true' : null"
+        [attr.aria-describedby]="describedBy('sender.name', 'sender-name-error')">
+      @if (invalid('sender.name')) {
+        <p id="sender-name-error" role="alert" class="error">{{ 'COVER_LETTER_FORM.REQUIRED' | translate }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="sender-street">{{ 'COVER_LETTER_FORM.SENDER_STREET_LABEL' | translate }}</label>
+      <input id="sender-street" type="text" formControlName="street" required aria-required="true"
+        autocomplete="street-address"
+        [attr.aria-invalid]="invalid('sender.street') ? 'true' : null"
+        [attr.aria-describedby]="describedBy('sender.street', 'sender-street-error')">
+      @if (invalid('sender.street')) {
+        <p id="sender-street-error" role="alert" class="error">{{ 'COVER_LETTER_FORM.REQUIRED' | translate }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="sender-postal-code">{{ 'COVER_LETTER_FORM.SENDER_POSTAL_CODE_LABEL' | translate }}</label>
+      <input id="sender-postal-code" type="text" formControlName="postalCode" required aria-required="true"
+        autocomplete="postal-code" inputmode="numeric"
+        [attr.aria-invalid]="invalid('sender.postalCode') ? 'true' : null"
+        [attr.aria-describedby]="describedBy('sender.postalCode', 'sender-postal-code-error')">
+      @if (invalid('sender.postalCode')) {
+        <p id="sender-postal-code-error" role="alert" class="error">{{ 'COVER_LETTER_FORM.REQUIRED' | translate }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="sender-city">{{ 'COVER_LETTER_FORM.SENDER_CITY_LABEL' | translate }}</label>
+      <input id="sender-city" type="text" formControlName="city" required aria-required="true"
+        autocomplete="address-level2"
+        [attr.aria-invalid]="invalid('sender.city') ? 'true' : null"
+        [attr.aria-describedby]="describedBy('sender.city', 'sender-city-help', 'sender-city-error')">
+      <p id="sender-city-help" class="hint">{{ 'COVER_LETTER_FORM.SENDER_CITY_HELP' | translate }}</p>
+      @if (invalid('sender.city')) {
+        <p id="sender-city-error" role="alert" class="error">{{ 'COVER_LETTER_FORM.REQUIRED' | translate }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="sender-email">{{ 'COVER_LETTER_FORM.SENDER_EMAIL_LABEL' | translate }}</label>
+      <input id="sender-email" type="email" formControlName="email" autocomplete="email"
+        [attr.aria-invalid]="invalid('sender.email') ? 'true' : null"
+        [attr.aria-describedby]="describedBy('sender.email', 'sender-email-error')">
+      @if (invalid('sender.email')) {
+        <p id="sender-email-error" role="alert" class="error">{{ 'COVER_LETTER_FORM.EMAIL_INVALID' | translate }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="sender-phone">{{ 'COVER_LETTER_FORM.SENDER_PHONE_LABEL' | translate }}</label>
+      <input id="sender-phone" type="tel" formControlName="phone" autocomplete="tel">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>{{ 'COVER_LETTER_FORM.CONTENT_LEGEND' | translate }}</legend>
+
+    <div class="field">
+      <label for="subject">{{ 'COVER_LETTER_FORM.SUBJECT_LABEL' | translate }}</label>
+      <input id="subject" type="text" formControlName="subject" aria-describedby="subject-help">
+      <p id="subject-help" class="hint">{{ 'COVER_LETTER_FORM.SUBJECT_HELP' | translate }}</p>
+    </div>
+
+    <div class="field">
+      <label for="greeting">{{ 'COVER_LETTER_FORM.GREETING_LABEL' | translate }}</label>
+      <input id="greeting" type="text" formControlName="greeting" aria-describedby="greeting-help">
+      <p id="greeting-help" class="hint">{{ 'COVER_LETTER_FORM.GREETING_HELP' | translate }}</p>
+    </div>
+
+    <h3 id="blocks-heading">{{ 'COVER_LETTER_FORM.BLOCKS_HEADING' | translate }}</h3>
+    <p id="blocks-help" class="hint">{{ 'COVER_LETTER_FORM.BLOCKS_HELP' | translate }}</p>
+
+    <div formArrayName="blocks">
+      @for (block of blocks.controls; track $index; let i = $index, first = $first, last = $last) {
+        <fieldset class="block" [formGroupName]="i">
+          <legend>{{ 'COVER_LETTER_FORM.BLOCK_LEGEND' | translate:{ number: i + 1, total: blocks.length } }}</legend>
+
+          <div class="field">
+            <label [attr.for]="'block-type-' + i">{{ 'COVER_LETTER_FORM.BLOCK_TYPE_LABEL' | translate }}</label>
+            <select [id]="'block-type-' + i" formControlName="type">
+              @for (type of blockTypes; track type) {
+                <option [value]="type">{{ 'COVER_LETTER_FORM.BLOCK_TYPE_' + type | translate }}</option>
+              }
+            </select>
+          </div>
+
+          @if (isList(block)) {
+            <div class="field" [formArrayName]="'items'">
+              @for (item of items(block).controls; track $index; let j = $index) {
+                <div class="item-row">
+                  <label [attr.for]="'block-' + i + '-item-' + j">
+                    {{ 'COVER_LETTER_FORM.ITEM_LABEL' | translate:{ number: j + 1 } }}
+                  </label>
+                  <input [id]="'block-' + i + '-item-' + j" type="text" [formControlName]="j">
+                  <button type="button" class="btn-remove" (click)="removeItem(block, i, j)">
+                    {{ 'COVER_LETTER_FORM.REMOVE_ITEM' | translate:{ number: j + 1 } }}
+                  </button>
+                </div>
+              }
+              <button type="button" class="btn-secondary" [id]="'block-' + i + '-add-item'" (click)="addItem(block, i)">
+                {{ 'COVER_LETTER_FORM.ADD_ITEM' | translate }}
+              </button>
+            </div>
+          } @else {
+            <div class="field">
+              <label [attr.for]="'block-text-' + i">{{ 'COVER_LETTER_FORM.BLOCK_TEXT_LABEL' | translate }}</label>
+              <textarea [id]="'block-text-' + i" formControlName="text" rows="5"
+                aria-describedby="blocks-help"></textarea>
+            </div>
+          }
+
+          <div class="block-actions">
+            <button type="button" class="btn-secondary" [id]="'block-move-up-' + i"
+              [disabled]="first" (click)="moveBlock(i, -1)">
+              {{ 'COVER_LETTER_FORM.MOVE_UP' | translate:{ number: i + 1 } }}
+            </button>
+            <button type="button" class="btn-secondary" [id]="'block-move-down-' + i"
+              [disabled]="last" (click)="moveBlock(i, 1)">
+              {{ 'COVER_LETTER_FORM.MOVE_DOWN' | translate:{ number: i + 1 } }}
+            </button>
+            <button type="button" class="btn-remove" (click)="removeBlock(i)">
+              {{ 'COVER_LETTER_FORM.REMOVE_BLOCK' | translate:{ number: i + 1 } }}
+            </button>
+          </div>
+        </fieldset>
+      }
+    </div>
+
+    <button type="button" class="btn-secondary" id="add-block" (click)="addBlock()">
+      {{ 'COVER_LETTER_FORM.ADD_BLOCK' | translate }}
+    </button>
+
+    <div class="field">
+      <label for="closing">{{ 'COVER_LETTER_FORM.CLOSING_LABEL' | translate }}</label>
+      <input id="closing" type="text" formControlName="closing" aria-describedby="closing-help">
+      <p id="closing-help" class="hint">{{ 'COVER_LETTER_FORM.CLOSING_HELP' | translate }}</p>
+    </div>
+  </fieldset>
+
+  <fieldset formArrayName="attachments">
+    <legend>{{ 'COVER_LETTER_FORM.ATTACHMENTS_LEGEND' | translate }}</legend>
+    <p id="attachments-help" class="hint">{{ 'COVER_LETTER_FORM.ATTACHMENTS_HELP' | translate }}</p>
+
+    @for (attachment of attachments.controls; track $index; let i = $index) {
+      <div class="item-row">
+        <label [attr.for]="'attachment-' + i">
+          {{ 'COVER_LETTER_FORM.ATTACHMENT_LABEL' | translate:{ number: i + 1 } }}
+        </label>
+        <input [id]="'attachment-' + i" type="text" [formControlName]="i" aria-describedby="attachments-help">
+        <button type="button" class="btn-remove" (click)="removeAttachment(i)">
+          {{ 'COVER_LETTER_FORM.REMOVE_ATTACHMENT' | translate:{ number: i + 1 } }}
+        </button>
+      </div>
+    }
+    <button type="button" class="btn-secondary" id="add-attachment" (click)="addAttachment()">
+      {{ 'COVER_LETTER_FORM.ADD_ATTACHMENT' | translate }}
+    </button>
+  </fieldset>
+
+  <div class="form-actions">
+    <button type="submit" class="btn-primary" [disabled]="previewing">
+      {{ (previewing ? 'COVER_LETTER_FORM.CHECKING' : 'COVER_LETTER_FORM.CHECK') | translate }}
+    </button>
+    <button type="button" class="btn-secondary" [disabled]="downloading" (click)="downloadPdf()">
+      {{ (downloading ? 'COVER_LETTER_FORM.CREATING_PDF' : 'COVER_LETTER_FORM.CREATE_PDF') | translate }}
+    </button>
+  </div>
+
+  @if (renderError) {
+    <p role="alert" class="error">{{ 'COVER_LETTER_FORM.RENDER_ERROR' | translate }}</p>
+  }
+</form>
+
+@if (pdfUrl) {
+  <p class="pdf-link">
+    <a id="pdf-download" [href]="pdfUrl" [download]="pdfFilename">
+      {{ 'COVER_LETTER_FORM.DOWNLOAD_PDF' | translate:{ filename: pdfFilename } }}
+    </a>
+  </p>
+}
+
+@if (previewText) {
+  <section class="preview" aria-labelledby="preview-heading">
+    <h3 id="preview-heading">{{ 'COVER_LETTER_FORM.PREVIEW_HEADING' | translate }}</h3>
+    <p class="hint">{{ 'COVER_LETTER_FORM.PREVIEW_HELP' | translate }}</p>
+    <pre class="preview-text">{{ previewText }}</pre>
+  </section>
+}

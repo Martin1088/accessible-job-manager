@@ -133,55 +133,6 @@
     <p role="alert">{{ 'HOME.PROFILE_ERROR' | translate }}</p>
   }
 
-  <!-- Personalized cover letter template -->
-  @if (profile) {
-    <section aria-labelledby="template-heading">
-      <h2 id="template-heading">{{ 'HOME.TEMPLATE_HEADING' | translate }}</h2>
-      <p>{{ 'HOME.TEMPLATE_INTRO' | translate }}</p>
-      <form class="template-card" (ngSubmit)="downloadTemplate()">
-        <div class="field">
-          <label for="sender-name">{{ 'HOME.SENDER_NAME_LABEL' | translate }}</label>
-          <input id="sender-name" name="sender-name" type="text" required
-            aria-required="true" [(ngModel)]="senderName"/>
-        </div>
-        <div class="field">
-          <label for="sender-street">{{ 'HOME.SENDER_STREET_LABEL' | translate }}</label>
-          <input id="sender-street" name="sender-street" type="text" required
-            aria-required="true" [(ngModel)]="senderStreet"/>
-        </div>
-        <div class="field">
-          <label for="sender-postal-code">{{ 'HOME.SENDER_POSTAL_CODE_LABEL' | translate }}</label>
-          <input id="sender-postal-code" name="sender-postal-code" type="text" required
-            aria-required="true" [(ngModel)]="senderPostalCode"/>
-        </div>
-        <div class="field">
-          <label for="sender-city">{{ 'HOME.SENDER_CITY_LABEL' | translate }}</label>
-          <input id="sender-city" name="sender-city" type="text" required
-            aria-required="true" [(ngModel)]="senderCity"/>
-        </div>
-        <div class="field">
-          <label for="sender-email">{{ 'HOME.SENDER_EMAIL_LABEL' | translate }}</label>
-          <input id="sender-email" name="sender-email" type="email" required
-            aria-required="true" [(ngModel)]="senderEmail"/>
-        </div>
-        <div class="field">
-          <label for="template-language">{{ 'HOME.TEMPLATE_LANGUAGE_LABEL' | translate }}</label>
-          <select id="template-language" name="template-language" [(ngModel)]="templateLanguage">
-            @for (opt of languageOptions; track opt.value) {
-              <option [value]="opt.value">{{ opt.label | translate }}</option>
-            }
-          </select>
-        </div>
-        @if (templateError) {
-          <p role="alert">{{ 'HOME.TEMPLATE_ERROR' | translate }}</p>
-        }
-        <button type="submit" class="btn-primary" [disabled]="!templateFormValid || downloadingTemplate">
-          {{ (downloadingTemplate ? 'HOME.DOWNLOADING_TEMPLATE' : 'HOME.DOWNLOAD_TEMPLATE') | translate }}
-        </button>
-      </form>
-    </section>
-  }
-
   <!-- Quick navigation -->
   <section aria-labelledby="nav-heading">
     <h2 id="nav-heading">{{ 'HOME.NAV_HEADING' | translate }}</h2>
@@ -196,6 +147,12 @@
         <a routerLink="/applications">
           <span class="quick-nav__title">{{ 'HOME.NAV_APPLICATIONS_TITLE' | translate }}</span>
           <span class="quick-nav__desc">{{ 'HOME.NAV_APPLICATIONS_DESC' | translate }}</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/cover-letter-template">
+          <span class="quick-nav__title">{{ 'HOME.NAV_TEMPLATE_TITLE' | translate }}</span>
+          <span class="quick-nav__desc">{{ 'HOME.NAV_TEMPLATE_DESC' | translate }}</span>
         </a>
       </li>
     </ul>

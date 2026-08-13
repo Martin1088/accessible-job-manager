@@ -38,6 +38,14 @@
             {{ 'NAV.COMPANIES' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+C' : 'c' }}</kbd>
           </a>
         </li>
+        <li>
+          <a routerLink="/cover-letter-template" routerLinkActive="active"
+            #rlaTemplate="routerLinkActive"
+            [attr.aria-current]="rlaTemplate.isActive ? 'page' : null"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+T' : 't Alt+Shift+T'">
+            {{ 'NAV.COVER_LETTER_TEMPLATE' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+T' : 't' }}</kbd>
+          </a>
+        </li>
       </ul>
     </nav>
   }

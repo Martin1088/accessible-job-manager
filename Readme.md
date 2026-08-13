@@ -8,14 +8,14 @@ A full-stack job application tracking portal built with accessibility as a first
 
 | Layer      | Technology                                          |
 |------------|-----------------------------------------------------|
-| Backend    | Spring Boot 3.4.4, Java 26, Spring Security OAuth2  |
+| Backend    | Spring Boot 3.5.16, Java 26, Spring Security OAuth2 |
 | Persistence| Spring Data JPA, PostgreSQL 16                      |
 | Document   | docx4j (mail merge), Gotenberg (PDF via LibreOffice)|
-| Frontend   | Angular 19 (standalone components)                  |
+| Frontend   | Angular 22 (standalone components)                  |
 | Auth       | OIDC via Authentik                                  |
 | Storage    | Garage (S3-compatible)                              |
 | Proxy      | Traefik v2                                          |
-| Build      | Gradle 9 (Groovy DSL), Angular CLI 19               |
+| Build      | Gradle 9 (Groovy DSL), Angular CLI 22               |
 | Job import | Ollama (local LLM, structured-output extraction)    |
 | i18n       | `@ngx-translate/core` (English, German, Dutch)      |
 
@@ -85,8 +85,8 @@ Roles are assigned via Authentik `groups` claim. The `GroupsGrantedAuthoritiesMa
 
 ### Prerequisites
 
-- Java 26 (or 21+)
-- Node 20+
+- Java 26
+- Node 24+
 - Docker + Docker Compose
 - A running Authentik instance
 - Ollama running locally with a pulled model (only needed for job posting import, e.g. `ollama pull qwen2.5:3b`)

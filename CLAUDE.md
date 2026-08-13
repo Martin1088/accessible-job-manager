@@ -33,7 +33,7 @@ cd dev && docker compose up -d   # Postgres, Garage (S3), Gotenberg, Traefik, Au
 
 ### Tech stack
 
-Spring Boot 3.4.4 · Java 26 · Lombok 1.18.38 · Angular 19 standalone · PostgreSQL · Garage S3 · Gotenberg (LibreOffice PDF) · OIDC via Authentik
+Spring Boot 3.5.16 · Java 26 · Lombok 1.18.38 · Angular 22 standalone · PostgreSQL · Garage S3 · Gotenberg (LibreOffice PDF) · OIDC via Authentik
 
 ### Build pipeline
 

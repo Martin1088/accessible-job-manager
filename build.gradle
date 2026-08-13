@@ -5,7 +5,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'org.springframework.boot' version '3.4.4'
+    id 'org.springframework.boot' version '3.5.16'
 }
 
 repositories {
@@ -20,8 +20,8 @@ configurations { mockitoAgent }
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    implementation platform('org.springframework.boot:spring-boot-dependencies:3.4.4')
-    annotationProcessor platform('org.springframework.boot:spring-boot-dependencies:3.4.4')
+    implementation platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
+    annotationProcessor platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
     implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.3'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.jsoup:jsoup:1.18.1'
@@ -45,7 +45,7 @@ dependencies {
     testImplementation libs.org.springframework.security.spring.security.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
-    mockitoAgent(platform('org.springframework.boot:spring-boot-dependencies:3.4.4'))
+    mockitoAgent(platform('org.springframework.boot:spring-boot-dependencies:3.5.16'))
     mockitoAgent('org.mockito:mockito-core') { transitive = false }
 }
 
@@ -53,8 +53,15 @@ dependencies {
 group = 'de.samply'
 version = '0.0.1-SNAPSHOT'
 description = 'Management Portal'
-java.sourceCompatibility = JavaVersion.VERSION_21
-java.targetCompatibility = JavaVersion.VERSION_21
+// Toolchain statt source/targetCompatibility: legt Compile- *und* API-Level
+// auf 26 fest. source/targetCompatibility haetten nur die Bytecode-Version
+// gesetzt, nicht die verfuegbare API -- Code gegen JDK-26-APIs waere lokal
+// durchgelaufen und erst im Docker-Build auf JDK 21 gebrochen.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(26)
+    }
+}
 
 publishing {
     publications {

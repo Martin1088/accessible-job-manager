@@ -28,6 +28,7 @@ export class AppComponent implements OnInit {
     'a': '/applications',
     'd': '/documents',
     'c': '/companies',
+    't': '/cover-letter-template',
     'h': '/guide',
   };
 
@@ -47,6 +48,14 @@ export class AppComponent implements OnInit {
     if (e.ctrlKey && e.altKey && !e.shiftKey && !e.metaKey && e.key.toLowerCase() === 'h') {
       e.preventDefault();
       this.router.navigate(['/guide']);
+      return;
+    }
+
+    // Cover letter template answers to Alt+Shift+T on every platform, not just
+    // Windows, so the combo keeps working where the bare 't' below also does.
+    if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 't') {
+      e.preventDefault();
+      this.router.navigate(['/cover-letter-template']);
       return;
     }
 
