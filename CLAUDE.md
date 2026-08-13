@@ -26,7 +26,8 @@ CHROME_BIN=/opt/homebrew/bin/chromium npx ng test --watch=false --browsers=Chrom
 ### Dev infrastructure
 
 ```bash
-cd dev && docker compose up -d   # Postgres, Garage (S3), Gotenberg, Traefik, Authentik
+cd dev && docker compose up -d                        # Postgres, Garage (S3), Gotenberg, Traefik
+cd dev && docker compose -f authentik.yml up -d       # Authentik (OIDC), separate stack
 ```
 
 ## Architecture

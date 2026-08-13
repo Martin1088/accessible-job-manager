@@ -1,51 +1,35 @@
 {
   "name": "accessible-job-manager",
 
-  // Neutrales Basis-Image: die java:1-*-Images gibt es nur bis 21, das JDK
-  // kommt daher aus dem Feature.
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
 
   "features": {
-    // JDK 26 (Temurin), passend zur lokalen Entwicklungsumgebung
-    // (~/.sdkman/candidates/java/26.0.1-tem). Verifiziert: Gradle 9.4.1
-    // laeuft auf JDK 26.
-    // installGradle: false -- gradlew laedt Gradle 9.4.1 selbst herunter,
-    // ein per Feature installiertes Gradle wuerde vom Wrapper ignoriert.
     "ghcr.io/devcontainers/features/java:1": {
       "version": "26",
       "jdkDistro": "tem",
       "installGradle": false
     },
-    // Node 24 -- gleiche Major wie der Dockerfile-Build-Stage
-    // (setup_24.x), damit Dev und Prod dieselbe Runtime nutzen.
-    // Angular 22 verlangt ^20.19 || ^22.12 || ^24.
     "ghcr.io/devcontainers/features/node:1": {
       "version": "24"
     },
-    // Docker-in-Docker: dev/docker-compose.yml startet selbst Container
-    // (Traefik, Postgres, Gotenberg, Garage, WebUI).
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
       "dockerDashComposeVersion": "v2"
     }
   },
 
-  // Ports aus dev/docker-compose.yml, plus 4200 fuer `ng serve`.
-  "forwardPorts": [8060, 4200, 5432, 3900, 3901, 3909, 3000, 80],
+  "forwardPorts": [8060, 9000, 9443, 5432, 3900, 3901, 3909, 3000],
   "portsAttributes": {
     "8060": { "label": "Backend (Spring Boot)" },
-    "4200": { "label": "Frontend (Angular dev)" },
+    "9000": { "label": "Authentik (OIDC)" },
+    "9443": { "label": "Authentik (OIDC, TLS)" },
     "5432": { "label": "PostgreSQL" },
     "3900": { "label": "Garage S3" },
     "3901": { "label": "Garage Admin" },
     "3909": { "label": "Garage WebUI" },
-    "3000": { "label": "Gotenberg (PDF)" },
-    "80":   { "label": "Traefik" }
+    "3000": { "label": "Gotenberg (PDF)" }
   },
 
-  // npm ci statt npm install: AppClient/package-lock.json existiert, und ci
-  // installiert exakt daraus, reproduzierbar und schneller.
-  // ./gradlew --version laedt die Wrapper-Distribution einmalig vor.
   "postCreateCommand": "chmod +x gradlew && ./gradlew --version && npm ci --prefix AppClient",
 
   "customizations": {

@@ -53,10 +53,6 @@ dependencies {
 group = 'de.samply'
 version = '0.0.1-SNAPSHOT'
 description = 'Management Portal'
-// Toolchain statt source/targetCompatibility: legt Compile- *und* API-Level
-// auf 26 fest. source/targetCompatibility haetten nur die Bytecode-Version
-// gesetzt, nicht die verfuegbare API -- Code gegen JDK-26-APIs waere lokal
-// durchgelaufen und erst im Docker-Build auf JDK 21 gebrochen.
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(26)
@@ -89,18 +85,6 @@ test {
 def frontendDir = "$projectDir/AppClient"
 def staticDir = "$projectDir/src/main/resources/static"
 
-// `npm run build` runs `ng build` with outputPath set (in angular.json) to
-// write directly into src/main/resources/static, then moves the browser/
-// subfolder contents up a level. There's no separate dist/ copy step to do
-// afterwards - a previous copyFrontend Copy task pointed at a dist/ path
-// that's never populated anymore and was always a NO-SOURCE no-op.
-//
-// outputs.dir is declared explicitly so Gradle (in particular the
-// configuration cache) knows this Exec task writes into staticDir and
-// correctly invalidates processResources' snapshot of src/main/resources
-// afterwards. Without it, application.yml was intermittently missing from
-// the built jar because processResources could reuse a stale, pre-npm-build
-// snapshot of that directory.
 tasks.register('npmBuild', Exec) {
     workingDir frontendDir
     inputs.dir("$frontendDir/src")
