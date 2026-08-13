@@ -19,8 +19,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm start                      # dev server on :4200, proxies /api /login /logout /oauth2 → :8060
-CHROME_BIN=/opt/homebrew/bin/chromium npx ng test --watch=false --browsers=ChromeHeadless
-CHROME_BIN=/opt/homebrew/bin/chromium npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/**"
+npx ng test --watch=false --browsers=ChromeHeadless
+npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/**"
+```
+
+Karma needs a Chrome/Chromium binary. It is found automatically where one is on
+`PATH` (GitHub's runners, most desktops); elsewhere — a plain devcontainer has
+no browser at all — install one and export `CHROME_BIN` first:
+
+```bash
+sudo apt-get update && sudo apt-get install -y chromium   # Debian/Ubuntu, incl. devcontainer
+export CHROME_BIN=/usr/bin/chromium
+export CHROME_BIN=/opt/homebrew/bin/chromium              # macOS/Homebrew
 ```
 
 ### Dev infrastructure

@@ -83,97 +83,23 @@ Roles are assigned via Authentik `groups` claim. The `GroupsGrantedAuthoritiesMa
 
 ## Local Development
 
-### Prerequisites
+Full setup instructions live in **[docs/local-development.md](docs/local-development.md)**:
+prerequisites, the Docker Compose dev stack, OIDC and Garage configuration,
+running backend and frontend, the Angular tests, and running the whole
+toolchain remotely with DevPod.
 
-- Java 26
-- Node 24+
-- Docker + Docker Compose
-- A running Authentik instance
-- Ollama running locally with a pulled model (only needed for job posting import, e.g. `ollama pull qwen2.5:3b`)
-
-### 1. Start dev infrastructure
+The short version:
 
 ```bash
 cd dev
-docker compose up -d
+docker compose up -d                    # Postgres, Garage, Gotenberg, Traefik
+docker compose -f authentik.yml up -d   # Authentik (OIDC)
+cd ..
+./gradlew bootRun                       # backend on :8060, builds the frontend first
 ```
 
-This starts:
-
-| Service      | Port | Description                    |
-|--------------|------|--------------------------------|
-| PostgreSQL   | 5432 | Main database                  |
-| Garage       | 3900 | S3-compatible object storage   |
-| Garage Admin | 3901 | Garage admin API               |
-| Garage WebUI | 3909 | Storage browser UI             |
-| Gotenberg    | 3000 | LibreOffice PDF conversion     |
-| Traefik      | 80   | Reverse proxy                  |
-
-### 2. Configure OIDC
-
-Edit `src/main/resources/application.yml` and set your Authentik client credentials, or pass them as environment variables:
-
-```yaml
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          authentik:
-            client-id: <your-client-id>
-            client-secret: <your-client-secret>
-        provider:
-          authentik:
-            issuer-uri: http://localhost:9000/application/o/<your-app>/
-```
-
-The Authentik application must expose a `groups` claim on the OIDC token. Create groups named `Advisor` and `Reviewer`; users in neither group are treated as regular users (`USER`).
-
-### 3. Configure document storage (S3 or Azure)
-
-Set `STORAGE_PROVIDER` to `s3` (default, Garage) or `azure`.
-
-For S3/Garage:
-
-```
-S3_ENDPOINT=http://localhost:3900
-S3_BUCKET=job-manager
-ACCESS_KEY=<garage-access-key>
-SECRET_KEY=<garage-secret-key>
-```
-
-For Azure Blob Storage:
-
-```
-STORAGE_PROVIDER=azure
-AZURE_STORAGE_CONNECTION_STRING=<your-connection-string>
-```
-
-### 4. Run the backend
-
-```bash
-./gradlew bootRun
-```
-
-Backend starts on `http://localhost:8060`.
-
-### 5. Run the frontend (dev mode)
-
-```bash
-cd AppClient
-npm install
-npm start
-```
-
-Frontend dev server starts on `http://localhost:4200`. The proxy config forwards `/api`, `/login`, `/logout` and `/oauth2` to the backend.
-
-### 6. Build for production (embedded frontend)
-
-```bash
-./gradlew bootRun   # triggers npmBuild + copyFrontend automatically
-```
-
-The Angular build output is copied into `src/main/resources/static/` and served by Spring Boot at `http://localhost:8060`.
+Garage needs a one-time bootstrap (layout, bucket, access key) before uploads
+work — see [Bootstrapping Garage](docs/local-development.md#bootstrapping-garage).
 
 ---
 
