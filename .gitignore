@@ -33,6 +33,8 @@ build/
 .vscode/
 AppClient/node/
 .DS_Store
+*/.DS_Store
+/bin
 
 # Gradle
 .gradle/
