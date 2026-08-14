@@ -15,7 +15,8 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
       "dockerDashComposeVersion": "v2"
-    }
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
   },
 
   "forwardPorts": [8060, 9000, 9443, 5432, 3900, 3901, 3909, 3000],

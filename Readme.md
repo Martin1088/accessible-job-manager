@@ -1,6 +1,12 @@
 # Accessible Job Manager
 
-A full-stack job application tracking portal built with accessibility as a first-class requirement. Users can manage companies, positions, job applications and documents. Advisors guide users through the process; reviewers can access documents shared with them.
+A job application management tool built for blind and visually impaired users. Screen reader operation is not a feature added on top here — it is the premise the architecture is built on.
+
+The question behind the project: **how do you write a hundred job applications efficiently when you cannot see the screen, and how does closing that gap improve equality of opportunity in hiring?** Applicants with a visual impairment routinely drop out of the process not because of the job, but because of the tooling around it — inaccessible portals, PDF forms that have to be filled in by hand, layout work that a screen reader cannot meaningfully convey.
+
+The answer this project offers is to put the whole process in one accessible place. A job posting is read in from a link and taken over as structured data. The cover letter is written as text and comes out as a DIN 5008-compliant PDF — the geometry is a server-side guarantee, so no one has to arrange fields on a page by hand. Around that, users manage their companies, positions, applications and documents — and they do not have to do it alone. The role model puts a support team behind the applicant: advisors are assigned to their users, see how the search is going and suggest concrete openings with a message attached, so the work of finding and evaluating postings is shared rather than left to one person. Reviewers get access to exactly the documents a user hands them, to look over an application before it goes out. Every access is granted by the user and can be revoked again — support is offered, never imposed.
+
+Open source under the MIT license and built to be self-hosted, so institutions in vocational rehabilitation can run their own instance and connect it to existing systems.
 
 ---
 
@@ -23,6 +29,11 @@ A full-stack job application tracking portal built with accessibility as a first
 
 ## Roles
 
+The three roles exist so that a job seeker can have a support team around them — a
+career advisor who searches and coaches, someone trusted who reads over a cover
+letter — instead of facing an inaccessible process alone. Each role sees only what
+its work requires, and the job seeker controls what is shared.
+
 | Role       | Description                                                                      |
 |------------|----------------------------------------------------------------------------------|
 | `USER`     | Job seeker — manages companies, applications, documents, generates cover letters |
@@ -30,6 +41,49 @@ A full-stack job application tracking portal built with accessibility as a first
 | `REVIEWER` | Document reviewer — sees users who shared documents, can download them           |
 
 Roles are assigned via Authentik `groups` claim. The `GroupsGrantedAuthoritiesMapper` normalises group names to uppercase and maps them to Spring Security `ROLE_*` authorities. Create Authentik groups named exactly `Advisor` and `Reviewer` (any casing works — the mapper normalises them).
+
+---
+
+## Accessibility
+
+"Screen reader first" is a claim that is easy to make and easy to break, so here is
+what it means concretely in this codebase.
+
+**The document structure is the interface.** Every page is built from real HTML
+semantics rather than styled `<div>`s, because that structure is what a screen
+reader reads out:
+
+| Pattern | Why it is there |
+|---------|-----------------|
+| Skip link, visible on keyboard focus | Jump straight to `<main>` instead of tabbing through the navigation on every page |
+| `<header>`, `<main id="main-content">`, `<nav aria-label="…">` | Landmark navigation — JAWS and NVDA can jump between regions directly |
+| `aria-current="page"` on the active nav link | "Where am I" is announced, not inferred from a colour |
+| Separate `<nav>` per role, hidden when not applicable | No dead links to read past |
+| `<caption>` and `scope="col"` on every data table | Table cells are announced with the column they belong to |
+| Three-state sort with `aria-sort` | Sorting state is readable, not just an arrow glyph |
+| `<label>`, `aria-required`, `aria-describedby` on form fields | Purpose, requiredness and error text reach the field itself |
+| `role="alert"` / `role="status"` | Errors and empty states are announced when they appear, without moving focus |
+| `<dl>`/`<dt>`/`<dd>` for key-value data | Profile and detail views read as pairs, not as a run-on line |
+
+**No layout work is pushed onto the user.** The DIN 5008 geometry of a cover letter
+lives in a server-side template (`templates/cover-letter/din5008.html`); the frontend
+edits text blocks and style *values* and never computes a millimetre. Positioning an
+address block by hand is exactly the kind of task that a PDF form makes hard and a
+screen reader makes harder — so the application does it instead.
+
+**The preview is linear text, and it is the same text.** `?format=text` renders the
+cover letter from the same assembled model as `?format=pdf`, so what gets read aloud
+in the preview is what lands in the PDF. Reimplementing preview logic in the frontend
+would let the two drift apart — the one thing a user who cannot check the PDF
+visually has no way to notice.
+
+**Nothing is announced twice or not at all.** Translations for all three languages
+(en/de/nl) load through an `APP_INITIALIZER` before the first render, so a screen
+reader never reads raw i18n keys during a flash of untranslated content.
+
+`AppClient/CLAUDE.md` carries the checklist every UI change is held against.
+Verification is currently manual — testing with a real screen reader — there is no
+automated accessibility gate (axe, pa11y, Lighthouse) in the build yet.
 
 ---
 

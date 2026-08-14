@@ -234,8 +234,9 @@ df -h /
 ## Remote Development with DevPod
 
 `.devcontainer/devcontainer.json` describes the full toolchain — JDK 26
-(Temurin), Node 24 and Docker-in-Docker, so `dev/docker-compose.yml` and
-`dev/authentik.yml` can be started inside the workspace. It works with any
+(Temurin), Node 24, Docker-in-Docker and the Claude Code CLI, so
+`dev/docker-compose.yml` and `dev/authentik.yml` can be started inside the
+workspace. It works with any
 [DevPod](https://devpod.sh) provider; `docker` runs it on your own machine,
 `hetzner` and the other cloud providers run it on a rented server.
 
@@ -270,6 +271,20 @@ so Gradle and the npm dependencies are in place. Verify with:
 ls gradlew && java -version && node -v
 ./gradlew build --no-daemon
 ```
+
+Claude Code is installed by the
+`ghcr.io/anthropics/devcontainer-features/claude-code` feature and is on `PATH`:
+
+```bash
+cd /workspaces/ajm
+claude
+```
+
+The machine has no browser, so the login prints a URL to open on your own
+machine and paste the resulting code back into the terminal. Setting
+`ANTHROPIC_API_KEY` skips that step. The credentials live in `~/.claude` inside
+the container: `devpod stop`/`up` keeps them, `--recreate` and `devpod delete`
+do not.
 
 The clone is an ordinary git checkout — `git fetch` and `git checkout <branch>`
 work as usual, and DevPod injects your git credentials. Note that switching to
