@@ -11,7 +11,7 @@ Back to the [project overview](../Readme.md).
 - Node 24+
 - Docker + Docker Compose
 - A running Authentik instance (`dev/authentik.yml` provides one)
-- Ollama running locally with a pulled model (only needed for job posting import, e.g. `ollama pull qwen2.5:3b`)
+- Ollama with a pulled model — only needed for job posting import, see [section 8](#8-optional-ollama-for-job-posting-import)
 
 ## 1. Start dev infrastructure
 
@@ -184,6 +184,50 @@ export CHROME_BIN=/usr/bin/chromium
 ```
 
 On macOS with Homebrew the path is `/opt/homebrew/bin/chromium` instead.
+
+## 8. Optional: Ollama for job posting import
+
+`POST /api/posting/overview` sends the fetched page text to a local Ollama
+model. Only that one endpoint needs it — everything else runs without it.
+
+Ollama is not part of `docker-compose.yml`, but `local-setup.yml` defines it,
+and the service can be started on its own:
+
+```bash
+cd dev
+docker compose -f local-setup.yml up -d ollama
+```
+
+Pull a model once (`qwen2.5:3b` is the default in `application.yml`, roughly
+2 GB):
+
+```bash
+docker compose -f local-setup.yml exec ollama ollama pull qwen2.5:3b
+```
+
+Check that it answers:
+
+```bash
+docker compose -f local-setup.yml exec ollama ollama list
+curl http://localhost:11434/api/tags
+```
+
+The container publishes `127.0.0.1:11434`, which matches the `OLLAMA_URL`
+default of `http://localhost:11434` — no environment variable needed. Stop it
+again when you are done, it is the heaviest service in the stack:
+
+```bash
+docker compose -f local-setup.yml stop ollama
+```
+
+Inference runs on the CPU here; there is no GPU passthrough in the Compose
+definition. A 3B model is usable that way, larger ones get slow. In a
+devcontainer, check the free space before pulling — models land on the same
+volume as the images and `node_modules`:
+
+```bash
+df -h /
+```
 
 ---
 
