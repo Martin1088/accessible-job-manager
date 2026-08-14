@@ -1,16 +1,104 @@
 <main id="main-content" tabindex="-1">
   <h1>{{ 'PROFILE.TITLE' | translate }}</h1>
 
+  @if (loadError) {
+    <p role="alert" class="error">{{ 'PROFILE.LOAD_ERROR' | translate }}</p>
+  }
+
   @if (auth.me$ | async; as me) {
     <dl class="profile-info">
-      <dt>{{ 'PROFILE.NAME' | translate }}</dt>
-      <dd>{{ me.name }}</dd>
-      <dt>{{ 'PROFILE.EMAIL' | translate }}</dt>
-      <dd>{{ me.email }}</dd>
       <dt>{{ 'PROFILE.ROLES' | translate }}</dt>
       <dd>{{ me.groups.length ? me.groups.join(', ') : ('PROFILE.ROLE_USER' | translate) }}</dd>
     </dl>
-  } @else {
-    <p role="status">{{ 'PROFILE.LOADING' | translate }}</p>
   }
+
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+
+    <!-- Focused on failed submit: a list of what to fix, each entry a link to the field. -->
+    @if (submitted && invalidFields.length) {
+      <div #errorSummary class="error-summary" tabindex="-1" aria-labelledby="error-summary-heading">
+        <h2 id="error-summary-heading">{{ 'PROFILE.ERROR_SUMMARY_HEADING' | translate }}</h2>
+        <ul role="list">
+          @for (field of invalidFields; track field.id) {
+            <li><a [href]="'#' + field.id">{{ field.label | translate }}</a></li>
+          }
+        </ul>
+      </div>
+    }
+
+    <fieldset>
+      <legend>{{ 'PROFILE.SENDER_LEGEND' | translate }}</legend>
+      <p id="sender-help" class="hint">{{ 'PROFILE.SENDER_HELP' | translate }}</p>
+
+      <div class="field">
+        <label for="profile-name">{{ 'PROFILE.NAME' | translate }}</label>
+        <input id="profile-name" type="text" formControlName="name" required aria-required="true"
+          autocomplete="name"
+          [attr.aria-invalid]="invalid('name') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('name', 'sender-help', 'profile-name-error')">
+        @if (invalid('name')) {
+          <p id="profile-name-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="profile-email">{{ 'PROFILE.EMAIL' | translate }}</label>
+        <input id="profile-email" type="email" formControlName="email" required aria-required="true"
+          autocomplete="email"
+          [attr.aria-invalid]="invalid('email') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('email', 'profile-email-error')">
+        @if (invalid('email')) {
+          <p id="profile-email-error" role="alert" class="error">{{ 'PROFILE.EMAIL_INVALID' | translate }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="profile-street">{{ 'PROFILE.STREET' | translate }}</label>
+        <input id="profile-street" type="text" formControlName="street" required aria-required="true"
+          autocomplete="street-address"
+          [attr.aria-invalid]="invalid('street') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('street', 'profile-street-error')">
+        @if (invalid('street')) {
+          <p id="profile-street-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="profile-postal-code">{{ 'PROFILE.POSTAL_CODE' | translate }}</label>
+        <input id="profile-postal-code" type="text" formControlName="postalCode" required aria-required="true"
+          autocomplete="postal-code" inputmode="numeric"
+          [attr.aria-invalid]="invalid('postalCode') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('postalCode', 'profile-postal-code-error')">
+        @if (invalid('postalCode')) {
+          <p id="profile-postal-code-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="profile-city">{{ 'PROFILE.CITY' | translate }}</label>
+        <input id="profile-city" type="text" formControlName="city" required aria-required="true"
+          autocomplete="address-level2"
+          [attr.aria-invalid]="invalid('city') ? 'true' : null"
+          [attr.aria-describedby]="describedBy('city', 'profile-city-error')">
+        @if (invalid('city')) {
+          <p id="profile-city-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="profile-phone">{{ 'PROFILE.PHONE' | translate }}</label>
+        <input id="profile-phone" type="tel" formControlName="phone" autocomplete="tel">
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" [disabled]="saving">
+        {{ (saving ? 'PROFILE.SAVING' : 'PROFILE.SAVE') | translate }}
+      </button>
+    </div>
+
+    @if (saveError) {
+      <p role="alert" class="error">{{ 'PROFILE.SAVE_ERROR' | translate }}</p>
+    }
+  </form>
 </main>

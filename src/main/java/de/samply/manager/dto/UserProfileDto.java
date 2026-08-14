@@ -9,6 +9,10 @@ public record UserProfileDto(
         String userId,
         String name,
         String email,
+        String street,
+        String postalCode,
+        String city,
+        String phone,
         Role role,
         List<AdvisorDto> advisors,
         List<ReviewerDto> reviewers

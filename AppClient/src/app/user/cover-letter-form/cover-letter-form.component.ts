@@ -1,13 +1,21 @@
-import { Component, OnInit, ChangeDetectionStrategy, ElementRef, ViewChild, inject } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { Observable, of, switchMap, take, tap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { LanguageService } from '../../core/language.service';
 import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { Application } from '../../model/application';
-import { BlockType, CoverLetterTemplate } from '../../model/cover-letter';
+import {
+  BlockKey,
+  BlockType,
+  CoverLetterRenderRequest,
+  HtmlLetterTemplate,
+  HtmlLetterTemplateRequest,
+  LetterBlock,
+} from '../../model/cover-letter';
 import { DocumentLanguage } from '../../model/document';
 
 const UI_TO_LETTER_LANGUAGE: Record<string, DocumentLanguage> = {
@@ -21,9 +29,13 @@ const UI_TO_LETTER_LANGUAGE: Record<string, DocumentLanguage> = {
  * understands; nothing describes where anything sits on the page. The DIN 5008
  * geometry never leaves the backend, so no input can break the norm.
  *
- * Seven of the letter's parts are never asked for, because the server derives them
- * from the chosen application: the recipient block, the return address, the
- * salutation, the date, and the signature.
+ * Nothing about the sender or the recipient is asked for here. The recipient block,
+ * salutation, date and signature are derived from the chosen application; the sender
+ * block is read from the profile, where it is maintained once.
+ *
+ * Subject, greeting, blocks and closing are stored as one reusable template; the
+ * attachments belong to a single sending and travel with the render call. Rendering
+ * saves first, so what is printed is always what is stored.
  */
 @Component({
   selector: 'app-cover-letter-form',
@@ -33,8 +45,6 @@ const UI_TO_LETTER_LANGUAGE: Record<string, DocumentLanguage> = {
   styleUrl: './cover-letter-form.component.scss'
 })
 export class CoverLetterFormComponent implements OnInit {
-  @ViewChild('errorSummary') errorSummary?: ElementRef<HTMLElement>;
-
   private readonly fb = inject(FormBuilder);
   private readonly announcer = inject(LiveAnnouncer);
   private readonly translate = inject(TranslateService);
@@ -45,9 +55,18 @@ export class CoverLetterFormComponent implements OnInit {
 
   readonly blockTypes: BlockType[] = ['PARAGRAPH', 'HEADING', 'BULLET_LIST'];
 
+  /** The template being edited; null until the first save has returned one. */
+  templateId: string | null = null;
+
+  /** Ids of the single-occurrence blocks, so saving twice does not churn them. */
+  private readonly slotIds = new Map<BlockKey, string>();
+
   applicationOptions: Application[] = [];
   loadError = false;
-  submitted = false;
+
+  saving = false;
+  saveError = false;
+  savedAt = false;
 
   previewText = '';
   previewing = false;
@@ -58,15 +77,9 @@ export class CoverLetterFormComponent implements OnInit {
   pdfFilename = '';
 
   readonly letter = this.fb.group({
-    applicationId: this.fb.control<number | null>(null, Validators.required),
-    sender: this.fb.group({
-      name: ['', Validators.required],
-      street: ['', Validators.required],
-      postalCode: ['', Validators.required],
-      city: ['', Validators.required],
-      email: ['', Validators.email],
-      phone: [''],
-    }),
+    // Optional: with no application chosen the letter is rendered against the sample
+    // recipient, so a template can be proofread before it is tied to an application.
+    applicationId: this.fb.control<number | null>(null),
     subject: [''],
     greeting: [''],
     blocks: this.fb.array<FormGroup>([]),
@@ -88,37 +101,58 @@ export class CoverLetterFormComponent implements OnInit {
       error: () => this.loadError = true,
     });
 
-    // The sender name/email are the only address parts the profile knows; street,
-    // postal code, city and phone have no home on UserProfile yet and stay typed.
-    this.auth.me$.subscribe(me => {
-      if (!me) return;
-      this.letter.controls.sender.patchValue({ name: me.name ?? '', email: me.email ?? '' });
-      this.loadSkeleton();
+    // take(1) matters: a second emission would create a second template.
+    this.auth.me$.pipe(take(1)).subscribe(me => {
+      if (me) this.loadTemplate();
     });
   }
 
   /**
-   * Pulls the starting blocks and the localized closing formula from the server. The
-   * closing default lives in the backend message bundle, so it is fetched rather than
-   * duplicated here in a second language file.
+   * Opens the caller's template, creating one on first use. Passing no blocks lets the
+   * server store its localized skeleton, so the starting blocks and the closing formula
+   * come from the backend message bundle rather than a second language file here.
    */
-  private loadSkeleton(): void {
-    const language = UI_TO_LETTER_LANGUAGE[this.language.current() ?? 'de'] ?? 'GERMAN';
-    this.coverLetters.defaultTemplate(this.senderValue(), language).subscribe({
-      next: (template) => {
-        this.letter.patchValue({ closing: template.closing ?? '' });
-        this.blocks.clear();
-        template.blocks.forEach(block => this.blocks.push(this.blockGroup(block.type, block.text)));
-      },
+  private loadTemplate(): void {
+    this.coverLetters.listTemplates().pipe(
+      switchMap(templates => templates.length
+        ? of(templates[0])
+        : this.coverLetters.createTemplate({}, this.letterLanguage())),
+    ).subscribe({
+      next: (template) => this.applyTemplate(template),
       error: () => this.loadError = true,
     });
   }
 
-  private blockGroup(type: BlockType, text: string): FormGroup {
+  /** Fans the stored blocks back out into the form's fixed slots and its block list. */
+  private applyTemplate(template: HtmlLetterTemplate): void {
+    this.templateId = template.id;
+    this.slotIds.clear();
+    this.blocks.clear();
+
+    let subject = '';
+    let greeting = '';
+    let closing = '';
+
+    for (const block of template.blocks) {
+      if (block.key === 'SUBJECT' || block.key === 'SALUTATION' || block.key === 'REGARDS') {
+        if (block.id) this.slotIds.set(block.key, block.id);
+        if (block.key === 'SUBJECT') subject = block.content;
+        if (block.key === 'SALUTATION') greeting = block.content;
+        if (block.key === 'REGARDS') closing = block.content;
+      } else {
+        this.blocks.push(this.blockGroup(block.key, block.content, block.items, block.id));
+      }
+    }
+
+    this.letter.patchValue({ subject, greeting, closing });
+  }
+
+  private blockGroup(type: BlockType, text: string, items: string[] = [], id: string | null = null): FormGroup {
     return this.fb.group({
+      id: this.fb.control<string | null>(id),
       type: this.fb.control<BlockType>(type),
       text: [text],
-      items: this.fb.array<ReturnType<FormBuilder['control']>>([]),
+      items: this.fb.array(items.map(item => this.fb.control(item))),
     });
   }
 
@@ -183,34 +217,6 @@ export class CoverLetterFormComponent implements OnInit {
     this.focusAfterRender(this.attachments.length ? `attachment-${Math.max(0, index - 1)}` : 'add-attachment');
   }
 
-  // --- validation wiring ---------------------------------------------------
-
-  invalid(path: string): boolean {
-    const control = this.letter.get(path);
-    return !!control && control.invalid && (control.touched || this.submitted);
-  }
-
-  /**
-   * Only ever names elements that are actually in the DOM. An aria-describedby that
-   * points at a missing id makes some screen readers drop the whole hint.
-   */
-  describedBy(path: string, ...ids: string[]): string | null {
-    const present = ids.filter(id => id.endsWith('-error') ? this.invalid(path) : true);
-    return present.length ? present.join(' ') : null;
-  }
-
-  get invalidFields(): { path: string; id: string; label: string }[] {
-    const candidates = [
-      { path: 'applicationId', id: 'application-id', label: 'COVER_LETTER_FORM.APPLICATION_LABEL' },
-      { path: 'sender.name', id: 'sender-name', label: 'COVER_LETTER_FORM.SENDER_NAME_LABEL' },
-      { path: 'sender.street', id: 'sender-street', label: 'COVER_LETTER_FORM.SENDER_STREET_LABEL' },
-      { path: 'sender.postalCode', id: 'sender-postal-code', label: 'COVER_LETTER_FORM.SENDER_POSTAL_CODE_LABEL' },
-      { path: 'sender.city', id: 'sender-city', label: 'COVER_LETTER_FORM.SENDER_CITY_LABEL' },
-      { path: 'sender.email', id: 'sender-email', label: 'COVER_LETTER_FORM.SENDER_EMAIL_LABEL' },
-    ];
-    return candidates.filter(field => this.invalid(field.path));
-  }
-
   get selectedApplication(): Application | null {
     const id = this.letter.controls.applicationId.value;
     return this.applicationOptions.find(a => a.id === id) ?? null;
@@ -222,11 +228,33 @@ export class CoverLetterFormComponent implements OnInit {
    * The proofreading pass: the server linearizes the very letter it would print, so
    * the text below is never a second implementation of the layout.
    */
+  /** Stores the template on its own, without rendering anything. */
+  save(): void {
+    this.saving = true;
+    this.saveError = false;
+    this.savedAt = false;
+    this.saveTemplate().subscribe({
+      next: () => {
+        this.saving = false;
+        this.savedAt = true;
+        this.announce('COVER_LETTER_FORM.SAVED');
+      },
+      error: () => {
+        this.saveError = true;
+        this.saving = false;
+      },
+    });
+  }
+
   preview(): void {
-    if (!this.validateForRender()) return;
     this.previewing = true;
     this.renderError = false;
-    this.coverLetters.renderText(this.letter.controls.applicationId.value!, this.payload()).subscribe({
+    const applicationId = this.letter.controls.applicationId.value;
+    this.saveTemplate().pipe(
+      switchMap(template => applicationId
+        ? this.coverLetters.renderText(applicationId, template.id, this.renderRequest())
+        : this.coverLetters.previewText(template.id, this.renderRequest(), this.letterLanguage())),
+    ).subscribe({
       next: (text) => {
         this.previewText = text;
         this.previewing = false;
@@ -240,11 +268,15 @@ export class CoverLetterFormComponent implements OnInit {
   }
 
   downloadPdf(): void {
-    if (!this.validateForRender()) return;
     this.downloading = true;
     this.renderError = false;
     this.revokePdfUrl();
-    this.coverLetters.renderPdf(this.letter.controls.applicationId.value!, this.payload()).subscribe({
+    const applicationId = this.letter.controls.applicationId.value;
+    this.saveTemplate().pipe(
+      switchMap(template => applicationId
+        ? this.coverLetters.renderPdf(applicationId, template.id, this.renderRequest())
+        : this.coverLetters.previewPdf(template.id, this.renderRequest(), this.letterLanguage())),
+    ).subscribe({
       next: (response) => {
         this.pdfUrl = URL.createObjectURL(response.body!);
         this.pdfFilename = this.extractFilename(response.headers.get('Content-Disposition')) ?? 'Anschreiben.pdf';
@@ -259,41 +291,61 @@ export class CoverLetterFormComponent implements OnInit {
     });
   }
 
-  private validateForRender(): boolean {
-    this.submitted = true;
-    if (this.letter.valid) return true;
-    this.letter.markAllAsTouched();
-    this.focusElement(this.errorSummary?.nativeElement);
-    return false;
+  /** Saves the edited template, creating it if this is the first save. */
+  private saveTemplate(): Observable<HtmlLetterTemplate> {
+    const request = this.templateRequest();
+    const language = this.letterLanguage();
+    const saved = this.templateId
+      ? this.coverLetters.updateTemplate(this.templateId, request, language)
+      : this.coverLetters.createTemplate(request, language);
+    return saved.pipe(tap(template => this.templateId = template.id));
   }
 
-  /** `style` is deliberately never sent: the geometry belongs to the server. */
-  private payload(): CoverLetterTemplate {
+  /**
+   * Folds the form's fixed slots and its block list into one ordered block list.
+   * `style` is deliberately never sent: the geometry belongs to the server.
+   */
+  private templateRequest(): HtmlLetterTemplateRequest {
     const value = this.letter.getRawValue();
-    return {
-      sender: this.senderValue(),
-      subject: value.subject?.trim() || null,
-      greeting: value.greeting?.trim() || null,
-      blocks: this.blocks.controls.map(block => ({
-        type: block.get('type')!.value as BlockType,
-        text: block.get('text')!.value ?? '',
+    const blocks: LetterBlock[] = [];
+
+    const subject = value.subject?.trim();
+    if (subject) blocks.push(this.slotBlock('SUBJECT', subject));
+
+    const greeting = value.greeting?.trim();
+    if (greeting) blocks.push(this.slotBlock('SALUTATION', greeting));
+
+    for (const block of this.blocks.controls) {
+      blocks.push({
+        id: block.get('id')!.value ?? crypto.randomUUID(),
+        key: block.get('type')!.value as BlockType,
+        content: block.get('text')!.value ?? '',
         items: (this.items(block).value as string[]).filter(item => !!item?.trim()),
-      })),
-      closing: value.closing?.trim() || null,
-      attachments: (this.attachments.value as string[]).filter(a => !!a?.trim()),
-    };
+      });
+    }
+
+    const closing = value.closing?.trim();
+    if (closing) blocks.push(this.slotBlock('REGARDS', closing));
+
+    return { blocks };
   }
 
-  private senderValue() {
-    const sender = this.letter.controls.sender.getRawValue();
-    return {
-      name: sender.name ?? '',
-      street: sender.street ?? '',
-      postalCode: sender.postalCode ?? '',
-      city: sender.city ?? '',
-      email: sender.email ?? '',
-      phone: sender.phone ?? '',
-    };
+  private slotBlock(key: BlockKey, content: string): LetterBlock {
+    const id = this.slotIds.get(key) ?? crypto.randomUUID();
+    this.slotIds.set(key, id);
+    return { id, key, content, items: [] };
+  }
+
+  /**
+   * The parts that belong to this one sending rather than to the template. The sender
+   * is absent on purpose: the server reads it from the profile.
+   */
+  private renderRequest(): CoverLetterRenderRequest {
+    return { attachments: (this.attachments.value as string[]).filter(a => !!a?.trim()) };
+  }
+
+  private letterLanguage(): DocumentLanguage {
+    return UI_TO_LETTER_LANGUAGE[this.language.current() ?? 'de'] ?? 'GERMAN';
   }
 
   private extractFilename(contentDisposition: string | null): string | null {

@@ -1,6 +1,7 @@
 package de.samply.manager.services;
 
 import de.samply.manager.dto.UserProfileDto;
+import de.samply.manager.dto.UserProfileUpdateRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.types.Role;
 import de.samply.manager.model.UserProfile;
@@ -27,6 +28,26 @@ public class UserProfileService {
                                 .build()
                 ));
         return toDto(profile);
+    }
+
+    /** Updates the sender block. Blank values are stored as null so the letter omits the line. */
+    public UserProfileDto updateProfile(String userId, UserProfileUpdateRequest request) {
+        UserProfile profile = findProfile(userId);
+        profile.setName(trimmed(request.name()));
+        profile.setEmail(trimmed(request.email()));
+        profile.setStreet(trimmed(request.street()));
+        profile.setPostalCode(trimmed(request.postalCode()));
+        profile.setCity(trimmed(request.city()));
+        profile.setPhone(trimmed(request.phone()));
+        return toDto(userProfileRepository.save(profile));
+    }
+
+    private String trimmed(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     public UserProfileDto getProfile(String userId) {
@@ -87,6 +108,10 @@ public class UserProfileService {
                 profile.getUserId(),
                 profile.getName(),
                 profile.getEmail(),
+                profile.getStreet(),
+                profile.getPostalCode(),
+                profile.getCity(),
+                profile.getPhone(),
                 profile.getRole(),
                 profile.getAdvisors().stream()
                         .map(a -> new UserProfileDto.AdvisorDto(a.getUserId(), a.getName(), a.getEmail()))

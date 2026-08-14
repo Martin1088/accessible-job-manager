@@ -2,8 +2,11 @@ package de.samply.manager.coverletter;
 
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Application;
+import de.samply.manager.model.Company;
+import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.repository.ApplicationRepository;
+import de.samply.manager.types.Gender;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -39,8 +42,22 @@ public class CoverLetterHtmlService {
     @Transactional(readOnly = true)
     public RenderedLetter render(Long applicationId, CoverLetterTemplate template, RenderFormat format, String userId) {
         CompanyPosition position = ownedPosition(applicationId, userId);
-        Language language = languageOf(position);
+        return renderFor(position, template, format, languageOf(position));
+    }
 
+    /**
+     * Renders a template against the sample recipient, so a letter can be proofread
+     * before it is tied to an application. The sample position is built in memory and
+     * never stored - this is the same pipeline as {@link #render}, only the recipient
+     * differs, so what the preview shows is what a real application would print.
+     */
+    public RenderedLetter renderSample(CoverLetterTemplate template, RenderFormat format, Language language) {
+        Language letterLanguage = language == null ? Language.GERMAN : language;
+        return renderFor(samplePosition(letterLanguage), template, format, letterLanguage);
+    }
+
+    private RenderedLetter renderFor(CompanyPosition position, CoverLetterTemplate template,
+                                     RenderFormat format, Language language) {
         CoverLetterModel letter = assembler.assemble(template, position, language);
 
         return switch (format) {
@@ -51,6 +68,30 @@ public class CoverLetterHtmlService {
             case TEXT -> new RenderedLetter(format, bytes(textRenderer.render(letter)),
                     fileBaseName(position, language) + ".txt", language);
         };
+    }
+
+    /** A detached stand-in recipient; every value comes from the message bundle. */
+    private CompanyPosition samplePosition(Language language) {
+        Company company = new Company();
+        company.setName(labels.label("coverLetter.sample.company", language));
+
+        CompanyLocation location = new CompanyLocation();
+        location.setStreet(labels.label("coverLetter.sample.street", language));
+        location.setPostcode(labels.label("coverLetter.sample.postcode", language));
+        location.setCity(labels.label("coverLetter.sample.city", language));
+        location.setCountry(labels.label("coverLetter.sample.country", language));
+        location.setCompany(company);
+        company.getLocations().add(location);
+
+        CompanyPosition position = new CompanyPosition();
+        position.setTitle(labels.label("coverLetter.sample.position", language));
+        position.setContactGender(Gender.FEMALE);
+        position.setContactLastName(labels.label("coverLetter.sample.contactLastName", language));
+        position.setApplyLanguage(language);
+        position.setCompany(company);
+        company.getPositions().add(position);
+
+        return position;
     }
 
     /**
