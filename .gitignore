@@ -55,6 +55,11 @@ src/main/resources/static
 
 dev/meta
 dev/garage-data
+dev/postgres-data
+dev/authentik/database
+dev/authentik/redis
+dev/authentik/media
+dev/authentik/templates
 
 # Claude Code - personal/machine-local settings (permission allowlists etc.)
 .claude/settings.local.json

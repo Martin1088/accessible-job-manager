@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: authentik
       POSTGRES_PASSWORD: authentik
     volumes:
-      - authentik-database:/var/lib/postgresql/data
+      - ./authentik/database:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U authentik -d authentik"]
       interval: 10s
@@ -24,7 +24,7 @@ services:
     container_name: authentik-redis
     command: --save 60 1 --loglevel warning
     volumes:
-      - authentik-redis:/data
+      - ./authentik/redis:/data
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 10s
@@ -47,9 +47,13 @@ services:
       AUTHENTIK_SECRET_KEY: dev-only-secret-key-do-not-reuse
       AUTHENTIK_BOOTSTRAP_PASSWORD: authentik
       AUTHENTIK_BOOTSTRAP_EMAIL: admin@localhost
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-crwWfMQ8Ml9hSqnhzIjUNX8xsB2Q4pedrR2QU4jh}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-Vfc6Ebg5P6FPUhxk6qX7BFsd1YCB4tE4ia1MFhLRsfGZ3U72lF2rjah8tx5Psk1nU5N13hIrr5qgymwzs5twZniMfE1rwUlxs8HUWvhkkaN4AXxo9ZTlJ1lKqxhCMQOw}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-http://localhost:8060/login/oauth2/code/authentik}
     volumes:
-      - authentik-media:/media
-      - authentik-templates:/templates
+      - ./authentik/media:/media
+      - ./authentik/templates:/templates
+      - ./authentik/blueprints:/blueprints/custom:ro
     ports:
       - "9000:9000"
       - "9443:9443"
@@ -68,8 +72,9 @@ services:
     command: worker
     environment: *authentik-env
     volumes:
-      - authentik-media:/media
-      - authentik-templates:/templates
+      - ./authentik/media:/media
+      - ./authentik/templates:/templates
+      - ./authentik/blueprints:/blueprints/custom:ro
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       authentik-postgres:
@@ -79,12 +84,6 @@ services:
     restart: unless-stopped
     networks:
       - web
-
-volumes:
-  authentik-database: {}
-  authentik-redis: {}
-  authentik-media: {}
-  authentik-templates: {}
 
 networks:
   web: {}

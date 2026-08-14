@@ -58,7 +58,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - web
@@ -100,9 +100,6 @@ services:
       S3_ENDPOINT_URL: "http://garage:3900"
     networks:
       - web
-
-volumes:
-  postgres-data: {}
 
 networks:
   web: {}

@@ -35,23 +35,37 @@ This starts:
 
 ## 2. Configure OIDC
 
-Edit `src/main/resources/application.yml` and set your Authentik client credentials, or pass them as environment variables:
+Nothing to click. `dev/authentik/blueprints/access-job-manager.yaml` is mounted into
+both Authentik containers at `/blueprints/custom` and applied automatically, so a
+fresh instance comes up already carrying:
 
-```yaml
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          authentik:
-            client-id: <your-client-id>
-            client-secret: <your-client-secret>
-        provider:
-          authentik:
-            issuer-uri: http://localhost:9000/application/o/<your-app>/
+- the OAuth2/OIDC provider, with the client ID and secret that `application.yml`
+  uses as its defaults, and the redirect URI `http://localhost:8060/login/oauth2/code/authentik`
+- the application under the slug `access-job-manager`, which makes the issuer
+  `http://localhost:9000/application/o/access-job-manager/`
+- the groups `Advisor` and `Reviewer` — users in neither are treated as `USER`
+
+The `groups` claim rides along with the standard `profile` scope: Authentik's
+default profile mapping already emits every group the user belongs to, which is why
+the backend only requests `openid, email, profile`.
+
+Log in at `http://localhost:9000` with `akadmin` / the `AUTHENTIK_BOOTSTRAP_PASSWORD`
+from `authentik.yml` to assign users to those groups.
+
+To point the stack at different credentials, set the same variables the backend
+reads — the Compose file passes them through to the blueprint:
+
+```bash
+OIDC_CLIENT_ID=… OIDC_CLIENT_SECRET=… docker compose -f authentik.yml up -d
 ```
 
-The Authentik application must expose a `groups` claim on the OIDC token. Create groups named `Advisor` and `Reviewer`; users in neither group are treated as regular users (`USER`).
+The blueprint is idempotent and matched by name and slug, so re-applying it updates
+the existing objects instead of duplicating them. To apply it by hand after an edit,
+without restarting anything:
+
+```bash
+docker compose -f authentik.yml exec authentik-worker ak apply_blueprint custom/access-job-manager.yaml
+```
 
 ## 3. Configure document storage (S3 or Azure)
 
@@ -293,6 +307,32 @@ container; use `devpod up ajm --recreate` for that.
 
 Nothing syncs back to your own machine. Commit and push, or the work is lost
 when the workspace is deleted.
+
+### Where the data lives
+
+Inside the workspace, Docker runs as Docker-in-Docker, and that inner daemon keeps
+its entire state — images and named volumes alike — in a single outer volume tied to
+the container's identity (`dind-var-lib-docker-<devcontainerId>`). Rebuilding the
+container with `devpod up --recreate` therefore hands you a fresh, empty Docker
+daemon: every database in it is gone at once, without any command having deleted
+anything.
+
+The dev stacks avoid that by binding their data into the workspace folder rather
+than into named volumes — `dev/postgres-data`, `dev/authentik/*`, `dev/meta` and
+`dev/garage-data`. The workspace folder is mounted from the machine's disk
+(`/.devpod/agent/contexts/…/content`), so it outlives the container and survives a
+recreate. Only `devpod delete` removes it, together with the machine's volume.
+
+Verify which of the two a path is on:
+
+```bash
+awk '$5 ~ /^\/(workspaces|var\/lib\/docker)$/ {print $5"  <=  "$4}' /proc/self/mountinfo
+```
+
+Authentik is the one stack that would be painful to lose regardless, since its
+configuration is database state. That is what the blueprint in
+[section 2](#2-configure-oidc) is for: a wiped instance reconfigures itself on
+startup, and only the user accounts and group assignments have to be recreated.
 
 ### Ports
 
