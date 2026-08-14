@@ -30,7 +30,6 @@ public class UserProfileService {
         return toDto(profile);
     }
 
-    /** Updates the sender block. Blank values are stored as null so the letter omits the line. */
     public UserProfileDto updateProfile(String userId, UserProfileUpdateRequest request) {
         UserProfile profile = findProfile(userId);
         profile.setName(trimmed(request.name()));

@@ -29,7 +29,6 @@ public class UserProfile {
     private String name;
     private String email;
 
-    /** Postal address and phone, together with name/email the sender block of a letter. */
     private String street;
     private String postalCode;
     private String city;

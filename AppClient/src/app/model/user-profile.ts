@@ -1,5 +1,3 @@
-/** Mirrors the backend `UserProfileDto` / `UserProfileUpdateRequest`. */
-
 export interface UserProfileContact {
   userId: string;
   name: string | null;
