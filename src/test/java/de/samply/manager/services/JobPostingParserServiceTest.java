@@ -8,8 +8,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JobPostingParserServiceTest {
 
-    // A URL that fails validation must never reach the LLM, so the client is a
-    // stub that fails the test if it is called at all.
+    // Every case here is rejected by URL validation before the LLM client would ever
+    // be called. The stub fails the test rather than returning null, so that invariant
+    // is asserted instead of merely assumed.
     private final JobPostingParserService service = new JobPostingParserService(postingText -> {
         throw new AssertionError("LLM client called for a rejected URL");
     });
