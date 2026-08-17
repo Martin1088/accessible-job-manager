@@ -6,6 +6,7 @@ import de.samply.manager.coverletter.CoverLetterHtmlService;
 import de.samply.manager.coverletter.CoverLetterTemplate;
 import de.samply.manager.coverletter.StyleSettingsValidator;
 import de.samply.manager.dto.CoverLetterRenderRequest;
+import de.samply.manager.dto.HtmlLetterTemplateDto;
 import de.samply.manager.dto.HtmlLetterTemplateRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.HtmlLetterTemplate;
@@ -36,32 +37,48 @@ public class HtmlLetterTemplateService {
     private final MessageSource messageSource;
 
     @Transactional(readOnly = true)
-    public List<HtmlLetterTemplate> findAll(String userId) {
-        return repository.findByUserId(userId);
+    public List<HtmlLetterTemplateDto> findAll(String userId) {
+        return repository.findByUserIdOrderByUpdatedAtDesc(userId).stream()
+                .map(HtmlLetterTemplateDto::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public HtmlLetterTemplate find(UUID id, String userId) {
-        return owned(id, userId);
+    public HtmlLetterTemplateDto find(UUID id, String userId) {
+        return HtmlLetterTemplateDto.from(owned(id, userId));
     }
 
     @Transactional
-    public HtmlLetterTemplate create(HtmlLetterTemplateRequest request, Language language, String userId) {
-        return repository.save(HtmlLetterTemplate.builder()
+    public HtmlLetterTemplateDto create(HtmlLetterTemplateRequest request, Language language, String userId) {
+        return HtmlLetterTemplateDto.from(repository.save(HtmlLetterTemplate.builder()
                 .userId(userId)
+                .name(nameOf(request, language, defaultName(language)))
+                .language(language)
                 .layoutLetter(layoutOf(request))
                 .style(styleSettingsValidator.validated(request == null ? null : request.style()))
                 .blocks(blocksOf(request, language))
-                .build());
+                .build()));
     }
 
     @Transactional
-    public HtmlLetterTemplate update(UUID id, HtmlLetterTemplateRequest request, Language language, String userId) {
+    public HtmlLetterTemplateDto update(UUID id, HtmlLetterTemplateRequest request, Language language, String userId) {
         HtmlLetterTemplate template = owned(id, userId);
+        template.setName(nameOf(request, language, template.getName()));
+        template.setLanguage(language);
         template.setLayoutLetter(layoutOf(request));
         template.setStyle(styleSettingsValidator.validated(request == null ? null : request.style()));
         template.setBlocks(blocksOf(request, language));
-        return repository.save(template);
+        return HtmlLetterTemplateDto.from(repository.save(template));
+    }
+
+    private String nameOf(HtmlLetterTemplateRequest request, Language language, String fallback) {
+        String name = request == null || request.name() == null ? null : request.name().trim();
+        if (name != null && !name.isEmpty()) return name;
+        return fallback == null || fallback.isBlank() ? defaultName(language) : fallback;
+    }
+
+    private String defaultName(Language language) {
+        return messageSource.getMessage("coverLetter.defaultTemplateName", null, language.locale());
     }
 
     @Transactional
@@ -69,11 +86,6 @@ public class HtmlLetterTemplateService {
         repository.delete(owned(id, userId));
     }
 
-    /**
-     * Rebuilds the renderable letter from a stored template plus the parts that belong
-     * to this one sending. Placeholders inside the blocks are left untouched - they are
-     * resolved further down the pipeline, against the application being rendered for.
-     */
     @Transactional(readOnly = true)
     public CoverLetterTemplate asCoverLetterTemplate(UUID id, CoverLetterRenderRequest request, String userId) {
         HtmlLetterTemplate stored = owned(id, userId);

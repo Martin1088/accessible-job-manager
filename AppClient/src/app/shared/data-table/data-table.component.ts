@@ -12,6 +12,8 @@ export interface TableAction {
   label: string;
   ariaLabel: (row: any) => string;
   handler: (row: any) => void;
+  /** Omitted means the action shows on every row; used where rows are of mixed kinds. */
+  visible?: (row: any) => boolean;
 }
 
 type SortDirection = 'asc' | 'desc' | null;
@@ -38,9 +40,14 @@ export class DataTableComponent implements OnChanges {
   sortField: string | null = null;
   sortDirection: SortDirection = null;
 
+  private rowActions = new WeakMap<any, TableAction[]>();
+
   constructor(private translate: TranslateService) {}
 
   ngOnChanges(): void {
+    // The per-row action lists are keyed by row identity, so they have to go whenever
+    // the rows or the actions themselves are replaced.
+    this.rowActions = new WeakMap();
     this.sortedRows = [...this.rows];
     this.applySort();
   }
@@ -69,6 +76,20 @@ export class DataTableComponent implements OnChanges {
       const bVal = (b[field] ?? '').toString().toLowerCase();
       return aVal < bVal ? -dir : aVal > bVal ? dir : 0;
     });
+  }
+
+  /**
+   * The actions that apply to one row, so a table can mix rows of different kinds.
+   * Called from the template on every change detection pass, so the filtered list is
+   * cached per row rather than rebuilt each time.
+   */
+  actionsFor(row: any): TableAction[] {
+    let actions = this.rowActions.get(row);
+    if (!actions) {
+      actions = this.actions.filter(action => !action.visible || action.visible(row));
+      this.rowActions.set(row, actions);
+    }
+    return actions;
   }
 
   sortIcon(field: string): string {

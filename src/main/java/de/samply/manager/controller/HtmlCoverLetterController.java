@@ -5,9 +5,9 @@ import de.samply.manager.coverletter.CoverLetterTemplate;
 import de.samply.manager.coverletter.RenderFormat;
 import de.samply.manager.coverletter.StyleSettings;
 import de.samply.manager.dto.CoverLetterRenderRequest;
+import de.samply.manager.dto.HtmlLetterTemplateDto;
 import de.samply.manager.dto.HtmlLetterTemplateRequest;
 import de.samply.manager.exception.ApiException;
-import de.samply.manager.model.HtmlLetterTemplate;
 import de.samply.manager.services.HtmlLetterTemplateService;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
@@ -49,27 +49,27 @@ public class HtmlCoverLetterController {
     }
 
     @GetMapping("/template")
-    public List<HtmlLetterTemplate> listTemplates(@AuthenticationPrincipal OidcUser user) {
+    public List<HtmlLetterTemplateDto> listTemplates(@AuthenticationPrincipal OidcUser user) {
         return htmlLetterTemplateService.findAll(user.getSubject());
     }
 
     @GetMapping("/template/{id}")
-    public HtmlLetterTemplate getTemplate(@PathVariable UUID id, @AuthenticationPrincipal OidcUser user) {
+    public HtmlLetterTemplateDto getTemplate(@PathVariable UUID id, @AuthenticationPrincipal OidcUser user) {
         return htmlLetterTemplateService.find(id, user.getSubject());
     }
 
     @PostMapping("/template")
-    public ResponseEntity<HtmlLetterTemplate> createTemplate(
+    public ResponseEntity<HtmlLetterTemplateDto> createTemplate(
             @RequestBody(required = false) HtmlLetterTemplateRequest request,
             @RequestParam(value = "language", defaultValue = "GERMAN") Language language,
             @AuthenticationPrincipal OidcUser user) {
 
-        HtmlLetterTemplate saved = htmlLetterTemplateService.create(request, language, user.getSubject());
-        return ResponseEntity.created(URI.create("/api/html/cover-letter/template/" + saved.getId())).body(saved);
+        HtmlLetterTemplateDto saved = htmlLetterTemplateService.create(request, language, user.getSubject());
+        return ResponseEntity.created(URI.create("/api/html/cover-letter/template/" + saved.id())).body(saved);
     }
 
     @PutMapping("/template/{id}")
-    public HtmlLetterTemplate updateTemplate(
+    public HtmlLetterTemplateDto updateTemplate(
             @PathVariable UUID id,
             @RequestBody HtmlLetterTemplateRequest request,
             @RequestParam(value = "language", defaultValue = "GERMAN") Language language,

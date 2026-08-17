@@ -1,6 +1,7 @@
 package de.samply.manager.services;
 
 import de.samply.manager.coverletter.CoverLetterLabels;
+import de.samply.manager.coverletter.CoverLetterTemplate;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.types.Language;
 import jakarta.xml.bind.JAXBElement;
@@ -150,26 +151,23 @@ public class WordCoverLetterService {
     }
 
     /**
-     * Builds a brand-new cover letter template (header + mail-merge skeleton),
-     * mirroring the DIN 5008 style layout: centered sender block in the header,
-     * recipient address / date / subject / greeting as MERGEFIELDs in the body,
-     * and an empty placeholder where the letter text goes.
+     * Builds a brand-new cover letter template (header + mail-merge skeleton):
+     * centered sender block in the header, recipient address / date / subject /
+     * greeting as MERGEFIELDs in the body, and an empty placeholder where the
+     * letter text goes.
      */
-    public byte[] createTemplateWithHeader(Map<String, String> personalData, Language language) throws Exception {
+    public byte[] createTemplateWithHeader(CoverLetterTemplate.Sender sender, Language language) throws Exception {
         WordprocessingMLPackage wordPackage = WordprocessingMLPackage.createPackage();
         ObjectFactory factory = Context.getWmlObjectFactory();
 
-        String senderName = personalData.getOrDefault("senderName", "");
-        String senderStreet = personalData.getOrDefault("senderStreet", "");
-        String senderPostalCode = personalData.getOrDefault("senderPostalCode", "");
-        String senderCity = personalData.getOrDefault("senderCity", "");
-        String senderEmail = personalData.getOrDefault("senderEmail", "");
+        CoverLetterTemplate.Sender normalized = sender.normalized();
 
         HeaderPart headerPart = new HeaderPart();
-        headerPart.getContent().add(centeredParagraph(factory, senderName));
+        headerPart.getContent().add(centeredParagraph(factory, normalized.name()));
         headerPart.getContent().add(centeredParagraph(factory,
-                joinNonBlank(", ", senderStreet, joinNonBlank(" ", senderPostalCode, senderCity))));
-        headerPart.getContent().add(centeredParagraph(factory, senderEmail));
+                joinNonBlank(", ", normalized.street(),
+                        joinNonBlank(" ", normalized.postalCode(), normalized.city()))));
+        headerPart.getContent().add(centeredParagraph(factory, normalized.email()));
 
         MainDocumentPart mainDocumentPart = wordPackage.getMainDocumentPart();
         Body body = mainDocumentPart.getJaxbElement().getBody();

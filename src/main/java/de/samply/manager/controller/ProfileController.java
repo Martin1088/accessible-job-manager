@@ -12,11 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * The caller's own profile. Name, email, postal address and phone are the sender
- * block of every letter, so they are maintained once here rather than re-typed in
- * each cover letter form.
- */
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor

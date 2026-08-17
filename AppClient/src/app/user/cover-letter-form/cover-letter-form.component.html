@@ -4,6 +4,12 @@
     <p role="alert" class="error">{{ 'COVER_LETTER_FORM.LOAD_ERROR' | translate }}</p>
   }
 
+  <div class="field">
+    <label for="template-name">{{ 'COVER_LETTER_FORM.NAME_LABEL' | translate }}</label>
+    <input id="template-name" type="text" formControlName="name" aria-describedby="template-name-help">
+    <p id="template-name-help" class="hint">{{ 'COVER_LETTER_FORM.NAME_HELP' | translate }}</p>
+  </div>
+
   <fieldset>
     <legend>{{ 'COVER_LETTER_FORM.RECIPIENT_LEGEND' | translate }}</legend>
     <p id="application-help" class="hint">{{ 'COVER_LETTER_FORM.RECIPIENT_HELP' | translate }}</p>
