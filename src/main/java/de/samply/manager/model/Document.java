@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "documents")
 @Data
@@ -49,6 +52,8 @@ public class Document {
     @JoinColumn(name = "company_position_id")
     private CompanyPosition companyPosition;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

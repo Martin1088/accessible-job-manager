@@ -7,7 +7,7 @@
     <input #fileInput type="file"
       accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       style="display:none" tabindex="-1" aria-hidden="true"
-      (change)="onFileSelected($event)">
+      (change)="onFileSelected($event, 'TEMPLATE')">
   </div>
 
   @if (errorMessage) {
@@ -27,6 +27,16 @@
           aria-required="true"
           [attr.placeholder]="'DOCUMENTS.LABEL_PLACEHOLDER' | translate"/>
       </div>
+      @if (uploadMode === 'DOCUMENT') {
+        <div class="field">
+          <label for="doc-type">{{ 'DOCUMENTS.TYPE_FIELD' | translate }}</label>
+          <select id="doc-type" name="doc-type" [(ngModel)]="pendingType">
+            @for (t of pdfTypeOptions; track t.value) {
+              <option [value]="t.value">{{ t.label | translate }}</option>
+            }
+          </select>
+        </div>
+      }
       <div class="field">
         <label for="doc-language">{{ 'DOCUMENTS.LANGUAGE_FIELD' | translate }}</label>
         <select id="doc-language" name="doc-language" [(ngModel)]="pendingLanguage">
@@ -88,11 +98,34 @@
     }
   </div>
 
-  <app-data-table
-    caption="DOCUMENTS.TABLE_CAPTION"
-    [columns]="columns"
-    [rows]="filteredRows"
-    [actions]="actions"
-    emptyMessage="DOCUMENTS.EMPTY">
-  </app-data-table>
+  <section aria-labelledby="templates-heading">
+    <h2 id="templates-heading">{{ 'DOCUMENTS.TEMPLATES_HEADING' | translate }}</h2>
+    <app-data-table
+      caption="DOCUMENTS.TABLE_CAPTION"
+      [columns]="columns"
+      [rows]="filteredRows"
+      [actions]="actions"
+      emptyMessage="DOCUMENTS.EMPTY">
+    </app-data-table>
+  </section>
+
+  <section aria-labelledby="documents-heading">
+    <div class="page-header">
+      <h2 id="documents-heading">{{ 'DOCUMENTS.DOCUMENTS_HEADING' | translate }}</h2>
+      <button type="button" class="btn-upload" (click)="pdfInput.click()" [disabled]="uploading">
+        <span aria-hidden="true">↑</span> {{ (uploading ? 'DOCUMENTS.UPLOADING' : 'DOCUMENTS.UPLOAD_PDF') | translate }}
+      </button>
+      <input #pdfInput type="file" accept=".pdf,application/pdf"
+        style="display:none" tabindex="-1" aria-hidden="true"
+        (change)="onFileSelected($event, 'DOCUMENT')">
+    </div>
+    <p class="hint">{{ 'DOCUMENTS.DOCUMENTS_HELP' | translate }}</p>
+    <app-data-table
+      caption="DOCUMENTS.DOCUMENTS_CAPTION"
+      [columns]="documentColumns"
+      [rows]="filteredDocumentRows"
+      [actions]="documentActions"
+      emptyMessage="DOCUMENTS.DOCUMENTS_EMPTY">
+    </app-data-table>
+  </section>
 </main>

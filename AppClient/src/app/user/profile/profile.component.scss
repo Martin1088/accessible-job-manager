@@ -14,3 +14,87 @@ main {
   dt { font-weight: 600; color: #64748b; }
   dd { margin: 0; }
 }
+
+fieldset {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem 1.25rem;
+  margin: 1.5rem 0;
+  background: #fff;
+
+  legend {
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0 0.4rem;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+
+  label { font-size: 0.875rem; font-weight: 500; }
+
+  input, select {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+  }
+}
+
+.hint {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.error {
+  color: #b3261e;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Focus lands here after a failed submit, so it must show a focus ring. */
+.error-summary {
+  border: 2px solid #b3261e;
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.5rem;
+  background: #fff5f5;
+
+  h2 { margin: 0 0 0.5rem; font-size: 1rem; color: #b3261e; }
+  ul { margin: 0; padding-left: 1.2rem; }
+  li { margin-bottom: 0.25rem; }
+  a { color: #b3261e; font-weight: 500; }
+
+  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.btn-primary {
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  background: #005fcc;
+  color: #fff;
+  border: none;
+  &:hover:not(:disabled) { background: #004aaa; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+}

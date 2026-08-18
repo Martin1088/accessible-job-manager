@@ -77,6 +77,8 @@ export class CoverLetterFormComponent implements OnInit {
   pdfFilename = '';
 
   readonly letter = this.fb.group({
+    // What the user calls this template; shown as its label in the documents list.
+    name: [''],
     // Optional: with no application chosen the letter is rendered against the sample
     // recipient, so a template can be proofread before it is tied to an application.
     applicationId: this.fb.control<number | null>(null),
@@ -144,7 +146,7 @@ export class CoverLetterFormComponent implements OnInit {
       }
     }
 
-    this.letter.patchValue({ subject, greeting, closing });
+    this.letter.patchValue({ name: template.name ?? '', subject, greeting, closing });
   }
 
   private blockGroup(type: BlockType, text: string, items: string[] = [], id: string | null = null): FormGroup {
@@ -308,6 +310,7 @@ export class CoverLetterFormComponent implements OnInit {
   private templateRequest(): HtmlLetterTemplateRequest {
     const value = this.letter.getRawValue();
     const blocks: LetterBlock[] = [];
+    const name = value.name?.trim();
 
     const subject = value.subject?.trim();
     if (subject) blocks.push(this.slotBlock('SUBJECT', subject));
@@ -327,7 +330,9 @@ export class CoverLetterFormComponent implements OnInit {
     const closing = value.closing?.trim();
     if (closing) blocks.push(this.slotBlock('REGARDS', closing));
 
-    return { blocks };
+    // Omitted rather than sent empty: the server keeps the stored name in that case
+    // instead of overwriting it, and picks a localized default on first creation.
+    return name ? { name, blocks } : { blocks };
   }
 
   private slotBlock(key: BlockKey, content: string): LetterBlock {

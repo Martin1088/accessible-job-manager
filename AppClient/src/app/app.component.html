@@ -94,7 +94,14 @@
       </button>
       <ng-template #accountMenu>
         <div class="account-menu" cdkMenu [attr.aria-label]="'ACCOUNT.TRIGGER_LABEL' | translate">
-          <a routerLink="/profile" cdkMenuItem>{{ 'ACCOUNT.PROFILE' | translate }}</a>
+          <a routerLink="/profile" cdkMenuItem
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+P' : 'p'">
+            {{ 'ACCOUNT.PROFILE' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+P' : 'p' }}</kbd>
+          </a>
+          <a routerLink="/preferences" cdkMenuItem
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+E' : 'e'">
+            {{ 'ACCOUNT.PREFERENCES' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+E' : 'e' }}</kbd>
+          </a>
           <a routerLink="/guide" cdkMenuItem
             [attr.aria-keyshortcuts]="(isWindows ? 'Alt+Shift+H' : 'h') + ' Ctrl+Alt+H'">
             {{ 'ACCOUNT.GUIDE' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+H' : 'h' }}</kbd> <kbd aria-hidden="true">Ctrl+Alt+H</kbd>

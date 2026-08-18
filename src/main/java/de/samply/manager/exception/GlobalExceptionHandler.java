@@ -7,9 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Central mapping of exceptions to HTTP responses, kept in the same
@@ -46,6 +49,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);
         return body(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+            .map(e -> e.getField() + " " + e.getDefaultMessage())
+            .collect(Collectors.joining(", "));
+        return body(HttpStatus.BAD_REQUEST, message);
     }
 
     private ResponseEntity<Map<String, Object>> body(HttpStatus status, String message) {

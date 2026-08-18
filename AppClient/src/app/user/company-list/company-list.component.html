@@ -55,4 +55,82 @@
     [actions]="actions"
     emptyMessage="COMPANIES.EMPTY">
   </app-data-table>
+
+  @if (viewingRow) {
+    <section class="job-posting-view" aria-labelledby="job-posting-view-heading">
+      <div class="job-posting-view-header">
+        <h2 id="job-posting-view-heading" #jobPostingViewHeading tabindex="-1">
+          {{ 'COMPANIES.JOB_POSTING_VIEW_HEADING' | translate: { position: viewingRow.positionTitle, company: viewingRow.name } }}
+        </h2>
+        <button type="button" (click)="closeJobPostingView()">
+          {{ 'COMPANIES.JOB_POSTING_VIEW_CLOSE' | translate }}
+        </button>
+      </div>
+
+      <div class="view-toggle" role="group" [attr.aria-label]="'COMPANIES.JOB_POSTING_VIEW_TOGGLE_LABEL' | translate">
+        <button type="button"
+          [attr.aria-pressed]="viewMode === 'structure' ? 'true' : 'false'"
+          (click)="setViewMode('structure')">
+          {{ 'COMPANIES.STRUCTURE_VIEW' | translate }}
+        </button>
+        <button type="button"
+          [attr.aria-pressed]="viewMode === 'original' ? 'true' : 'false'"
+          (click)="setViewMode('original')">
+          {{ 'COMPANIES.ORIGINAL_VIEW' | translate }}
+        </button>
+      </div>
+
+      @if (viewMode === 'structure') {
+        <dl class="structure-view">
+          <dt>{{ 'COMPANIES.COL_NAME' | translate }}</dt>
+          <dd>{{ viewingCompany?.name }}</dd>
+
+          <dt>{{ 'COMPANIES.COL_POSITION' | translate }}</dt>
+          <dd>{{ viewingPosition?.title }}</dd>
+
+          @for (loc of viewingCompany?.locations ?? []; track loc) {
+            <dt>{{ 'COMPANIES.LOCATIONS_HEADING' | translate }}</dt>
+            <dd>{{ formatLocation(loc) }}</dd>
+          }
+
+          @if (viewingPosition?.contactLastName) {
+            <dt>{{ 'COMPANIES.CONTACT_LAST_NAME' | translate }}</dt>
+            <dd>{{ formatContact(viewingPosition) }}</dd>
+          }
+          @if (viewingPosition?.email) {
+            <dt>{{ 'COMPANIES.EMAIL' | translate }}</dt>
+            <dd><a [href]="'mailto:' + viewingPosition?.email">{{ viewingPosition?.email }}</a></dd>
+          }
+          @if (viewingPosition?.website) {
+            <dt>{{ 'COMPANIES.WEBSITE' | translate }}</dt>
+            <dd><a [href]="viewingPosition?.website" target="_blank" rel="noopener">{{ viewingPosition?.website }}</a></dd>
+          }
+          @if (viewingPosition?.notes) {
+            <dt>{{ 'COMPANIES.NOTES' | translate }}</dt>
+            <dd>{{ viewingPosition?.notes }}</dd>
+          }
+        </dl>
+      } @else {
+        @switch (snapshotState) {
+          @case ('loading') {
+            <p role="status">{{ 'COMPANIES.JOB_POSTING_LOADING' | translate }}</p>
+          }
+          @case ('none') {
+            <p role="status">{{ 'COMPANIES.NO_JOB_POSTING_FOUND' | translate }}</p>
+          }
+          @case ('error') {
+            <p role="alert">{{ 'COMPANIES.ERROR_LOAD_JOB_POSTING' | translate }}</p>
+          }
+          @case ('ready') {
+            <p class="original-view-link">
+              <a [href]="snapshotUrl" target="_blank" rel="noopener">
+                {{ 'COMPANIES.ACTION_VIEW_JOB_POSTING' | translate }} ({{ 'COMPANIES.OPEN_NEW_TAB' | translate }})
+              </a>
+            </p>
+            <iframe [src]="snapshotSrc" [title]="'COMPANIES.ORIGINAL_VIEW' | translate" class="snapshot-frame"></iframe>
+          }
+        }
+      }
+    </section>
+  }
 </main>

@@ -166,8 +166,8 @@ The Angular build output is copied into `src/main/resources/static/` and served 
 
 ## 7. Run the frontend tests
 
-Karma runs through the `@angular/build:karma` builder configured in
-`angular.json`; there is no `karma.conf.js`. Watch mode opens a real browser:
+Karma runs through the `@angular/build:karma` builder configured in `angular.json`,
+with `karma.conf.js` supplying the browser launcher. Watch mode opens a real browser:
 
 ```bash
 cd AppClient
@@ -188,9 +188,8 @@ npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/*
 ```
 
 Karma needs a Chrome or Chromium binary and finds it through `CHROME_BIN` when
-it is not on `PATH`. GitHub's runners ship one, so `.github/workflows/build.yml`
-sets nothing; a plain devcontainer does not, and the run fails before the first
-spec. Install one and point the variable at it:
+it is not on `PATH`. GitHub's runners ship one; a plain devcontainer does not, and
+the run fails before the first spec. Install one and point the variable at it:
 
 ```bash
 sudo apt-get update && sudo apt-get install -y chromium
@@ -198,6 +197,13 @@ export CHROME_BIN=/usr/bin/chromium
 ```
 
 On macOS with Homebrew the path is `/opt/homebrew/bin/chromium` instead.
+
+Chromium additionally refuses to start as root unless `--no-sandbox` is passed, and
+the devcontainer runs as root (`"remoteUser": "root"`). `karma.conf.js` handles that
+on its own: it selects a `ChromeHeadlessNoSandbox` launcher when the process is root
+and the stock sandboxed `ChromeHeadless` otherwise, so `npx ng test` needs no extra
+flags in either place. Naming a browser explicitly overrides the choice, which is what
+CI does with `--browsers=ChromeHeadless`.
 
 ## 8. Optional: Ollama for job posting import
 

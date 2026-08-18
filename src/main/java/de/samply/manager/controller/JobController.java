@@ -2,6 +2,7 @@ package de.samply.manager.controller;
 
 import de.samply.manager.dto.CompanyDto;
 import de.samply.manager.services.CompanyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,14 +24,14 @@ public class JobController {
     }
 
     @PostMapping
-    public ResponseEntity<CompanyDto> create(@RequestBody CompanyDto dto,
+    public ResponseEntity<CompanyDto> create(@Valid @RequestBody CompanyDto dto,
                                              @AuthenticationPrincipal OidcUser user) {
         return ResponseEntity.ok(companyService.createCompany(dto, user.getSubject()));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CompanyDto> update(@PathVariable Long id,
-                                             @RequestBody CompanyDto dto,
+                                             @Valid @RequestBody CompanyDto dto,
                                              @AuthenticationPrincipal OidcUser user) {
         return ResponseEntity.ok(companyService.updateCompany(id, dto, user.getSubject()));
     }

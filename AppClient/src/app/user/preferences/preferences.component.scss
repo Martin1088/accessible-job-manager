@@ -1,0 +1,82 @@
+main {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+fieldset {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem 1.25rem;
+  margin: 1.5rem 0;
+  background: #fff;
+
+  legend {
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0 0.4rem;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+
+  label { font-size: 0.875rem; font-weight: 500; }
+
+  input, select {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+  }
+}
+
+.hint {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.error {
+  color: #b3261e;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* The two explicit save/reset controls - no autosave, so their state (dirty vs.
+   pristine) is the only thing that enables/disables them. */
+.icon-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: #f1f5f9; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+}
+
+.icon-btn-save {
+  border-color: #005fcc;
+  color: #005fcc;
+}

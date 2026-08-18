@@ -40,14 +40,14 @@
         </tr>
       }
 
-      @for (row of sortedRows; track row) {
+      @for (row of sortedRows; track row.id ?? $index) {
         <tr>
           @for (col of columns; track col) {
             <td>{{ row[col.field] }}</td>
           }
           @if (actions.length > 0) {
             <td>
-              @for (action of actions; track action) {
+              @for (action of actionsFor(row); track action) {
                 <button
                   type="button"
                   (click)="action.handler(row)"
