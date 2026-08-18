@@ -3,6 +3,7 @@ package de.samply.manager.controller;
 import de.samply.manager.dto.GrantAccessRequest;
 import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.services.DocumentAccessService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class DocumentAccessController {
     @PostMapping("/{documentId}/access")
     public ResponseEntity<DocumentAccess> grantAccess(
             @PathVariable UUID documentId,
-            @RequestBody GrantAccessRequest request,
+            @Valid @RequestBody GrantAccessRequest request,
             @AuthenticationPrincipal OidcUser user) {
 
         return ResponseEntity.ok(

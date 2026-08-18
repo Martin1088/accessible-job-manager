@@ -1,3 +1,5 @@
+import { UserPreferences } from './user-preferences';
+
 export interface UserProfileContact {
   userId: string;
   name: string | null;
@@ -15,6 +17,7 @@ export interface UserProfile {
   role: string | null;
   advisors: UserProfileContact[];
   reviewers: UserProfileContact[];
+  preferences: UserPreferences;
 }
 
 /**

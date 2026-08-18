@@ -57,4 +57,12 @@ public class UserProfile {
     )
     @Builder.Default
     private Set<UserProfile> reviewers = new HashSet<>();
+
+    @Embedded
+    @Builder.Default
+    private UserPreferences preferences = new UserPreferences();
+
+    public UserPreferences getPreferences() {
+        return preferences != null ? preferences : new UserPreferences();
+    }
 }

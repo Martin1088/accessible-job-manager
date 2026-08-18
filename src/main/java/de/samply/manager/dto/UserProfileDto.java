@@ -15,7 +15,8 @@ public record UserProfileDto(
         String phone,
         Role role,
         List<AdvisorDto> advisors,
-        List<ReviewerDto> reviewers
+        List<ReviewerDto> reviewers,
+        UserPreferencesDto preferences
 ) {
     public record AdvisorDto(String userId, String name, String email) {
     }

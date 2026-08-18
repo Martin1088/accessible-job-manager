@@ -50,3 +50,83 @@ main {
   &:hover { background: #f1f5f9; }
   &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
 }
+
+.job-posting-view {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+
+  h2:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+}
+
+.job-posting-view-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  h2 { margin: 0; font-size: 1.1rem; }
+
+  button {
+    background: #fff;
+    color: #374151;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    &:hover { background: #f1f5f9; }
+    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+  }
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  button {
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #374151;
+    font-size: 0.875rem;
+    font-family: inherit;
+    cursor: pointer;
+    &:hover { background: #f1f5f9; }
+    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+    &[aria-pressed="true"] {
+      background: #005fcc;
+      color: #fff;
+      border-color: #005fcc;
+    }
+  }
+}
+
+.structure-view {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1.5rem;
+  font-size: 0.95rem;
+
+  dt { font-weight: 600; color: #64748b; }
+  dd { margin: 0; }
+}
+
+.original-view-link {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+
+  a { color: #005fcc; font-weight: 500; }
+}
+
+.snapshot-frame {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}

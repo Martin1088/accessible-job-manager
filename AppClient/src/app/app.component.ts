@@ -30,6 +30,8 @@ export class AppComponent implements OnInit {
     'c': '/companies',
     't': '/cover-letter-template',
     'h': '/guide',
+    'p': '/profile',
+    'e': '/preferences',
   };
 
   // Windows screen readers (JAWS/NVDA) reserve bare letter keys for their own

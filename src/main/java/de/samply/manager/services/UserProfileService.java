@@ -1,8 +1,10 @@
 package de.samply.manager.services;
 
+import de.samply.manager.dto.UserPreferencesDto;
 import de.samply.manager.dto.UserProfileDto;
 import de.samply.manager.dto.UserProfileUpdateRequest;
 import de.samply.manager.exception.ApiException;
+import de.samply.manager.model.UserPreferences;
 import de.samply.manager.types.Role;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.UserProfileRepository;
@@ -16,6 +18,7 @@ import java.util.List;
 public class UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
+    private final UserPreferencesValidator userPreferencesValidator;
 
     public UserProfileDto findOrCreate(String userId, String name, String email) {
         UserProfile profile = userProfileRepository.findById(userId)
@@ -47,6 +50,13 @@ public class UserProfileService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    public UserProfileDto updatePreferences(String userId, UserPreferencesDto request) {
+        UserProfile profile = findProfile(userId);
+        UserPreferencesDto validated = userPreferencesValidator.validated(request);
+        profile.setPreferences(toEmbeddable(validated));
+        return toDto(userProfileRepository.save(profile));
     }
 
     public UserProfileDto getProfile(String userId) {
@@ -117,7 +127,30 @@ public class UserProfileService {
                         .toList(),
                 profile.getReviewers().stream()
                         .map(r -> new UserProfileDto.ReviewerDto(r.getUserId(), r.getName(), r.getEmail()))
-                        .toList()
+                        .toList(),
+                toDto(profile.getPreferences())
         );
+    }
+
+    private UserPreferencesDto toDto(UserPreferences preferences) {
+        return new UserPreferencesDto(
+                preferences.getFontScale(),
+                preferences.getContrastMode(),
+                preferences.getReduceMotion(),
+                preferences.getHideImages(),
+                preferences.getLineHeight(),
+                preferences.getFontFamily()
+        );
+    }
+
+    private UserPreferences toEmbeddable(UserPreferencesDto dto) {
+        return UserPreferences.builder()
+                .fontScale(dto.fontScale())
+                .contrastMode(dto.contrastMode())
+                .reduceMotion(dto.reduceMotion())
+                .hideImages(dto.hideImages())
+                .lineHeight(dto.lineHeight())
+                .fontFamily(dto.fontFamily())
+                .build();
     }
 }

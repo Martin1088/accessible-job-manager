@@ -33,6 +33,12 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'preferences',
+    loadComponent: () => import('./user/preferences/preferences.component')
+      .then(m => m.PreferencesComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'guide',
     loadComponent: () => import('./user/guide/guide.component')
       .then(m => m.GuideComponent),

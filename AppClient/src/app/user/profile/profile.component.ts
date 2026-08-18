@@ -6,6 +6,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth.service';
 import { UserProfileService } from '../../services/user-profile.service';
 import { UserProfile } from '../../model/user-profile';
+import { PreferencesService } from '../../services/preferences.service';
 
 /**
  * The profile form. Its six fields are the sender block of every letter, maintained
@@ -26,6 +27,7 @@ export class ProfileComponent implements OnInit {
   private readonly announcer = inject(LiveAnnouncer);
   private readonly translate = inject(TranslateService);
   private readonly profiles = inject(UserProfileService);
+  private readonly preferences = inject(PreferencesService);
   readonly auth = inject(AuthService);
 
   profile: UserProfile | null = null;
@@ -52,6 +54,9 @@ export class ProfileComponent implements OnInit {
 
   private applyProfile(profile: UserProfile): void {
     this.profile = profile;
+    // Seeds the shared preferences cache from the response this page already fetched,
+    // rather than depending on AccessibilityService's bootstrap-time load having run.
+    this.preferences.seed(profile.preferences);
     this.form.patchValue({
       name: profile.name ?? '',
       email: profile.email ?? '',

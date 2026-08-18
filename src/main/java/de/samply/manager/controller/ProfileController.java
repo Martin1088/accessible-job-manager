@@ -1,12 +1,15 @@
 package de.samply.manager.controller;
 
+import de.samply.manager.dto.UserPreferencesDto;
 import de.samply.manager.dto.UserProfileDto;
 import de.samply.manager.dto.UserProfileUpdateRequest;
 import de.samply.manager.services.UserProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +29,14 @@ public class ProfileController {
     }
 
     @PutMapping
-    public UserProfileDto updateProfile(@RequestBody UserProfileUpdateRequest request,
+    public UserProfileDto updateProfile(@Valid @RequestBody UserProfileUpdateRequest request,
                                         @AuthenticationPrincipal OidcUser user) {
         return userProfileService.updateProfile(user.getSubject(), request);
+    }
+
+    @PatchMapping("/preferences")
+    public UserProfileDto updatePreferences(@RequestBody UserPreferencesDto request,
+                                            @AuthenticationPrincipal OidcUser user) {
+        return userProfileService.updatePreferences(user.getSubject(), request);
     }
 }
