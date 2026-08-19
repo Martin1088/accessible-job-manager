@@ -1,5 +1,6 @@
 package de.samply.manager.controller;
 
+import de.samply.manager.dto.DocumentDto;
 import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
@@ -37,32 +38,34 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @GetMapping
-    public List<Document> getMyDocuments(
+    public List<DocumentDto> getMyDocuments(
             @RequestParam(required = false) DocumentType type,
             @AuthenticationPrincipal OidcUser user) {
 
-        return documentService.findAll(user.getSubject(), type);
+        return documentService.findAll(user.getSubject(), type).stream()
+                .map(DocumentDto::from)
+                .toList();
     }
 
     @PostMapping("/upload")
     @ResponseStatus(HttpStatus.CREATED)
-    public Document upload(
+    public DocumentDto upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam("label") String label,
             @RequestParam(value = "type", defaultValue = "COVER_LETTER_TEMPLATE") DocumentType type,
             @RequestParam(value = "language", defaultValue = "ENGLISH") Language language,
             @AuthenticationPrincipal OidcUser user) throws IOException {
 
-        return documentService.upload(file, label, type, language, user.getSubject());
+        return DocumentDto.from(documentService.upload(file, label, type, language, user.getSubject()));
     }
 
     @PatchMapping("/{documentId}")
-    public Document update(
+    public DocumentDto update(
             @PathVariable UUID documentId,
             @RequestBody UpdateDocumentRequest request,
             @AuthenticationPrincipal OidcUser user) {
 
-        return documentService.update(documentId, request, user.getSubject());
+        return DocumentDto.from(documentService.update(documentId, request, user.getSubject()));
     }
 
     /**

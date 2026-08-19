@@ -5,6 +5,7 @@ import {
   CoverLetterRenderRequest,
   HtmlLetterTemplate,
   HtmlLetterTemplateRequest,
+  LetterBlock,
 } from '../model/cover-letter';
 import { DocumentLanguage } from '../model/document';
 
@@ -29,6 +30,16 @@ export class CoverLetterService {
 
   getTemplate(id: string): Observable<HtmlLetterTemplate> {
     return this.http.get<HtmlLetterTemplate>(`${this.apiUrl}/template/${id}`);
+  }
+
+  /**
+   * The starting text offered for a language. Read-only, so the editor can ask
+   * for it whenever the letter language changes without creating a template.
+   */
+  suggestions(language: DocumentLanguage): Observable<LetterBlock[]> {
+    return this.http.get<LetterBlock[]>(`${this.apiUrl}/template/suggestions`, {
+      params: new HttpParams().set('language', language),
+    });
   }
 
   /**

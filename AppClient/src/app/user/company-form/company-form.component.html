@@ -23,10 +23,27 @@
     </div>
   }
 
+  <section class="suggestions" aria-labelledby="suggestions-heading">
+    <h2 id="suggestions-heading">{{ 'COMPANIES.SUGGEST_HEADING' | translate }}</h2>
+    <div>
+      <label for="suggestion-url">{{ 'COMPANIES.SUGGEST_URL_LABEL' | translate }}</label>
+      <input id="suggestion-url" type="url" [(ngModel)]="suggestionUrl" name="suggestion-url"
+             aria-describedby="suggestion-url-hint"/>
+      <span id="suggestion-url-hint" class="hint">{{ 'COMPANIES.SUGGEST_URL_HINT' | translate }}</span>
+    </div>
+    @if (suggestionError) {
+      <div role="alert">{{ suggestionError }}</div>
+    }
+    <div role="status">{{ suggestionStatus }}</div>
+  </section>
+
   <div>
     <div>
       <label for="name">{{ 'COMPANIES.NAME_LABEL' | translate }}</label>
       <input id="name" [(ngModel)]="company.name" required aria-required="true"/>
+      <button type="button" (click)="suggestCompany()" [disabled]="isSuggesting('company')">
+        {{ (isSuggesting('company') ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_COMPANY') | translate }}
+      </button>
     </div>
 
     <section aria-labelledby="locations-heading">
@@ -41,7 +58,7 @@
             </div>
             <div>
               <label [for]="'city-' + i">{{ 'COMPANIES.CITY' | translate }}</label>
-              <input [id]="'city-' + i" [(ngModel)]="loc.city" [name]="'city-' + i"/>
+              <input [id]="'city-' + i" [(ngModel)]="loc.city" [name]="'city-' + i" required aria-required="true"/>
             </div>
             <div>
               <label [for]="'postcode-' + i">{{ 'COMPANIES.POSTCODE' | translate }}</label>
@@ -51,6 +68,10 @@
               <label [for]="'country-' + i">{{ 'COMPANIES.COUNTRY' | translate }}</label>
               <input [id]="'country-' + i" [(ngModel)]="loc.country" [name]="'country-' + i"/>
             </div>
+            <button type="button" (click)="suggestLocation(i)" [disabled]="isSuggesting('location-' + i)"
+                    [attr.aria-label]="'COMPANIES.SUGGEST_LOCATION_ARIA' | translate: { n: i + 1 }">
+              {{ (isSuggesting('location-' + i) ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_LOCATION') | translate }}
+            </button>
             <button type="button" (click)="removeLocation(i)" [attr.aria-label]="'COMPANIES.REMOVE_LOCATION_ARIA' | translate: { n: i + 1 }">{{ 'COMPANIES.REMOVE' | translate }}</button>
           </fieldset>
         </div>
@@ -66,7 +87,7 @@
             <legend>{{ 'COMPANIES.POSITION_LEGEND' | translate: { n: i + 1 } }}</legend>
             <div>
               <label [for]="'title-' + i">{{ 'COMPANIES.JOB_TITLE' | translate }}</label>
-              <input [id]="'title-' + i" [(ngModel)]="pos.title" [name]="'title-' + i"/>
+              <input [id]="'title-' + i" [(ngModel)]="pos.title" [name]="'title-' + i" required aria-required="true"/>
             </div>
             <div>
               <label [for]="'contactGender-' + i">{{ 'COMPANIES.CONTACT_GENDER' | translate }}</label>
@@ -86,6 +107,15 @@
               <input [id]="'contactLastName-' + i" [(ngModel)]="pos.contactLastName" [name]="'contactLastName-' + i"/>
             </div>
             <div>
+              <label [for]="'applyLanguage-' + i">{{ 'COMPANIES.APPLY_LANGUAGE' | translate }}</label>
+              <select [id]="'applyLanguage-' + i" [(ngModel)]="pos.applyLanguage" [name]="'applyLanguage-' + i">
+                <option value="">{{ 'COMPANIES.SELECT_PLACEHOLDER' | translate }}</option>
+                @for (l of languageOptions; track l) {
+                  <option [value]="l.value">{{ l.label | translate }}</option>
+                }
+              </select>
+            </div>
+            <div>
               <label [for]="'email-' + i">{{ 'COMPANIES.EMAIL' | translate }}</label>
               <input [id]="'email-' + i" type="email" [(ngModel)]="pos.email" [name]="'email-' + i"/>
             </div>
@@ -94,9 +124,29 @@
               <input [id]="'website-' + i" type="url" [(ngModel)]="pos.website" [name]="'website-' + i"/>
             </div>
             <div>
+              <label [for]="'applicationMethod-' + i">{{ 'COMPANIES.APPLY_METHOD' | translate }}</label>
+              <select [id]="'applicationMethod-' + i" [(ngModel)]="pos.applicationMethod"
+                      [name]="'applicationMethod-' + i" [attr.aria-describedby]="'applicationMethod-hint-' + i">
+                <option value="">{{ 'COMPANIES.SELECT_PLACEHOLDER' | translate }}</option>
+                @for (m of applicationMethodOptions; track m) {
+                  <option [value]="m.value">{{ m.label | translate }}</option>
+                }
+              </select>
+              <span [id]="'applicationMethod-hint-' + i" class="hint">{{ 'COMPANIES.APPLY_METHOD_HINT' | translate }}</span>
+            </div>
+            <div>
               <label [for]="'notes-' + i">{{ 'COMPANIES.NOTES' | translate }}</label>
               <textarea [id]="'notes-' + i" [(ngModel)]="pos.notes" [name]="'notes-' + i" rows="3"></textarea>
             </div>
+
+            <button type="button" (click)="suggestPosition(i)" [disabled]="isSuggesting('position-' + i)"
+                    [attr.aria-label]="'COMPANIES.SUGGEST_POSITION_ARIA' | translate: { n: i + 1 }">
+              {{ (isSuggesting('position-' + i) ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_POSITION') | translate }}
+            </button>
+            <button type="button" (click)="suggestApplicationMethod(i)" [disabled]="isSuggesting('apply-' + i)"
+                    [attr.aria-label]="'COMPANIES.SUGGEST_APPLY_ARIA' | translate: { n: i + 1 }">
+              {{ (isSuggesting('apply-' + i) ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_APPLY') | translate }}
+            </button>
             <button type="button" (click)="removePosition(i)" [attr.aria-label]="'COMPANIES.REMOVE_POSITION_ARIA' | translate: { n: i + 1 }">{{ 'COMPANIES.REMOVE' | translate }}</button>
           </fieldset>
         </div>

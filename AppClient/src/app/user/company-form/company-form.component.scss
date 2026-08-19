@@ -20,6 +20,13 @@ label {
   color: #333;
 }
 
+// Helper text under a field. #666 on the form's white background is ~5.7:1,
+// so it still clears WCAG AA at this size.
+.hint {
+  font-size: 0.78rem;
+  color: #666;
+}
+
 input, textarea {
   width: 100%;
   padding: 0.5rem 0.75rem;

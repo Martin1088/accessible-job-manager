@@ -1,7 +1,7 @@
 package de.samply.manager.controller;
 
+import de.samply.manager.dto.DocumentAccessDto;
 import de.samply.manager.dto.GrantAccessRequest;
-import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.services.DocumentAccessService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,13 +32,13 @@ public class DocumentAccessController {
     private final DocumentAccessService documentAccessService;
 
     @PostMapping("/{documentId}/access")
-    public ResponseEntity<DocumentAccess> grantAccess(
+    public ResponseEntity<DocumentAccessDto> grantAccess(
             @PathVariable UUID documentId,
             @Valid @RequestBody GrantAccessRequest request,
             @AuthenticationPrincipal OidcUser user) {
 
-        return ResponseEntity.ok(
-                documentAccessService.grant(documentId, request.reviewerId(), user.getSubject()));
+        return ResponseEntity.ok(DocumentAccessDto.from(
+                documentAccessService.grant(documentId, request.reviewerId(), user.getSubject())));
     }
 
     @DeleteMapping("/{documentId}/access/{reviewerId}")

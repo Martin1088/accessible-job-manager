@@ -68,6 +68,14 @@ export const routes: Routes = [
       .then(m => m.CoverLetterTemplateComponent),
     canActivate: [authGuard, userGuard]
   },
+  // The same editor opened on a stored template. Without an id it starts a new
+  // one, so writing a second letter never edits the first.
+  {
+    path: 'cover-letter-template/:id',
+    loadComponent: () => import('./user/cover-letter-template/cover-letter-template.component')
+      .then(m => m.CoverLetterTemplateComponent),
+    canActivate: [authGuard, userGuard]
+  },
   {
     path: 'companies/new',
     loadComponent: () => import('./user/company-form/company-form.component')

@@ -1,5 +1,7 @@
 package de.samply.manager.services;
 
+import de.samply.manager.jobimport.llm.JobPostingLlmClient;
+import de.samply.manager.jobimport.llm.LlmExtractionSpec;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,8 +13,11 @@ class JobPostingParserServiceTest {
     // Every case here is rejected by URL validation before the LLM client would ever
     // be called. The stub fails the test rather than returning null, so that invariant
     // is asserted instead of merely assumed.
-    private final JobPostingParserService service = new JobPostingParserService(postingText -> {
-        throw new AssertionError("LLM client called for a rejected URL");
+    private final JobPostingParserService service = new JobPostingParserService(new JobPostingLlmClient() {
+        @Override
+        public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
+            throw new AssertionError("LLM client called for a rejected URL");
+        }
     });
 
     @ParameterizedTest

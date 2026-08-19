@@ -2,22 +2,21 @@ package de.samply.manager.jobimport.llm;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.samply.manager.dto.JobPostingExtraction;
+import de.samply.manager.exception.ApiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import static de.samply.manager.jobimport.llm.JobPostingLlmPrompt.SYSTEM_PROMPT;
-import static de.samply.manager.jobimport.llm.JobPostingLlmPrompt.truncate;
+import static de.samply.manager.jobimport.llm.JobPostingLlmPrompt.truncateFields;
 
 /** Calls an Azure OpenAI chat completions deployment in structured-output (json_schema) mode. */
 @Service
@@ -26,6 +25,7 @@ public class AzureJobPostingLlmClient implements JobPostingLlmClient {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final MessageSource messageSource;
     private final String endpoint;
     private final String deployment;
     private final String apiVersion;
@@ -35,39 +35,36 @@ public class AzureJobPostingLlmClient implements JobPostingLlmClient {
                                      @Value("${job-posting.parser.azure.deployment}") String deployment,
                                      @Value("${job-posting.parser.azure.api-version}") String apiVersion,
                                      @Value("${job-posting.parser.azure.api-key}") String apiKey,
-                                     ObjectMapper objectMapper) {
+                                     ObjectMapper objectMapper,
+                                     MessageSource messageSource) {
         this.endpoint = endpoint.replaceAll("/+$", "");
         this.deployment = deployment;
         this.apiVersion = apiVersion;
         this.apiKey = apiKey;
         this.objectMapper = objectMapper;
+        this.messageSource = messageSource;
         this.restClient = RestClient.builder().build();
     }
 
     @Override
-    public JobPostingExtraction extract(String postingText) {
+    public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
         Map<String, Object> schema = Map.of(
                 "type", "object",
                 "additionalProperties", false,
-                "properties", Map.of(
-                        "title", Map.of("type", List.of("string", "null")),
-                        "company", Map.of("type", List.of("string", "null")),
-                        "location", Map.of("type", List.of("string", "null")),
-                        "employmentType", Map.of("type", List.of("string", "null"))
-                ),
-                "required", List.of("title", "company", "location", "employmentType")
+                "properties", spec.properties(),
+                "required", spec.requiredFields()
         );
 
         Map<String, Object> body = Map.of(
                 "temperature", 0,
                 "messages", List.of(
-                        Map.of("role", "system", "content", SYSTEM_PROMPT),
+                        Map.of("role", "system", "content", spec.systemPrompt()),
                         Map.of("role", "user", "content", postingText)
                 ),
                 "response_format", Map.of(
                         "type", "json_schema",
                         "json_schema", Map.of(
-                                "name", "job_posting_extraction",
+                                "name", spec.name(),
                                 "strict", true,
                                 "schema", schema
                         )
@@ -87,18 +84,20 @@ public class AzureJobPostingLlmClient implements JobPostingLlmClient {
                     .retrieve()
                     .body(String.class);
         } catch (RestClientException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Job posting extraction service unavailable");
+            throw new ApiException.BadGateway(message("error.llm.unavailable"));
         }
 
         try {
             JsonNode root = objectMapper.readTree(response);
             String content = root.path("choices").get(0).path("message").path("content").asText();
-            JobPostingExtraction raw = objectMapper.readValue(content, JobPostingExtraction.class);
-            return new JobPostingExtraction(
-                    truncate(raw.title()), truncate(raw.company()),
-                    truncate(raw.location()), truncate(raw.employmentType()));
+            JsonNode fields = truncateFields(objectMapper.readTree(content), spec.maxFieldLength());
+            return objectMapper.treeToValue(fields, spec.type());
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not parse extraction result");
+            throw new ApiException.BadGateway(message("error.llm.unparsable"));
         }
+    }
+
+    private String message(String key) {
+        return messageSource.getMessage(key, null, Locale.ROOT);
     }
 }
