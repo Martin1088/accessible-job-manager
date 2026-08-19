@@ -23,12 +23,13 @@ npx ng test --watch=false --browsers=ChromeHeadless
 npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/**"
 ```
 
-Karma needs a Chrome/Chromium binary. It is found automatically where one is on
-`PATH` (GitHub's runners, most desktops); elsewhere — a plain devcontainer has
-no browser at all — install one and export `CHROME_BIN` first:
+Karma needs a Chrome/Chromium binary. The devcontainer installs Chromium and sets
+`CHROME_BIN` for you (see `.devcontainer/devcontainer.json`), and it is found
+automatically wherever one is on `PATH` (GitHub's runners, most desktops).
+Outside those, install one and export the variable first:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y chromium   # Debian/Ubuntu, incl. devcontainer
+sudo apt-get update && sudo apt-get install -y chromium   # Debian/Ubuntu
 export CHROME_BIN=/usr/bin/chromium
 export CHROME_BIN=/opt/homebrew/bin/chromium              # macOS/Homebrew
 ```

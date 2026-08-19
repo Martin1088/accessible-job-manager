@@ -16,7 +16,16 @@
       "version": "latest",
       "dockerDashComposeVersion": "v2"
     },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+
+  // Karma needs a real browser binary and the base image ships without one.
+  // CHROME_BIN is what karma.conf.js looks for; without it `ng test` cannot start.
+  "containerEnv": {
+    "CHROME_BIN": "/usr/bin/chromium"
   },
 
   "forwardPorts": [8060, 9000, 9443, 5432, 3900, 3901, 3909, 3000],
@@ -30,6 +39,8 @@
     "3909": { "label": "Garage WebUI" },
     "3000": { "label": "Gotenberg (PDF)" }
   },
+
+  "onCreateCommand": "apt-get update && apt-get install -y chromium && rm -rf /var/lib/apt/lists/*",
 
   "postCreateCommand": "chmod +x gradlew && ./gradlew --version && npm ci --prefix AppClient",
 
