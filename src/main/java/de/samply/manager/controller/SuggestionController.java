@@ -16,9 +16,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** The user's end of a suggestion; the advisor's end is {@link AdvisorController}. */
+/**
+ * The user's end of a suggestion; the advisor's end is {@link AdvisorController}.
+ *
+ * <p>Addressed as "mine" rather than under a plain {@code /api/suggestions}: the
+ * job posting field extraction claims that namespace for a different meaning of
+ * the word, and a reader of the URL alone could not tell the two apart. "My
+ * suggestions" are the ones written to me, against the advisor's "the ones I
+ * wrote" - close enough in wording that the paths must not also be near-twins,
+ * which rules out {@code /api/advisory/**} beside {@code /api/advisor/**}.
+ */
 @RestController
-@RequestMapping("/api/suggestions")
+@RequestMapping("/api/my/suggestions")
 @RequiredArgsConstructor
 public class SuggestionController {
 
