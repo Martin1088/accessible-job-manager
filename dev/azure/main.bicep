@@ -320,6 +320,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'OIDC_REDIRECT_URI', value: oidcRedirectUri }
             { name: 'OIDC_ISSUER_URI', value: oidcIssuerUri }
             { name: 'OIDC_AUTH_URI', value: oidcAuthUri }
+            { name: 'COOKIE_SECURE', value: 'true' }
             { name: 'GOTENBERG_URL', value: 'http://${gotenberg.name}' }
             { name: 'STORAGE_PROVIDER', value: 'azure' }
             { name: 'AZURE_STORAGE_CONNECTION_STRING', secretRef: 'storage-connection' }

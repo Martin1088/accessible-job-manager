@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
@@ -167,5 +168,39 @@ class AdzunaJobSearchSourceTest {
 
         assertThatThrownBy(() -> source.search(query()))
                 .isInstanceOf(ApiException.TooManyRequests.class);
+    }
+
+    @Test
+    void aLoggedUrlCarriesNeitherTheAppIdNorTheAppKey() {
+        URI uri = URI.create("https://api.adzuna.com/v1/api/jobs/de/search/1"
+                + "?app_id=real-id&app_key=real-key&what=java&results_per_page=20");
+
+        String redacted = AdzunaJobSearchSource.redact(uri);
+
+        assertThat(redacted).doesNotContain("real-id", "real-key");
+        assertThat(redacted).contains("app_id=***", "app_key=***", "what=java", "results_per_page=20");
+    }
+
+    /**
+     * The regression this guards: reading the decoded query and replacing it in
+     * the encoded URL misses as soon as a term needs escaping, and the miss is
+     * silent - the credentials would be written to the log in full.
+     */
+    @Test
+    void anEncodedSearchTermStillLeavesTheCredentialsRedacted() {
+        URI uri = URI.create("https://api.adzuna.com/v1/api/jobs/de/search/1"
+                + "?app_id=real-id&app_key=real-key&what=java%20entwickler&where=K%C3%B6ln");
+
+        String redacted = AdzunaJobSearchSource.redact(uri);
+
+        assertThat(redacted).doesNotContain("real-id", "real-key");
+        assertThat(redacted).contains("app_id=***", "app_key=***", "what=java%20entwickler", "where=K%C3%B6ln");
+    }
+
+    @Test
+    void aUrlWithoutAQueryIsLoggedUnchanged() {
+        URI uri = URI.create("https://api.adzuna.com/v1/api/jobs/de/search/1");
+
+        assertThat(AdzunaJobSearchSource.redact(uri)).isEqualTo(uri.toString());
     }
 }

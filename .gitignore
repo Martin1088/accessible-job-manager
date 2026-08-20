@@ -53,6 +53,9 @@ AppClient/package-lock.json
 out/
 src/main/resources/static
 
+# Local secrets and configuration; dev/.env.example is the committed template.
+dev/.env
+
 dev/meta
 dev/garage-data
 dev/postgres-data

@@ -2,6 +2,8 @@ package de.samply.manager.jobsearch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import de.samply.manager.exception.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,9 +18,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Searches the Adzuna aggregator (https://developer.adzuna.com).
@@ -35,6 +40,14 @@ public class AdzunaJobSearchSource implements JobSearchSource {
 
     public static final String ID = "adzuna";
     private static final String ATTRIBUTION = "Jobs by Adzuna";
+
+    private static final Logger log = LoggerFactory.getLogger(AdzunaJobSearchSource.class);
+
+    /** Query parameters that carry the operator's credentials and must never be logged. */
+    private static final Set<String> CREDENTIAL_PARAMETERS = Set.of("app_id", "app_key");
+
+    /** An upstream error body is echoed back for diagnosis, but only this much of it. */
+    private static final int MAX_LOGGED_ERROR_BODY = 512;
 
     private final RestClient restClient;
     private final AdzunaProperties properties;
@@ -123,16 +136,61 @@ public class AdzunaJobSearchSource implements JobSearchSource {
 
     private JsonNode get(Function<UriBuilder, URI> uri) {
         try {
-            JsonNode body = restClient.get().uri(uri).retrieve().body(JsonNode.class);
+            JsonNode body = restClient.get()
+                    .uri(builder -> {
+                        URI built = uri.apply(builder);
+                        // Debug, not info: the URL carries the advisor's search terms.
+                        log.debug("Calling Adzuna: {}", redact(built));
+                        return built;
+                    })
+                    .retrieve()
+                    .body(JsonNode.class);
             if (body == null) {
                 throw new ApiException.BadGateway(message("error.jobSearch.unparsable"));
             }
             return body;
         } catch (RestClientResponseException e) {
+            log.warn("Adzuna answered {}: {}", e.getStatusCode().value(), truncate(e.getResponseBodyAsString()));
             throw translate(e);
         } catch (RestClientException e) {
+            log.warn("Adzuna could not be reached", e);
             throw new ApiException.BadGateway(message("error.jobSearch.unavailable"));
         }
+    }
+
+    /**
+     * The app id and key travel as query parameters, so a URL that reaches a log
+     * must not carry them.
+     *
+     * <p>The <em>raw</em> query is split into parameters rather than
+     * string-replaced as a whole: {@link URI#getQuery()} returns the decoded
+     * form, which need not occur in {@link URI#toString()} at all. One search
+     * term containing a space or an umlaut is enough for the two to diverge, and
+     * a replacement that silently misses would log the key in the clear.
+     */
+    static String redact(URI uri) {
+        String rawQuery = uri.getRawQuery();
+        if (rawQuery == null) {
+            return uri.toString();
+        }
+        String redacted = Arrays.stream(rawQuery.split("&"))
+                .map(AdzunaJobSearchSource::redactParameter)
+                .collect(Collectors.joining("&"));
+        return uri.toString().replace(rawQuery, redacted);
+    }
+
+    /** Keeps an upstream error body from filling the log with an entire error page. */
+    private static String truncate(String body) {
+        if (body == null || body.length() <= MAX_LOGGED_ERROR_BODY) {
+            return body;
+        }
+        return body.substring(0, MAX_LOGGED_ERROR_BODY) + "… (truncated)";
+    }
+
+    private static String redactParameter(String parameter) {
+        int separator = parameter.indexOf('=');
+        String name = separator < 0 ? parameter : parameter.substring(0, separator);
+        return CREDENTIAL_PARAMETERS.contains(name) ? name + "=***" : parameter;
     }
 
     /**

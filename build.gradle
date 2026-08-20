@@ -102,3 +102,25 @@ tasks.register('npmBuild', Exec) {
 }
 
 processResources.dependsOn npmBuild
+
+tasks.named('bootRun') {
+    def envFile = file("$projectDir/dev/.env")
+    if (!envFile.exists()) {
+        return
+    }
+    envFile.readLines().each { line ->
+        def entry = line.trim()
+        if (entry.isEmpty() || entry.startsWith('#')) {
+            return
+        }
+        def separator = entry.indexOf('=')
+        if (separator <= 0) {
+            return
+        }
+        def key = entry.substring(0, separator).trim()
+        def value = entry.substring(separator + 1).trim().replaceAll(/^["']|["']$/, '')
+        if (System.getenv(key) == null) {
+            environment key, value
+        }
+    }
+}
