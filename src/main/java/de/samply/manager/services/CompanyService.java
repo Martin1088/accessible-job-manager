@@ -112,6 +112,8 @@ public class CompanyService {
         dto.setId(l.getId());
         dto.setStreet(l.getStreet());
         dto.setCity(l.getCity());
+        dto.setPostcode(l.getPostcode());
+        dto.setCountry(l.getCountry());
         return dto;
     }
 
@@ -122,9 +124,11 @@ public class CompanyService {
         dto.setContactGender(p.getContactGender());
         dto.setContactTitle(p.getContactTitle());
         dto.setContactLastName(p.getContactLastName());
+        dto.setApplyLanguage(p.getApplyLanguage());
         dto.setEmail(p.getEmail());
         dto.setWebsite(p.getWebsite());
         dto.setNotes(p.getNotes());
+        dto.setApplicationMethod(p.getApplicationMethod());
         dto.setCreatedAt(p.getCreatedAt());
         return dto;
     }
@@ -149,6 +153,8 @@ public class CompanyService {
         CompanyLocation l = new CompanyLocation();
         l.setStreet(dto.getStreet());
         l.setCity(dto.getCity());
+        l.setPostcode(dto.getPostcode());
+        l.setCountry(dto.getCountry());
         l.setCompany(company);
         return l;
     }
@@ -158,9 +164,11 @@ public class CompanyService {
         p.setContactGender(dto.getContactGender());
         p.setContactTitle(dto.getContactTitle());
         p.setContactLastName(dto.getContactLastName());
+        p.setApplyLanguage(dto.getApplyLanguage());
         p.setEmail(dto.getEmail());
         p.setWebsite(dto.getWebsite());
         p.setNotes(dto.getNotes());
+        p.setApplicationMethod(dto.getApplicationMethod());
     }
 
     private CompanyPosition toPositionEntity(CompanyPositionDto dto, Company company) {

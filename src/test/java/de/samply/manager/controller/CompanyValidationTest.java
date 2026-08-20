@@ -63,7 +63,7 @@ class CompanyValidationTest {
     }
 
     @Test
-    void blankLocationStreetAndCity_areRejectedWithTheConfiguredMessages() throws Exception {
+    void blankLocationCity_isRejectedWithTheConfiguredMessage() throws Exception {
         CompanyDto dto = validCompany();
         CompanyLocationDto location = new CompanyLocationDto();
         location.setStreet("");
@@ -75,8 +75,23 @@ class CompanyValidationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", containsString("Street must not be blank")))
                 .andExpect(jsonPath("$.message", containsString("City must not be blank")));
+    }
+
+    /** A location is usable with only a city - not every posting names a street. */
+    @Test
+    void blankLocationStreet_isAccepted() throws Exception {
+        CompanyDto dto = validCompany();
+        CompanyLocationDto location = new CompanyLocationDto();
+        location.setStreet("");
+        location.setCity("Berlin");
+        dto.setLocations(List.of(location));
+
+        mvc.perform(post("/api/companies")
+                        .with(oidcLogin().idToken(t -> t.subject("test-sub")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(dto)))
+                .andExpect(status().isOk());
     }
 
     @Test

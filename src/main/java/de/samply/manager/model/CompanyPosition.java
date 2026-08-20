@@ -1,5 +1,7 @@
 package de.samply.manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import de.samply.manager.types.ApplicationMethod;
 import de.samply.manager.types.Gender;
 import de.samply.manager.types.Language;
 import jakarta.persistence.*;
@@ -30,10 +32,14 @@ public class CompanyPosition {
     @Enumerated(EnumType.STRING)
     private Language applyLanguage;
 
+    @Enumerated(EnumType.STRING)
+    private ApplicationMethod applicationMethod;
+
     private String email;
+    @Column(length = 2048)
     private String website;
     private String notes;
-
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;

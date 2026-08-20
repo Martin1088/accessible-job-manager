@@ -1,5 +1,6 @@
 package de.samply.manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -12,7 +13,7 @@ public class CompanyLocation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column
     private String street;
 
     @Column(nullable = false)
@@ -24,6 +25,8 @@ public class CompanyLocation {
     @Column
     private String country;
 
+    // Back-reference of the Company.locations cycle - see CompanyPosition.company.
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;

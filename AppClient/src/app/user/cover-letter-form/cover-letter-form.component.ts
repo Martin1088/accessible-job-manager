@@ -1,8 +1,10 @@
 import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { NgTemplateOutlet } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Observable, of, switchMap, take, tap } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, switchMap, take, tap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { LanguageService } from '../../core/language.service';
 import { ApplicationService } from '../../services/application.service';
@@ -16,13 +18,27 @@ import {
   HtmlLetterTemplateRequest,
   LetterBlock,
 } from '../../model/cover-letter';
-import { DocumentLanguage } from '../../model/document';
+import { DocumentLanguage, uiToLetterLanguage } from '../../model/document';
 
-const UI_TO_LETTER_LANGUAGE: Record<string, DocumentLanguage> = {
-  de: 'GERMAN',
-  en: 'ENGLISH',
-  nl: 'DUTCH',
-};
+/**
+ * Escapes text before it is written into the letter's markup. Without it a link
+ * text containing an ampersand or a quote would produce broken markup that the
+ * server's sanitizer then has to salvage.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** The three languages a letter can be written in, independent of the UI's. */
+const LETTER_LANGUAGE_OPTIONS: { value: DocumentLanguage; label: string }[] = [
+  { value: 'GERMAN',  label: 'LANGUAGE.DE' },
+  { value: 'ENGLISH', label: 'LANGUAGE.EN' },
+  { value: 'DUTCH',   label: 'LANGUAGE.NL' },
+];
 
 /**
  * The HTML cover letter form. Every field here maps 1:1 onto a slot the server
@@ -39,7 +55,9 @@ const UI_TO_LETTER_LANGUAGE: Record<string, DocumentLanguage> = {
  */
 @Component({
   selector: 'app-cover-letter-form',
-  imports: [ReactiveFormsModule, TranslatePipe],
+  // FormsModule for the link editor's two standalone inputs; NgTemplateOutlet
+  // renders that one editor next to whichever field opened it.
+  imports: [ReactiveFormsModule, FormsModule, NgTemplateOutlet, TranslatePipe],
   templateUrl: './cover-letter-form.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './cover-letter-form.component.scss'
@@ -52,6 +70,8 @@ export class CoverLetterFormComponent implements OnInit {
   private readonly language = inject(LanguageService);
   private readonly applications = inject(ApplicationService);
   private readonly coverLetters = inject(CoverLetterService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly blockTypes: BlockType[] = ['PARAGRAPH', 'HEADING', 'BULLET_LIST'];
 
@@ -76,9 +96,41 @@ export class CoverLetterFormComponent implements OnInit {
   pdfUrl: string | null = null;
   pdfFilename = '';
 
+  readonly languageOptions = LETTER_LANGUAGE_OPTIONS;
+
+  /**
+   * The last suggestion the server gave, per slot. Switching the letter
+   * language replaces a field only while it still holds this - that is what
+   * distinguishes text the user has not touched from text they wrote.
+   */
+  private suggested: { subject: string; greeting: string; closing: string; blocks: string[] } =
+    { subject: '', greeting: '', closing: '', blocks: [] };
+
+  suggestionsLoading = false;
+
+  // --- link editor ---------------------------------------------------------
+  // One editor serves every field; `linkTarget` says which one it was opened
+  // from. Splicing an anchor in for the user is the point: the letter accepts a
+  // small set of inline HTML, but typing angle brackets by hand is not
+  // something this app should ask of anyone.
+
+  /** The field the editor is open for; null while it is closed. */
+  linkTarget: { block: number; item: number | null } | null = null;
+  linkText = '';
+  linkUrl = '';
+  linkError = '';
+
+  /** Where in that field's value the anchor goes - the caret when it opened. */
+  private linkCaret = 0;
+  private linkSelectionEnd = 0;
+
   readonly letter = this.fb.group({
     // What the user calls this template; shown as its label in the documents list.
-    name: [''],
+    // Required, because the name is how a stored letter is picked out again.
+    name: ['', Validators.required],
+    // Which language the letter is written in - not which language the app is
+    // shown in. Starts at the UI's, so the common case needs no choice at all.
+    letterLanguage: this.fb.control<DocumentLanguage>(uiToLetterLanguage(this.language.current())),
     // Optional: with no application chosen the letter is rendered against the sample
     // recipient, so a template can be proofread before it is tied to an application.
     applicationId: this.fb.control<number | null>(null),
@@ -103,26 +155,86 @@ export class CoverLetterFormComponent implements OnInit {
       error: () => this.loadError = true,
     });
 
-    // take(1) matters: a second emission would create a second template.
     this.auth.me$.pipe(take(1)).subscribe(me => {
-      if (me) this.loadTemplate();
+      if (!me) return;
+      const id = this.route.snapshot.paramMap.get('id');
+      if (id) this.openTemplate(id);
+      else this.startNewTemplate();
+    });
+  }
+
+  /** Opens one stored template, named in the route by the documents view. */
+  private openTemplate(id: string): void {
+    this.coverLetters.getTemplate(id).subscribe({
+      next: (template) => this.applyTemplate(template),
+      error: () => this.loadError = true,
     });
   }
 
   /**
-   * Opens the caller's template, creating one on first use. Passing no blocks lets the
-   * server store its localized skeleton, so the starting blocks and the closing formula
-   * come from the backend message bundle rather than a second language file here.
+   * Starts a letter that is not yet stored: the form is blank, `templateId` is
+   * null, and the first save creates a new template rather than overwriting an
+   * existing one.
+   *
+   * <p>This is the default the editor opens in. Editing whatever template
+   * happened to be stored first is what made every letter overwrite the last
+   * one - a second letter has to begin as a second letter.
    */
-  private loadTemplate(): void {
-    this.coverLetters.listTemplates().pipe(
-      switchMap(templates => templates.length
-        ? of(templates[0])
-        : this.coverLetters.createTemplate({}, this.letterLanguage())),
-    ).subscribe({
-      next: (template) => this.applyTemplate(template),
-      error: () => this.loadError = true,
+  startNewTemplate(): void {
+    this.templateId = null;
+    this.slotIds.clear();
+    this.blocks.clear();
+    this.attachments.clear();
+    this.letter.patchValue({
+      name: '',
+      applicationId: null,
+      subject: '',
+      greeting: '',
+      closing: '',
+      letterLanguage: uiToLetterLanguage(this.language.current()),
     });
+    this.savedAt = false;
+
+    this.suggestionsLoading = true;
+    this.coverLetters.suggestions(this.letterLanguage()).subscribe({
+      next: (blocks) => {
+        this.fillFrom(blocks);
+        this.suggestionsLoading = false;
+      },
+      error: () => {
+        this.suggestionsLoading = false;
+        this.loadError = true;
+      },
+    });
+  }
+
+  /** The editor's "start another letter" action; also clears the id from the URL. */
+  newTemplate(): void {
+    this.router.navigate(['/cover-letter-template']);
+    this.startNewTemplate();
+    this.announce('COVER_LETTER_FORM.NEW_STARTED');
+  }
+
+  /**
+   * Fills a blank form from a suggestion, creating one block per suggested
+   * paragraph - unlike the in-place reseed, which only rewrites blocks that
+   * already exist.
+   */
+  private fillFrom(blocks: LetterBlock[]): void {
+    this.blocks.clear();
+    let subject = '';
+    let greeting = '';
+    let closing = '';
+
+    for (const block of blocks) {
+      if (block.key === 'SUBJECT') subject = block.content;
+      else if (block.key === 'SALUTATION') greeting = block.content;
+      else if (block.key === 'REGARDS') closing = block.content;
+      else this.blocks.push(this.blockGroup(block.key as BlockType, block.content, block.items));
+    }
+
+    this.letter.patchValue({ subject, greeting, closing });
+    this.suggested = this.toSlots(blocks);
   }
 
   /** Fans the stored blocks back out into the form's fixed slots and its block list. */
@@ -146,8 +258,110 @@ export class CoverLetterFormComponent implements OnInit {
       }
     }
 
-    this.letter.patchValue({ name: template.name ?? '', subject, greeting, closing });
+    this.letter.patchValue({
+      name: template.name ?? '',
+      letterLanguage: template.language ?? this.letter.controls.letterLanguage.value,
+      subject,
+      greeting,
+      closing,
+    });
+    this.loadBaseline(template.language ?? this.letterLanguage());
   }
+
+  /**
+   * Records what the server *would* suggest for the language this template is
+   * stored in, so an edited field can be told apart from an untouched one.
+   *
+   * <p>Comparing against the stored text instead would defeat the purpose: it
+   * matches itself, so every field would count as untouched and a language
+   * switch would overwrite work the user had already saved.
+   */
+  private loadBaseline(language: DocumentLanguage): void {
+    this.coverLetters.suggestions(language).subscribe({
+      next: (blocks) => this.suggested = this.toSlots(blocks),
+      // Baseline unknown: everything then reads as user-written and is kept,
+      // which is the side to fail on.
+      error: () => this.suggested = { subject: '', greeting: '', closing: '', blocks: [] },
+    });
+  }
+
+  // --- letter language -----------------------------------------------------
+
+  /**
+   * Switching the language re-seeds the suggested text, but only where the user
+   * has left it as it came: a field they wrote themselves keeps its content, so
+   * changing the language can never discard work. `insertSuggestions()` is the
+   * way to replace text deliberately.
+   */
+  onLetterLanguageChange(): void {
+    this.applySuggestions(false);
+  }
+
+  /** Replaces the letter's text with the suggestions for the chosen language. */
+  insertSuggestions(): void {
+    this.applySuggestions(true);
+  }
+
+  private applySuggestions(replaceEdited: boolean): void {
+    this.suggestionsLoading = true;
+    this.coverLetters.suggestions(this.letterLanguage()).subscribe({
+      next: (blocks) => {
+        // Inserting on request rebuilds the body, so a user who deleted the
+        // blocks gets them back; a language switch only rewrites what is there.
+        if (replaceEdited) this.fillFrom(blocks);
+        else this.seed(blocks, false);
+        this.suggestionsLoading = false;
+        this.announce(replaceEdited
+          ? 'COVER_LETTER_FORM.SUGGESTIONS_INSERTED'
+          : 'COVER_LETTER_FORM.LANGUAGE_CHANGED');
+      },
+      error: () => {
+        this.suggestionsLoading = false;
+        this.loadError = true;
+      },
+    });
+  }
+
+  /** Fans a suggestion's blocks out into the form's fixed slots plus its body. */
+  private toSlots(blocks: LetterBlock[]): { subject: string; greeting: string; closing: string; blocks: string[] } {
+    const slots = { subject: '', greeting: '', closing: '', blocks: [] as string[] };
+    for (const block of blocks) {
+      if (block.key === 'SUBJECT') slots.subject = block.content;
+      else if (block.key === 'SALUTATION') slots.greeting = block.content;
+      else if (block.key === 'REGARDS') slots.closing = block.content;
+      else slots.blocks.push(block.content);
+    }
+    return slots;
+  }
+
+  private seed(blocks: LetterBlock[], replaceEdited: boolean): void {
+    const next = this.toSlots(blocks);
+    const value = this.letter.getRawValue();
+    this.letter.patchValue({
+      subject: this.reseed(value.subject ?? '', this.suggested.subject, next.subject, replaceEdited),
+      greeting: this.reseed(value.greeting ?? '', this.suggested.greeting, next.greeting, replaceEdited),
+      closing: this.reseed(value.closing ?? '', this.suggested.closing, next.closing, replaceEdited),
+    });
+
+    // Body blocks line up by position: the skeleton's Nth paragraph replaces the
+    // Nth one here. Blocks the user added beyond the skeleton have no counterpart
+    // and are left alone.
+    this.blocks.controls.forEach((control, index) => {
+      const text = control.get('text')!;
+      text.setValue(this.reseed(
+        text.value ?? '', this.suggested.blocks[index] ?? '', next.blocks[index] ?? '', replaceEdited));
+    });
+
+    this.suggested = next;
+  }
+
+  /** Keeps a field the user wrote; swaps one that still holds the old suggestion. */
+  private reseed(current: string, previousSuggestion: string, nextSuggestion: string, replaceEdited: boolean): string {
+    if (replaceEdited) return nextSuggestion;
+    const untouched = current.trim() === '' || current.trim() === previousSuggestion.trim();
+    return untouched ? nextSuggestion : current;
+  }
+
 
   private blockGroup(type: BlockType, text: string, items: string[] = [], id: string | null = null): FormGroup {
     return this.fb.group({
@@ -206,6 +420,94 @@ export class CoverLetterFormComponent implements OnInit {
     this.focusAfterRender(`block-${blockIndex}-add-item`);
   }
 
+  // --- links ---------------------------------------------------------------
+
+  isLinkEditorOpen(blockIndex: number, itemIndex: number | null): boolean {
+    return this.linkTarget?.block === blockIndex && this.linkTarget?.item === itemIndex;
+  }
+
+  /**
+   * Opens the editor for one field, remembering the caret so the anchor lands
+   * where the user was typing. Text they had selected becomes the link text,
+   * which is the behaviour any editor makes you expect.
+   */
+  openLinkEditor(blockIndex: number, itemIndex: number | null): void {
+    const field = this.linkField(blockIndex, itemIndex);
+    const start = field?.selectionStart ?? field?.value.length ?? 0;
+    const end = field?.selectionEnd ?? start;
+
+    this.linkCaret = start;
+    this.linkSelectionEnd = end;
+    this.linkText = field ? field.value.substring(start, end) : '';
+    this.linkUrl = '';
+    this.linkError = '';
+    this.linkTarget = { block: blockIndex, item: itemIndex };
+    this.focusAfterRender('link-text');
+  }
+
+  closeLinkEditor(): void {
+    const target = this.linkTarget;
+    this.linkTarget = null;
+    if (target) this.focusAfterRender(this.linkFieldId(target.block, target.item));
+  }
+
+  /**
+   * Splices the anchor into the field. The URL is checked against the same
+   * schemes the server keeps: anything else has its href stripped there, so
+   * accepting it here would store a link that silently stops being one.
+   */
+  insertLink(): void {
+    const url = this.linkUrl.trim();
+    const text = this.linkText.trim();
+
+    if (!url || !this.isAllowedUrl(url)) {
+      this.linkError = this.translate.instant('COVER_LETTER_FORM.LINK_URL_INVALID');
+      this.focusAfterRender('link-url');
+      return;
+    }
+    if (!text) {
+      this.linkError = this.translate.instant('COVER_LETTER_FORM.LINK_TEXT_REQUIRED');
+      this.focusAfterRender('link-text');
+      return;
+    }
+
+    const target = this.linkTarget;
+    if (!target) return;
+
+    const control = this.linkControl(target.block, target.item);
+    if (!control) return;
+
+    const value: string = control.value ?? '';
+    const anchor = `<a href="${escapeHtml(url)}">${escapeHtml(text)}</a>`;
+    control.setValue(value.slice(0, this.linkCaret) + anchor + value.slice(this.linkSelectionEnd));
+
+    this.linkTarget = null;
+    this.announce('COVER_LETTER_FORM.LINK_INSERTED', { text });
+    this.focusAfterRender(this.linkFieldId(target.block, target.item));
+  }
+
+  /** Mirrors MarkupSanitizer's protocol whitelist. */
+  private isAllowedUrl(url: string): boolean {
+    return /^(https?:\/\/|mailto:)/i.test(url);
+  }
+
+  private linkFieldId(blockIndex: number, itemIndex: number | null): string {
+    return itemIndex === null
+      ? `block-text-${blockIndex}`
+      : `block-${blockIndex}-item-${itemIndex}`;
+  }
+
+  private linkField(blockIndex: number, itemIndex: number | null): HTMLInputElement | HTMLTextAreaElement | null {
+    return document.getElementById(this.linkFieldId(blockIndex, itemIndex)) as
+      HTMLInputElement | HTMLTextAreaElement | null;
+  }
+
+  private linkControl(blockIndex: number, itemIndex: number | null) {
+    const block = this.blocks.at(blockIndex);
+    if (!block) return null;
+    return itemIndex === null ? block.get('text') : this.items(block).at(itemIndex);
+  }
+
   addAttachment(): void {
     this.attachments.push(this.fb.control(''));
     const index = this.attachments.length - 1;
@@ -230,8 +532,22 @@ export class CoverLetterFormComponent implements OnInit {
    * The proofreading pass: the server linearizes the very letter it would print, so
    * the text below is never a second implementation of the layout.
    */
+  /**
+   * Refuses to store an unnamed letter and puts the user in the name field.
+   * Checked before preview and PDF too, since both save first.
+   */
+  private nameMissing(): boolean {
+    const name = this.letter.controls.name;
+    if (name.valid) return false;
+    name.markAsTouched();
+    this.announce('COVER_LETTER_FORM.NAME_REQUIRED');
+    this.focusAfterRender('template-name');
+    return true;
+  }
+
   /** Stores the template on its own, without rendering anything. */
   save(): void {
+    if (this.nameMissing()) return;
     this.saving = true;
     this.saveError = false;
     this.savedAt = false;
@@ -249,6 +565,7 @@ export class CoverLetterFormComponent implements OnInit {
   }
 
   preview(): void {
+    if (this.nameMissing()) return;
     this.previewing = true;
     this.renderError = false;
     const applicationId = this.letter.controls.applicationId.value;
@@ -270,6 +587,7 @@ export class CoverLetterFormComponent implements OnInit {
   }
 
   downloadPdf(): void {
+    if (this.nameMissing()) return;
     this.downloading = true;
     this.renderError = false;
     this.revokePdfUrl();
@@ -293,14 +611,23 @@ export class CoverLetterFormComponent implements OnInit {
     });
   }
 
-  /** Saves the edited template, creating it if this is the first save. */
+  /**
+   * Stores the letter: an update once it has an id, otherwise a new template.
+   * A blank editor therefore always adds one instead of replacing another.
+   */
   private saveTemplate(): Observable<HtmlLetterTemplate> {
     const request = this.templateRequest();
     const language = this.letterLanguage();
+    const creating = !this.templateId;
     const saved = this.templateId
       ? this.coverLetters.updateTemplate(this.templateId, request, language)
       : this.coverLetters.createTemplate(request, language);
-    return saved.pipe(tap(template => this.templateId = template.id));
+    return saved.pipe(tap(template => {
+      this.templateId = template.id;
+      // Put the new template's id in the URL, so a reload reopens this letter
+      // rather than silently starting yet another one.
+      if (creating) this.router.navigate(['/cover-letter-template', template.id], { replaceUrl: true });
+    }));
   }
 
   /**
@@ -350,7 +677,7 @@ export class CoverLetterFormComponent implements OnInit {
   }
 
   private letterLanguage(): DocumentLanguage {
-    return UI_TO_LETTER_LANGUAGE[this.language.current() ?? 'de'] ?? 'GERMAN';
+    return this.letter.controls.letterLanguage.value ?? uiToLetterLanguage(this.language.current());
   }
 
   private extractFilename(contentDisposition: string | null): string | null {

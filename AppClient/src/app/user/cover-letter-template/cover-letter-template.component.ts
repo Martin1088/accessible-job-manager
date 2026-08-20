@@ -3,7 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DocumentLanguage } from '../../model/document';
+import { DocumentLanguage, uiToLetterLanguage } from '../../model/document';
+import { LanguageService } from '../../core/language.service';
 import { CoverLetterFormComponent } from '../cover-letter-form/cover-letter-form.component';
 
 // Reuses the LANGUAGE.* UI-language keys (EN/DE/NL), same as the documents list.
@@ -29,7 +30,9 @@ export class CoverLetterTemplateComponent {
   /** Which provider's panel is mounted. Only one is in the DOM at a time. */
   provider: 'HTML' | 'WORD' = 'HTML';
 
-  templateLanguage: DocumentLanguage = 'GERMAN';
+  // Starts at the language the UI is in, which is the one the user just chose;
+  // it is only a starting point, the select below overrides it.
+  templateLanguage: DocumentLanguage = uiToLetterLanguage(inject(LanguageService).current());
   downloadingTemplate = false;
   templateError = false;
 

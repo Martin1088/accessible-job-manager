@@ -35,6 +35,43 @@ class MarkupSanitizerTest {
                 .doesNotContain("<div", "style=", "<script", "alert", "<img", "onclick");
     }
 
+    /**
+     * The anchors the cover letter form's "Insert link" action writes, exactly
+     * as it writes them: text and URL HTML-escaped there, so the two sides agree
+     * on what reaches this sanitizer.
+     */
+    @Test
+    void keepsAnchorsProducedByTheEditor() {
+        String clean = sanitizer.sanitize(
+                "Vor <a href=\"https://example.com/a?x=1&amp;y=2\">Tom &amp; Jerry</a> nach");
+
+        assertThat(clean)
+                .contains("href=\"https://example.com/a?x=1&amp;y=2\"")
+                .contains(">Tom &amp; Jerry<");
+    }
+
+    @Test
+    void keepsMailtoLinks() {
+        assertThat(sanitizer.sanitize("<a href=\"mailto:chef@firma.de\">Mail</a>"))
+                .contains("href=\"mailto:chef@firma.de\"");
+    }
+
+    /**
+     * A quote in the link text cannot close the href and start an attribute of
+     * its own - the editor escapes it, and it stays escaped through here.
+     */
+    @Test
+    void aQuoteInAUrlCannotBreakOutOfTheAttribute() {
+        String clean = sanitizer.sanitize(
+                "<a href=\"https://x.de/&quot;onmouseover=alert(1)\">x</a>");
+
+        // The payload stays inside the href value: escaped, and with no quote
+        // ending the attribute in front of it, so no handler attribute appears.
+        assertThat(clean)
+                .contains("&quot;onmouseover=alert(1)")
+                .doesNotContain("\" onmouseover");
+    }
+
     @Test
     void dropsJavascriptUrls() {
         assertThat(sanitizer.sanitize("<a href=\"javascript:alert(1)\">klick</a>"))

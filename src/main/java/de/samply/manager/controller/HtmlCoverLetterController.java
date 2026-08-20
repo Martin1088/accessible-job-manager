@@ -4,11 +4,13 @@ import de.samply.manager.coverletter.CoverLetterHtmlService;
 import de.samply.manager.coverletter.CoverLetterTemplate;
 import de.samply.manager.coverletter.RenderFormat;
 import de.samply.manager.coverletter.StyleSettings;
+import de.samply.manager.dto.CoverLetterEmailDto;
 import de.samply.manager.dto.CoverLetterRenderRequest;
 import de.samply.manager.dto.HtmlLetterTemplateDto;
 import de.samply.manager.dto.HtmlLetterTemplateRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.services.HtmlLetterTemplateService;
+import de.samply.manager.types.Block;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -56,6 +58,18 @@ public class HtmlCoverLetterController {
     @GetMapping("/template/{id}")
     public HtmlLetterTemplateDto getTemplate(@PathVariable UUID id, @AuthenticationPrincipal OidcUser user) {
         return htmlLetterTemplateService.find(id, user.getSubject());
+    }
+
+    /**
+     * The starting text offered for a language. Read-only: the editor asks for
+     * it when the letter language changes, which must not create or alter a
+     * stored template.
+     */
+    @GetMapping("/template/suggestions")
+    public List<Block> templateSuggestions(
+            @RequestParam(value = "language", defaultValue = "GERMAN") Language language) {
+
+        return htmlLetterTemplateService.suggestions(language);
     }
 
     @PostMapping("/template")
@@ -132,6 +146,26 @@ public class HtmlCoverLetterController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition(rendered))
                 .contentType(contentType(rendered.format()))
                 .body(rendered.content());
+    }
+
+    /**
+     * The same letter as an email draft, for applying by mail rather than by attachment.
+     * The caller opens it in their own mail client; nothing is sent from here.
+     */
+    @PostMapping("/{applicationId}/email/{templateId}")
+    public CoverLetterEmailDto email(
+            @PathVariable Long applicationId,
+            @PathVariable UUID templateId,
+            @RequestBody(required = false) CoverLetterRenderRequest request,
+            @AuthenticationPrincipal OidcUser user) {
+
+        CoverLetterTemplate template =
+                htmlLetterTemplateService.asCoverLetterTemplate(templateId, request, user.getSubject());
+
+        CoverLetterHtmlService.EmailDraft draft =
+                coverLetterHtmlService.renderAsEmail(applicationId, template, user.getSubject());
+
+        return new CoverLetterEmailDto(draft.to(), draft.subject(), draft.body());
     }
 
     private RenderFormat renderFormat(String format) {

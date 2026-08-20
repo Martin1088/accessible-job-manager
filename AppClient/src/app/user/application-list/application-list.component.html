@@ -39,6 +39,15 @@
     </section>
   }
 
+  @if (preview) {
+    <section class="letter-preview" #previewPanel tabindex="-1" aria-labelledby="preview-heading">
+      <h2 id="preview-heading">{{ 'APPLICATIONS.PREVIEW_HEADING' | translate: { company: preview.company } }}</h2>
+      <p class="preview-template">{{ 'APPLICATIONS.PREVIEW_TEMPLATE' | translate: { template: preview.template } }}</p>
+      <pre class="preview-text">{{ preview.text }}</pre>
+      <button type="button" class="btn-secondary" (click)="closePreview()">{{ 'COMMON.CLOSE' | translate }}</button>
+    </section>
+  }
+
   <div class="filter-bar" role="search" [attr.aria-label]="'APPLICATIONS.FILTER_ARIA' | translate">
     <div class="filter-group">
       <label for="search-field">{{ 'APPLICATIONS.SEARCH_FIELD_LABEL' | translate }}</label>
@@ -140,12 +149,30 @@
           <td class="cover-letter-cell">
             <label [for]="'tpl-' + row.id" class="sr-only">{{ 'APPLICATIONS.TEMPLATE_FOR' | translate: { company: row.companyName } }}</label>
             <select [id]="'tpl-' + row.id" [(ngModel)]="selectedTemplate[row.id]"
-              [disabled]="templates.length === 0" [name]="'tpl-' + row.id">
-              <option value="" disabled selected>{{ 'APPLICATIONS.SELECT_TEMPLATE' | translate }}</option>
-              @for (t of templates; track t) {
-                <option [value]="t.id">{{ t.label }}</option>
+              [disabled]="!hasTemplates" [name]="'tpl-' + row.id">
+              <option [ngValue]="undefined" disabled selected>{{ 'APPLICATIONS.SELECT_TEMPLATE' | translate }}</option>
+              @if (wordTemplates.length) {
+                <optgroup [label]="'APPLICATIONS.TEMPLATE_GROUP_WORD' | translate">
+                  @for (t of wordTemplates; track t.id) {
+                    <option [ngValue]="t">{{ t.label }}</option>
+                  }
+                </optgroup>
+              }
+              @if (htmlTemplates.length) {
+                <optgroup [label]="'APPLICATIONS.TEMPLATE_GROUP_HTML' | translate">
+                  @for (t of htmlTemplates; track t.id) {
+                    <option [ngValue]="t">{{ t.label }}</option>
+                  }
+                </optgroup>
               }
             </select>
+            <button type="button"
+              class="btn-download"
+              [disabled]="!selectedTemplate[row.id] || previewing[row.id]"
+              (click)="previewCoverLetter(row.id)"
+              [attr.aria-label]="'APPLICATIONS.PREVIEW_ARIA' | translate: { company: row.companyName }">
+              {{ (previewing[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.PREVIEW') | translate }}
+            </button>
             <button type="button"
               class="btn-download"
               [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
@@ -155,7 +182,7 @@
             </button>
             <button type="button"
               class="btn-download"
-              [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
+              [disabled]="!supportsWord(row.id) || downloading[row.id]"
               (click)="downloadCoverLetterWord(row.id)"
               [attr.aria-label]="'APPLICATIONS.DOWNLOAD_WORD_ARIA' | translate: { company: row.companyName }">
               {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_WORD') | translate }}
@@ -167,6 +194,9 @@
               [attr.aria-label]="'APPLICATIONS.SEND_EMAIL_ARIA' | translate: { company: row.companyName }">
               {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.SEND_EMAIL') | translate }}
             </button>
+            @if (selectedTemplate[row.id] && !supportsWord(row.id)) {
+              <p class="template-note">{{ 'APPLICATIONS.WORD_UNAVAILABLE' | translate }}</p>
+            }
           </td>
           <td class="actions-cell">
             <button type="button" (click)="startEdit(row)"

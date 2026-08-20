@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @RestController
@@ -48,6 +49,18 @@ public class WordCoverLetterController {
 
         return download(wordLetterTemplateService.fillAsWord(
                 applicationId, documentId, user.getSubject()), DOCX);
+    }
+
+    /** The linearized letter, read in the browser rather than downloaded. */
+    @PostMapping("/{applicationId}/fill/{documentId}/text")
+    public ResponseEntity<String> fillAsText(
+            @PathVariable Long applicationId,
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal OidcUser user) {
+
+        return ResponseEntity.ok()
+                .contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8))
+                .body(wordLetterTemplateService.fillAsText(applicationId, documentId, user.getSubject()));
     }
 
     @PostMapping("/{applicationId}/fill/{documentId}/email")

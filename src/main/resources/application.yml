@@ -48,6 +48,8 @@ job-posting:
       deployment: ${AZURE_OPENAI_DEPLOYMENT:}
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       api-key: ${AZURE_OPENAI_API_KEY:}
+    extended:
+      field-extraction: true
 
 storage:
   provider: ${STORAGE_PROVIDER:s3}
