@@ -20,6 +20,13 @@ label {
   color: #333;
 }
 
+// Helper text under a field. #666 on the form's white background is ~5.7:1,
+// so it still clears WCAG AA at this size.
+.hint {
+  font-size: 0.78rem;
+  color: #666;
+}
+
 input, textarea {
   width: 100%;
   padding: 0.5rem 0.75rem;
@@ -95,6 +102,35 @@ textarea {
     color: #c0392b;
     font-size: 0.85rem;
   }
+}
+
+/*
+ * Feedback for one suggestion trigger, rendered next to the button that was
+ * pressed. Deliberately not a live region: the two regions in the suggestions
+ * section carry the announcement, so a screen reader hears the message once.
+ * #444 and #c0392b on the form's white background are ~9.7:1 and ~5:1.
+ */
+.suggestion-feedback {
+  font-size: 0.85rem;
+  color: #444;
+
+  &.is-error {
+    color: #c0392b;
+  }
+}
+
+/* Announced by a screen reader, never shown - the visible copy sits with its button. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .actions {

@@ -260,7 +260,7 @@ workspace. It works with any
 Pass the **repository URL**, not a local path:
 
 ```bash
-devpod up https://github.com/Martin1088/accessible-job-manager.git@feature/html-template --id ajm --ide none
+devpod up https://github.com/Martin1088/accessible-job-manager.git@feature/develop --id ajm --ide none
 ```
 
 With a local path (`devpod up .`) DevPod uploads the working directory to the

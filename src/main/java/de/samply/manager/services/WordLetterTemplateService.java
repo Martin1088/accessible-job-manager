@@ -49,6 +49,17 @@ public class WordLetterTemplateService {
         return new RenderedDocument(fill(ctx), baseName(ctx) + ".docx");
     }
 
+    /**
+     * The filled letter as plain text, for reading it front to back before printing.
+     * Extracted from the same filled document the PDF is converted from, so the
+     * preview cannot describe a letter other than the one that comes out.
+     */
+    @Transactional(readOnly = true)
+    public String fillAsText(Long applicationId, UUID documentId, String userId) {
+        FillContext ctx = loadAndValidate(applicationId, documentId, userId);
+        return unchecked(() -> wordCoverLetterService.extractPlainText(fill(ctx)));
+    }
+
     @Transactional(readOnly = true)
     public CoverLetterEmailDto fillAsEmail(Long applicationId, UUID documentId, String userId) {
         FillContext ctx = loadAndValidate(applicationId, documentId, userId);

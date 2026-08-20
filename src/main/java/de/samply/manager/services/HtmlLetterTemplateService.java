@@ -52,7 +52,7 @@ public class HtmlLetterTemplateService {
     public HtmlLetterTemplateDto create(HtmlLetterTemplateRequest request, Language language, String userId) {
         return HtmlLetterTemplateDto.from(repository.save(HtmlLetterTemplate.builder()
                 .userId(userId)
-                .name(nameOf(request, language, defaultName(language)))
+                .name(requiredName(request))
                 .language(language)
                 .layoutLetter(layoutOf(request))
                 .style(styleSettingsValidator.validated(request == null ? null : request.style()))
@@ -69,6 +69,24 @@ public class HtmlLetterTemplateService {
         template.setStyle(styleSettingsValidator.validated(request == null ? null : request.style()));
         template.setBlocks(blocksOf(request, language));
         return HtmlLetterTemplateDto.from(repository.save(template));
+    }
+
+    /**
+     * A new template has to be named. Falling back to a localized default
+     * instead is what let several letters end up sharing one name, which makes
+     * the documents list unusable for telling them apart - the name is how a
+     * stored letter is picked out.
+     *
+     * <p>Update keeps the fallback: there a blank name means "leave the stored
+     * one alone", not "no name".
+     */
+    private String requiredName(HtmlLetterTemplateRequest request) {
+        String name = request == null || request.name() == null ? null : request.name().trim();
+        if (name == null || name.isEmpty()) {
+            throw new ApiException.BadRequest(
+                    messageSource.getMessage("error.letterTemplate.nameRequired", null, Locale.ROOT));
+        }
+        return name;
     }
 
     private String nameOf(HtmlLetterTemplateRequest request, Language language, String fallback) {
@@ -123,6 +141,16 @@ public class HtmlLetterTemplateService {
                         profile.getName(), profile.getStreet(), profile.getPostalCode(),
                         profile.getCity(), profile.getEmail(), profile.getPhone()))
                 .orElse(null);
+    }
+
+    /**
+     * The starting text the editor offers for a language, without storing
+     * anything. The same skeleton a first save would persist, so what the form
+     * shows as a suggestion and what an untouched template contains cannot
+     * drift apart.
+     */
+    public List<Block> suggestions(Language language) {
+        return skeleton(language);
     }
 
     private List<Block> blocksOf(HtmlLetterTemplateRequest request, Language language) {

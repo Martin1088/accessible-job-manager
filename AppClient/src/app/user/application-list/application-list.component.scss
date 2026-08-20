@@ -24,6 +24,39 @@ main {
   h2 { margin: 0 0 1rem; font-size: 1.1rem; }
 }
 
+/*
+ * The letter read front to back. It takes focus when it opens, so the outline is
+ * the reader's landing mark rather than noise - never remove it.
+ */
+.letter-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+
+  h2 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+
+  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+
+  .preview-template {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    color: #4b5563;
+  }
+
+  // The letter is linearized text: its blank lines are the paragraph breaks, so
+  // it wraps rather than scrolling sideways, and keeps its own line breaks.
+  .preview-text {
+    margin: 0 0 1rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+}
+
 .position-info {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -191,6 +224,14 @@ main {
     font-size: 0.85rem;
     font-family: inherit;
     &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+
+  // Says why a greyed-out action is greyed out. #4b5563 on the row background is
+  // ~7:1, so the explanation is not itself hard to read.
+  .template-note {
+    flex: 1 1 100%;
+    font-size: 0.75rem;
+    color: #4b5563;
   }
 }
 

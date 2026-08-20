@@ -2,9 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
+  CoverLetterEmail,
   CoverLetterRenderRequest,
   HtmlLetterTemplate,
   HtmlLetterTemplateRequest,
+  LetterBlock,
 } from '../model/cover-letter';
 import { DocumentLanguage } from '../model/document';
 
@@ -29,6 +31,16 @@ export class CoverLetterService {
 
   getTemplate(id: string): Observable<HtmlLetterTemplate> {
     return this.http.get<HtmlLetterTemplate>(`${this.apiUrl}/template/${id}`);
+  }
+
+  /**
+   * The starting text offered for a language. Read-only, so the editor can ask
+   * for it whenever the letter language changes without creating a template.
+   */
+  suggestions(language: DocumentLanguage): Observable<LetterBlock[]> {
+    return this.http.get<LetterBlock[]>(`${this.apiUrl}/template/suggestions`, {
+      params: new HttpParams().set('language', language),
+    });
   }
 
   /**
@@ -85,5 +97,13 @@ export class CoverLetterService {
       responseType: 'blob',
       observe: 'response',
     });
+  }
+
+  /**
+   * The letter prepared for the user's own mail client. Nothing is sent from the
+   * server; the caller turns this into a mailto: link.
+   */
+  renderEmail(applicationId: number, templateId: string, request: CoverLetterRenderRequest): Observable<CoverLetterEmail> {
+    return this.http.post<CoverLetterEmail>(`${this.apiUrl}/${applicationId}/email/${templateId}`, request);
   }
 }

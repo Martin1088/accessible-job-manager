@@ -6,8 +6,34 @@
 
   <div class="field">
     <label for="template-name">{{ 'COVER_LETTER_FORM.NAME_LABEL' | translate }}</label>
-    <input id="template-name" type="text" formControlName="name" aria-describedby="template-name-help">
-    <p id="template-name-help" class="hint">{{ 'COVER_LETTER_FORM.NAME_HELP' | translate }}</p>
+    <input id="template-name" type="text" formControlName="name" required aria-required="true"
+      [attr.aria-invalid]="letter.controls.name.touched && letter.controls.name.invalid ? 'true' : null"
+      aria-describedby="template-name-help template-name-error">
+    <p id="template-name-help" class="hint">
+      {{ 'COVER_LETTER_FORM.NAME_HELP' | translate }}
+      {{ 'COVER_LETTER_FORM.NAME_HELP_MULTI' | translate }}
+    </p>
+    <p id="template-name-error" class="error" role="alert">
+      @if (letter.controls.name.touched && letter.controls.name.invalid) {
+        {{ 'COVER_LETTER_FORM.NAME_REQUIRED' | translate }}
+      }
+    </p>
+  </div>
+
+  <div class="field">
+    <label for="letter-language">{{ 'COVER_LETTER_FORM.LANGUAGE_LABEL' | translate }}</label>
+    <select id="letter-language" formControlName="letterLanguage"
+      aria-describedby="letter-language-help" (change)="onLetterLanguageChange()">
+      @for (option of languageOptions; track option.value) {
+        <option [value]="option.value">{{ option.label | translate }}</option>
+      }
+    </select>
+    <p id="letter-language-help" class="hint">{{ 'COVER_LETTER_FORM.LANGUAGE_HELP' | translate }}</p>
+    <button type="button" class="btn-secondary" [disabled]="suggestionsLoading"
+      (click)="insertSuggestions()">
+      {{ (suggestionsLoading ? 'COVER_LETTER_FORM.SUGGESTIONS_LOADING'
+                             : 'COVER_LETTER_FORM.INSERT_SUGGESTIONS') | translate }}
+    </button>
   </div>
 
   <fieldset>
@@ -79,10 +105,17 @@
                     {{ 'COVER_LETTER_FORM.ITEM_LABEL' | translate:{ number: j + 1 } }}
                   </label>
                   <input [id]="'block-' + i + '-item-' + j" type="text" [formControlName]="j">
+                  <button type="button" class="btn-secondary" (click)="openLinkEditor(i, j)"
+                    [attr.aria-label]="'COVER_LETTER_FORM.INSERT_LINK_ITEM_ARIA' | translate:{ number: j + 1 }">
+                    {{ 'COVER_LETTER_FORM.INSERT_LINK' | translate }}
+                  </button>
                   <button type="button" class="btn-remove" (click)="removeItem(block, i, j)">
                     {{ 'COVER_LETTER_FORM.REMOVE_ITEM' | translate:{ number: j + 1 } }}
                   </button>
                 </div>
+                @if (isLinkEditorOpen(i, j)) {
+                  <ng-container *ngTemplateOutlet="linkEditor"/>
+                }
               }
               <button type="button" class="btn-secondary" [id]="'block-' + i + '-add-item'" (click)="addItem(block, i)">
                 {{ 'COVER_LETTER_FORM.ADD_ITEM' | translate }}
@@ -93,6 +126,13 @@
               <label [attr.for]="'block-text-' + i">{{ 'COVER_LETTER_FORM.BLOCK_TEXT_LABEL' | translate }}</label>
               <textarea [id]="'block-text-' + i" formControlName="text" rows="5"
                 aria-describedby="blocks-help"></textarea>
+              <button type="button" class="btn-secondary" (click)="openLinkEditor(i, null)"
+                [attr.aria-label]="'COVER_LETTER_FORM.INSERT_LINK_BLOCK_ARIA' | translate:{ number: i + 1 }">
+                {{ 'COVER_LETTER_FORM.INSERT_LINK' | translate }}
+              </button>
+              @if (isLinkEditorOpen(i, null)) {
+                <ng-container *ngTemplateOutlet="linkEditor"/>
+              }
             </div>
           }
 
@@ -154,6 +194,9 @@
     <button type="button" class="btn-secondary" [disabled]="downloading" (click)="downloadPdf()">
       {{ (downloading ? 'COVER_LETTER_FORM.CREATING_PDF' : 'COVER_LETTER_FORM.CREATE_PDF') | translate }}
     </button>
+    <button type="button" class="btn-secondary" (click)="newTemplate()">
+      {{ 'COVER_LETTER_FORM.NEW' | translate }}
+    </button>
   </div>
 
   <p aria-live="polite" aria-atomic="true" class="derived">
@@ -186,3 +229,39 @@
     <pre class="preview-text">{{ previewText }}</pre>
   </section>
 }
+
+<!--
+  One editor, rendered next to whichever field it was opened from. A group with
+  its own labelled fields rather than a prompt(): it needs two values, and the
+  URL has to be checked before it is written into the letter.
+-->
+<ng-template #linkEditor>
+  <div class="link-editor" role="group" aria-labelledby="link-editor-heading">
+    <p id="link-editor-heading" class="link-editor-heading">{{ 'COVER_LETTER_FORM.LINK_HEADING' | translate }}</p>
+
+    <div class="field">
+      <label for="link-text">{{ 'COVER_LETTER_FORM.LINK_TEXT_LABEL' | translate }}</label>
+      <input id="link-text" type="text" [(ngModel)]="linkText" [ngModelOptions]="{ standalone: true }">
+    </div>
+
+    <div class="field">
+      <label for="link-url">{{ 'COVER_LETTER_FORM.LINK_URL_LABEL' | translate }}</label>
+      <input id="link-url" type="text" [(ngModel)]="linkUrl" [ngModelOptions]="{ standalone: true }"
+        aria-describedby="link-url-help">
+      <p id="link-url-help" class="hint">{{ 'COVER_LETTER_FORM.LINK_URL_HELP' | translate }}</p>
+    </div>
+
+    @if (linkError) {
+      <p class="error" role="alert">{{ linkError }}</p>
+    }
+
+    <div class="link-editor-actions">
+      <button type="button" class="btn-primary" (click)="insertLink()">
+        {{ 'COVER_LETTER_FORM.LINK_INSERT' | translate }}
+      </button>
+      <button type="button" class="btn-secondary" (click)="closeLinkEditor()">
+        {{ 'COMMON.CANCEL' | translate }}
+      </button>
+    </div>
+  </div>
+</ng-template>

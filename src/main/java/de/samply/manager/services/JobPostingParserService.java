@@ -3,6 +3,8 @@ package de.samply.manager.services;
 import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,6 +20,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.LinkedHashSet;
 
 /**
  * Fetches a job posting from a user-supplied URL (with SSRF-safe host
@@ -32,6 +35,7 @@ public class JobPostingParserService {
     private static final int MAX_HTML_BYTES = 3_000_000;
     private static final int MAX_TEXT_CHARS = 8_000;
     private static final int MAX_REDIRECTS = 5;
+    private static final int MAX_LINKS = 60;
 
     private final JobPostingLlmClient llmClient;
     private final HttpClient httpClient;
@@ -60,6 +64,43 @@ public class JobPostingParserService {
      */
     public FetchedPage fetchPage(String rawUrl) {
         return fetchHtml(validate(rawUrl));
+    }
+
+    /** The posting's visible text, fetched through the same validated path. */
+    public String postingText(String rawUrl) {
+        return visibleText(fetchHtml(validate(rawUrl)));
+    }
+
+    /**
+     * The posting's visible text followed by the links found on the page.
+     *
+     * <p>For deciding <em>how</em> to apply, the text alone is not enough: an
+     * apply button carries its destination in an href, and a mailto: address
+     * may never appear as text at all. Without the hrefs a model asked for an
+     * application URL can only invent one.
+     *
+     * <p>The links are listed unfiltered (beyond de-duplication and a size
+     * cap) rather than pre-selected by an apply-looking heuristic, so the
+     * choice of which link is the application link stays with the model.
+     */
+    public String postingTextWithLinks(String rawUrl) {
+        FetchedPage page = fetchHtml(validate(rawUrl));
+        Document document = Jsoup.parse(page.html(), page.url().toString());
+        String text = truncateText(document.text());
+
+        LinkedHashSet<String> links = new LinkedHashSet<>();
+        for (Element anchor : document.select("a[href]")) {
+            if (links.size() >= MAX_LINKS) break;
+            String href = anchor.absUrl("href");
+            if (href.isBlank()) href = anchor.attr("href");
+            if (href.isBlank() || href.startsWith("javascript:")) continue;
+            String label = anchor.text().strip();
+            links.add(label.isBlank() ? href : label + " -> " + href);
+        }
+        if (links.isEmpty()) {
+            return text;
+        }
+        return text + "\n\nLinks on the page:\n" + String.join("\n", links);
     }
 
     private URI validate(String rawUrl) {
@@ -143,7 +184,10 @@ public class JobPostingParserService {
     }
 
     private String visibleText(FetchedPage page) {
-        String text = Jsoup.parse(page.html(), page.url().toString()).text();
+        return truncateText(Jsoup.parse(page.html(), page.url().toString()).text());
+    }
+
+    private String truncateText(String text) {
         return text.length() > MAX_TEXT_CHARS ? text.substring(0, MAX_TEXT_CHARS) : text;
     }
 

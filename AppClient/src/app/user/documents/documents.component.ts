@@ -163,7 +163,15 @@ export class DocumentsComponent implements OnInit {
     {
       label: 'DOCUMENTS.ACTION_OPEN',
       ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_OPEN_ARIA', { label: row.label }),
-      handler: () => this.router.navigate(['/cover-letter-template']),
+      // With the id: the editor opens this template rather than whichever one
+      // happened to be stored first.
+      handler: (row) => this.router.navigate(['/cover-letter-template', row.id]),
+      visible: (row) => row.kind === 'HTML',
+    },
+    {
+      label: 'DOCUMENTS.ACTION_DELETE',
+      ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_DELETE_ARIA', { label: row.label }),
+      handler: (row) => this.deleteHtmlTemplate(row),
       visible: (row) => row.kind === 'HTML',
     },
   ];
@@ -411,6 +419,22 @@ export class DocumentsComponent implements OnInit {
         this.uploading = false;
         this.errorMessage = this.translate.instant('DOCUMENTS.ERROR_UPDATE');
       },
+    });
+  }
+
+  /**
+   * Removes one stored letter template. Its own action rather than a branch in
+   * deleteDocument: a template is not an uploaded file and goes through the
+   * cover letter API, not the document one.
+   */
+  private deleteHtmlTemplate(row: any): void {
+    if (!confirm(this.translate.instant('DOCUMENTS.CONFIRM_DELETE', { label: row.label }))) return;
+    this.coverLetters.deleteTemplate(row.id).subscribe({
+      next: () => {
+        this.htmlTemplates = this.htmlTemplates.filter(t => t.id !== row.id);
+        this.rebuildRows();
+      },
+      error: () => this.errorMessage = this.translate.instant('DOCUMENTS.ERROR_DELETE'),
     });
   }
 

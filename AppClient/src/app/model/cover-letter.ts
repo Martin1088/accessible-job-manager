@@ -37,3 +37,10 @@ export interface HtmlLetterTemplateRequest {
 export interface CoverLetterRenderRequest {
   attachments: string[];
 }
+
+/** Mirrors `CoverLetterEmailDto`: a letter prepared for the user's own mail client. */
+export interface CoverLetterEmail {
+  to: string;
+  subject: string;
+  body: string;
+}
