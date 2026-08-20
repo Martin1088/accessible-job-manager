@@ -1,5 +1,7 @@
-package de.samply.manager.model;
+package de.samply.manager.advisory;
 
+import de.samply.manager.model.CompanyPosition;
+import de.samply.manager.model.UserProfile;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;

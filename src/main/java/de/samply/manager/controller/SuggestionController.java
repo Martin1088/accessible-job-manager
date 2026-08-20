@@ -1,46 +1,40 @@
 package de.samply.manager.controller;
 
+import de.samply.manager.advisory.SuggestionService;
+import de.samply.manager.dto.SuggestionDto;
 import de.samply.manager.dto.SuggestionStatusRequest;
-import de.samply.manager.exception.ApiException;
-import de.samply.manager.model.Suggestion;
-import de.samply.manager.repository.SuggestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/** The user's end of a suggestion; the advisor's end is {@link AdvisorController}. */
 @RestController
 @RequestMapping("/api/suggestions")
 @RequiredArgsConstructor
 public class SuggestionController {
 
-    private final SuggestionRepository suggestionRepository;
+    private final SuggestionService suggestionService;
 
-    // User sees their own suggestions
     @GetMapping
-    public List<Suggestion> mySuggestions(@AuthenticationPrincipal OidcUser user) {
-        return suggestionRepository.findByTargetUserUserId(user.getSubject());
+    public List<SuggestionDto> mySuggestions(@AuthenticationPrincipal OidcUser user) {
+        return suggestionService.forUser(user.getSubject());
     }
 
-    // User accepts or rejects a suggestion
     @PatchMapping("/{id}")
-    public ResponseEntity<Suggestion> updateStatus(
+    public ResponseEntity<SuggestionDto> updateStatus(
             @PathVariable Long id,
             @RequestBody SuggestionStatusRequest request,
             @AuthenticationPrincipal OidcUser user) {
 
-        Suggestion suggestion = suggestionRepository.findById(id)
-                .orElseThrow(ApiException.NotFound::new);
-
-        // Make sure only the target user can update it
-        if (!suggestion.getTargetUser().getUserId().equals(user.getSubject())) {
-            throw new ApiException.Forbidden();
-        }
-
-        suggestion.setStatus(request.status());
-        return ResponseEntity.ok(suggestionRepository.save(suggestion));
+        return ResponseEntity.ok(suggestionService.answer(id, request.status(), user.getSubject()));
     }
 }

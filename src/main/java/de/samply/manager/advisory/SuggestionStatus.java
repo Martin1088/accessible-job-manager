@@ -1,4 +1,4 @@
-package de.samply.manager.model;
+package de.samply.manager.advisory;
 
 public enum SuggestionStatus {
     PENDING,

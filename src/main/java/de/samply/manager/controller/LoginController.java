@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class ApiController {
+public class LoginController {
 
     @GetMapping("/login/as/{role}")
     public RedirectView loginAs(@PathVariable("role") String role, HttpSession session) {
@@ -44,19 +44,4 @@ public class ApiController {
                 "groups", groups
         ));
     }
-
-    @GetMapping("token")
-    public Map<String, Object> token(@RegisteredOAuth2AuthorizedClient("authentik") OAuth2AuthorizedClient client) {
-        return Map.of(
-                "id_token", client.getPrincipalName(),
-                "access_token", client.getAccessToken().getTokenValue(),
-                "expires_at", client.getAccessToken().getExpiresAt()
-        );
-    }
-
-    @GetMapping("access_token")
-    public String accessToken(@RegisteredOAuth2AuthorizedClient("authentik") OAuth2AuthorizedClient client) {
-        return client.getAccessToken().getTokenValue();
-    }
-
 }

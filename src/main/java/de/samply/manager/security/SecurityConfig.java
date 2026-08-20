@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -13,6 +14,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
     @Autowired
@@ -41,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
                         .requestMatchers("/impressum", "/datenschutz").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/advisor/**").hasRole("ADVISOR")
+                        .requestMatchers("/api/reviewer/**").hasRole("REVIEWER")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
