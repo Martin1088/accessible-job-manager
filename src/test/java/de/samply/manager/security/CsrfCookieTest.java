@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +29,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(JobController.class)
 @Import(SecurityConfig.class)
+// This slice has the same context signature as JobControllerTest, so both would
+// normally share one cached ApplicationContext - and that context is no longer the
+// one SecurityConfig built. The first `.with(csrf())` anywhere in it makes
+// SecurityMockMvcRequestPostProcessors reflectively overwrite the live CsrfFilter's
+// `tokenRepository` field with a session-backed test double, permanently. This class
+// is the only one that reads the real cookie, so it needs the untampered chain: run
+// it against a context of its own.
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class CsrfCookieTest {
 
     private static final String COOKIE = "XSRF-TOKEN";
