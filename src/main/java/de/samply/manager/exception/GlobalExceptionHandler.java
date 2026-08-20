@@ -5,10 +5,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.context.MessageSource;
+import java.util.Locale;
 
 import java.util.Map;
 import java.util.stream.Collector;
@@ -23,6 +27,12 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private final MessageSource messageSource;
+
+    public GlobalExceptionHandler(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Map<String, Object>> handleApiException(ApiException ex) {
@@ -43,6 +53,33 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /**
+     * A denied {@code @PreAuthorize} check. Method security throws inside the
+     * controller invocation, so the exception leaves the DispatcherServlet and is
+     * offered to this advice before Spring Security's ExceptionTranslationFilter
+     * ever sees it - and {@link #handleUnexpected} would answer 500 for what is a
+     * 403. The filter only gets its turn when nothing here claims the exception.
+     * <p>
+     * 403 rather than a challenge to log in: the filter chain already requires
+     * authentication for every {@code /api/**} path, so a request that reaches a
+     * controller at all carries an authenticated principal.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        return body(HttpStatus.FORBIDDEN, HttpStatus.FORBIDDEN.getReasonPhrase());
+    }
+
+    /**
+     * A request parameter that will not convert - an unknown enum name, a
+     * non-numeric page - is the caller's mistake, not a server fault; without
+     * this it would fall through to the catch-all below and answer 500.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return body(HttpStatus.BAD_REQUEST,
+                messageSource.getMessage("error.request.parameterInvalid", new Object[]{ex.getName()}, Locale.ROOT));
     }
 
     @ExceptionHandler(Exception.class)

@@ -65,9 +65,21 @@ public abstract class ApiException extends RuntimeException {
         }
     }
 
+    public static final class TooManyRequests extends ApiException {
+        public TooManyRequests(String message) {
+            super(HttpStatus.TOO_MANY_REQUESTS, message);
+        }
+    }
+
     public static final class BadGateway extends ApiException {
         public BadGateway(String message) {
             super(HttpStatus.BAD_GATEWAY, message);
+        }
+    }
+
+    public static final class ServiceUnavailable extends ApiException {
+        public ServiceUnavailable(String message) {
+            super(HttpStatus.SERVICE_UNAVAILABLE, message);
         }
     }
 

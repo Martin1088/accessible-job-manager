@@ -244,6 +244,46 @@ volume as the images and `node_modules`:
 df -h /
 ```
 
+## 9. Optional: Adzuna key for advisor job search
+
+`/api/advisor/job-search` searches the [Adzuna](https://developer.adzuna.com)
+aggregator. It ships with no credentials on purpose: without both variables
+below the source reports itself unconfigured, the endpoints answer `503` and the
+frontend hides the feature. Everything else runs unaffected.
+
+Register an application at <https://developer.adzuna.com/> — the free tier is
+enough for development — and pass the pair the backend reads:
+
+```
+JOBSOURCE_ADZUNA_APP_ID=<your-app-id>
+JOBSOURCE_ADZUNA_APP_KEY=<your-app-key>
+JOBSOURCE_ADZUNA_COUNTRY=de     # optional, default de
+```
+
+Check that it answers:
+
+```bash
+curl -b cookies.txt 'http://localhost:8060/api/advisor/job-search/status'
+curl -b cookies.txt 'http://localhost:8060/api/advisor/job-search?what=java&where=K%C3%B6ln'
+```
+
+(Both need an advisor session — the endpoints are `ADVISOR`-only.)
+
+**For operators:** the key is per organisation, and Adzuna's terms bind the
+organisation using it, not the authors of this software. Two clauses matter in
+practice:
+
+- **Retention.** A result may be held for at most 14 days. This application
+  therefore stores none: searches are read-through, and a posting an advisor
+  picks is imported from the employer's own page through the normal snapshot
+  path, which is the operator's own data. Do not add a results cache or a
+  "saved search results" table without re-reading that clause.
+- **Attribution.** Every response carries an `attribution` field (`Jobs by
+  Adzuna`); it belongs next to the results wherever they are displayed.
+
+To turn the feature off again, unset the two variables and restart — no other
+configuration depends on them.
+
 ---
 
 ## Remote Development with DevPod

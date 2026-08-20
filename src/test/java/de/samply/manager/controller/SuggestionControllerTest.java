@@ -21,6 +21,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -52,6 +53,7 @@ class SuggestionControllerTest {
         when(suggestionService.answer(1L, SuggestionStatus.ACCEPTED, "test-sub")).thenReturn(dto());
 
         mvc.perform(patch("/api/my/suggestions/1")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(new SuggestionStatusRequest(SuggestionStatus.ACCEPTED))))
@@ -63,6 +65,7 @@ class SuggestionControllerTest {
         when(suggestionService.answer(anyLong(), any(), eq("test-sub"))).thenThrow(new ApiException.Forbidden());
 
         mvc.perform(patch("/api/my/suggestions/1")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(new SuggestionStatusRequest(SuggestionStatus.ACCEPTED))))

@@ -93,6 +93,16 @@ param azureOpenAiApiVersion string = '2024-08-01-preview'
 @secure()
 param azureOpenAiApiKey string = ''
 
+@description('Adzuna application id for the advisor job search. Leave empty to keep the job search feature switched off')
+param adzunaAppId string = ''
+
+@description('Adzuna application key. Register your own at https://developer.adzuna.com - the API terms bind the organisation using the key')
+@secure()
+param adzunaAppKey string = ''
+
+@description('Country board the advisor job search defaults to')
+param adzunaCountry string = 'de'
+
 // ---------------------------------------------------------------------------
 // Storage: account + blob container (documents)
 // ---------------------------------------------------------------------------
@@ -283,6 +293,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'azure-openai-api-key'
           value: azureOpenAiApiKey
         }
+        {
+          name: 'adzuna-app-key'
+          value: adzunaAppKey
+        }
       ]
     }
     template: {
@@ -318,6 +332,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'AZURE_OPENAI_DEPLOYMENT', value: azureOpenAiDeployment }
             { name: 'AZURE_OPENAI_API_VERSION', value: azureOpenAiApiVersion }
             { name: 'AZURE_OPENAI_API_KEY', secretRef: 'azure-openai-api-key' }
+            { name: 'JOBSOURCE_ADZUNA_APP_ID', value: adzunaAppId }
+            { name: 'JOBSOURCE_ADZUNA_APP_KEY', secretRef: 'adzuna-app-key' }
+            { name: 'JOBSOURCE_ADZUNA_COUNTRY', value: adzunaCountry }
           ]
         }
       ]

@@ -51,6 +51,14 @@ job-posting:
     extended:
       field-extraction: true
 
+job-source:
+  adzuna:
+    base-url: ${JOBSOURCE_ADZUNA_BASE_URL:https://api.adzuna.com/v1/api}
+    app-id: ${JOBSOURCE_ADZUNA_APP_ID:}
+    app-key: ${JOBSOURCE_ADZUNA_APP_KEY:}
+    country: ${JOBSOURCE_ADZUNA_COUNTRY:de}
+    max-results-per-page: ${JOBSOURCE_ADZUNA_MAX_RESULTS:50}
+
 storage:
   provider: ${STORAGE_PROVIDER:s3}
   s3:
