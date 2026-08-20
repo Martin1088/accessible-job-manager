@@ -39,10 +39,28 @@ public class CoverLetterHtmlService {
     /** A rendered letter together with everything the controller needs to serve it. */
     public record RenderedLetter(RenderFormat format, byte[] content, String filename, Language language) {}
 
+    /** A letter prepared for an email client: recipient, subject line and body text. */
+    public record EmailDraft(String to, String subject, String body) {}
+
     @Transactional(readOnly = true)
     public RenderedLetter render(Long applicationId, CoverLetterTemplate template, RenderFormat format, String userId) {
         CompanyPosition position = ownedPosition(applicationId, userId);
         return renderFor(position, template, format, languageOf(position));
+    }
+
+    /**
+     * The same letter handed to an email client instead of a printer: the linearized
+     * text as the body, and the recipient taken from the position being applied for.
+     * <p>
+     * Subject and body come off the same assembled model the PDF is printed from, so a
+     * template that writes its own subject line keeps it here rather than being given
+     * a second one derived somewhere else.
+     */
+    @Transactional(readOnly = true)
+    public EmailDraft renderAsEmail(Long applicationId, CoverLetterTemplate template, String userId) {
+        CompanyPosition position = ownedPosition(applicationId, userId);
+        CoverLetterModel letter = assembler.assemble(template, position, languageOf(position));
+        return new EmailDraft(position.getEmail(), letter.subject(), textRenderer.render(letter));
     }
 
     /**

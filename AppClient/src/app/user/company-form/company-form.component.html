@@ -31,11 +31,23 @@
              aria-describedby="suggestion-url-hint"/>
       <span id="suggestion-url-hint" class="hint">{{ 'COMPANIES.SUGGEST_URL_HINT' | translate }}</span>
     </div>
-    @if (suggestionError) {
-      <div role="alert">{{ suggestionError }}</div>
-    }
-    <div role="status">{{ suggestionStatus }}</div>
+    <!--
+      Announcement only. The message is shown visibly next to the button that
+      was pressed, which can be several screens below this section; these two
+      regions stay in the DOM so a screen reader announces into them.
+    -->
+    <div class="visually-hidden" role="alert">{{ suggestionError }}</div>
+    <div class="visually-hidden" role="status">{{ suggestionStatus }}</div>
   </section>
+
+  <!-- Visible feedback for one suggestion trigger, rendered where it was triggered. -->
+  <ng-template #suggestionFeedback let-key>
+    @if (suggestionErrorFor(key)) {
+      <p class="suggestion-feedback is-error">{{ suggestionErrorFor(key) }}</p>
+    } @else if (suggestionStatusFor(key)) {
+      <p class="suggestion-feedback">{{ suggestionStatusFor(key) }}</p>
+    }
+  </ng-template>
 
   <div>
     <div>
@@ -44,6 +56,7 @@
       <button type="button" (click)="suggestCompany()" [disabled]="isSuggesting('company')">
         {{ (isSuggesting('company') ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_COMPANY') | translate }}
       </button>
+      <ng-container *ngTemplateOutlet="suggestionFeedback; context: { $implicit: 'company' }"></ng-container>
     </div>
 
     <section aria-labelledby="locations-heading">
@@ -73,6 +86,7 @@
               {{ (isSuggesting('location-' + i) ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_LOCATION') | translate }}
             </button>
             <button type="button" (click)="removeLocation(i)" [attr.aria-label]="'COMPANIES.REMOVE_LOCATION_ARIA' | translate: { n: i + 1 }">{{ 'COMPANIES.REMOVE' | translate }}</button>
+            <ng-container *ngTemplateOutlet="suggestionFeedback; context: { $implicit: 'location-' + i }"></ng-container>
           </fieldset>
         </div>
       }
@@ -143,10 +157,12 @@
                     [attr.aria-label]="'COMPANIES.SUGGEST_POSITION_ARIA' | translate: { n: i + 1 }">
               {{ (isSuggesting('position-' + i) ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_POSITION') | translate }}
             </button>
+            <ng-container *ngTemplateOutlet="suggestionFeedback; context: { $implicit: 'position-' + i }"></ng-container>
             <button type="button" (click)="suggestApplicationMethod(i)" [disabled]="isSuggesting('apply-' + i)"
                     [attr.aria-label]="'COMPANIES.SUGGEST_APPLY_ARIA' | translate: { n: i + 1 }">
               {{ (isSuggesting('apply-' + i) ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_APPLY') | translate }}
             </button>
+            <ng-container *ngTemplateOutlet="suggestionFeedback; context: { $implicit: 'apply-' + i }"></ng-container>
             <button type="button" (click)="removePosition(i)" [attr.aria-label]="'COMPANIES.REMOVE_POSITION_ARIA' | translate: { n: i + 1 }">{{ 'COMPANIES.REMOVE' | translate }}</button>
           </fieldset>
         </div>

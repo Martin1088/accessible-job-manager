@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
+  CoverLetterEmail,
   CoverLetterRenderRequest,
   HtmlLetterTemplate,
   HtmlLetterTemplateRequest,
@@ -96,5 +97,13 @@ export class CoverLetterService {
       responseType: 'blob',
       observe: 'response',
     });
+  }
+
+  /**
+   * The letter prepared for the user's own mail client. Nothing is sent from the
+   * server; the caller turns this into a mailto: link.
+   */
+  renderEmail(applicationId: number, templateId: string, request: CoverLetterRenderRequest): Observable<CoverLetterEmail> {
+    return this.http.post<CoverLetterEmail>(`${this.apiUrl}/${applicationId}/email/${templateId}`, request);
   }
 }

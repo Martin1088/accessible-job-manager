@@ -1,4 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
@@ -11,7 +12,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-company-form',
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, NgTemplateOutlet],
   templateUrl: './company-form.component.html',
   styleUrl: './company-form.component.scss',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -39,6 +40,15 @@ export class CompanyFormComponent implements OnInit {
   pendingSuggestion: string | null = null;
   suggestionError = '';
   suggestionStatus = '';
+  // Which trigger the current message belongs to. Only one suggestion runs at
+  // a time, so a single message plus its owner is enough to render it next to
+  // the button that was pressed - a position's buttons sit several screens
+  // below the suggestions section, where a message there is never seen.
+  feedbackKey: string | null = null;
+  // Counts what the running suggestion actually filled in, so a run that
+  // changed nothing says so instead of reporting success over an unchanged
+  // form - which is indistinguishable from the button doing nothing at all.
+  private filledCount = 0;
 
   // Set when this form was opened from the dashboard's "Use for new company"
   // action, so we know to generate a PDF snapshot of the source posting once
@@ -142,11 +152,15 @@ export class CompanyFormComponent implements OnInit {
   /**
    * Answers "which way do I go to apply?". The application link goes into the
    * position's existing website field rather than a field of its own.
+   *
+   * <p>Like every other suggestion this only fills blanks: a method the user
+   * picked themselves outranks a guess read off the posting. The target field
+   * is still offered, so a hand-picked EMAIL can pick up a detected address.
    */
   suggestApplicationMethod(index: number): void {
     const position = this.company.positions[index];
     this.runSuggestion(`apply-${index}`, this.suggestionService.applicationMethod(this.suggestionUrl), s => {
-      position.applicationMethod = s.method;
+      position.applicationMethod = this.fill(position.applicationMethod, s.method);
       if (s.method === 'EMAIL') {
         position.email = this.fill(position.email, s.email);
       } else if (s.method === 'WEB_FORM') {
@@ -159,8 +173,19 @@ export class CompanyFormComponent implements OnInit {
     return this.pendingSuggestion === key;
   }
 
+  /** The message shown next to one trigger, empty for every other trigger. */
+  suggestionStatusFor(key: string): string {
+    return this.feedbackKey === key ? this.suggestionStatus : '';
+  }
+
+  suggestionErrorFor(key: string): string {
+    return this.feedbackKey === key ? this.suggestionError : '';
+  }
+
   private runSuggestion<T>(key: string, request: Observable<T>, apply: (result: T) => void): void {
+    this.feedbackKey = key;
     if (!this.suggestionUrl.trim()) {
+      this.suggestionStatus = '';
       this.suggestionError = this.translate.instant('COMPANIES.SUGGEST_URL_REQUIRED');
       return;
     }
@@ -169,8 +194,10 @@ export class CompanyFormComponent implements OnInit {
     this.pendingSuggestion = key;
     request.pipe(finalize(() => this.pendingSuggestion = null)).subscribe({
       next: (result) => {
+        this.filledCount = 0;
         apply(result);
-        this.suggestionStatus = this.translate.instant('COMPANIES.SUGGEST_DONE');
+        this.suggestionStatus = this.translate.instant(
+          this.filledCount > 0 ? 'COMPANIES.SUGGEST_DONE' : 'COMPANIES.SUGGEST_NOTHING');
       },
       error: (err: HttpErrorResponse) => {
         this.suggestionStatus = '';
@@ -186,6 +213,7 @@ export class CompanyFormComponent implements OnInit {
     if (!isBlank) return current;
     if (suggested === undefined || suggested === null) return current;
     if (typeof suggested === 'string' && suggested.trim() === '') return current;
+    this.filledCount++;
     return suggested;
   }
 
