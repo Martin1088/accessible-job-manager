@@ -10,6 +10,7 @@ import de.samply.manager.model.Document;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.UserProfileRepository;
+import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

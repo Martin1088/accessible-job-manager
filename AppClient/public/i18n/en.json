@@ -46,7 +46,14 @@
     "LOAD_ERROR": "The profile could not be loaded.",
     "REQUIRED": "This field is required.",
     "EMAIL_INVALID": "Enter a valid email address.",
-    "ERROR_SUMMARY_HEADING": "Please correct the following fields"
+    "ERROR_SUMMARY_HEADING": "Please correct the following fields",
+    "EXPORT_HEADING": "Export your data",
+    "EXPORT_HELP": "Downloads all your companies, positions and applications as a single spreadsheet. Column headers are written in the language you are currently using.",
+    "EXPORT_XLSX": "Export as Excel (.xlsx)",
+    "EXPORT_CSV": "Export as CSV",
+    "EXPORTING": "Preparing download…",
+    "EXPORT_STARTED": "The export has been downloaded.",
+    "EXPORT_ERROR": "The export could not be created."
   },
   "PREFERENCES": {
     "LEGEND": "Display & accessibility",

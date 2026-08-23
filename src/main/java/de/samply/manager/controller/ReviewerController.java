@@ -6,7 +6,7 @@ import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.DocumentAccessRepository;
 import de.samply.manager.repository.UserProfileRepository;
-import de.samply.manager.services.StorageService;
+import de.samply.manager.services.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

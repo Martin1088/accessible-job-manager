@@ -91,4 +91,97 @@ describe('ProfileComponent', () => {
     expect(fixture.componentInstance.saving).toBeFalse();
     expect(fixture.componentInstance.submitted).toBeFalse();
   });
+
+  describe('data export', () => {
+    /**
+     * Stops the anchor click from navigating the Karma runner, and records the name it
+     * would have saved under. Spying on the prototype rather than on
+     * `document.createElement`: the latter is what Angular renders through, and
+     * stubbing it breaks every component in the fixture.
+     */
+    function stubDownload(): string[] {
+      spyOn(URL, 'createObjectURL').and.returnValue('blob:stub');
+      spyOn(URL, 'revokeObjectURL');
+      const saved: string[] = [];
+      spyOn(HTMLAnchorElement.prototype, 'click').and.callFake(function (this: HTMLAnchorElement) {
+        saved.push(this.download);
+      });
+      return saved;
+    }
+
+    function exportRequest() {
+      return http.expectOne(r => r.url === '/api/export/companies');
+    }
+
+    it('requests the workbook and hands the downloaded file its server-given name', () => {
+      const saved = stubDownload();
+      const fixture = create();
+      http.expectOne('/api/profile').flush(baseProfile);
+
+      fixture.componentInstance.exportData('XLSX');
+      expect(fixture.componentInstance.exporting).toBe('XLSX');
+
+      const req = exportRequest();
+      expect(req.request.headers.get('Accept'))
+        .toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      req.flush(new Blob([]), {
+        headers: { 'Content-Disposition': 'attachment; filename=companies-export-2026-08-23.xlsx' },
+      });
+
+      expect(saved).toEqual(['companies-export-2026-08-23.xlsx']);
+      expect(fixture.componentInstance.exporting).toBeNull();
+      expect(fixture.componentInstance.exportError).toBeFalse();
+    });
+
+    it('requests CSV when the CSV button is used', () => {
+      stubDownload();
+      const fixture = create();
+      http.expectOne('/api/profile').flush(baseProfile);
+
+      fixture.componentInstance.exportData('CSV');
+
+      const req = exportRequest();
+      expect(req.request.headers.get('Accept')).toBe('text/csv');
+      req.flush(new Blob(['a,b']));
+    });
+
+    it('sends the language the UI is being read in', () => {
+      stubDownload();
+      const fixture = create();
+      http.expectOne('/api/profile').flush(baseProfile);
+
+      fixture.componentInstance.exportData('CSV');
+
+      // provideTranslateService above bootstraps with fallbackLang 'en'.
+      expect(exportRequest().request.params.get('language')).toBe('ENGLISH');
+      http.expectNone(r => r.url === '/api/export/companies');
+    });
+
+    it('ignores a second press while an export is still running', () => {
+      stubDownload();
+      const fixture = create();
+      http.expectOne('/api/profile').flush(baseProfile);
+
+      fixture.componentInstance.exportData('CSV');
+      fixture.componentInstance.exportData('XLSX');
+
+      // One in-flight request, still the CSV one: the second press was dropped.
+      const req = exportRequest();
+      expect(req.request.headers.get('Accept')).toBe('text/csv');
+      req.flush(new Blob(['a,b']));
+    });
+
+    it('surfaces a failed export and releases the buttons', () => {
+      const saved = stubDownload();
+      const fixture = create();
+      http.expectOne('/api/profile').flush(baseProfile);
+
+      fixture.componentInstance.exportData('CSV');
+      exportRequest().flush(new Blob([]), { status: 500, statusText: 'Server Error' });
+
+      expect(fixture.componentInstance.exportError).toBeTrue();
+      expect(fixture.componentInstance.exporting).toBeNull();
+      expect(saved).toEqual([]);
+    });
+  });
 });

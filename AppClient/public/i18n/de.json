@@ -46,7 +46,14 @@
     "LOAD_ERROR": "Das Profil konnte nicht geladen werden.",
     "REQUIRED": "Dieses Feld ist erforderlich.",
     "EMAIL_INVALID": "Geben Sie eine gültige E-Mail-Adresse ein.",
-    "ERROR_SUMMARY_HEADING": "Bitte korrigieren Sie folgende Felder"
+    "ERROR_SUMMARY_HEADING": "Bitte korrigieren Sie folgende Felder",
+    "EXPORT_HEADING": "Daten exportieren",
+    "EXPORT_HELP": "Lädt alle Ihre Unternehmen, Stellen und Bewerbungen als eine Tabelle herunter. Die Spaltenüberschriften erscheinen in der Sprache, die Sie gerade verwenden.",
+    "EXPORT_XLSX": "Als Excel exportieren (.xlsx)",
+    "EXPORT_CSV": "Als CSV exportieren",
+    "EXPORTING": "Download wird vorbereitet…",
+    "EXPORT_STARTED": "Der Export wurde heruntergeladen.",
+    "EXPORT_ERROR": "Der Export konnte nicht erstellt werden."
   },
   "PREFERENCES": {
     "LEGEND": "Darstellung & Barrierefreiheit",

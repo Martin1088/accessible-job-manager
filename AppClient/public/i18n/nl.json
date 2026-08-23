@@ -46,7 +46,14 @@
     "LOAD_ERROR": "Het profiel kon niet worden geladen.",
     "REQUIRED": "Dit veld is verplicht.",
     "EMAIL_INVALID": "Voer een geldig e-mailadres in.",
-    "ERROR_SUMMARY_HEADING": "Corrigeer de volgende velden"
+    "ERROR_SUMMARY_HEADING": "Corrigeer de volgende velden",
+    "EXPORT_HEADING": "Gegevens exporteren",
+    "EXPORT_HELP": "Downloadt al uw bedrijven, functies en sollicitaties als één spreadsheet. De kolomkoppen staan in de taal die u nu gebruikt.",
+    "EXPORT_XLSX": "Exporteren als Excel (.xlsx)",
+    "EXPORT_CSV": "Exporteren als CSV",
+    "EXPORTING": "Download wordt voorbereid…",
+    "EXPORT_STARTED": "De export is gedownload.",
+    "EXPORT_ERROR": "De export kon niet worden gemaakt."
   },
   "PREFERENCES": {
     "LEGEND": "Weergave & toegankelijkheid",

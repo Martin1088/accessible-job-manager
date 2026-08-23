@@ -1,4 +1,4 @@
-package de.samply.manager.services;
+package de.samply.manager.services.storage;
 
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 

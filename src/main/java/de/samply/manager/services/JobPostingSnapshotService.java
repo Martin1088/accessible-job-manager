@@ -7,6 +7,8 @@ import de.samply.manager.model.DocumentType;
 import de.samply.manager.types.Language;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
+import de.samply.manager.services.storage.StorageService;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;

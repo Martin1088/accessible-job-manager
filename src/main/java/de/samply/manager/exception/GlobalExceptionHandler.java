@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -96,11 +97,22 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, message);
     }
 
+    /**
+     * The content type is set explicitly rather than left to content negotiation. A
+     * request that accepts only a file - the export endpoints are fetched with
+     * {@code Accept: text/csv} or the spreadsheet type - excludes JSON, so negotiating
+     * this body would fail with {@code HttpMediaTypeNotAcceptableException}, the
+     * original exception would be rethrown, and the caller would get a bodyless 500
+     * instead of the error contract. Presetting a concrete type makes Spring write the
+     * body as that type and skip the Accept and {@code produces} checks altogether.
+     */
     private ResponseEntity<Map<String, Object>> body(HttpStatus status, String message) {
-        return ResponseEntity.status(status).body(Map.of(
-                "status", status.value(),
-                "error", status.getReasonPhrase(),
-                "message", message != null ? message : ""
-        ));
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of(
+                        "status", status.value(),
+                        "error", status.getReasonPhrase(),
+                        "message", message != null ? message : ""
+                ));
     }
 }

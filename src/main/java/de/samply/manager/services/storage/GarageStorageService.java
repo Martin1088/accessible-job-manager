@@ -1,4 +1,4 @@
-package de.samply.manager.services;
+package de.samply.manager.services.storage;
 
 import de.samply.manager.config.S3Properties;
 import lombok.RequiredArgsConstructor;
