@@ -7,9 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,21 +108,21 @@ public class JobPostingParserService {
 
     private URI validate(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL must not be empty");
+            throw new ApiException.BadRequest(message("error.url.empty"));
         }
 
         URI uri;
         try {
             uri = new URI(rawUrl.trim());
         } catch (URISyntaxException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed URL");
+            throw new ApiException.BadRequest(message("error.url.malformed"));
         }
 
         if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL must use http or https");
+            throw new ApiException.BadRequest(message("error.url.scheme"));
         }
         if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL must include a host");
+            throw new ApiException.BadRequest(message("error.url.host"));
         }
 
         rejectIfDisallowedHost(uri.getHost());
@@ -136,14 +134,13 @@ public class JobPostingParserService {
         try {
             addresses = InetAddress.getAllByName(host);
         } catch (UnknownHostException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not resolve host");
+            throw new ApiException.BadRequest(message("error.url.hostUnresolved"));
         }
         for (InetAddress address : addresses) {
             if (address.isLoopbackAddress() || address.isAnyLocalAddress()
                     || address.isLinkLocalAddress() || address.isSiteLocalAddress()
                     || address.isMulticastAddress() || isUniqueLocalIpv6(address)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "URL points to a disallowed network address");
+                throw new ApiException.BadRequest(message("error.url.disallowedHost"));
             }
         }
     }

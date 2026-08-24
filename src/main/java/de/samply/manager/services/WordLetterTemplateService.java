@@ -7,12 +7,11 @@ import de.samply.manager.model.Application;
 import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
-import de.samply.manager.repository.ApplicationRepository;
-import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.UserProfileRepository;
 import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +19,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,9 +31,10 @@ public class WordLetterTemplateService {
 
     private final WordCoverLetterService wordCoverLetterService;
     private final StorageService storageService;
-    private final DocumentRepository documentRepository;
-    private final ApplicationRepository applicationRepository;
+    private final DocumentService documentService;
+    private final ApplicationService applicationService;
     private final UserProfileRepository userProfileRepository;
+    private final MessageSource messageSource;
 
     public record RenderedDocument(byte[] content, String filename) {}
 
@@ -106,13 +107,9 @@ public class WordLetterTemplateService {
     }
 
     private FillContext loadAndValidate(Long applicationId, UUID documentId, String userId) {
-        Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ApiException.NotFound("Application not found"));
-        if (!app.getUserId().equals(userId)) throw new ApiException.Forbidden();
+        Application app = applicationService.findOwned(applicationId, userId);
 
-        Document doc = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ApiException.NotFound("Document not found"));
-        if (!doc.getUserId().equals(userId)) throw new ApiException.Forbidden();
+        Document doc = documentService.findOwned(documentId, userId);
 
         CompanyPosition pos = app.getCompanyPosition();
         return new FillContext(doc, pos, replacements(pos, doc.getLanguage()));
@@ -142,7 +139,8 @@ public class WordLetterTemplateService {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            throw new ApiException.InternalServerError("Could not render the cover letter");
+            throw new ApiException.InternalServerError(
+                    messageSource.getMessage("error.coverLetter.wordRenderFailed", null, Locale.ROOT));
         }
     }
 

@@ -1,20 +1,16 @@
 package de.samply.manager.coverletter;
 
-import de.samply.manager.exception.ApiException;
-import de.samply.manager.model.Application;
 import de.samply.manager.model.Company;
+import de.samply.manager.services.ApplicationService;
 import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
-import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.types.Gender;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Entry point for the HTML cover letter provider: loads the application the letter
@@ -28,13 +24,12 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class CoverLetterHtmlService {
 
-    private final ApplicationRepository applicationRepository;
+    private final ApplicationService applicationService;
     private final CoverLetterAssembler assembler;
     private final HtmlCoverLetterRenderer htmlRenderer;
     private final TextCoverLetterRenderer textRenderer;
     private final HtmlToPdfConverter pdfConverter;
     private final CoverLetterLabels labels;
-    private final MessageSource messageSource;
 
     /** A rendered letter together with everything the controller needs to serve it. */
     public record RenderedLetter(RenderFormat format, byte[] content, String filename, Language language) {}
@@ -143,13 +138,7 @@ public class CoverLetterHtmlService {
     }
 
     private CompanyPosition ownedPosition(Long applicationId, String userId) {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ApiException.NotFound(
-                        messageSource.getMessage("error.coverLetter.applicationNotFound", null, Locale.ROOT)));
-        if (!application.getUserId().equals(userId)) {
-            throw new ApiException.Forbidden();
-        }
-        return application.getCompanyPosition();
+        return applicationService.findOwned(applicationId, userId).getCompanyPosition();
     }
 
     /** The letter follows the language the position is applied for, German by default. */

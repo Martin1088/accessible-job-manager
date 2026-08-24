@@ -19,6 +19,9 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 22MB
+  threads:
+    virtual:
+      enabled: true
   security:
     oauth2:
       client:
@@ -84,12 +87,11 @@ server:
 
 logging:
   level:
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2.client: DEBUG
-    org.springframework.web.client: DEBUG
-    org.springframework.security.oauth2: TRACE
-    de.samply.manager.jobsearch: ${JOBSOURCE_LOG_LEVEL:DEBUG}
-    de.samply.manager.controller.AdvisorJobSearchController: ${JOBSOURCE_LOG_LEVEL:DEBUG}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+    org.springframework.security.oauth2: ${OAUTH2_LOG_LEVEL:INFO}
+    org.springframework.web.client: ${WEB_CLIENT_LOG_LEVEL:INFO}
+    de.samply.manager.jobsearch: ${JOBSOURCE_LOG_LEVEL:INFO}
+    de.samply.manager.controller.AdvisorJobSearchController: ${JOBSOURCE_LOG_LEVEL:INFO}
 job-manager:
   metrics:
     enabled: true

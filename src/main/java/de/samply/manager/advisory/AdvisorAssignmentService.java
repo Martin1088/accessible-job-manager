@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** Which users an advisor may write suggestions for. */
 @Service
 @RequiredArgsConstructor
 public class AdvisorAssignmentService {

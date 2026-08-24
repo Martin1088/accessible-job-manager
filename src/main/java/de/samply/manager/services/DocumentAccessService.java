@@ -5,9 +5,11 @@ import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentAccess;
 import de.samply.manager.repository.DocumentAccessRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -16,13 +18,15 @@ public class DocumentAccessService {
 
     private final DocumentAccessRepository documentAccessRepository;
     private final DocumentService documentService;
+    private final MessageSource messageSource;
 
     @Transactional
     public DocumentAccess grant(UUID documentId, String reviewerId, String userId) {
-        Document document = documentService.owned(documentId, userId);
+        Document document = documentService.findOwned(documentId, userId);
 
         if (documentAccessRepository.existsByDocumentIdAndReviewerId(documentId, reviewerId)) {
-            throw new ApiException.Conflict("Access already granted");
+            throw new ApiException.Conflict(
+                    messageSource.getMessage("error.documentAccess.alreadyGranted", null, Locale.ROOT));
         }
 
         DocumentAccess access = new DocumentAccess();
@@ -35,7 +39,7 @@ public class DocumentAccessService {
 
     @Transactional
     public void revoke(UUID documentId, String reviewerId, String userId) {
-        documentService.owned(documentId, userId);
+        documentService.findOwned(documentId, userId);
 
         documentAccessRepository.findByDocumentId(documentId).stream()
                 .filter(a -> a.getReviewerId().equals(reviewerId))

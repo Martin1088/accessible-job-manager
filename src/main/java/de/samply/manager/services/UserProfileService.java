@@ -9,9 +9,11 @@ import de.samply.manager.types.Role;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +21,7 @@ public class UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
     private final UserPreferencesValidator userPreferencesValidator;
+    private final MessageSource messageSource;
 
     public UserProfileDto findOrCreate(String userId, String name, String email) {
         UserProfile profile = userProfileRepository.findById(userId)
@@ -61,7 +64,7 @@ public class UserProfileService {
 
     public UserProfileDto getProfile(String userId) {
         UserProfile profile = userProfileRepository.findById(userId)
-                .orElseThrow(() -> new ApiException.NotFound("User not found: " + userId));
+                .orElseThrow(() -> new ApiException.NotFound(message("error.profile.userNotFound", userId)));
         return toDto(profile);
     }
 
@@ -70,7 +73,7 @@ public class UserProfileService {
         UserProfile advisor = findProfile(advisorId);
 
         if (advisor.getRole() != Role.ADVISOR) {
-            throw new ApiException.BadRequest("User " + advisorId + " is not an advisor");
+            throw new ApiException.BadRequest(message("error.profile.notAnAdvisor", advisorId));
         }
 
         user.getAdvisors().add(advisor);
@@ -82,7 +85,7 @@ public class UserProfileService {
         UserProfile reviewer = findProfile(reviewerId);
 
         if (reviewer.getRole() != Role.REVIEWER) {
-            throw new ApiException.BadRequest("User " + reviewerId + " is not a reviewer");
+            throw new ApiException.BadRequest(message("error.profile.notAReviewer", reviewerId));
         }
 
         user.getReviewers().add(reviewer);
@@ -107,9 +110,13 @@ public class UserProfileService {
                 .toList();
     }
 
+    private String message(String key, Object... args) {
+        return messageSource.getMessage(key, args, Locale.ROOT);
+    }
+
     private UserProfile findProfile(String userId) {
         return userProfileRepository.findById(userId)
-                .orElseThrow(() -> new ApiException.NotFound("User not found: " + userId));
+                .orElseThrow(() -> new ApiException.NotFound(message("error.profile.userNotFound", userId)));
     }
 
     private UserProfileDto toDto(UserProfile profile) {

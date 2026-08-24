@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 
 import { CompanyFormComponent } from './company-form.component';
+import { Company } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { SuggestionService } from '../../services/suggestion.service';
 
@@ -15,12 +16,19 @@ describe('CompanyFormComponent', () => {
   let companyServiceSpy: jasmine.SpyObj<CompanyService>;
   let suggestionServiceSpy: jasmine.SpyObj<SuggestionService>;
   let routerSpy: jasmine.SpyObj<Router>;
+  // Read by the ActivatedRoute stub, so a test can re-create the component in
+  // edit mode without reconfiguring the TestBed.
+  let routeId: string | null;
 
   beforeEach(async () => {
+    routeId = null;
     companyServiceSpy = jasmine.createSpyObj('CompanyService', ['getAll', 'create', 'update']);
     suggestionServiceSpy = jasmine.createSpyObj('SuggestionService',
       ['company', 'location', 'position', 'applicationMethod']);
-    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    // createUrlTree/serializeUrl are what routerLink calls to build an href;
+    // the links to already-saved companies need them to render at all.
+    routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl']);
+    routerSpy.serializeUrl.and.returnValue('/companies/edit/7');
 
     await TestBed.configureTestingModule({
       imports: [CompanyFormComponent],
@@ -30,7 +38,7 @@ describe('CompanyFormComponent', () => {
         { provide: Router, useValue: routerSpy },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: { get: () => null } } }
+          useValue: { snapshot: { paramMap: { get: () => routeId } } }
         },
         provideTranslateService({ fallbackLang: 'en' }),
         provideHttpClient(withXhr()),
@@ -45,9 +53,18 @@ describe('CompanyFormComponent', () => {
         SUGGEST_URL_REQUIRED: 'Enter a job posting URL first.',
         SUGGEST_DONE: 'Suggestion applied to the empty fields.',
         SUGGEST_NOTHING: 'Nothing to apply.',
+        DUPLICATE_HINT: 'You already have a company named "{{name}}".',
+        DUPLICATE_OPEN: 'Open the existing one',
+        DUPLICATE_HINT_AT: 'You already have "{{name}}" in {{cities}}.',
+        SAME_NAME_ELSEWHERE: 'You have a company with this name at another location:',
+        SIMILAR_HEADING: 'Companies you already have with a similar name:',
       }
     });
     translate.use('en');
+
+    // Both modes load the user's companies now - create mode matches the typed
+    // name against them. Tests that care override this before detectChanges().
+    companyServiceSpy.getAll.and.returnValue(of([]));
 
     fixture = TestBed.createComponent(CompanyFormComponent);
     component = fixture.componentInstance;
@@ -243,6 +260,164 @@ describe('CompanyFormComponent', () => {
     const messages = fixture.nativeElement.querySelectorAll('fieldset .suggestion-feedback');
     expect(messages.length).toBe(1);
     expect(messages[0].textContent.trim()).toBe('Enter a job posting URL first.');
+  });
+
+  // ── companies the user already has ────────────────────────────────────────
+
+  /** Re-creates the component with a given set of already-saved companies. */
+  function withExistingCompanies(companies: Company[]): void {
+    companyServiceSpy.getAll.and.returnValue(of(companies));
+    fixture = TestBed.createComponent(CompanyFormComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  }
+
+  const acme: Company = { id: 7, name: 'Acme GmbH', locations: [], positions: [] };
+
+  /** Same name, two branches - the pair the location tiers are about. */
+  const muellerHamburg: Company = {
+    id: 11, name: 'Müller GmbH', positions: [],
+    locations: [{ street: 'Hafenstr. 1', city: 'Hamburg' }],
+  };
+  const muellerMunich: Company = {
+    id: 12, name: 'Müller GmbH', positions: [],
+    locations: [{ street: 'Sendlinger Str. 4', city: 'München' }],
+  };
+
+  /** Types a city into the form the way the template does. */
+  function enterCity(city: string): void {
+    component.addLocation();
+    component.onCityChange(component.company.locations.length - 1, city);
+  }
+
+  it('flags a name the user already has, ignoring case and spacing', () => {
+    withExistingCompanies([acme]);
+
+    component.onNameChange('  acme   gmbh ');
+
+    expect(component.duplicateOf()?.company.id).toBe(7);
+    expect(component.similarCompanies()).toEqual([]);
+  });
+
+  it('renders the duplicate hint with a link to the existing company', () => {
+    withExistingCompanies([acme]);
+
+    component.onNameChange('Acme GmbH');
+    fixture.detectChanges();
+
+    const hint = fixture.nativeElement.querySelector('#existing-companies');
+    expect(hint.getAttribute('role')).toBe('status');
+    expect(hint.textContent).toContain('You already have a company named "Acme GmbH".');
+    expect(hint.querySelector('a').textContent.trim()).toBe('Open the existing one');
+    expect(routerSpy.createUrlTree).toHaveBeenCalledWith(['/companies/edit', 7], jasmine.anything());
+  });
+
+  it('lists similar companies while the name is still being typed', () => {
+    withExistingCompanies([acme, { id: 8, name: 'Acme Ltd', locations: [], positions: [] }]);
+
+    component.onNameChange('acme');
+
+    expect(component.duplicateOf()).toBeUndefined();
+    expect(component.similarCompanies().map(m => m.company.id)).toEqual([7, 8]);
+  });
+
+  // ── same name, different site ─────────────────────────────────────────────
+
+  it('does not call another branch of the same name a duplicate', () => {
+    withExistingCompanies([muellerHamburg]);
+
+    component.onNameChange('Müller GmbH');
+    enterCity('München');
+
+    expect(component.duplicateOf()).toBeUndefined();
+    expect(component.sameNameElsewhere().map(m => m.company.id)).toEqual([11]);
+    expect(component.sameNameElsewhere()[0].cities).toBe('Hamburg');
+  });
+
+  it('flags the same name at the same city as a duplicate', () => {
+    withExistingCompanies([muellerHamburg, muellerMunich]);
+
+    component.onNameChange('Mueller GmbH');
+    enterCity('Muenchen');
+
+    expect(component.duplicateOf()?.company.id).toBe(12);
+    expect(component.duplicateOf()?.cities).toBe('München');
+    expect(component.sameNameElsewhere()).toEqual([]);
+  });
+
+  it('falls back to the name alone until a city has been entered', () => {
+    withExistingCompanies([muellerHamburg]);
+
+    component.onNameChange('Müller GmbH');
+
+    expect(component.duplicateOf()?.company.id).toBe(11);
+  });
+
+  it('flags a saved company that has no city recorded to contradict the form', () => {
+    withExistingCompanies([acme]);
+
+    component.onNameChange('Acme GmbH');
+    enterCity('Berlin');
+
+    expect(component.duplicateOf()?.company.id).toBe(7);
+  });
+
+  it('re-checks the site when a location is removed again', () => {
+    withExistingCompanies([muellerHamburg]);
+
+    component.onNameChange('Müller GmbH');
+    enterCity('München');
+    expect(component.duplicateOf()).toBeUndefined();
+
+    component.removeLocation(0);
+
+    expect(component.duplicateOf()?.company.id).toBe(11);
+  });
+
+  it('holds back the looser list while an exact name match is showing', () => {
+    withExistingCompanies([muellerHamburg, { id: 13, name: 'Müller Söhne', locations: [], positions: [] }]);
+
+    component.onNameChange('Müller GmbH');
+    enterCity('München');
+
+    expect(component.sameNameElsewhere().length).toBe(1);
+    expect(component.similarCompanies()).toEqual([]);
+  });
+
+  it('ignores positions entirely - a new posting always brings a new one', () => {
+    withExistingCompanies([{ ...acme, positions: [{ id: 3, title: 'Developer' }] }]);
+
+    component.onNameChange('Acme GmbH');
+    component.addPosition();
+    component.company.positions[0].title = 'Something else';
+
+    expect(component.duplicateOf()?.company.id).toBe(7);
+  });
+
+  it('stays quiet until at least two characters have been typed', () => {
+    withExistingCompanies([acme]);
+
+    component.onNameChange('a');
+
+    expect(component.similarCompanies()).toEqual([]);
+    expect(component.duplicateOf()).toBeUndefined();
+  });
+
+  it('does not flag the company being edited as a duplicate of itself', () => {
+    routeId = '7';
+    withExistingCompanies([acme]);
+
+    expect(component.company.name).toBe('Acme GmbH');
+    expect(component.duplicateOf()).toBeUndefined();
+  });
+
+  it('flags an edited company renamed onto another one the user has', () => {
+    routeId = '7';
+    withExistingCompanies([acme, { id: 8, name: 'Globex', locations: [], positions: [] }]);
+
+    component.onNameChange('globex');
+
+    expect(component.duplicateOf()?.company.id).toBe(8);
   });
 
   // ── save (create mode) ────────────────────────────────────────────────────

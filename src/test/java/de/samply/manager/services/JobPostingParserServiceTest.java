@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,8 +43,8 @@ class JobPostingParserServiceTest {
     })
     void rejectsDisallowedOrMalformedUrls(String url) {
         assertThatThrownBy(() -> service.overview(url))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(ApiException.BadRequest.class)
+                .extracting(e -> ((ApiException) e).getStatus().value())
                 .isEqualTo(400);
     }
 
