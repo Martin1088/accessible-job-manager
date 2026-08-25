@@ -4,8 +4,9 @@ import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
-import de.samply.manager.repository.DocumentAccessRepository;
+import de.samply.manager.model.Share;
 import de.samply.manager.repository.DocumentRepository;
+import de.samply.manager.repository.ShareRepository;
 import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ import java.util.UUID;
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
-    private final DocumentAccessRepository documentAccessRepository;
+    private final ShareRepository shareRepository;
     private final StorageService storageService;
     private final MessageSource messageSource;
 
@@ -131,7 +132,7 @@ public class DocumentService {
     @Transactional
     public void delete(UUID documentId, String userId) {
         Document document = findOwned(documentId, userId);
-        documentAccessRepository.deleteAll(documentAccessRepository.findByDocumentId(documentId));
+        shareRepository.deleteAll(shareRepository.findByDocumentId(documentId));
         storageService.delete(document.getStorageKey());
         documentRepository.delete(document);
     }

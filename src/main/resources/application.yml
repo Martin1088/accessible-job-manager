@@ -97,6 +97,7 @@ job-manager:
     enabled: true
     log-status-transitions: true
   security:
+    claim: ${OIDC_ROLES_CLAIM:groups}
     role-groups:
       USER: ${GROUP_USER:User}
       ADVISOR: ${GROUP_ADVISOR:Advisor}

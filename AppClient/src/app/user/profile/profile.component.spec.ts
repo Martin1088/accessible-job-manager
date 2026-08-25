@@ -15,7 +15,7 @@ describe('ProfileComponent', () => {
 
   const baseProfile: UserProfile = {
     userId: 'u1', name: 'Alice', email: 'a@b.com', street: 'Main St 1', postalCode: '12345',
-    city: 'Berlin', phone: null, role: 'USER', advisors: [], reviewers: [],
+    city: 'Berlin', phone: null, roles: ['USER'],
     preferences: DEFAULT_PREFERENCES,
   };
 
@@ -38,7 +38,7 @@ describe('ProfileComponent', () => {
   function create() {
     const fixture = TestBed.createComponent(ProfileComponent);
     fixture.detectChanges();
-    http.match('/api/me').forEach(req => req.flush({ sub: 'u1', name: 'Alice', email: 'a@b.com', groups: [] }));
+    http.match('/api/me').forEach(req => req.flush({ sub: 'u1', name: 'Alice', email: 'a@b.com', roles: ['USER'] }));
     return fixture;
   }
 

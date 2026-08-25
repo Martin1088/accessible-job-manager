@@ -3,11 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 
+export type AppRole = 'USER' | 'ADVISOR' | 'REVIEWER';
+
 export interface UserMe {
   sub: string;
   name: string;
   email: string;
-  groups: string[];
+  roles: AppRole[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -20,14 +22,22 @@ export class AuthService {
     catchError(() => of(null))
   );
 
-  readonly isAdvisor$  = this.me$.pipe(map(me => !!me?.groups?.includes('ADVISOR')));
-  readonly isReviewer$ = this.me$.pipe(map(me => !!me?.groups?.includes('REVIEWER')));
-  readonly isUser$     = this.me$.pipe(
-    map(me => !!me && !me?.groups?.includes('ADVISOR') && !me?.groups?.includes('REVIEWER'))
-  );
+  readonly isUser$     = this.hasRole('USER');
+  readonly isAdvisor$  = this.hasRole('ADVISOR');
+  readonly isReviewer$ = this.hasRole('REVIEWER');
+
+  hasRole(role: AppRole) {
+    return this.me$.pipe(map(me => !!me?.roles?.includes(role)));
+  }
 
   logout(): void {
-    fetch('/logout', { method: 'POST', credentials: 'include' })
-      .then(() => window.location.href = '/');
+    this.http.post<{ redirectUrl: string }>('/api/logout', {}).subscribe({
+      next: res => this.redirectTo(res.redirectUrl || '/'),
+      error: () => this.redirectTo('/')
+    });
+  }
+
+  redirectTo(url: string): void {
+    window.location.href = url;
   }
 }

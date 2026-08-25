@@ -71,7 +71,7 @@ describe('PreferencesComponent', () => {
     expect(req.request.body.fontFamily).toBe('DYSLEXIA_FRIENDLY');
     req.flush({
       userId: 'u1', name: null, email: null, street: null, postalCode: null, city: null,
-      phone: null, role: 'USER', advisors: [], reviewers: [],
+      phone: null, roles: ['USER'],
       preferences: { ...DEFAULT_PREFERENCES, fontFamily: 'DYSLEXIA_FRIENDLY' },
     });
 
@@ -93,7 +93,7 @@ describe('PreferencesComponent', () => {
     });
     req.flush({
       userId: 'u1', name: null, email: null, street: null, postalCode: null, city: null,
-      phone: null, role: 'USER', advisors: [], reviewers: [], preferences: DEFAULT_PREFERENCES,
+      phone: null, roles: ['USER'], preferences: DEFAULT_PREFERENCES,
     });
   });
 
@@ -110,7 +110,7 @@ describe('PreferencesComponent', () => {
     expect(req.request.method).toBe('PATCH');
     req.flush({
       userId: 'u1', name: null, email: null, street: null, postalCode: null, city: null,
-      phone: null, role: 'USER', advisors: [], reviewers: [], preferences: DEFAULT_PREFERENCES,
+      phone: null, roles: ['USER'], preferences: DEFAULT_PREFERENCES,
     });
   });
 });

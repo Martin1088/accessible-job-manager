@@ -7,43 +7,45 @@ import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 public class GroupsGrantedAuthoritiesMapper implements GrantedAuthoritiesMapper {
+
+    private final RoleMapper roleMapper;
+
+    public GroupsGrantedAuthoritiesMapper(RoleMapper roleMapper) {
+        this.roleMapper = roleMapper;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> mapAuthorities(Collection<? extends GrantedAuthority> authorities) {
         Set<GrantedAuthority> mapped = new HashSet<>(authorities);
 
         for (GrantedAuthority authority : authorities) {
-            List<String> groups = extractGroups(authority);
-            for (String group : groups) {
-                mapped.add(new SimpleGrantedAuthority("ROLE_" + group.toUpperCase()));
+            for (AppRole role : roleMapper.rolesFromClaim(extractGroupsClaim(authority))) {
+                mapped.add(new SimpleGrantedAuthority(role.authority()));
             }
         }
 
         return mapped;
     }
 
-    private List<String> extractGroups(GrantedAuthority authority) {
-        Object groupsClaim = null;
+    private Object extractGroupsClaim(GrantedAuthority authority) {
+        String claim = roleMapper.claim();
 
         if (authority instanceof OidcUserAuthority oidc) {
-            groupsClaim = oidc.getIdToken().getClaim("groups");
-            if (groupsClaim == null && oidc.getUserInfo() != null) {
-                groupsClaim = oidc.getUserInfo().getClaim("groups");
+            Object value = oidc.getIdToken().getClaim(claim);
+            if (value == null && oidc.getUserInfo() != null) {
+                value = oidc.getUserInfo().getClaim(claim);
             }
-        } else if (authority instanceof OAuth2UserAuthority oauth2) {
-            groupsClaim = oauth2.getAttributes().get("groups");
+            return value;
         }
-
-        if (groupsClaim instanceof List<?> list) {
-            return list.stream()
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
-                    .toList();
+        if (authority instanceof OAuth2UserAuthority oauth2) {
+            return oauth2.getAttributes().get(claim);
         }
-        return List.of();
+        return null;
     }
 }

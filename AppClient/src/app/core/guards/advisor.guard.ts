@@ -1,22 +1,17 @@
 import { inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { AuthService } from '../auth.service';
 
 export const advisorGuard = () => {
-  const http = inject(HttpClient);
+  const auth = inject(AuthService);
   const router = inject(Router);
 
-  return http.get<{ groups: string[] }>('/api/me').pipe(
-    map(me => {
-      if (me.groups?.includes('ADVISOR')) return true;
+  return auth.isAdvisor$.pipe(
+    map(isAdvisor => {
+      if (isAdvisor) return true;
       router.navigate(['/forbidden']);
       return false;
-    }),
-    catchError(() => {
-      router.navigate(['/forbidden']);
-      return of(false);
     })
   );
 };

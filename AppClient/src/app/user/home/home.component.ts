@@ -119,8 +119,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.auth.me$.subscribe({
       next: (me) => {
         if (!me) { this.profileError = true; return; }
-        if (me.groups.includes('ADVISOR'))  { this.router.navigate(['/advisor']);   return; }
-        if (me.groups.includes('REVIEWER')) { this.router.navigate(['/reviewer']);  return; }
+        if (me.roles.includes('ADVISOR'))  { this.router.navigate(['/advisor']);   return; }
+        if (me.roles.includes('REVIEWER')) { this.router.navigate(['/reviewer']);  return; }
         this.profile = me;
       },
       error: () => this.profileError = true,

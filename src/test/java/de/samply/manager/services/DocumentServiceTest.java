@@ -3,7 +3,7 @@ package de.samply.manager.services;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
-import de.samply.manager.repository.DocumentAccessRepository;
+import de.samply.manager.repository.ShareRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 class DocumentServiceTest {
 
     @Mock DocumentRepository documentRepository;
-    @Mock DocumentAccessRepository documentAccessRepository;
+    @Mock ShareRepository shareRepository;
     @Mock StorageService storageService;
     @Mock MessageSource messageSource;
     @InjectMocks DocumentService service;
@@ -106,18 +106,18 @@ class DocumentServiceTest {
 
         verify(storageService, never()).delete(any());
         verify(documentRepository, never()).delete(any());
-        verify(documentAccessRepository, never()).deleteAll(any());
+        verify(shareRepository, never()).deleteAll(any());
     }
 
     @Test
     void delete_removesTheAccessGrantsWithTheOwnersOwnDocument() {
         Document document = document("u1", DocumentType.CV);
         when(documentRepository.findById(ID)).thenReturn(Optional.of(document));
-        when(documentAccessRepository.findByDocumentId(ID)).thenReturn(java.util.List.of());
+        when(shareRepository.findByDocumentId(ID)).thenReturn(java.util.List.of());
 
         service.delete(ID, "u1");
 
-        verify(documentAccessRepository).deleteAll(any());
+        verify(shareRepository).deleteAll(any());
         verify(storageService).delete("u1/cv/file.pdf");
         verify(documentRepository).delete(document);
     }

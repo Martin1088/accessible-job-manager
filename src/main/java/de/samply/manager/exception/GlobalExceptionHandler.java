@@ -6,12 +6,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.context.MessageSource;
 import java.util.Locale;
 
@@ -81,6 +84,32 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return body(HttpStatus.BAD_REQUEST,
                 messageSource.getMessage("error.request.parameterInvalid", new Object[]{ex.getName()}, Locale.ROOT));
+    }
+
+    /**
+     * The same reasoning as {@link #handleTypeMismatch}, for the request body: an
+     * unknown enum name or malformed JSON is the caller's mistake. The exception's own
+     * message is not echoed back - it carries parser internals and class names.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        return body(HttpStatus.BAD_REQUEST,
+                messageSource.getMessage("error.request.bodyInvalid", null, Locale.ROOT));
+    }
+
+    /**
+     * A request that matched no handler. Which of the two is thrown depends on whether
+     * static resource mappings are in play, so both are claimed here - otherwise the
+     * catch-all below reports a mistyped URL as a server fault, and logs it as one.
+     * <p>
+     * SPA routes are unaffected: {@link de.samply.manager.controller.WebController}
+     * forwards them to {@code index.html} before it can get this far, and deliberately
+     * excludes {@code /api}, which is the path space this answers for.
+     */
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<Map<String, Object>> handleNoHandler(Exception ex) {
+        return body(HttpStatus.NOT_FOUND,
+                messageSource.getMessage("error.request.noHandler", null, Locale.ROOT));
     }
 
     @ExceptionHandler(Exception.class)

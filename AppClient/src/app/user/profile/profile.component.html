@@ -8,7 +8,7 @@
   @if (auth.me$ | async; as me) {
     <dl class="profile-info">
       <dt>{{ 'PROFILE.ROLES' | translate }}</dt>
-      <dd>{{ me.groups.length ? me.groups.join(', ') : ('PROFILE.ROLE_USER' | translate) }}</dd>
+      <dd>{{ me.roles.length ? me.roles.join(', ') : ('PROFILE.ROLE_USER' | translate) }}</dd>
     </dl>
   }
 

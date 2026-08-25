@@ -25,7 +25,6 @@ public class CompanyLocation {
     @Column
     private String country;
 
-
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)

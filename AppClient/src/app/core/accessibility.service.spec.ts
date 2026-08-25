@@ -13,7 +13,7 @@ describe('AccessibilityService', () => {
 
   const baseProfile: Omit<UserProfile, 'preferences'> = {
     userId: 'u1', name: 'Alice', email: 'a@b.com', street: null, postalCode: null,
-    city: null, phone: null, role: 'USER', advisors: [], reviewers: []
+    city: null, phone: null, roles: ['USER']
   };
 
   beforeEach(() => {

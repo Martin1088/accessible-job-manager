@@ -1,4 +1,5 @@
 import { UserPreferences } from './user-preferences';
+import { AppRole } from '../core/auth.service';
 
 export interface UserProfileContact {
   userId: string;
@@ -14,9 +15,7 @@ export interface UserProfile {
   postalCode: string | null;
   city: string | null;
   phone: string | null;
-  role: string | null;
-  advisors: UserProfileContact[];
-  reviewers: UserProfileContact[];
+  roles: AppRole[];
   preferences: UserPreferences;
 }
 

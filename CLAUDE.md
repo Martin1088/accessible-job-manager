@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Frontend (run from `AppClient/`)
 
 ```bash
-npm start                      # dev server on :4200, proxies /api /login /logout /oauth2 → :8060
+npm start                      # dev server on :4200, proxies /api /login /oauth2 → :8060 (logout is POST /api/logout)
 npx ng test --watch=false --browsers=ChromeHeadless
 npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/**"
 ```
@@ -53,9 +53,15 @@ Spring Boot 3.5.16 · Java 26 · Lombok 1.18.38 · Angular 22 standalone · Post
 
 ### Authentication & role mapping
 
-OIDC login is handled by Authentik. `GroupsGrantedAuthoritiesMapper` reads the `groups` claim (list of strings) from the ID token or userinfo and adds `ROLE_<GROUP_UPPERCASE>` to the Spring Security authorities. This means Authentik groups `"Advisor"` and `"Reviewer"` (any casing) become `ROLE_ADVISOR` and `ROLE_REVIEWER`. `RoleCheckSuccessHandler` upserts a `UserProfile` row on every successful login.
+The application has exactly three roles, defined once by the `AppRole` enum: `USER`, `ADVISOR`, `REVIEWER`. Their authorities (`ROLE_USER`, …) are derived from the enum constant, never from the name of the identity provider group that conferred them — which is what keeps the hardcoded `hasRole('ADVISOR')` in `SecurityConfig` and the `@PreAuthorize` annotations on the advisor/reviewer controllers correct when a deployment renames its groups.
 
-`GET /api/me` reads roles from `Authentication.getAuthorities()`, strips `ROLE_`, and filters out `OIDC_USER`. The Angular `AuthService` subscribes to `/api/me` with `shareReplay(1)` and derives `isUser$`, `isAdvisor$`, `isReviewer$`.
+**One translation point.** `SecurityRolesProperties` (`job-manager.security` in `application.yml`) names the groups that confer each role, and `RoleMapper` is the only place that translation happens. Because the values are just strings the provider emits, any IdP works without a code change: Authentik group names, an Entra ID group object GUID, a Keycloak role. `claim` selects which claim to read (default `groups`); several values may confer one role. Matching is case-insensitive.
+
+A group the configuration does not mention **confers nothing** — the application grants only its own three roles, so a group named `advisor` belonging to another application in the same directory cannot confer advisor rights here. Misconfiguration (a role no group confers, one group conferring two roles) fails startup rather than degrading quietly.
+
+`GroupsGrantedAuthoritiesMapper` applies `RoleMapper` at login, reading the claim from the ID token and falling back to userinfo. `RoleCheckSuccessHandler` rejects a login that holds none of the three roles — holding no role is not the same as holding `USER` — honours the role picked via `/api/login/as/{role}`, and upserts a `UserProfile` row.
+
+`GET /api/me` returns `roles` (canonical names, whitelisted through `AppRole.fromAuthority`, so non-role authorities like `OIDC_USER` cannot leak into it). The Angular `AuthService` subscribes with `shareReplay(1)` and derives `isUser$`, `isAdvisor$`, `isReviewer$` from a single `hasRole()` helper.
 
 Unauthenticated `text/html` requests are redirected to OAuth; API requests receive a 401. `WebController` catches all SPA routes (up to 4 path segments) and forwards to `index.html`.
 
@@ -90,7 +96,7 @@ Rules this split enforces, in order of how easily they are broken:
 Function-based guards in `AppClient/src/app/core/guards/`:
 - `authGuard` — checks `/api/me` directly (used to protect the login-required shell)
 - `advisorGuard` / `reviewerGuard` — check `AuthService.isAdvisor$` / `isReviewer$`; redirect to `/forbidden` on failure
-- `userGuard` — rejects advisors and reviewers from user-only routes (`/companies`, `/applications`, `/documents`)
+- `userGuard` — requires the `USER` role for user-only routes (`/companies`, `/applications`, `/documents`)
 
 Home components for each role redirect away if the role doesn't match (advisors → `/advisor`, reviewers → `/reviewer`).
 
@@ -120,7 +126,9 @@ The build is configured with `-Dnet.bytebuddy.experimental=true` and the Mockito
 - H2 in-memory DB
 - Static OAuth2 provider URLs (no `issuer-uri` that would trigger a live OIDC discovery request)
 
-`@WebMvcTest` on controllers needs `@MockitoBean` for `CompanyService`, `RoleCheckSuccessHandler`, and `GroupsGrantedAuthoritiesMapper` (the latter two are referenced by `SecurityConfig`). Use `SecurityMockMvcRequestPostProcessors.oidcLogin()` to supply a test principal.
+`@WebMvcTest` on controllers needs `@MockitoBean` for `CompanyService`, `RoleCheckSuccessHandler`, and `GroupsGrantedAuthoritiesMapper` (the latter two are referenced by `SecurityConfig`). Use `SecurityMockMvcRequestPostProcessors.oidcLogin()` to supply a test principal, with `.authorities(…)` to give it a role.
+
+`oidcLogin()` sets authorities directly and so bypasses the authorities mapper. To exercise the group-name-to-role translation together with the `hasRole` checks, import the real `GroupsGrantedAuthoritiesMapper` and run the claim through it to build the authorities — `RenamedGroupAuthorizationTest` does this, and is the regression guard for a deployment that renames its IdP groups.
 
 ## Accessibility requirements
 

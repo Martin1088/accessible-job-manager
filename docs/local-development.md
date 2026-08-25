@@ -43,7 +43,8 @@ fresh instance comes up already carrying:
   uses as its defaults, and the redirect URI `http://localhost:8060/login/oauth2/code/authentik`
 - the application under the slug `access-job-manager`, which makes the issuer
   `http://localhost:9000/application/o/access-job-manager/`
-- the groups `Advisor` and `Reviewer` — users in neither are treated as `USER`
+- the groups `User`, `Advisor` and `Reviewer` — every account needs one of them, since
+  a login carrying none of the three roles is rejected
 
 The `groups` claim rides along with the standard `profile` scope: Authentik's
 default profile mapping already emits every group the user belongs to, which is why
@@ -154,7 +155,7 @@ npm install
 npm start
 ```
 
-Frontend dev server starts on `http://localhost:4200`. The proxy config forwards `/api`, `/login`, `/logout` and `/oauth2` to the backend.
+Frontend dev server starts on `http://localhost:4200`. The proxy config forwards `/api`, `/login` and `/oauth2` to the backend (logout is `POST /api/logout`, already covered by `/api`).
 
 ## 6. Build for production (embedded frontend)
 
