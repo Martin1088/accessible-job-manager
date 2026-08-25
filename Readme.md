@@ -1,3 +1,4 @@
+![Accessible Job Manager Logo](docs/Juke.png)
 # Accessible Job Manager
 
 **A job application manager for blind and visually impaired users.** Screen reader
