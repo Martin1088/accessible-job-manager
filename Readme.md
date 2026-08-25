@@ -1,12 +1,51 @@
 # Accessible Job Manager
 
-A job application management tool built for blind and visually impaired users. Screen reader operation is not a feature added on top here — it is the premise the architecture is built on.
+**A job application manager for blind and visually impaired users.** Screen reader
+operation is not a feature added on top here — it is the premise the architecture is
+built on.
 
-The question behind the project: **how do you write a hundred job applications efficiently when you cannot see the screen, and how does closing that gap improve equality of opportunity in hiring?** Applicants with a visual impairment routinely drop out of the process not because of the job, but because of the tooling around it — inaccessible portals, PDF forms that have to be filled in by hand, layout work that a screen reader cannot meaningfully convey.
+> How do you write a hundred job applications efficiently when you cannot see the
+> screen — and what does closing that gap mean for equality of opportunity in hiring?
 
-The answer this project offers is to put the whole process in one accessible place. A job posting is read in from a link and taken over as structured data. The cover letter is written as text and comes out as a DIN 5008-compliant PDF — the geometry is a server-side guarantee, so no one has to arrange fields on a page by hand. Around that, users manage their companies, positions, applications and documents — and they do not have to do it alone. The role model puts a support team behind the applicant: advisors are assigned to their users, see how the search is going and suggest concrete openings with a message attached, so the work of finding and evaluating postings is shared rather than left to one person. Reviewers get access to exactly the documents a user hands them, to look over an application before it goes out. Every access is granted by the user and can be revoked again — support is offered, never imposed.
+## The problem
 
-Open source under the MIT license and built to be self-hosted, so institutions in vocational rehabilitation can run their own instance and connect it to existing systems.
+Applicants with a visual impairment routinely drop out of the process not because of
+the job, but because of the tooling around it:
+
+- inaccessible job portals,
+- PDF forms that have to be filled in by hand,
+- layout work that a screen reader cannot meaningfully convey.
+
+## The approach
+
+Put the whole process in one accessible place.
+
+**Import instead of retyping.** A job posting is read in from a link and taken over as
+structured data.
+
+**Write text, get a letter.** The cover letter is written as text and comes out as a
+DIN 5008-compliant PDF. The geometry is a server-side guarantee, so no one has to
+arrange fields on a page by hand.
+
+**Keep the search in one place.** Companies, positions, applications and documents are
+managed in the same app.
+
+**And not alone.** The role model puts a support team behind the applicant:
+
+- **Advisors** are assigned to their users, see how the search is going, and suggest
+  concrete openings with a message attached — so finding and evaluating postings is
+  shared work, not one person's burden.
+- **Reviewers** get access to exactly the documents a user hands them, to look over an
+  application before it goes out.
+
+Every access is granted by the user and can be revoked again: support is offered,
+never imposed.
+
+## License and hosting
+
+Open source under the MIT license and built to be self-hosted, so institutions in
+vocational rehabilitation can run their own instance and connect it to existing
+systems.
 
 ---
 
