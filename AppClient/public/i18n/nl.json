@@ -1,5 +1,24 @@
 {
   "SKIP_LINK": "Naar de hoofdinhoud springen",
+  "LOGIN": {
+    "TITLE": "Job Manager",
+    "TAGLINE": "Sollicitaties bijhouden en sollicitatiebrieven opstellen",
+    "SIGN_IN_HEADING": "Aanmelden",
+    "CONTINUE_AS_USER": "Doorgaan als Gebruiker",
+    "OTHER_ROLES": "Andere rollen",
+    "CONTINUE_AS_ADVISOR": "Doorgaan als Adviseur",
+    "CONTINUE_AS_REVIEWER": "Doorgaan als Beoordelaar",
+    "ENCLOSURE_LABEL": "Bijlage",
+    "WHATS_INSIDE": "Dit vindt u binnen",
+    "SCREENSHOT_ALT": "Het Job Manager-dashboard: een veld om een vacature via URL te importeren en snelkoppelingen naar Bedrijven, Sollicitaties, Sollicitatiebriefsjabloon en Profiel.",
+    "CAPTION": "Importeer een vacature via de URL, volg elke sollicitatie van concept tot aanbod, en maak sollicitatiebrieven volgens DIN 5008 — even goed te gebruiken met een schermlezer als met een muis.",
+    "BUILT_BY": "Gebouwd door",
+    "SOURCE_ON_GITHUB": "broncode op GitHub",
+    "OPENS_NEW_TAB": "opent in een nieuw tabblad",
+    "ERROR_WRONG_ROLE": "Uw account heeft niet de vereiste rol. Probeer een andere aanmeldoptie.",
+    "ERROR_ACCESS_DENIED": "Toegang geweigerd. Probeer het opnieuw.",
+    "ERROR_GENERIC": "Aanmelden mislukt ({{code}}). Probeer het opnieuw."
+  },
   "NAV": {
     "USER_LABEL": "Hoofdnavigatie",
     "ADVISOR_LABEL": "Adviseursnavigatie",
@@ -8,7 +27,8 @@
     "DOCUMENTS": "Documenten",
     "COMPANIES": "Bedrijven",
     "COVER_LETTER_TEMPLATE": "Sollicitatiebriefsjabloon",
-    "DASHBOARD": "Dashboard"
+    "DASHBOARD": "Dashboard",
+    "JOB_SEARCH": "Vacaturezoeker"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Accountmenu",
@@ -45,7 +65,14 @@
     "LOAD_ERROR": "Het profiel kon niet worden geladen.",
     "REQUIRED": "Dit veld is verplicht.",
     "EMAIL_INVALID": "Voer een geldig e-mailadres in.",
-    "ERROR_SUMMARY_HEADING": "Corrigeer de volgende velden"
+    "ERROR_SUMMARY_HEADING": "Corrigeer de volgende velden",
+    "EXPORT_HEADING": "Gegevens exporteren",
+    "EXPORT_HELP": "Downloadt al uw bedrijven, functies en sollicitaties als één spreadsheet. De kolomkoppen staan in de taal die u nu gebruikt.",
+    "EXPORT_XLSX": "Exporteren als Excel (.xlsx)",
+    "EXPORT_CSV": "Exporteren als CSV",
+    "EXPORTING": "Download wordt voorbereid…",
+    "EXPORT_STARTED": "De export is gedownload.",
+    "EXPORT_ERROR": "De export kon niet worden gemaakt."
   },
   "PREFERENCES": {
     "LEGEND": "Weergave & toegankelijkheid",
@@ -112,6 +139,50 @@
     "STATUS_ACCEPTED": "Geaccepteerd",
     "STATUS_REJECTED": "Afgewezen"
   },
+  "JOB_SEARCH": {
+    "TITLE": "Vacaturezoeker",
+    "INTRO": "Zoek openstaande vacatures om aan uw gebruikers voor te stellen.",
+    "STATUS_LOADING": "Beschikbaarheid van de vacaturezoeker wordt gecontroleerd…",
+    "ERROR_STATUS": "Kon niet controleren of de vacaturezoeker beschikbaar is.",
+    "NOT_CONFIGURED": "De vacaturezoeker is niet ingesteld op deze server.",
+    "FILTERS_HEADING": "Zoekfilters",
+    "FIELD_WHAT": "Zoekwoorden",
+    "FIELD_WHAT_EXCLUDE": "Zoekwoorden uitsluiten",
+    "FIELD_WHERE": "Locatie",
+    "FIELD_DISTANCE": "Afstand (km)",
+    "FIELD_MAX_DAYS_OLD": "Geplaatst binnen (dagen)",
+    "FIELD_SALARY_MIN": "Minimumsalaris",
+    "FIELD_FULL_TIME": "Voltijd",
+    "FIELD_PERMANENT": "Vast",
+    "FIELD_CATEGORY": "Categorie",
+    "FIELD_SORT": "Sorteren op",
+    "OPTION_ANY": "Alle",
+    "OPTION_YES": "Ja",
+    "OPTION_NO": "Nee",
+    "SELECT_CATEGORY_PLACEHOLDER": "— Alle categorieën —",
+    "SORT_RELEVANCE": "Relevantie",
+    "SORT_DATE": "Datum",
+    "SORT_SALARY": "Salaris",
+    "SORT_HYBRID": "Gecombineerd",
+    "CRITERIA_HINT": "Voer zoekwoorden, een locatie of een categorie in voordat u zoekt.",
+    "SEARCH": "Zoeken",
+    "SEARCHING": "Bezig met zoeken…",
+    "ERROR_CRITERIA_MISSING": "Voer zoekwoorden, een locatie of een categorie in voordat u zoekt.",
+    "ERROR_SEARCH": "De vacaturezoeker is mislukt. Probeer het opnieuw.",
+    "RESULTS_HEADING": "Resultaten",
+    "RESULTS_COUNT": "{{count}} vacatures gevonden",
+    "RESULTS_EMPTY": "Geen vacatures gevonden voor deze zoekopdracht.",
+    "VIEW_POSTING_ARIA": "Vacature bekijken: {{title}} bij {{company}} (opent in nieuw tabblad)",
+    "DETAIL_COMPANY": "Bedrijf",
+    "DETAIL_LOCATION": "Locatie",
+    "DETAIL_SALARY": "Salaris",
+    "DETAIL_CONTRACT": "Contract",
+    "DETAIL_POSTED": "Geplaatst",
+    "SALARY_ESTIMATED": "{{range}} (geschat)",
+    "PREVIOUS_PAGE": "Vorige pagina",
+    "NEXT_PAGE": "Volgende pagina",
+    "PAGE_INFO": "Pagina {{page}} van {{totalPages}}"
+  },
   "REVIEWER": {
     "TITLE": "Beoordelaarsdashboard",
     "ERROR_LOAD_USERS": "Gebruikers konden niet worden geladen.",
@@ -129,6 +200,7 @@
     "DOWNLOAD_ARIA": "{{label}} downloaden"
   },
   "COMMON": {
+    "BACK": "Terug",
     "YEAR": "Jaar",
     "MONTH": "Maand",
     "ALL_YEARS": "Alle jaren",
@@ -154,7 +226,10 @@
     "ACTIONS": "Acties",
     "SORT_BY": "Sorteren op {{column}}",
     "SORTED_ASC": "{{column}} oplopend gesorteerd, klik voor aflopend",
-    "SORTED_DESC": "{{column}} aflopend gesorteerd, klik om te wissen"
+    "SORTED_DESC": "{{column}} aflopend gesorteerd, klik om te wissen",
+    "SORT_ANNOUNCE_ASC": "Gesorteerd op {{column}}, oplopend",
+    "SORT_ANNOUNCE_DESC": "Gesorteerd op {{column}}, aflopend",
+    "SORT_ANNOUNCE_NONE": "Sortering voor {{column}} gewist"
   },
   "STATUS": {
     "DRAFT": "Concept",
@@ -265,6 +340,11 @@
     "JSON_HINT": "Verwacht formaat:",
     "JSON_INVALID": "Ongeldig JSON-bestand.",
     "NAME_LABEL": "Bedrijfsnaam *",
+    "DUPLICATE_HINT": "U heeft al een bedrijf met de naam “{{name}}”.",
+    "DUPLICATE_HINT_AT": "U heeft “{{name}}” in {{cities}} al opgeslagen.",
+    "SAME_NAME_ELSEWHERE": "U heeft een bedrijf met deze naam op een andere locatie:",
+    "DUPLICATE_OPEN": "Bestaand bedrijf openen",
+    "SIMILAR_HEADING": "Uw bedrijven met een vergelijkbare naam:",
     "LOCATIONS_HEADING": "Locaties",
     "LOCATION_LEGEND": "Locatie {{n}}",
     "STREET": "Straat",

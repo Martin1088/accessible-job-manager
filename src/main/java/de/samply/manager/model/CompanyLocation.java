@@ -25,7 +25,6 @@ public class CompanyLocation {
     @Column
     private String country;
 
-    // Back-reference of the Company.locations cycle - see CompanyPosition.company.
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)

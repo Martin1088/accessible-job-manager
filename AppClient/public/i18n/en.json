@@ -1,5 +1,24 @@
 {
   "SKIP_LINK": "Skip to main content",
+  "LOGIN": {
+    "TITLE": "Job Manager",
+    "TAGLINE": "Track applications and write cover letters",
+    "SIGN_IN_HEADING": "Sign in",
+    "CONTINUE_AS_USER": "Continue as User",
+    "OTHER_ROLES": "Other roles",
+    "CONTINUE_AS_ADVISOR": "Continue as Advisor",
+    "CONTINUE_AS_REVIEWER": "Continue as Reviewer",
+    "ENCLOSURE_LABEL": "Enclosure",
+    "WHATS_INSIDE": "What's inside",
+    "SCREENSHOT_ALT": "The Job Manager dashboard: a field to import a job posting by URL, and quick links to Companies, Applications, Cover Letter Template and Profile.",
+    "CAPTION": "Import a job posting from its URL, track every application from draft to offer, and generate DIN 5008 business letters — built to work as well with a screen reader as with a mouse.",
+    "BUILT_BY": "Built by",
+    "SOURCE_ON_GITHUB": "source on GitHub",
+    "OPENS_NEW_TAB": "opens in a new tab",
+    "ERROR_WRONG_ROLE": "Your account does not have the required role. Please try a different login option.",
+    "ERROR_ACCESS_DENIED": "Access was denied. Please try again.",
+    "ERROR_GENERIC": "Login failed ({{code}}). Please try again."
+  },
   "NAV": {
     "USER_LABEL": "Main navigation",
     "ADVISOR_LABEL": "Advisor navigation",
@@ -8,7 +27,8 @@
     "DOCUMENTS": "Documents",
     "COMPANIES": "Companies",
     "COVER_LETTER_TEMPLATE": "Cover Letter Template",
-    "DASHBOARD": "Dashboard"
+    "DASHBOARD": "Dashboard",
+    "JOB_SEARCH": "Job Search"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Account menu",
@@ -45,7 +65,14 @@
     "LOAD_ERROR": "The profile could not be loaded.",
     "REQUIRED": "This field is required.",
     "EMAIL_INVALID": "Enter a valid email address.",
-    "ERROR_SUMMARY_HEADING": "Please correct the following fields"
+    "ERROR_SUMMARY_HEADING": "Please correct the following fields",
+    "EXPORT_HEADING": "Export your data",
+    "EXPORT_HELP": "Downloads all your companies, positions and applications as a single spreadsheet. Column headers are written in the language you are currently using.",
+    "EXPORT_XLSX": "Export as Excel (.xlsx)",
+    "EXPORT_CSV": "Export as CSV",
+    "EXPORTING": "Preparing download…",
+    "EXPORT_STARTED": "The export has been downloaded.",
+    "EXPORT_ERROR": "The export could not be created."
   },
   "PREFERENCES": {
     "LEGEND": "Display & accessibility",
@@ -112,6 +139,50 @@
     "STATUS_ACCEPTED": "Accepted",
     "STATUS_REJECTED": "Rejected"
   },
+  "JOB_SEARCH": {
+    "TITLE": "Job Search",
+    "INTRO": "Search open positions to suggest to your users.",
+    "STATUS_LOADING": "Checking job search availability…",
+    "ERROR_STATUS": "Could not check whether job search is available.",
+    "NOT_CONFIGURED": "Job search is not set up on this server.",
+    "FILTERS_HEADING": "Search filters",
+    "FIELD_WHAT": "Keywords",
+    "FIELD_WHAT_EXCLUDE": "Exclude keywords",
+    "FIELD_WHERE": "Location",
+    "FIELD_DISTANCE": "Distance (km)",
+    "FIELD_MAX_DAYS_OLD": "Posted within (days)",
+    "FIELD_SALARY_MIN": "Minimum salary",
+    "FIELD_FULL_TIME": "Full-time",
+    "FIELD_PERMANENT": "Permanent",
+    "FIELD_CATEGORY": "Category",
+    "FIELD_SORT": "Sort by",
+    "OPTION_ANY": "Any",
+    "OPTION_YES": "Yes",
+    "OPTION_NO": "No",
+    "SELECT_CATEGORY_PLACEHOLDER": "— All categories —",
+    "SORT_RELEVANCE": "Relevance",
+    "SORT_DATE": "Date",
+    "SORT_SALARY": "Salary",
+    "SORT_HYBRID": "Hybrid",
+    "CRITERIA_HINT": "Enter keywords, a location, or a category before searching.",
+    "SEARCH": "Search",
+    "SEARCHING": "Searching…",
+    "ERROR_CRITERIA_MISSING": "Enter keywords, a location, or a category before searching.",
+    "ERROR_SEARCH": "Job search failed. Please try again.",
+    "RESULTS_HEADING": "Results",
+    "RESULTS_COUNT": "{{count}} jobs found",
+    "RESULTS_EMPTY": "No jobs found for this search.",
+    "VIEW_POSTING_ARIA": "View posting: {{title}} at {{company}} (opens in a new tab)",
+    "DETAIL_COMPANY": "Company",
+    "DETAIL_LOCATION": "Location",
+    "DETAIL_SALARY": "Salary",
+    "DETAIL_CONTRACT": "Contract",
+    "DETAIL_POSTED": "Posted",
+    "SALARY_ESTIMATED": "{{range}} (estimated)",
+    "PREVIOUS_PAGE": "Previous page",
+    "NEXT_PAGE": "Next page",
+    "PAGE_INFO": "Page {{page}} of {{totalPages}}"
+  },
   "REVIEWER": {
     "TITLE": "Reviewer Dashboard",
     "ERROR_LOAD_USERS": "Failed to load users.",
@@ -129,6 +200,7 @@
     "DOWNLOAD_ARIA": "Download {{label}}"
   },
   "COMMON": {
+    "BACK": "Back",
     "YEAR": "Year",
     "MONTH": "Month",
     "ALL_YEARS": "All years",
@@ -154,7 +226,10 @@
     "ACTIONS": "Actions",
     "SORT_BY": "Sort by {{column}}",
     "SORTED_ASC": "{{column}} sorted ascending, click for descending",
-    "SORTED_DESC": "{{column}} sorted descending, click to clear"
+    "SORTED_DESC": "{{column}} sorted descending, click to clear",
+    "SORT_ANNOUNCE_ASC": "Sorted by {{column}}, ascending",
+    "SORT_ANNOUNCE_DESC": "Sorted by {{column}}, descending",
+    "SORT_ANNOUNCE_NONE": "Sort cleared for {{column}}"
   },
   "STATUS": {
     "DRAFT": "Draft",
@@ -265,6 +340,11 @@
     "JSON_HINT": "Expected format:",
     "JSON_INVALID": "Invalid JSON file.",
     "NAME_LABEL": "Company Name *",
+    "DUPLICATE_HINT": "You already have a company named \"{{name}}\".",
+    "DUPLICATE_HINT_AT": "You already have \"{{name}}\" in {{cities}}.",
+    "SAME_NAME_ELSEWHERE": "You have a company with this name at another location:",
+    "DUPLICATE_OPEN": "Open the existing one",
+    "SIMILAR_HEADING": "Companies you already have with a similar name:",
     "LOCATIONS_HEADING": "Locations",
     "LOCATION_LEGEND": "Location {{n}}",
     "STREET": "Street",

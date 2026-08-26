@@ -1,4 +1,5 @@
-import { Component, Input, OnChanges, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, OnChanges, ChangeDetectionStrategy, inject } from '@angular/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -41,6 +42,7 @@ export class DataTableComponent implements OnChanges {
   sortDirection: SortDirection = null;
 
   private rowActions = new WeakMap<any, TableAction[]>();
+  private readonly announcer = inject(LiveAnnouncer);
 
   constructor(private translate: TranslateService) {}
 
@@ -62,6 +64,20 @@ export class DataTableComponent implements OnChanges {
       this.sortDirection = 'asc';
     }
     this.applySort();
+    this.announceSort(field);
+  }
+
+  /**
+   * aria-sort alone is not reliably announced on change by VoiceOver - this
+   * confirms the sort event itself, while aria-sort covers state on re-read.
+   */
+  private announceSort(field: string): void {
+    const col = this.columns.find(c => c.field === field);
+    const column = col ? this.translate.instant(col.label) : field;
+    const key = this.sortField === field
+      ? (this.sortDirection === 'asc' ? 'TABLE.SORT_ANNOUNCE_ASC' : 'TABLE.SORT_ANNOUNCE_DESC')
+      : 'TABLE.SORT_ANNOUNCE_NONE';
+    this.announcer.announce(this.translate.instant(key, { column }), 'polite');
   }
 
   private applySort(): void {

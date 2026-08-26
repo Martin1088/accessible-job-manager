@@ -60,6 +60,11 @@
             #rlaAdvisor="routerLinkActive"
           [attr.aria-current]="rlaAdvisor.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
         </li>
+        <li>
+          <a routerLink="/advisor/job-search" routerLinkActive="active"
+            #rlaJobSearch="routerLinkActive"
+          [attr.aria-current]="rlaJobSearch.isActive ? 'page' : null">{{ 'NAV.JOB_SEARCH' | translate }}</a>
+        </li>
       </ul>
     </nav>
   }

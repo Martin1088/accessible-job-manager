@@ -7,6 +7,10 @@ import { AuthService } from '../../core/auth.service';
 import { UserProfileService } from '../../services/user-profile.service';
 import { UserProfile } from '../../model/user-profile';
 import { PreferencesService } from '../../services/preferences.service';
+import { ExportFormat, ExportService } from '../../services/export.service';
+import { LanguageService } from '../../core/language.service';
+import { uiToLetterLanguage } from '../../model/document';
+import { saveBlobResponse } from '../../core/file-download';
 
 /**
  * The profile form. Its six fields are the sender block of every letter, maintained
@@ -28,6 +32,8 @@ export class ProfileComponent implements OnInit {
   private readonly translate = inject(TranslateService);
   private readonly profiles = inject(UserProfileService);
   private readonly preferences = inject(PreferencesService);
+  private readonly exports = inject(ExportService);
+  private readonly language = inject(LanguageService);
   readonly auth = inject(AuthService);
 
   profile: UserProfile | null = null;
@@ -35,6 +41,10 @@ export class ProfileComponent implements OnInit {
   saveError = false;
   saving = false;
   submitted = false;
+
+  /** Which export is in flight, so only the button pressed shows its busy label. */
+  exporting: ExportFormat | null = null;
+  exportError = false;
 
   readonly form = this.fb.group({
     name: ['', Validators.required],
@@ -88,6 +98,32 @@ export class ProfileComponent implements OnInit {
       error: () => {
         this.saveError = true;
         this.saving = false;
+      },
+    });
+  }
+
+  /**
+   * Downloads the caller's companies, positions and applications as one spreadsheet.
+   * The column headers are written in the language the UI is being read in - the page
+   * offers no separate picker for it, since a second language choice here would only
+   * ever be answered with the one already made in the header.
+   */
+  exportData(format: ExportFormat): void {
+    if (this.exporting) {
+      return;
+    }
+    this.exportError = false;
+    this.exporting = format;
+
+    this.exports.exportCompanies(format, uiToLetterLanguage(this.language.current())).subscribe({
+      next: (response) => {
+        saveBlobResponse(response, format === 'CSV' ? 'companies-export.csv' : 'companies-export.xlsx');
+        this.exporting = null;
+        this.announce('PROFILE.EXPORT_STARTED');
+      },
+      error: () => {
+        this.exportError = true;
+        this.exporting = null;
       },
     });
   }

@@ -84,6 +84,14 @@ fieldset {
   margin: 1.5rem 0 1rem;
 }
 
+.export {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.25rem;
+  margin-top: 2rem;
+
+  h2 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+}
+
 .btn-primary {
   padding: 0.5rem 1.2rem;
   border-radius: 6px;
@@ -95,6 +103,21 @@ fieldset {
   color: #fff;
   border: none;
   &:hover:not(:disabled) { background: #004aaa; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+}
+
+.btn-secondary {
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  background: #fff;
+  color: #005fcc;
+  border: 1px solid #005fcc;
+  &:hover:not(:disabled) { background: #eef4fd; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
   &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
 }

@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -55,6 +56,7 @@ class CompanyValidationTest {
         dto.setName("  ");
 
         mvc.perform(post("/api/companies")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(dto)))
@@ -71,6 +73,7 @@ class CompanyValidationTest {
         dto.setLocations(List.of(location));
 
         mvc.perform(post("/api/companies")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(dto)))
@@ -88,6 +91,7 @@ class CompanyValidationTest {
         dto.setLocations(List.of(location));
 
         mvc.perform(post("/api/companies")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(dto)))
@@ -102,6 +106,7 @@ class CompanyValidationTest {
         dto.setPositions(List.of(position));
 
         mvc.perform(post("/api/companies")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(dto)))
@@ -118,6 +123,7 @@ class CompanyValidationTest {
         dto.setPositions(List.of(position));
 
         mvc.perform(post("/api/companies")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(dto)))

@@ -1,8 +1,9 @@
 package de.samply.manager.dto;
 
-import de.samply.manager.types.Role;
+import de.samply.manager.security.AppRole;
 
 import java.util.List;
+import java.util.Set;
 
 
 public record UserProfileDto(
@@ -13,14 +14,7 @@ public record UserProfileDto(
         String postalCode,
         String city,
         String phone,
-        Role role,
-        List<AdvisorDto> advisors,
-        List<ReviewerDto> reviewers,
+        Set<AppRole> roles,
         UserPreferencesDto preferences
 ) {
-    public record AdvisorDto(String userId, String name, String email) {
-    }
-
-    public record ReviewerDto(String userId, String name, String email) {
-    }
 }

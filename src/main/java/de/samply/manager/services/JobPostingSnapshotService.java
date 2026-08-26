@@ -7,6 +7,8 @@ import de.samply.manager.model.DocumentType;
 import de.samply.manager.types.Language;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
+import de.samply.manager.services.storage.StorageService;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
@@ -44,17 +46,20 @@ public class JobPostingSnapshotService {
     private final String gotenbergUrl;
     private final StorageService storageService;
     private final DocumentRepository documentRepository;
+    private final DocumentService documentService;
     private final CompanyPositionRepository companyPositionRepository;
     private final MessageSource messageSource;
 
     public JobPostingSnapshotService(@Value("${gotenberg.url}") String gotenbergUrl,
                                      StorageService storageService,
                                      DocumentRepository documentRepository,
+                                     DocumentService documentService,
                                      CompanyPositionRepository companyPositionRepository,
                                      MessageSource messageSource) {
         this.gotenbergUrl = gotenbergUrl;
         this.storageService = storageService;
         this.documentRepository = documentRepository;
+        this.documentService = documentService;
         this.companyPositionRepository = companyPositionRepository;
         this.messageSource = messageSource;
         this.restClient = RestClient.create();
@@ -138,7 +143,7 @@ public class JobPostingSnapshotService {
     }
 
     public SnapshotContent download(UUID documentId, String userId) {
-        Document doc = findOwned(documentId, userId);
+        Document doc = documentService.findOwned(documentId, userId, DocumentType.JOB_POSTING_SNAPSHOT);
         try (InputStream in = storageService.download(doc.getStorageKey())) {
             return new SnapshotContent(doc, in.readAllBytes());
         } catch (IOException e) {
@@ -147,7 +152,7 @@ public class JobPostingSnapshotService {
     }
 
     public Document update(UUID documentId, String userId, String label, Language language) {
-        Document doc = findOwned(documentId, userId);
+        Document doc = documentService.findOwned(documentId, userId, DocumentType.JOB_POSTING_SNAPSHOT);
         if (label != null) doc.setLabel(label);
         if (language != null) doc.setLanguage(language);
         doc.setUpdatedAt(LocalDateTime.now());
@@ -163,35 +168,25 @@ public class JobPostingSnapshotService {
         return position;
     }
 
-    private Document findOwned(UUID documentId, String userId) {
-        Document doc = documentRepository.findById(documentId)
-                .filter(d -> d.getType() == DocumentType.JOB_POSTING_SNAPSHOT)
-                .orElseThrow(ApiException.NotFound::new);
-        if (!doc.getUserId().equals(userId)) {
-            throw new ApiException.Forbidden();
-        }
-        return doc;
-    }
-
     public record SnapshotContent(Document document, byte[] content) {}
 
     private URI validate(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            throw new ApiException.BadRequest(message("error.snapshot.urlEmpty"));
+            throw new ApiException.BadRequest(message("error.url.empty"));
         }
 
         URI uri;
         try {
             uri = new URI(rawUrl.trim());
         } catch (URISyntaxException e) {
-            throw new ApiException.BadRequest(message("error.snapshot.malformedUrl"));
+            throw new ApiException.BadRequest(message("error.url.malformed"));
         }
 
         if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new ApiException.BadRequest(message("error.snapshot.urlScheme"));
+            throw new ApiException.BadRequest(message("error.url.scheme"));
         }
         if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ApiException.BadRequest(message("error.snapshot.urlHost"));
+            throw new ApiException.BadRequest(message("error.url.host"));
         }
 
         rejectIfDisallowedHost(uri.getHost());
@@ -203,13 +198,13 @@ public class JobPostingSnapshotService {
         try {
             addresses = InetAddress.getAllByName(host);
         } catch (UnknownHostException e) {
-            throw new ApiException.BadRequest(message("error.snapshot.hostUnresolved"));
+            throw new ApiException.BadRequest(message("error.url.hostUnresolved"));
         }
         for (InetAddress address : addresses) {
             if (address.isLoopbackAddress() || address.isAnyLocalAddress()
                     || address.isLinkLocalAddress() || address.isSiteLocalAddress()
                     || address.isMulticastAddress() || isUniqueLocalIpv6(address)) {
-                throw new ApiException.BadRequest(message("error.snapshot.disallowedHost"));
+                throw new ApiException.BadRequest(message("error.url.disallowedHost"));
             }
         }
     }

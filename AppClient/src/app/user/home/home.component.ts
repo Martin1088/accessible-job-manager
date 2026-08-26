@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -72,6 +72,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   validatingSnapshot = false;
   snapshotValidateError = false;
+
+  // The server's own reason, when it gave one. A site that refuses automated
+  // access and a URL with a typo both fail here, and only the server can tell
+  // them apart - the generic text below would send the user off to re-check a
+  // URL that is perfectly correct.
+  jobSearchErrorMessage = '';
+  fullChainErrorMessage = '';
+  snapshotValidateErrorMessage = '';
   private previewObjectUrl?: string;
 
   // Which extraction source wins for a given field when the two disagree.
@@ -111,8 +119,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.auth.me$.subscribe({
       next: (me) => {
         if (!me) { this.profileError = true; return; }
-        if (me.groups.includes('ADVISOR'))  { this.router.navigate(['/advisor']);   return; }
-        if (me.groups.includes('REVIEWER')) { this.router.navigate(['/reviewer']);  return; }
+        if (me.roles.includes('ADVISOR'))  { this.router.navigate(['/advisor']);   return; }
+        if (me.roles.includes('REVIEWER')) { this.router.navigate(['/reviewer']);  return; }
         this.profile = me;
       },
       error: () => this.profileError = true,
@@ -129,31 +137,36 @@ export class HomeComponent implements OnInit, OnDestroy {
     // want to compare the two before merging one into the "new company" form.
     this.selectedSource = { name: 'fullChain', title: 'fullChain', location: 'fullChain' };
     this.snapshotValidateError = false;
+    this.snapshotValidateErrorMessage = '';
 
     this.searchingJobPosting = true;
     this.jobSearchError = false;
+    this.jobSearchErrorMessage = '';
     this.jobPosting = null;
     this.http.post<JobPostingExtraction>('/api/posting/overview', null, { params }).subscribe({
       next: (result) => {
         this.jobPosting = result;
         this.searchingJobPosting = false;
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.jobSearchError = true;
+        this.jobSearchErrorMessage = err.error?.message ?? '';
         this.searchingJobPosting = false;
       },
     });
 
     this.searchingFullChain = true;
     this.fullChainError = false;
+    this.fullChainErrorMessage = '';
     this.fullChainResult = null;
     this.http.post<JobPostingFullChain>('/api/posting/full-chain', null, { params }).subscribe({
       next: (result) => {
         this.fullChainResult = result;
         this.searchingFullChain = false;
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.fullChainError = true;
+        this.fullChainErrorMessage = err.error?.message ?? '';
         this.searchingFullChain = false;
       },
     });
@@ -171,17 +184,30 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.releasePreviewObjectUrl();
     this.validatingSnapshot = true;
     this.snapshotValidateError = false;
+    this.snapshotValidateErrorMessage = '';
     this.http.post('/api/posting/snapshot-validate', null, { params, responseType: 'blob' }).subscribe({
       next: (blob) => {
         this.previewObjectUrl = URL.createObjectURL(blob);
         window.open(this.previewObjectUrl, '_blank', 'noopener');
         this.validatingSnapshot = false;
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.snapshotValidateError = true;
         this.validatingSnapshot = false;
+        // This request asks for a blob, so its error body arrives as a Blob
+        // rather than parsed JSON - the server's reason has to be read out of it.
+        this.readBlobMessage(err.error).then(message => this.snapshotValidateErrorMessage = message);
       },
     });
+  }
+
+  private async readBlobMessage(body: unknown): Promise<string> {
+    if (!(body instanceof Blob)) return '';
+    try {
+      return JSON.parse(await body.text())?.message ?? '';
+    } catch {
+      return '';
+    }
   }
 
   private releasePreviewObjectUrl(): void {

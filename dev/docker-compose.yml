@@ -27,6 +27,10 @@ services:
       MANAGER_DB_PASSWORD: manager
       OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/access-job-manager/
       GOTENBERG_URL: http://gotenberg:3000
+      # Advisor job search stays off unless the operator supplies their own
+      # Adzuna key - see docs/local-development.md.
+      JOBSOURCE_ADZUNA_APP_ID: ${JOBSOURCE_ADZUNA_APP_ID:-}
+      JOBSOURCE_ADZUNA_APP_KEY: ${JOBSOURCE_ADZUNA_APP_KEY:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     labels:

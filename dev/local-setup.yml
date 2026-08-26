@@ -21,12 +21,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8060:8060"
+    env_file:
+      - .env
     environment:
       MANAGER_DB_URL: jdbc:postgresql://postgres:5432/manager
-      MANAGER_DB_USER: manager
-      MANAGER_DB_PASSWORD: manager
       OIDC_ISSUER_URI: http://host.docker.internal:9000/application/o/accessible-job-manager/
       GOTENBERG_URL: http://gotenberg:3000
+      OLLAMA_URL: http://ollama:11434
+      S3_ENDPOINT: http://garage:3900
     extra_hosts:
       - "host.docker.internal:host-gateway"
     labels:
@@ -53,8 +55,8 @@ services:
     container_name: manager-postgres
     environment:
       POSTGRES_DB: manager
-      POSTGRES_USER: manager
-      POSTGRES_PASSWORD: manager
+      POSTGRES_USER: ${MANAGER_DB_USER:-manager}
+      POSTGRES_PASSWORD: ${MANAGER_DB_PASSWORD:?set MANAGER_DB_PASSWORD in dev/.env}
     ports:
       - "5432:5432"
     volumes:

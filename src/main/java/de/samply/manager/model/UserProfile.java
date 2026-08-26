@@ -1,7 +1,7 @@
 package de.samply.manager.model;
 
+import de.samply.manager.security.AppRole;
 import de.samply.manager.types.Language;
-import de.samply.manager.types.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,11 +23,15 @@ public class UserProfile {
 
     @Id
     private String userId;
-
-    @Enumerated(EnumType.STRING)
-    private Role role;
     private String name;
     private String email;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_profile_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    private Set<AppRole> roles = new HashSet<>();
 
     private String street;
     private String postalCode;
@@ -39,24 +43,6 @@ public class UserProfile {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_advisors",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "advisor_id")
-    )
-    @Builder.Default
-    private Set<UserProfile> advisors = new HashSet<>();
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_reviewers",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "reviewer_id")
-    )
-    @Builder.Default
-    private Set<UserProfile> reviewers = new HashSet<>();
 
     @Embedded
     @Builder.Default

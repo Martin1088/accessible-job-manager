@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/suggestions")
+@RequestMapping("/api/field-suggestions")
 @RequiredArgsConstructor
 public class CompanyFieldSuggestionController {
 

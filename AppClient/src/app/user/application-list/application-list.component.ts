@@ -1,5 +1,6 @@
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -117,6 +118,8 @@ export class ApplicationListComponent implements OnInit {
   // must only get a new array/objects when the underlying data actually
   // changes, not on every change-detection pass.
   rows: any[] = [];
+
+  private readonly announcer = inject(LiveAnnouncer);
 
   constructor(
     private applicationService: ApplicationService,
@@ -303,6 +306,20 @@ export class ApplicationListComponent implements OnInit {
       this.sortField = field;
       this.sortDir = 'asc';
     }
+    this.announceSort(field);
+  }
+
+  /**
+   * aria-sort alone is not reliably announced on change by VoiceOver - this
+   * confirms the sort event itself, while aria-sort covers state on re-read.
+   */
+  private announceSort(field: string): void {
+    const col = this.columns.find(c => c.field === field);
+    const column = col ? this.translate.instant(col.label) : field;
+    const key = this.sortField === field
+      ? (this.sortDir === 'asc' ? 'TABLE.SORT_ANNOUNCE_ASC' : 'TABLE.SORT_ANNOUNCE_DESC')
+      : 'TABLE.SORT_ANNOUNCE_NONE';
+    this.announcer.announce(this.translate.instant(key, { column }), 'polite');
   }
 
   sortIcon(field: string): string {

@@ -1,4 +1,8 @@
 target/
+# Local infrastructure: holds dev/.env plus the postgres and garage data
+# directories. `COPY . .` would otherwise bake the credentials into a build
+# layer, and nothing in here is needed to build the jar.
+dev/
 .node/
 npm-debug.log
 .git

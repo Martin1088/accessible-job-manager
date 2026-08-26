@@ -95,6 +95,12 @@ export const routes: Routes = [
     canActivate: [advisorGuard]
   },
   {
+    path: 'advisor/job-search',
+    loadComponent: () => import('./advisor/job-search/job-search.component')
+      .then(m => m.JobSearchComponent),
+    canActivate: [advisorGuard]
+  },
+  {
     path: 'reviewer',
     loadComponent: () => import('./reviewer/home/home.component')
       .then(m => m.HomeComponent),

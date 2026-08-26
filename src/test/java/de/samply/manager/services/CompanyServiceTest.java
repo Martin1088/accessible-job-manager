@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,7 @@ class CompanyServiceTest {
 
     @Mock CompanyRepository repo;
     @Mock ApplicationRepository applicationRepo;
+    @Mock MessageSource messageSource;
     @InjectMocks CompanyService service;
 
     // ── getAllCompanies ───────────────────────────────────────────────────────
@@ -104,6 +106,9 @@ class CompanyServiceTest {
     @Test
     void deleteCompany_throwsRuntime_whenNotFound() {
         when(repo.findById(99L)).thenReturn(Optional.empty());
+        // The id is an argument of the bundled message, not spliced into a literal.
+        when(messageSource.getMessage(eq("error.company.notFound"), any(), any()))
+                .thenAnswer(inv -> "Company not found: " + ((Object[]) inv.getArgument(1))[0]);
 
         assertThatThrownBy(() -> service.deleteCompany(99L, "u1"))
                 .isInstanceOf(RuntimeException.class)

@@ -49,38 +49,41 @@
   }
 
   <div class="filter-bar" role="search" [attr.aria-label]="'APPLICATIONS.FILTER_ARIA' | translate">
-    <div class="filter-group">
-      <label for="search-field">{{ 'APPLICATIONS.SEARCH_FIELD_LABEL' | translate }}</label>
-      <select id="search-field" [(ngModel)]="searchField">
-        @for (f of searchFields; track f) {
-          <option [value]="f.value">{{ f.label | translate }}</option>
-        }
-      </select>
-    </div>
-    <div class="filter-group">
-      <label for="search-term">{{ 'APPLICATIONS.SEARCH_LABEL' | translate }}</label>
-      <input id="search-term" type="search" [(ngModel)]="searchTerm"
-        [attr.placeholder]="'APPLICATIONS.SEARCH_PLACEHOLDER' | translate"
-        [attr.aria-label]="'APPLICATIONS.SEARCH_ARIA' | translate"/>
-    </div>
-    <div class="filter-group">
-      <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
-      <select id="filter-year" [(ngModel)]="filterYear">
-        <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
-        @for (y of availableYears; track y) {
-          <option [value]="y">{{ y }}</option>
-        }
-      </select>
-    </div>
-    <div class="filter-group">
-      <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
-      <select id="filter-month" [(ngModel)]="filterMonth">
-        <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
-        @for (i of monthIndexes; track i) {
-          <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
-        }
-      </select>
-    </div>
+    <fieldset class="filter-fieldset">
+      <legend class="sr-only">{{ 'APPLICATIONS.FILTER_ARIA' | translate }}</legend>
+      <div class="filter-group">
+        <label for="search-field">{{ 'APPLICATIONS.SEARCH_FIELD_LABEL' | translate }}</label>
+        <select id="search-field" [(ngModel)]="searchField">
+          @for (f of searchFields; track f) {
+            <option [value]="f.value">{{ f.label | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="search-term">{{ 'APPLICATIONS.SEARCH_LABEL' | translate }}</label>
+        <input id="search-term" type="search" [(ngModel)]="searchTerm"
+          [attr.placeholder]="'APPLICATIONS.SEARCH_PLACEHOLDER' | translate"
+          [attr.aria-label]="'APPLICATIONS.SEARCH_ARIA' | translate"/>
+      </div>
+      <div class="filter-group">
+        <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
+        <select id="filter-year" [(ngModel)]="filterYear">
+          <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
+          @for (y of availableYears; track y) {
+            <option [value]="y">{{ y }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
+        <select id="filter-month" [(ngModel)]="filterMonth">
+          <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
+          @for (i of monthIndexes; track i) {
+            <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+          }
+        </select>
+      </div>
+    </fieldset>
     @if (filterActive) {
       <button type="button" class="btn-secondary" (click)="clearFilter()"
         [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
@@ -125,7 +128,7 @@
       @for (row of sortedRows; track row) {
         <tr>
           @for (col of columns; track col) {
-            <td>
+            <td [attr.data-label]="col.label | translate">
               @if (col.field !== 'statusLabel') {
                 {{ row[col.field] }}
               } @else {
@@ -146,7 +149,7 @@
               }
             </td>
           }
-          <td class="cover-letter-cell">
+          <td class="cover-letter-cell" [attr.data-label]="'APPLICATIONS.COL_COVER' | translate">
             <label [for]="'tpl-' + row.id" class="sr-only">{{ 'APPLICATIONS.TEMPLATE_FOR' | translate: { company: row.companyName } }}</label>
             <select [id]="'tpl-' + row.id" [(ngModel)]="selectedTemplate[row.id]"
               [disabled]="!hasTemplates" [name]="'tpl-' + row.id">
@@ -198,7 +201,7 @@
               <p class="template-note">{{ 'APPLICATIONS.WORD_UNAVAILABLE' | translate }}</p>
             }
           </td>
-          <td class="actions-cell">
+          <td class="actions-cell" [attr.data-label]="'TABLE.ACTIONS' | translate">
             <button type="button" (click)="startEdit(row)"
               [attr.aria-label]="'APPLICATIONS.ACTION_EDIT_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
               {{ 'APPLICATIONS.ACTION_EDIT' | translate }}

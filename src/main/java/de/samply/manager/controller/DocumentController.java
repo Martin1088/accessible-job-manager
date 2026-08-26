@@ -77,7 +77,7 @@ public class DocumentController {
             @PathVariable UUID documentId,
             @AuthenticationPrincipal OidcUser user) throws IOException {
 
-        Document document = documentService.owned(documentId, user.getSubject());
+        Document document = documentService.findOwned(documentId, user.getSubject());
         byte[] bytes = documentService.bytes(document);
 
         return ResponseEntity.ok()

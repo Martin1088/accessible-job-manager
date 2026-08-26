@@ -8,6 +8,8 @@ import lombok.ToString;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Data
 @ToString
 @EqualsAndHashCode
@@ -38,6 +40,9 @@ public class Application {
     @JoinColumn(name = "cover_letter_document_id")
     private Document coverLetter;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    
+    @CreationTimestamp
     private LocalDateTime updatedAt;
 }

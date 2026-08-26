@@ -4,15 +4,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import jakarta.servlet.Filter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
     @Autowired
@@ -25,14 +32,15 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/api/public/**", "/api/**")
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
+                .addFilterAfter(csrfCookieFilter(), CsrfFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.ico", "/error",
                                 "/assets/**",
                                 "/i18n/**",
-                                "/*.js", "/*.css", "/*.map",
+                                "/*.js", "/*.css", "/*.map", "/*.png",
                                 "/runtime*.js",
                                 "/polyfills*.js",
                                 "/main*.js",
@@ -40,7 +48,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
                         .requestMatchers("/impressum", "/datenschutz").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/api/advisor/**").hasRole("ADVISOR")
+                        .requestMatchers("/api/reviewer/**").hasRole("REVIEWER")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -61,12 +70,18 @@ public class SecurityConfig {
                             }
                         })
                 )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")
-                        .deleteCookies("JSESSIONID")
-                        .invalidateHttpSession(true));
+                .logout(AbstractHttpConfigurer::disable);
         return http.build();
+    }
+
+    private Filter csrfCookieFilter() {
+        return (request, response, chain) -> {
+            CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+            if (token != null) {
+                token.getToken();
+            }
+            chain.doFilter(request, response);
+        };
     }
 
     @Bean

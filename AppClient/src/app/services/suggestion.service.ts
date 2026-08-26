@@ -41,7 +41,7 @@ export interface ApplicationMethodSuggestion {
 })
 export class SuggestionService {
 
-  private readonly apiUrl = '/api/suggestions';
+  private readonly apiUrl = '/api/field-suggestions';
 
   constructor(private http: HttpClient) {}
 

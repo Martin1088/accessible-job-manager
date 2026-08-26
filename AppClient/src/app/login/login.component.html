@@ -1,30 +1,88 @@
 <main id="main-content" tabindex="-1">
-  <div class="login-card">
-    <h1>Job Manager</h1>
-    <p class="subtitle">Sign in to continue</p>
+  <div class="login-layout">
 
-    @if (error) {
-      <p role="alert" class="error">{{ error }}</p>
-    }
+    <div class="brand">
+      <!-- Decorative: the h1 text below it already gives the accessible name. -->
+      <img class="brand__logo" src="/juke.png" alt="" width="480" height="480" />
+      <h1 class="brand__title">{{ 'LOGIN.TITLE' | translate }}</h1>
+      <p class="brand__tagline">{{ 'LOGIN.TAGLINE' | translate }}</p>
+    </div>
 
-    <nav aria-label="Login options">
-      <ul role="list" class="login-options">
-        <li>
-          <button type="button" (click)="loginAsUser()" class="btn-primary">
-            Login as User
-          </button>
-        </li>
-        <li>
-          <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
-            Login as Advisor
-          </button>
-        </li>
-        <li>
-          <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
-            Login as Reviewer
-          </button>
-        </li>
-      </ul>
-    </nav>
+    <div class="letter">
+      <!--
+        DIN 5008 fold marks - real business letters carry two small unlabeled
+        tick marks on the page edge so the sheet lines up in a C6/5 window
+        envelope when folded. Positions match FIRST_FOLD_MARK_MM (87mm) and
+        SECOND_FOLD_MARK_MM (192mm) of a 297mm page in StyleSettings.java -
+        the same geometry this app's own cover-letter generator prints.
+        Decorative only.
+      -->
+      <span class="fold-mark fold-mark--upper" aria-hidden="true"></span>
+      <span class="fold-mark fold-mark--lower" aria-hidden="true"></span>
+
+      <!-- The 24.1mm writing-area margin from StyleSettings.din5008FormB(). -->
+      <span class="margin-guide" aria-hidden="true">
+        <span class="margin-guide__label">24.1mm</span>
+      </span>
+
+      @if (error) {
+        <p role="alert" class="error">
+          @switch (error) {
+            @case ('wrong_role') { {{ 'LOGIN.ERROR_WRONG_ROLE' | translate }} }
+            @case ('access_denied') { {{ 'LOGIN.ERROR_ACCESS_DENIED' | translate }} }
+            @default { {{ 'LOGIN.ERROR_GENERIC' | translate: { code: error } }} }
+          }
+        </p>
+      }
+
+      <h2 id="sign-in-heading" class="section-label">{{ 'LOGIN.SIGN_IN_HEADING' | translate }}</h2>
+
+      <nav aria-labelledby="sign-in-heading">
+        <ul role="list" class="login-options login-options--primary">
+          <li>
+            <button type="button" (click)="loginAsUser()" class="btn-primary">
+              {{ 'LOGIN.CONTINUE_AS_USER' | translate }}
+            </button>
+          </li>
+        </ul>
+
+        <div role="group" aria-labelledby="other-roles-heading" class="other-roles">
+          <p id="other-roles-heading" class="section-label">{{ 'LOGIN.OTHER_ROLES' | translate }}</p>
+          <ul role="list" class="login-options login-options--secondary">
+            <li>
+              <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
+                {{ 'LOGIN.CONTINUE_AS_ADVISOR' | translate }}
+              </button>
+            </li>
+            <li>
+              <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
+                {{ 'LOGIN.CONTINUE_AS_REVIEWER' | translate }}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="enclosure">
+      <p class="enclosure__label">{{ 'LOGIN.ENCLOSURE_LABEL' | translate }}</p>
+      <h2>{{ 'LOGIN.WHATS_INSIDE' | translate }}</h2>
+      <img class="enclosure__screenshot"
+        src="/home-preview.png"
+        [attr.alt]="'LOGIN.SCREENSHOT_ALT' | translate"
+        width="1919" height="878" />
+      <p class="enclosure__caption">{{ 'LOGIN.CAPTION' | translate }}</p>
+      <p class="enclosure__credit">
+        {{ 'LOGIN.BUILT_BY' | translate }}
+        <a href="https://martin1088.github.io/martin1088/" target="_blank" rel="noopener">
+          Martin Jurk<span class="sr-only"> ({{ 'LOGIN.OPENS_NEW_TAB' | translate }})</span>
+        </a>
+        —
+        <a href="https://github.com/Martin1088/accessible-job-manager" target="_blank" rel="noopener">
+          {{ 'LOGIN.SOURCE_ON_GITHUB' | translate }}<span class="sr-only"> ({{ 'LOGIN.OPENS_NEW_TAB' | translate }})</span>
+        </a>
+      </p>
+    </div>
+
   </div>
 </main>

@@ -1,3 +1,5 @@
+@use '../styles/breakpoints' as bp;
+
 /* Full-height flex shell so short pages (e.g. the login page) still push
    the footer to the bottom of the viewport instead of leaving it hidden
    below the fold — the footer carries the Impressum/Datenschutz links,
@@ -230,6 +232,72 @@ footer {
     &[aria-current="page"] {
       color: #005fcc;
       border-bottom: none;
+    }
+  }
+}
+
+/*
+ * The nav row and the account controls used to sit on one unbroken flex
+ * line - `nav ul` had no flex-wrap, so on a phone-width viewport the links
+ * ran past the edge of the screen instead of wrapping, forcing horizontal
+ * scroll on the one landmark every page depends on. This does not swap in a
+ * hamburger/disclosure pattern: there is only ever one <nav> visible at a
+ * time (role-gated), so wrapping the existing links is enough - no new
+ * widget, no extra focus management, no JS.
+ */
+@include bp.mobile {
+  header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  nav ul {
+    flex-wrap: wrap;
+    padding: 0.4rem 0.75rem;
+    gap: 0.15rem;
+  }
+
+  nav a {
+    padding: 0.6rem 0.85rem;
+    min-block-size: 44px;
+    font-size: 0.9rem;
+
+    // Keyboard shortcut hints are aria-hidden decoration for keyboard users;
+    // hiding them visually loses nothing for touch or screen-reader users
+    // and buys back the width the wrapped links need.
+    kbd {
+      display: none;
+    }
+  }
+
+  .account-bar {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .account-trigger {
+    min-block-size: 44px;
+  }
+
+  .lang-switch select {
+    min-block-size: 44px;
+  }
+
+  footer {
+    nav ul {
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    nav a {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+      padding: 0.25rem 0;
     }
   }
 }

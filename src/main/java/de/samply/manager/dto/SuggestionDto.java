@@ -1,6 +1,6 @@
 package de.samply.manager.dto;
 
-import de.samply.manager.model.SuggestionStatus;
+import de.samply.manager.advisory.SuggestionStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;

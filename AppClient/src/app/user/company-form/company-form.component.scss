@@ -119,6 +119,44 @@ textarea {
   }
 }
 
+/*
+ * The companies the user already has under the typed name. An exact match is
+ * the one worth stopping at, so it carries the warning colouring; the partial
+ * matches stay quiet, because typing towards a new name passes through them.
+ * #8a5a00 and #444 on the form's white background are ~4.9:1 and ~9.7:1.
+ */
+.existing-companies {
+  font-size: 0.85rem;
+  color: #444;
+
+  &:empty {
+    display: none;
+  }
+
+  .is-duplicate {
+    color: #8a5a00;
+    font-weight: 500;
+  }
+
+  ul {
+    margin: 0.15rem 0 0;
+    padding-left: 1.2rem;
+  }
+
+  // The site a listed company sits at - what tells two branches apart.
+  .at-city {
+    color: #666;
+
+    &::before {
+      content: " — ";
+    }
+  }
+
+  a {
+    color: #005fcc;
+  }
+}
+
 /* Announced by a screen reader, never shown - the visible copy sits with its button. */
 .visually-hidden {
   position: absolute;
@@ -135,6 +173,7 @@ textarea {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.5rem;
 

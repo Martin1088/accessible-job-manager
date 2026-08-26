@@ -1,5 +1,24 @@
 {
   "SKIP_LINK": "Zum Hauptinhalt springen",
+  "LOGIN": {
+    "TITLE": "Job Manager",
+    "TAGLINE": "Bewerbungen verwalten und Anschreiben erstellen",
+    "SIGN_IN_HEADING": "Anmelden",
+    "CONTINUE_AS_USER": "Als Benutzer fortfahren",
+    "OTHER_ROLES": "Andere Rollen",
+    "CONTINUE_AS_ADVISOR": "Als Berater fortfahren",
+    "CONTINUE_AS_REVIEWER": "Als Gutachter fortfahren",
+    "ENCLOSURE_LABEL": "Anlage",
+    "WHATS_INSIDE": "Das erwartet Sie",
+    "SCREENSHOT_ALT": "Das Job-Manager-Dashboard: ein Feld zum Importieren einer Stellenanzeige per URL sowie Schnellzugriffe auf Unternehmen, Bewerbungen, Anschreiben-Vorlage und Profil.",
+    "CAPTION": "Importieren Sie eine Stellenanzeige per URL, verfolgen Sie jede Bewerbung vom Entwurf bis zum Angebot und erstellen Sie Anschreiben nach DIN 5008 — nutzbar mit Bildschirmleseprogramm ebenso wie mit der Maus.",
+    "BUILT_BY": "Entwickelt von",
+    "SOURCE_ON_GITHUB": "Quellcode auf GitHub",
+    "OPENS_NEW_TAB": "öffnet in einem neuen Tab",
+    "ERROR_WRONG_ROLE": "Ihr Konto hat nicht die erforderliche Rolle. Bitte versuchen Sie eine andere Anmeldeoption.",
+    "ERROR_ACCESS_DENIED": "Der Zugriff wurde verweigert. Bitte versuchen Sie es erneut.",
+    "ERROR_GENERIC": "Anmeldung fehlgeschlagen ({{code}}). Bitte versuchen Sie es erneut."
+  },
   "NAV": {
     "USER_LABEL": "Hauptnavigation",
     "ADVISOR_LABEL": "Berater-Navigation",
@@ -8,7 +27,8 @@
     "DOCUMENTS": "Dokumente",
     "COMPANIES": "Unternehmen",
     "COVER_LETTER_TEMPLATE": "Anschreiben-Vorlage",
-    "DASHBOARD": "Übersicht"
+    "DASHBOARD": "Übersicht",
+    "JOB_SEARCH": "Jobsuche"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Kontomenü",
@@ -45,7 +65,14 @@
     "LOAD_ERROR": "Das Profil konnte nicht geladen werden.",
     "REQUIRED": "Dieses Feld ist erforderlich.",
     "EMAIL_INVALID": "Geben Sie eine gültige E-Mail-Adresse ein.",
-    "ERROR_SUMMARY_HEADING": "Bitte korrigieren Sie folgende Felder"
+    "ERROR_SUMMARY_HEADING": "Bitte korrigieren Sie folgende Felder",
+    "EXPORT_HEADING": "Daten exportieren",
+    "EXPORT_HELP": "Lädt alle Ihre Unternehmen, Stellen und Bewerbungen als eine Tabelle herunter. Die Spaltenüberschriften erscheinen in der Sprache, die Sie gerade verwenden.",
+    "EXPORT_XLSX": "Als Excel exportieren (.xlsx)",
+    "EXPORT_CSV": "Als CSV exportieren",
+    "EXPORTING": "Download wird vorbereitet…",
+    "EXPORT_STARTED": "Der Export wurde heruntergeladen.",
+    "EXPORT_ERROR": "Der Export konnte nicht erstellt werden."
   },
   "PREFERENCES": {
     "LEGEND": "Darstellung & Barrierefreiheit",
@@ -112,6 +139,50 @@
     "STATUS_ACCEPTED": "Angenommen",
     "STATUS_REJECTED": "Abgelehnt"
   },
+  "JOB_SEARCH": {
+    "TITLE": "Jobsuche",
+    "INTRO": "Offene Stellen suchen, um sie Ihren Benutzern vorzuschlagen.",
+    "STATUS_LOADING": "Verfügbarkeit der Jobsuche wird geprüft…",
+    "ERROR_STATUS": "Konnte nicht prüfen, ob die Jobsuche verfügbar ist.",
+    "NOT_CONFIGURED": "Die Jobsuche ist auf diesem Server nicht eingerichtet.",
+    "FILTERS_HEADING": "Suchfilter",
+    "FIELD_WHAT": "Suchbegriffe",
+    "FIELD_WHAT_EXCLUDE": "Suchbegriffe ausschließen",
+    "FIELD_WHERE": "Ort",
+    "FIELD_DISTANCE": "Umkreis (km)",
+    "FIELD_MAX_DAYS_OLD": "Veröffentlicht innerhalb (Tage)",
+    "FIELD_SALARY_MIN": "Mindestgehalt",
+    "FIELD_FULL_TIME": "Vollzeit",
+    "FIELD_PERMANENT": "Unbefristet",
+    "FIELD_CATEGORY": "Kategorie",
+    "FIELD_SORT": "Sortieren nach",
+    "OPTION_ANY": "Beliebig",
+    "OPTION_YES": "Ja",
+    "OPTION_NO": "Nein",
+    "SELECT_CATEGORY_PLACEHOLDER": "— Alle Kategorien —",
+    "SORT_RELEVANCE": "Relevanz",
+    "SORT_DATE": "Datum",
+    "SORT_SALARY": "Gehalt",
+    "SORT_HYBRID": "Kombiniert",
+    "CRITERIA_HINT": "Geben Sie Suchbegriffe, einen Ort oder eine Kategorie ein, bevor Sie suchen.",
+    "SEARCH": "Suchen",
+    "SEARCHING": "Wird gesucht…",
+    "ERROR_CRITERIA_MISSING": "Geben Sie Suchbegriffe, einen Ort oder eine Kategorie ein, bevor Sie suchen.",
+    "ERROR_SEARCH": "Die Jobsuche ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "RESULTS_HEADING": "Ergebnisse",
+    "RESULTS_COUNT": "{{count}} Stellen gefunden",
+    "RESULTS_EMPTY": "Keine Stellen für diese Suche gefunden.",
+    "VIEW_POSTING_ARIA": "Stelle ansehen: {{title}} bei {{company}} (öffnet in neuem Tab)",
+    "DETAIL_COMPANY": "Unternehmen",
+    "DETAIL_LOCATION": "Ort",
+    "DETAIL_SALARY": "Gehalt",
+    "DETAIL_CONTRACT": "Vertrag",
+    "DETAIL_POSTED": "Veröffentlicht",
+    "SALARY_ESTIMATED": "{{range}} (geschätzt)",
+    "PREVIOUS_PAGE": "Vorherige Seite",
+    "NEXT_PAGE": "Nächste Seite",
+    "PAGE_INFO": "Seite {{page}} von {{totalPages}}"
+  },
   "REVIEWER": {
     "TITLE": "Gutachter-Dashboard",
     "ERROR_LOAD_USERS": "Benutzer konnten nicht geladen werden.",
@@ -129,6 +200,7 @@
     "DOWNLOAD_ARIA": "{{label}} herunterladen"
   },
   "COMMON": {
+    "BACK": "Zurück",
     "YEAR": "Jahr",
     "MONTH": "Monat",
     "ALL_YEARS": "Alle Jahre",
@@ -154,7 +226,10 @@
     "ACTIONS": "Aktionen",
     "SORT_BY": "Sortieren nach {{column}}",
     "SORTED_ASC": "{{column}} aufsteigend sortiert, klicken für absteigend",
-    "SORTED_DESC": "{{column}} absteigend sortiert, klicken zum Zurücksetzen"
+    "SORTED_DESC": "{{column}} absteigend sortiert, klicken zum Zurücksetzen",
+    "SORT_ANNOUNCE_ASC": "Sortiert nach {{column}}, aufsteigend",
+    "SORT_ANNOUNCE_DESC": "Sortiert nach {{column}}, absteigend",
+    "SORT_ANNOUNCE_NONE": "Sortierung für {{column}} zurückgesetzt"
   },
   "STATUS": {
     "DRAFT": "Entwurf",
@@ -265,6 +340,11 @@
     "JSON_HINT": "Erwartetes Format:",
     "JSON_INVALID": "Ungültige JSON-Datei.",
     "NAME_LABEL": "Firmenname *",
+    "DUPLICATE_HINT": "Sie haben bereits ein Unternehmen mit dem Namen „{{name}}“.",
+    "DUPLICATE_HINT_AT": "Sie haben „{{name}}“ in {{cities}} bereits erfasst.",
+    "SAME_NAME_ELSEWHERE": "Sie haben ein Unternehmen dieses Namens an einem anderen Standort:",
+    "DUPLICATE_OPEN": "Vorhandenes öffnen",
+    "SIMILAR_HEADING": "Ihre Unternehmen mit ähnlichem Namen:",
     "LOCATIONS_HEADING": "Standorte",
     "LOCATION_LEGEND": "Standort {{n}}",
     "STREET": "Straße",
