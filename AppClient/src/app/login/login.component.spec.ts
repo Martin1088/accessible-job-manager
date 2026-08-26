@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
+import { provideTranslateService } from '@ngx-translate/core';
 
 import { LoginComponent } from './login.component';
 
@@ -12,7 +13,8 @@ describe('LoginComponent', () => {
       providers: [
         provideHttpClient(withXhr()),
         provideHttpClientTesting(),
-        provideRouter([])
+        provideRouter([]),
+        provideTranslateService({ fallbackLang: 'en' })
       ]
     }).compileComponents();
   });

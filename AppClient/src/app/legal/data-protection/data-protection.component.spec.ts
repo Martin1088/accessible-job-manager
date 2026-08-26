@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideTranslateService } from '@ngx-translate/core';
+import { provideRouter } from '@angular/router';
 
 import { DataProtectionComponent } from './data-protection.component';
 
@@ -7,7 +8,7 @@ describe('DataProtectionComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DataProtectionComponent],
-      providers: [provideTranslateService({ fallbackLang: 'en' })]
+      providers: [provideTranslateService({ fallbackLang: 'en' }), provideRouter([])]
     }).compileComponents();
   });
 
