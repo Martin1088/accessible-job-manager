@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 "/", "/index.html", "/favicon.ico", "/error",
                                 "/assets/**",
                                 "/i18n/**",
-                                "/*.js", "/*.css", "/*.map",
+                                "/*.js", "/*.css", "/*.map", "/*.png",
                                 "/runtime*.js",
                                 "/polyfills*.js",
                                 "/main*.js",
