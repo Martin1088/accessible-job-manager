@@ -1,30 +1,80 @@
 <main id="main-content" tabindex="-1">
-  <div class="login-card">
-    <h1>Job Manager</h1>
-    <p class="subtitle">Sign in to continue</p>
+  <div class="letter">
+    <!--
+      DIN 5008 fold marks - real business letters carry two small unlabeled
+      tick marks on the page edge so the sheet lines up in a C6/5 window
+      envelope when folded. Positions match FIRST_FOLD_MARK_MM (87mm) and
+      SECOND_FOLD_MARK_MM (192mm) of a 297mm page in StyleSettings.java -
+      the same geometry this app's own cover-letter generator prints.
+      Decorative only.
+    -->
+    <span class="fold-mark fold-mark--upper" aria-hidden="true"></span>
+    <span class="fold-mark fold-mark--lower" aria-hidden="true"></span>
+
+    <!-- The 24.1mm writing-area margin from StyleSettings.din5008FormB(). -->
+    <span class="margin-guide" aria-hidden="true">
+      <span class="margin-guide__label">24.1mm</span>
+    </span>
+
+    <div class="letterhead">
+      <svg class="postmark" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <circle class="pm-ring-outer" cx="60" cy="60" r="54" />
+        <circle class="pm-ring-inner" cx="60" cy="60" r="44" />
+        <g class="pm-ticks">
+          <line x1="60" y1="6" x2="60" y2="12" />
+          <line x1="87" y1="13.24" x2="84" y2="18.43" />
+          <line x1="106.76" y1="33" x2="101.57" y2="36" />
+          <line x1="114" y1="60" x2="108" y2="60" />
+          <line x1="106.76" y1="87" x2="101.57" y2="84" />
+          <line x1="87" y1="106.76" x2="84" y2="101.57" />
+          <line x1="60" y1="114" x2="60" y2="108" />
+          <line x1="33" y1="106.76" x2="36" y2="101.57" />
+          <line x1="13.24" y1="87" x2="18.43" y2="84" />
+          <line x1="6" y1="60" x2="12" y2="60" />
+          <line x1="13.24" y1="33" x2="18.43" y2="36" />
+          <line x1="33" y1="13.24" x2="36" y2="18.43" />
+        </g>
+        <text class="pm-text-main" x="60" y="56">JOB</text>
+        <text class="pm-text-main" x="60" y="70">MANAGER</text>
+        <text class="pm-text-sub" x="60" y="85">DIN 5008</text>
+      </svg>
+
+      <div class="letterhead__text">
+        <h1>Job Manager</h1>
+        <p class="tagline">Track applications and write cover letters — built to work as well with a screen reader as with a mouse.</p>
+      </div>
+    </div>
 
     @if (error) {
       <p role="alert" class="error">{{ error }}</p>
     }
 
-    <nav aria-label="Login options">
-      <ul role="list" class="login-options">
+    <div class="rule" aria-hidden="true"></div>
+
+    <nav aria-label="Sign in options">
+      <ul role="list" class="login-options login-options--primary">
         <li>
           <button type="button" (click)="loginAsUser()" class="btn-primary">
-            Login as User
-          </button>
-        </li>
-        <li>
-          <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
-            Login as Advisor
-          </button>
-        </li>
-        <li>
-          <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
-            Login as Reviewer
+            Continue as User
           </button>
         </li>
       </ul>
+
+      <div role="group" aria-labelledby="other-roles-heading" class="other-roles">
+        <p id="other-roles-heading" class="section-label">Other roles</p>
+        <ul role="list" class="login-options login-options--secondary">
+          <li>
+            <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
+              Continue as Advisor
+            </button>
+          </li>
+          <li>
+            <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
+              Continue as Reviewer
+            </button>
+          </li>
+        </ul>
+      </div>
     </nav>
   </div>
 </main>

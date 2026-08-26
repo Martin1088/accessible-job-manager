@@ -1,41 +1,202 @@
+// System font stacks only, deliberately - no Google Fonts fetch. This is the
+// one page every visitor loads before authenticating, and this app's own
+// privacy policy promises no third-party trackers; a webfont request would
+// leak a visitor's IP to a font CDN pre-consent. A serif + monospace pairing
+// is already enough of a typographic shift from the rest of the app's
+// system-ui sans to read as a considered "front door," without the fetch.
+$serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+$mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liberation Mono', monospace;
+
+:host {
+  --paper: #EDF1F5;
+  --card: #ffffff;
+  --ink: #1A2233;
+  --ink-soft: #57667A;
+  --rule: #D3DBE4;
+  --postmark: #B5432F;
+  --postmark-deep: #7A2C1F;
+  --error-bg: #FBEEEC;
+  --error-border: #E7B7AC;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --paper: #10151F;
+    --card: #171E2B;
+    --ink: #E8EDF4;
+    --ink-soft: #9BAAC2;
+    --rule: #2B3547;
+    --postmark: #E2694F;
+    --postmark-deep: #F0876F;
+    --error-bg: #3A2420;
+    --error-border: #5C332A;
+  }
+}
+
 main {
+  // Overrides the site-wide main{max-width:860px;margin:2rem auto} from
+  // styles.scss - without this the paper background only paints that
+  // centered strip instead of going full-bleed behind the letter.
+  max-width: none;
+  margin: 0;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f4f6fb;
+  background: var(--paper);
+  padding: 2.5rem 1.25rem;
 }
 
-.login-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 2.5rem 2rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.letter {
+  position: relative;
   width: 100%;
-  max-width: 360px;
-  text-align: center;
+  max-width: 420px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 2.75rem 2.25rem 2.5rem;
+  box-shadow: 0 1px 2px rgba(26, 34, 51, 0.05), 0 18px 40px -20px rgba(26, 34, 51, 0.4);
 
-  h1 {
-    font-size: 1.6rem;
-    margin-bottom: 0.25rem;
-    color: #1a1a2e;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: letter-settle 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes letter-settle {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fold-mark {
+  position: absolute;
+  left: -1px;
+  width: 8px;
+  height: 1px;
+  background: var(--ink-soft);
+  pointer-events: none;
+
+  // 87mm and 192mm of a 297mm page - FIRST_FOLD_MARK_MM / SECOND_FOLD_MARK_MM
+  // in StyleSettings.java.
+  &--upper { top: 29.3%; }
+  &--lower { top: 64.6%; }
+}
+
+.margin-guide {
+  position: absolute;
+  top: 2.5rem;
+  bottom: 2.5rem;
+  // 24.1mm of the 2.25rem card padding, decorative only - not to scale.
+  left: 1.65rem;
+  width: 1px;
+  background: var(--rule);
+  pointer-events: none;
+  display: none;
+
+  @media (min-width: 30rem) {
+    display: block;
+  }
+}
+
+.margin-guide__label {
+  position: absolute;
+  bottom: -0.25rem;
+  left: 0.4rem;
+  transform: rotate(-90deg);
+  transform-origin: left bottom;
+  font-family: $mono;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.letterhead {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.postmark {
+  flex-shrink: 0;
+  width: 4.75rem;
+  height: 4.75rem;
+  color: var(--postmark);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: stamp-down 0.6s 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 
-  .subtitle {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
+  circle, line {
+    fill: none;
+    stroke: currentColor;
   }
+
+  .pm-ring-outer { stroke-width: 1.5; }
+  .pm-ring-inner { stroke-width: 1; opacity: 0.6; }
+  .pm-ticks line { stroke-width: 1.5; }
+
+  text {
+    fill: currentColor;
+    font-family: $mono;
+    text-anchor: middle;
+  }
+
+  .pm-text-main { font-size: 13px; font-weight: 700; letter-spacing: 0.03em; }
+  .pm-text-sub  { font-size: 8px; letter-spacing: 0.1em; opacity: 0.75; }
+}
+
+@keyframes stamp-down {
+  from { opacity: 0; transform: scale(1.35) rotate(-10deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.letterhead__text {
+  min-width: 0;
+}
+
+h1 {
+  margin: 0 0 0.4rem;
+  font-family: $mono;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.tagline {
+  margin: 0;
+  font-family: $serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
 }
 
 .error {
-  background: #fde8e8;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-  border-radius: 6px;
-  padding: 0.65rem 1rem;
-  font-size: 0.875rem;
-  margin-bottom: 1.25rem;
+  font-family: $serif;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--postmark-deep);
+  border-radius: 3px;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.9rem;
+  margin: 0 0 1.25rem;
+  text-align: left;
+}
+
+.rule {
+  border-top: 1px solid var(--rule);
+  margin: 0 0 1.5rem;
+}
+
+.section-label {
+  margin: 0 0 0.6rem;
+  font-family: $mono;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
   text-align: left;
 }
 
@@ -45,34 +206,50 @@ main {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.6rem;
+}
+
+.login-options--primary {
+  margin-bottom: 1.75rem;
+}
+
+.other-roles {
+  text-align: left;
 }
 
 button {
   width: 100%;
-  padding: 0.7rem 1rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  font-weight: 500;
+  min-block-size: 44px;
+  padding: 0.8rem 1rem;
+  border-radius: 3px;
+  font-family: $mono;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, filter 0.15s;
 
   &:focus-visible {
-    outline: 3px solid #005fcc;
+    outline: 3px solid var(--postmark);
     outline-offset: 2px;
   }
 }
 
 .btn-primary {
-  background: #005fcc;
-  color: #fff;
-  &:hover { background: #004aaa; }
+  background: var(--ink);
+  color: var(--card);
+  border: 1px solid var(--ink);
+
+  &:hover { filter: brightness(0.92); }
 }
 
 .btn-secondary {
-  background: #e8f0fb;
-  color: #003d99;
-  &:hover { background: #d0e2f8; }
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+
+  &:hover {
+    border-color: var(--postmark);
+    color: var(--postmark-deep);
+  }
 }
