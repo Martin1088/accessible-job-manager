@@ -131,6 +131,9 @@ td button {
     align-items: center;
     gap: 1rem;
     border-bottom: 1px solid #e5e5e5;
+    // A cell value can be a long unbroken token (email, filename); without
+    // this it overflows the card instead of wrapping onto its own line.
+    overflow-wrap: anywhere;
 
     &::before {
       content: attr(data-label);

@@ -55,8 +55,11 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
 
 .user-info {
   display: flex; flex-direction: column; gap: 0.1rem;
+  min-inline-size: 0;
   strong { font-size: 1rem; color: #1e293b; }
-  span   { font-size: 0.85rem; color: #64748b; }
+  // An email address has no spaces to break on, so it needs its own wrap
+  // rule to avoid pushing the card wider than the viewport on a phone.
+  span   { font-size: 0.85rem; color: #64748b; overflow-wrap: anywhere; }
 }
 
 .doc-table {
@@ -113,6 +116,7 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
       justify-content: space-between;
       align-items: center;
       gap: 1rem;
+      overflow-wrap: anywhere;
 
       &::before {
         content: attr(data-label);

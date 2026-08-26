@@ -168,12 +168,15 @@ button[type="submit"] {
 
 .pagination {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
   margin-top: 1rem;
 
   button {
     padding: 0.4rem 1rem;
+    min-block-size: 44px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background: #fff;
