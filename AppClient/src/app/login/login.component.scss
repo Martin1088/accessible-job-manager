@@ -13,8 +13,8 @@ $mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liber
   --ink: #1A2233;
   --ink-soft: #57667A;
   --rule: #D3DBE4;
-  --postmark: #B5432F;
-  --postmark-deep: #7A2C1F;
+  --accent: #B5432F;
+  --accent-deep: #7A2C1F;
   --error-bg: #FBEEEC;
   --error-border: #E7B7AC;
 }
@@ -26,8 +26,8 @@ $mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liber
     --ink: #E8EDF4;
     --ink-soft: #9BAAC2;
     --rule: #2B3547;
-    --postmark: #E2694F;
-    --postmark-deep: #F0876F;
+    --accent: #E2694F;
+    --accent-deep: #F0876F;
     --error-bg: #3A2420;
     --error-border: #5C332A;
   }
@@ -117,38 +117,21 @@ main {
   margin-bottom: 1.5rem;
 }
 
-.postmark {
+.logo {
   flex-shrink: 0;
   width: 4.75rem;
   height: 4.75rem;
-  color: var(--postmark);
+  border-radius: 50%;
+  border: 1px solid var(--rule);
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: stamp-down 0.6s 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: logo-settle 0.6s 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
-
-  circle, line {
-    fill: none;
-    stroke: currentColor;
-  }
-
-  .pm-ring-outer { stroke-width: 1.5; }
-  .pm-ring-inner { stroke-width: 1; opacity: 0.6; }
-  .pm-ticks line { stroke-width: 1.5; }
-
-  text {
-    fill: currentColor;
-    font-family: $mono;
-    text-anchor: middle;
-  }
-
-  .pm-text-main { font-size: 13px; font-weight: 700; letter-spacing: 0.03em; }
-  .pm-text-sub  { font-size: 8px; letter-spacing: 0.1em; opacity: 0.75; }
 }
 
-@keyframes stamp-down {
-  from { opacity: 0; transform: scale(1.35) rotate(-10deg); }
-  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+@keyframes logo-settle {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .letterhead__text {
@@ -177,7 +160,7 @@ h1 {
   font-family: $serif;
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: var(--postmark-deep);
+  color: var(--accent-deep);
   border-radius: 3px;
   padding: 0.65rem 0.9rem;
   font-size: 0.9rem;
@@ -230,7 +213,7 @@ button {
   transition: background 0.15s, border-color 0.15s, color 0.15s, filter 0.15s;
 
   &:focus-visible {
-    outline: 3px solid var(--postmark);
+    outline: 3px solid var(--accent);
     outline-offset: 2px;
   }
 }
@@ -249,7 +232,7 @@ button {
   border: 1px solid var(--rule);
 
   &:hover {
-    border-color: var(--postmark);
-    color: var(--postmark-deep);
+    border-color: var(--accent);
+    color: var(--accent-deep);
   }
 }
