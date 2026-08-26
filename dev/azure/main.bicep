@@ -11,7 +11,12 @@
 //                    oidcAuthUri='https://.../application/o/authorize/' \
 //                    oidcRedirectUri='https://<expected-app-fqdn>/login/oauth2/code/authentik' \
 //                    azureOpenAiEndpoint='https://ajm-openai.openai.azure.com/' \
-//                    azureOpenAiApiKey='<AZURE_OPENAI_API_KEY>'
+//                    azureOpenAiApiKey='<AZURE_OPENAI_API_KEY>' \
+//                    adzunaAppId='<ADZUNA_APP_ID>' \
+//                    adzunaAppKey='<ADZUNA_APP_KEY>'
+//
+// adzunaAppId/adzunaAppKey turn on the advisor job search (Adzuna). Leave both
+// unset to keep the feature switched off - see dev/.env.example.
 //
 // azureOpenAiEndpoint/azureOpenAiApiKey wire up the job-posting LLM extractor
 // (jobPostingLlmProvider defaults to "azure" since no Ollama container is
