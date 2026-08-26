@@ -206,7 +206,10 @@
     "ACTIONS": "Actions",
     "SORT_BY": "Sort by {{column}}",
     "SORTED_ASC": "{{column}} sorted ascending, click for descending",
-    "SORTED_DESC": "{{column}} sorted descending, click to clear"
+    "SORTED_DESC": "{{column}} sorted descending, click to clear",
+    "SORT_ANNOUNCE_ASC": "Sorted by {{column}}, ascending",
+    "SORT_ANNOUNCE_DESC": "Sorted by {{column}}, descending",
+    "SORT_ANNOUNCE_NONE": "Sort cleared for {{column}}"
   },
   "STATUS": {
     "DRAFT": "Draft",

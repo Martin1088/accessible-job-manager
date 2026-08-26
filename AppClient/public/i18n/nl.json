@@ -206,7 +206,10 @@
     "ACTIONS": "Acties",
     "SORT_BY": "Sorteren op {{column}}",
     "SORTED_ASC": "{{column}} oplopend gesorteerd, klik voor aflopend",
-    "SORTED_DESC": "{{column}} aflopend gesorteerd, klik om te wissen"
+    "SORTED_DESC": "{{column}} aflopend gesorteerd, klik om te wissen",
+    "SORT_ANNOUNCE_ASC": "Gesorteerd op {{column}}, oplopend",
+    "SORT_ANNOUNCE_DESC": "Gesorteerd op {{column}}, aflopend",
+    "SORT_ANNOUNCE_NONE": "Sortering voor {{column}} gewist"
   },
   "STATUS": {
     "DRAFT": "Concept",

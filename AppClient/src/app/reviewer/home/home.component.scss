@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 main {
   max-width: 900px;
   margin: 2rem auto;
@@ -79,6 +81,8 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
 
 .btn-download {
   padding: 0.35rem 0.85rem;
+  min-inline-size: 44px;
+  min-block-size: 44px;
   background: #005fcc;
   color: #fff;
   border: none; border-radius: 6px;
@@ -87,4 +91,36 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
   &:hover:not(:disabled) { background: #004aaa; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
   &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+}
+
+// Mobile card layout: the DOM stays one <table> so VoiceOver still reports
+// table structure and per-cell header association - only the visual
+// presentation changes. Never use visibility:hidden/opacity:0 on thead here,
+// it would keep the header row reachable while looking hidden.
+@include bp.mobile {
+  .doc-table {
+    thead { display: none; }
+
+    tbody tr {
+      display: block;
+      margin-block-end: 0.75rem;
+      border: 1px solid #f1f5f9;
+      border-radius: 6px;
+    }
+
+    th, td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+    }
+
+    tr:last-child td:last-child { border-bottom: none; }
+  }
 }

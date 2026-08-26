@@ -43,10 +43,10 @@
       @for (row of sortedRows; track row.id ?? $index) {
         <tr>
           @for (col of columns; track col) {
-            <td>{{ row[col.field] }}</td>
+            <td [attr.data-label]="col.label | translate">{{ row[col.field] }}</td>
           }
           @if (actions.length > 0) {
-            <td>
+            <td [attr.data-label]="'TABLE.ACTIONS' | translate">
               @for (action of actionsFor(row); track action) {
                 <button
                   type="button"

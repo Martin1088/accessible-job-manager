@@ -206,7 +206,10 @@
     "ACTIONS": "Aktionen",
     "SORT_BY": "Sortieren nach {{column}}",
     "SORTED_ASC": "{{column}} aufsteigend sortiert, klicken für absteigend",
-    "SORTED_DESC": "{{column}} absteigend sortiert, klicken zum Zurücksetzen"
+    "SORTED_DESC": "{{column}} absteigend sortiert, klicken zum Zurücksetzen",
+    "SORT_ANNOUNCE_ASC": "Sortiert nach {{column}}, aufsteigend",
+    "SORT_ANNOUNCE_DESC": "Sortiert nach {{column}}, absteigend",
+    "SORT_ANNOUNCE_NONE": "Sortierung für {{column}} zurückgesetzt"
   },
   "STATUS": {
     "DRAFT": "Entwurf",

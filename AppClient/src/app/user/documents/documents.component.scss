@@ -1,3 +1,13 @@
+@use '../../../styles/breakpoints' as bp;
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
 main {
   max-width: 860px;
   margin: 2rem auto;
@@ -114,6 +124,17 @@ main {
   flex-wrap: wrap;
 }
 
+.filter-fieldset {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-inline-size: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
@@ -138,6 +159,23 @@ main {
   }
 
   input[type="search"] { min-width: 12rem; }
+}
+
+@include bp.mobile {
+  .filter-fieldset {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filter-group {
+    width: 100%;
+
+    select, input[type="search"] {
+      width: 100%;
+      min-width: 0;
+    }
+  }
 }
 
 .error {

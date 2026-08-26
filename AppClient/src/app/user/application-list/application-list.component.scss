@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 main {
   max-width: 1600px;
   margin: 2rem auto;
@@ -125,6 +127,17 @@ main {
   flex-wrap: wrap;
 }
 
+.filter-fieldset {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-inline-size: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
@@ -149,6 +162,23 @@ main {
   }
 
   input[type="search"] { min-width: 12rem; }
+}
+
+@include bp.mobile {
+  .filter-fieldset {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filter-group {
+    width: 100%;
+
+    select, input[type="search"] {
+      width: 100%;
+      min-width: 0;
+    }
+  }
 }
 
 .table-wrapper {
@@ -201,11 +231,75 @@ main {
         color: #64748b;
         cursor: pointer;
         padding: 0;
+        display: inline-flex;
+        align-items: center;
+        min-inline-size: 44px;
+        min-block-size: 44px;
         &:focus-visible { outline: 2px solid #005fcc; border-radius: 2px; }
       }
     }
 
     tbody tr:hover { background: #f8fafc; }
+  }
+}
+
+// Mobile card layout: the DOM stays one <table> so VoiceOver still reports
+// table structure and per-cell header association - only the visual
+// presentation changes. Never use visibility:hidden/opacity:0 on thead here,
+// it would keep the header row reachable while looking hidden.
+@include bp.mobile {
+  .table-wrapper {
+    overflow-x: visible;
+
+    table {
+      table-layout: auto;
+
+      col { width: auto !important; }
+
+      caption { margin-bottom: 0.75rem; }
+
+      thead { display: none; }
+
+      tbody tr {
+        display: block;
+        margin-block-end: 1rem;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+      }
+
+      th, td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        white-space: normal;
+
+        &::before {
+          content: attr(data-label);
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+      }
+
+      td:has(> div),
+      td:has(> button) {
+        flex-wrap: wrap;
+        align-items: flex-start;
+
+        &::before {
+          flex-basis: 100%;
+        }
+      }
+
+      td[colspan] {
+        display: block;
+
+        &::before { content: none; }
+      }
+
+      tr:last-child td:last-child { border-bottom: none; }
+    }
   }
 }
 
