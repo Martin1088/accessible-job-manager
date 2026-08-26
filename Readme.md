@@ -1,4 +1,4 @@
-![Accessible Job Manager Logo](docs/Juke.png)
+![Accessible Job Manager Logo](docs/assets/Juke.png)
 # Accessible Job Manager
 
 **A job application manager for blind and visually impaired users.** Screen reader
@@ -49,6 +49,7 @@ vocational rehabilitation can run their own instance and connect it to existing
 systems.
 
 ---
+![Accessible Job Manager Home Screenshot](docs/assets/Home.png)
 
 ## Tech Stack
 

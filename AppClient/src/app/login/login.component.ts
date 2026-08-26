@@ -1,30 +1,26 @@
 
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-
-const ERROR_MESSAGES: Record<string, string> = {
-  wrong_role:    'Your account does not have the required role. Please try a different login option.',
-  access_denied: 'Access was denied. Please try again.',
-};
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [RouterModule],
+  imports: [TranslatePipe],
   templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
-  error = '';
+  // The raw code from the query param (e.g. "wrong_role") or null. Resolved
+  // to a message in the template via the translate pipe, keyed by code, so
+  // the text stays reactive to a language switch like everywhere else.
+  error: string | null = null;
 
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    const code = this.route.snapshot.queryParamMap.get('error');
-    if (code) {
-      this.error = ERROR_MESSAGES[code] ?? `Login failed (${code}). Please try again.`;
-    }
+    this.error = this.route.snapshot.queryParamMap.get('error');
   }
 
   loginAsUser(): void {

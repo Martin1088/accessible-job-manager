@@ -1,5 +1,24 @@
 {
   "SKIP_LINK": "Naar de hoofdinhoud springen",
+  "LOGIN": {
+    "TITLE": "Job Manager",
+    "TAGLINE": "Sollicitaties bijhouden en sollicitatiebrieven opstellen",
+    "SIGN_IN_HEADING": "Aanmelden",
+    "CONTINUE_AS_USER": "Doorgaan als Gebruiker",
+    "OTHER_ROLES": "Andere rollen",
+    "CONTINUE_AS_ADVISOR": "Doorgaan als Adviseur",
+    "CONTINUE_AS_REVIEWER": "Doorgaan als Beoordelaar",
+    "ENCLOSURE_LABEL": "Bijlage",
+    "WHATS_INSIDE": "Dit vindt u binnen",
+    "SCREENSHOT_ALT": "Het Job Manager-dashboard: een veld om een vacature via URL te importeren en snelkoppelingen naar Bedrijven, Sollicitaties, Sollicitatiebriefsjabloon en Profiel.",
+    "CAPTION": "Importeer een vacature via de URL, volg elke sollicitatie van concept tot aanbod, en maak sollicitatiebrieven volgens DIN 5008 — even goed te gebruiken met een schermlezer als met een muis.",
+    "BUILT_BY": "Gebouwd door",
+    "SOURCE_ON_GITHUB": "broncode op GitHub",
+    "OPENS_NEW_TAB": "opent in een nieuw tabblad",
+    "ERROR_WRONG_ROLE": "Uw account heeft niet de vereiste rol. Probeer een andere aanmeldoptie.",
+    "ERROR_ACCESS_DENIED": "Toegang geweigerd. Probeer het opnieuw.",
+    "ERROR_GENERIC": "Aanmelden mislukt ({{code}}). Probeer het opnieuw."
+  },
   "NAV": {
     "USER_LABEL": "Hoofdnavigatie",
     "ADVISOR_LABEL": "Adviseursnavigatie",
@@ -181,6 +200,7 @@
     "DOWNLOAD_ARIA": "{{label}} downloaden"
   },
   "COMMON": {
+    "BACK": "Terug",
     "YEAR": "Jaar",
     "MONTH": "Maand",
     "ALL_YEARS": "Alle jaren",

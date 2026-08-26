@@ -1,5 +1,24 @@
 {
   "SKIP_LINK": "Skip to main content",
+  "LOGIN": {
+    "TITLE": "Job Manager",
+    "TAGLINE": "Track applications and write cover letters",
+    "SIGN_IN_HEADING": "Sign in",
+    "CONTINUE_AS_USER": "Continue as User",
+    "OTHER_ROLES": "Other roles",
+    "CONTINUE_AS_ADVISOR": "Continue as Advisor",
+    "CONTINUE_AS_REVIEWER": "Continue as Reviewer",
+    "ENCLOSURE_LABEL": "Enclosure",
+    "WHATS_INSIDE": "What's inside",
+    "SCREENSHOT_ALT": "The Job Manager dashboard: a field to import a job posting by URL, and quick links to Companies, Applications, Cover Letter Template and Profile.",
+    "CAPTION": "Import a job posting from its URL, track every application from draft to offer, and generate DIN 5008 business letters — built to work as well with a screen reader as with a mouse.",
+    "BUILT_BY": "Built by",
+    "SOURCE_ON_GITHUB": "source on GitHub",
+    "OPENS_NEW_TAB": "opens in a new tab",
+    "ERROR_WRONG_ROLE": "Your account does not have the required role. Please try a different login option.",
+    "ERROR_ACCESS_DENIED": "Access was denied. Please try again.",
+    "ERROR_GENERIC": "Login failed ({{code}}). Please try again."
+  },
   "NAV": {
     "USER_LABEL": "Main navigation",
     "ADVISOR_LABEL": "Advisor navigation",
@@ -181,6 +200,7 @@
     "DOWNLOAD_ARIA": "Download {{label}}"
   },
   "COMMON": {
+    "BACK": "Back",
     "YEAR": "Year",
     "MONTH": "Month",
     "ALL_YEARS": "All years",

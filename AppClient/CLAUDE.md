@@ -33,6 +33,46 @@ Accessibility is a core requirement, not an afterthought:
 - **Alerts** — `role="alert"` on error messages for live-region announcement
 - **Definition lists** — `<dl>`/`<dt>`/`<dd>` for key-value profile data
 
+## Internationalization (i18n)
+
+Every user-facing string ships in all three locales at once —
+`public/i18n/en.json`, `de.json`, `nl.json` — never just one. A component
+with hardcoded English text is a latent bug, not a shortcut: the login page
+went untranslated for a while for exactly this reason (it predated the rest
+of the app's `| translate` convention) and nobody noticed until someone
+tested it in German. Adding a key to only `en.json` reproduces that bug.
+
+- Use the `TranslatePipe` (`{{ 'NAMESPACE.KEY' | translate }}`) in templates,
+  not `TranslateService.instant()` in TypeScript — the pipe re-evaluates on
+  a language switch, `instant()` freezes the value at the moment it ran (see
+  `DataTableComponent`'s own comment on why it translates reactively).
+- For text that depends on component state (e.g. one of a few error codes),
+  branch in the template with `@switch` on the raw value and translate each
+  case, rather than resolving the final string in TypeScript — see
+  `login.component.html`'s handling of the `error` query param.
+- A person's name or the product name (`Job Manager`, `Martin Jurk`) is not
+  a translation key — it doesn't change per locale. Check an existing key
+  first (e.g. `HOME.TITLE`) before assuming everything needs one.
+- Reuse this app's own established vocabulary for a concept instead of
+  inventing new wording — role names in particular already have translated
+  labels (`PROFILE.ROLE_USER/ROLE_ADVISOR/ROLE_REVIEWER`); a new feature
+  that mentions a role should read those rather than retranslating it.
+
+**Verify translations render, not just parse.** After adding or changing
+keys:
+
+- [ ] All three JSON files still parse (`node -e "JSON.parse(require('fs').readFileSync(path))"`
+      per file, or just load the page — a syntax error breaks the whole
+      bundle, not just the new key).
+- [ ] Switch the language selector and confirm the new text actually
+      changes — a missing key silently falls back to showing the raw
+      `NAMESPACE.KEY` string instead of failing loudly.
+- [ ] Check German specifically for layout overflow. German strings run
+      noticeably longer than English for the same content (see this file's
+      own German copy for proof) — a button or card sized to the English
+      text is the most common place this breaks. Verify at both the
+      mobile breakpoint and the widest layout the copy appears in.
+
 ## Mobile & Responsive Conventions
 
 Screen-reader-first is the priority here too: visual adaptation for small
