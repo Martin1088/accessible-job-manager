@@ -165,7 +165,20 @@
     "REF_USERS": "Users",
     "REF_OPEN": "Open suggestions",
     "REF_UPDATED": "As of",
-    "SLIP_FROM": "From"
+    "SLIP_FROM": "From",
+    "REQUESTS_HEADING": "Assignment requests",
+    "REQUESTS_HELP": "Users who have asked you to advise them. Accepting a request adds the user to My Users.",
+    "REQUESTS_CAPTION": "Pending requests to advise a user",
+    "REQUESTS_EMPTY": "No pending requests.",
+    "REQ_COL_REQUESTED": "Requested",
+    "REQ_ACCEPT": "Accept",
+    "REQ_DECLINE": "Decline",
+    "REQ_ACCEPT_ARIA": "Accept the request from {{name}}",
+    "REQ_DECLINE_ARIA": "Decline the request from {{name}}",
+    "REQ_ACCEPTED": "{{name}} is now one of your users.",
+    "REQ_DECLINED": "Request from {{name}} declined.",
+    "ERROR_LOAD_REQUESTS": "Assignment requests could not be loaded.",
+    "ERROR_REQUEST_ACTION": "That did not work. Please try again."
   },
   "JOB_SEARCH": {
     "TITLE": "Job Search",

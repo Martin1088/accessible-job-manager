@@ -1,12 +1,15 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 
 import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DataTableComponent, TableColumn } from '../../shared/data-table/data-table.component';
+import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
 import { AuthService } from '../../core/auth.service';
+import { RelationshipService } from '../../services/relationship.service';
+import { Relationship } from '../../model/relationship';
 import { Company } from '../../model/company';
 
 interface AdvisorUser {
@@ -47,6 +50,29 @@ export class HomeComponent implements OnInit {
     { label: 'ADVISOR.COL_EMAIL', field: 'email', sortable: true },
   ];
 
+  // Incoming assignment requests: users who asked this advisor to advise them
+  // (from the directory on their profile page) and are waiting for an answer.
+  private incoming: Relationship[] = [];
+  requestRows: any[] = [];
+  requestError = '';
+  requestBusy = false;
+  requestColumns: TableColumn[] = [
+    { label: 'ADVISOR.COL_USER',           field: 'user',      sortable: true },
+    { label: 'ADVISOR.REQ_COL_REQUESTED',  field: 'requested', sortable: true },
+  ];
+  requestActions: TableAction[] = [
+    {
+      label: 'ADVISOR.REQ_ACCEPT',
+      ariaLabel: (row) => this.translate.instant('ADVISOR.REQ_ACCEPT_ARIA', { name: row.user }),
+      handler: (row) => this.answerRequest(row, 'accept'),
+    },
+    {
+      label: 'ADVISOR.REQ_DECLINE',
+      ariaLabel: (row) => this.translate.instant('ADVISOR.REQ_DECLINE_ARIA', { name: row.user }),
+      handler: (row) => this.answerRequest(row, 'decline'),
+    },
+  ];
+
   // Suggestion form
   assignedUsers: AdvisorUser[] = [];
   positionOptions: PositionOption[] = [];
@@ -68,13 +94,17 @@ export class HomeComponent implements OnInit {
 
   errorMessage = '';
 
+  private readonly announcer = inject(LiveAnnouncer);
+
   constructor(
     private http: HttpClient,
     private translate: TranslateService,
+    private relationships: RelationshipService,
     protected auth: AuthService,
   ) {
     this.translate.onLangChange.pipe(takeUntilDestroyed()).subscribe(() => {
       this.suggestionRows = this.toSuggestionRows(this.suggestions);
+      this.requestRows = this.toRequestRows(this.incoming);
     });
   }
 
@@ -93,6 +123,7 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMyUsers();
+    this.loadRequests();
     this.loadPositions();
     this.loadSuggestions();
   }
@@ -104,6 +135,57 @@ export class HomeComponent implements OnInit {
         this.userRows = users.map(u => ({ name: u.name, email: u.email }));
       },
       error: () => this.errorMessage = this.translate.instant('ADVISOR.ERROR_LOAD_USERS'),
+    });
+  }
+
+  private loadRequests(): void {
+    this.relationships.incoming().subscribe({
+      next: (list) => {
+        // Only advisor-kind links still awaiting an answer are actionable here.
+        this.incoming = list.filter(r => r.kind === 'ADVISOR' && r.status === 'REQUESTED');
+        this.requestRows = this.toRequestRows(this.incoming);
+      },
+      error: () => this.requestError = this.translate.instant('ADVISOR.ERROR_LOAD_REQUESTS'),
+    });
+  }
+
+  private toRequestRows(list: Relationship[]): any[] {
+    return list.map(r => ({
+      user:      r.applicantName,
+      requested: r.createdAt ? r.createdAt.substring(0, 10) : '—',
+      id:        r.id,
+    }));
+  }
+
+  private answerRequest(row: { id: string; user: string }, outcome: 'accept' | 'decline'): void {
+    if (this.requestBusy) {
+      return;
+    }
+    this.requestBusy = true;
+    this.requestError = '';
+
+    const call = outcome === 'accept'
+      ? this.relationships.accept(row.id)
+      : this.relationships.decline(row.id);
+
+    call.subscribe({
+      next: () => {
+        this.announcer.announce(
+          this.translate.instant(
+            outcome === 'accept' ? 'ADVISOR.REQ_ACCEPTED' : 'ADVISOR.REQ_DECLINED',
+            { name: row.user }),
+          'polite');
+        this.requestBusy = false;
+        this.loadRequests();
+        // An accepted user now belongs in My Users.
+        if (outcome === 'accept') {
+          this.loadMyUsers();
+        }
+      },
+      error: () => {
+        this.requestError = this.translate.instant('ADVISOR.ERROR_REQUEST_ACTION');
+        this.requestBusy = false;
+      },
     });
   }
 

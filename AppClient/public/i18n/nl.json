@@ -165,7 +165,20 @@
     "REF_USERS": "Gebruikers",
     "REF_OPEN": "Openstaande suggesties",
     "REF_UPDATED": "Peildatum",
-    "SLIP_FROM": "Van"
+    "SLIP_FROM": "Van",
+    "REQUESTS_HEADING": "Aanvragen voor begeleiding",
+    "REQUESTS_HELP": "Gebruikers die u hebben gevraagd hen te begeleiden. Als u een aanvraag accepteert, wordt de gebruiker toegevoegd aan Mijn gebruikers.",
+    "REQUESTS_CAPTION": "Openstaande aanvragen om een gebruiker te begeleiden",
+    "REQUESTS_EMPTY": "Geen openstaande aanvragen.",
+    "REQ_COL_REQUESTED": "Aangevraagd op",
+    "REQ_ACCEPT": "Accepteren",
+    "REQ_DECLINE": "Weigeren",
+    "REQ_ACCEPT_ARIA": "Aanvraag van {{name}} accepteren",
+    "REQ_DECLINE_ARIA": "Aanvraag van {{name}} weigeren",
+    "REQ_ACCEPTED": "{{name}} is nu een van uw gebruikers.",
+    "REQ_DECLINED": "Aanvraag van {{name}} geweigerd.",
+    "ERROR_LOAD_REQUESTS": "Aanvragen voor begeleiding konden niet worden geladen.",
+    "ERROR_REQUEST_ACTION": "Dat is niet gelukt. Probeer het opnieuw."
   },
   "JOB_SEARCH": {
     "TITLE": "Vacaturezoeker",

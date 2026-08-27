@@ -165,7 +165,20 @@
     "REF_USERS": "Benutzer",
     "REF_OPEN": "Offene Vorschläge",
     "REF_UPDATED": "Stand",
-    "SLIP_FROM": "Von"
+    "SLIP_FROM": "Von",
+    "REQUESTS_HEADING": "Betreuungsanfragen",
+    "REQUESTS_HELP": "Benutzer, die Sie um Betreuung gebeten haben. Wenn Sie eine Anfrage annehmen, wird der Benutzer zu „Meine Benutzer“ hinzugefügt.",
+    "REQUESTS_CAPTION": "Offene Anfragen zur Betreuung eines Benutzers",
+    "REQUESTS_EMPTY": "Keine offenen Anfragen.",
+    "REQ_COL_REQUESTED": "Angefragt am",
+    "REQ_ACCEPT": "Annehmen",
+    "REQ_DECLINE": "Ablehnen",
+    "REQ_ACCEPT_ARIA": "Anfrage von {{name}} annehmen",
+    "REQ_DECLINE_ARIA": "Anfrage von {{name}} ablehnen",
+    "REQ_ACCEPTED": "{{name}} gehört jetzt zu Ihren Benutzern.",
+    "REQ_DECLINED": "Anfrage von {{name}} abgelehnt.",
+    "ERROR_LOAD_REQUESTS": "Betreuungsanfragen konnten nicht geladen werden.",
+    "ERROR_REQUEST_ACTION": "Das hat nicht funktioniert. Bitte versuchen Sie es erneut."
   },
   "JOB_SEARCH": {
     "TITLE": "Jobsuche",

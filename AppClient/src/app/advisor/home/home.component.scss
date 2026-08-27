@@ -96,6 +96,14 @@ section.composer {
   color: var(--ink-soft);
 }
 
+// A line of standing instruction under a section tab, in the letter's own voice.
+.section-note {
+  margin: 0 0 1rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
 // --- Notices --------------------------------------------------------------
 
 .notice {
@@ -297,21 +305,19 @@ section.composer {
 }
 
 @include bp.mobile {
-  main {
-    gap: 1.25rem;
-  }
-
   section {
     padding: 1.1rem;
   }
 
-  :host ::ng-deep app-data-table tbody tr {
-    background: var(--card);
-    border-color: var(--rule);
-    box-shadow: none;
-  }
+  :host ::ng-deep app-data-table {
+    tbody tr {
+      background: var(--card);
+      border-color: var(--rule);
+      box-shadow: none;
+    }
 
-  :host ::ng-deep app-data-table td {
-    border-color: var(--rule);
+    td {
+      border-color: var(--rule);
+    }
   }
 }
