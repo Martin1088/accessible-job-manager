@@ -1,6 +1,8 @@
 package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
+import de.samply.manager.jobimport.diagnostics.FailureCategory;
+import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
@@ -49,19 +51,22 @@ public class JobPostingSnapshotService {
     private final DocumentService documentService;
     private final CompanyPositionRepository companyPositionRepository;
     private final MessageSource messageSource;
+    private final ImportDiagnostics diagnostics;
 
     public JobPostingSnapshotService(@Value("${gotenberg.url}") String gotenbergUrl,
                                      StorageService storageService,
                                      DocumentRepository documentRepository,
                                      DocumentService documentService,
                                      CompanyPositionRepository companyPositionRepository,
-                                     MessageSource messageSource) {
+                                     MessageSource messageSource,
+                                     ImportDiagnostics diagnostics) {
         this.gotenbergUrl = gotenbergUrl;
         this.storageService = storageService;
         this.documentRepository = documentRepository;
         this.documentService = documentService;
         this.companyPositionRepository = companyPositionRepository;
         this.messageSource = messageSource;
+        this.diagnostics = diagnostics;
         this.restClient = RestClient.create();
     }
 
@@ -75,15 +80,22 @@ public class JobPostingSnapshotService {
         body.add("url", uri.toString());
 
         try {
-            return restClient.post()
+            byte[] pdf = restClient.post()
                     .uri(gotenbergUrl + "/forms/chromium/convert/url")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(body)
                     .retrieve()
                     .body(byte[].class);
+            diagnostics.record(uri.toString(), FailureCategory.OK, null);
+            return pdf;
         } catch (RestClientResponseException e) {
-            throw new ApiException.BadRequest(describeConversionFailure(e));
+            ApiException failure = conversionFailure(e);
+            diagnostics.record(uri.toString(), FailureCategory.PDF_FETCH_FAILED, failure.getUpstreamStatus());
+            throw failure;
         } catch (RestClientException e) {
+            // Gotenberg itself is down: our problem, not the host's, so it is
+            // recorded under a category that keeps the host off the work list.
+            diagnostics.record(uri.toString(), FailureCategory.PDF_SERVICE_UNAVAILABLE, null);
             throw new ApiException.BadGateway(message("error.snapshot.serviceUnavailable"));
         }
     }
@@ -91,19 +103,22 @@ public class JobPostingSnapshotService {
     /**
      * Gotenberg reports a failed page load as "...HTTP status code from the main page: {status}: ..."
      * in its error body (e.g. a job posting that was taken down surfaces as a 404 there).
-     * Extracting that status lets us tell the user why their URL failed instead of a generic 502.
+     * Extracting that status lets us tell the user why their URL failed instead of a generic 502,
+     * and carrying it on the exception lets the diagnostics line name the status without
+     * re-parsing the localized message it ends up in.
      */
-    private String describeConversionFailure(RestClientResponseException e) {
+    private ApiException conversionFailure(RestClientResponseException e) {
         Matcher matcher = UPSTREAM_STATUS_PATTERN.matcher(e.getResponseBodyAsString());
         if (!matcher.find()) {
-            return message("error.snapshot.conversionFailed");
+            return new ApiException.BadRequest(message("error.snapshot.conversionFailed"));
         }
         int upstreamStatus = Integer.parseInt(matcher.group(1));
-        return switch (upstreamStatus) {
+        String description = switch (upstreamStatus) {
             case 404 -> message("error.snapshot.notFound404");
             case 401, 403 -> message("error.snapshot.deniedAccess", upstreamStatus);
             default -> message("error.snapshot.upstreamError", upstreamStatus);
         };
+        return new ApiException.BadRequest(description, upstreamStatus);
     }
 
     private String message(String key, Object... args) {

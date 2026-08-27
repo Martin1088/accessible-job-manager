@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Routing for the "ajm.diagnostics" logger only. Everything else keeps Spring
+  Boot's defaults, which is why base.xml's pieces are included rather than
+  replaced.
+
+  Switched entirely by environment variable, not by profile:
+
+    DIAGNOSTICS_LOG_LEVEL   OFF (default) | INFO      - whether lines are written
+    DIAGNOSTICS_LOG_FILE    logs/diagnostics.log      - where the file copy goes
+
+  Keeping the switch in one env var means a deployment turns diagnostics on
+  without a rebuild and without having to run under a particular profile name.
+
+  The logger is declared OFF here and turned on by logging.level.ajm.diagnostics
+  in application.yml, which Spring applies after this file is read and which
+  therefore wins. Declaring OFF rather than leaving the level unset matters: an
+  unset level inherits root INFO, so any context that does not read
+  application.yml (a @WebMvcTest, for one) would have diagnostics silently on.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!--
+      stdout, with a prefix. This is the copy that matters on Azure Container
+      Apps, where a file is worthless: scale-to-zero discards the filesystem.
+      The prefix is what makes the lines greppable back out of a container log
+      that everything else writes to as well: pipe "az containerapp logs show"
+      through grep '^DIAG|'.
+    -->
+    <appender name="DIAG_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>DIAG|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+      The file copy, for local runs: this is what `cut | sort | uniq -c` reads.
+      No prefix and no timestamp - both get in the way of that.
+
+      Declared unconditionally rather than behind a profile, because the level
+      already decides whether anything is written at all; with the default OFF
+      this appender never receives a line.
+
+      It does create the file at startup either way - logback opens it when the
+      appender starts, and 1.5 has no lazy option - so an empty
+      logs/diagnostics.log means diagnostics are off, not that a run found
+      nothing. In a container, mount ./logs so the file outlives it. Cleaning
+      up is rm -rf logs/.
+    -->
+    <appender name="DIAG_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${DIAGNOSTICS_LOG_FILE:-logs/diagnostics.log}</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+      additivity="false" matters: without it every diagnostics line is ALSO
+      written to the root appender, where it dilutes the normal log this is
+      meant to stay out of.
+    -->
+    <logger name="ajm.diagnostics" level="OFF" additivity="false">
+        <appender-ref ref="DIAG_CONSOLE"/>
+        <appender-ref ref="DIAG_FILE"/>
+    </logger>
+</configuration>

@@ -56,6 +56,9 @@ src/main/resources/static
 # Local secrets and configuration; dev/.env.example is the committed template.
 dev/.env
 
+# Job-import diagnostics (DIAGNOSTICS_LOG_LEVEL=INFO); disposable, rm -rf logs/
+logs/
+
 dev/meta
 dev/garage-data
 dev/postgres-data
