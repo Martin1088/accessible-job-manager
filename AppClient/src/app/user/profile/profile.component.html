@@ -102,6 +102,32 @@
     }
   </form>
 
+  @if (isUser$ | async) {
+    <section class="network" aria-labelledby="network-heading">
+      <h2 id="network-heading">{{ 'PROFILE.REL_HEADING' | translate }}</h2>
+      <p id="network-help" class="hint">{{ 'PROFILE.REL_HELP' | translate }}</p>
+
+      @if (networkError) {
+        <p role="alert" class="error">{{ 'PROFILE.REL_LOAD_ERROR' | translate }}</p>
+      }
+      @if (networkActionError) {
+        <p role="alert" class="error">{{ 'PROFILE.REL_ACTION_ERROR' | translate }}</p>
+      }
+
+      @if (networkLoading) {
+        <p role="status">{{ 'PROFILE.REL_LOADING' | translate }}</p>
+      } @else if (!networkError) {
+        <app-data-table
+          caption="PROFILE.REL_CAPTION"
+          [columns]="networkColumns"
+          [rows]="networkRows"
+          [actions]="networkActions"
+          emptyMessage="PROFILE.REL_EMPTY">
+        </app-data-table>
+      }
+    </section>
+  }
+
   <!-- Outside the profile form: these buttons must not submit it. -->
   <section class="export" aria-labelledby="export-heading">
     <h2 id="export-heading">{{ 'PROFILE.EXPORT_HEADING' | translate }}</h2>

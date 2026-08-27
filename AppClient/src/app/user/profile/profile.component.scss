@@ -84,12 +84,19 @@ fieldset {
   margin: 1.5rem 0 1rem;
 }
 
-.export {
+.export,
+.network {
   border-top: 1px solid #e2e8f0;
   padding-top: 1.25rem;
   margin-top: 2rem;
 
   h2 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+}
+
+.network {
+  .hint { margin-bottom: 1rem; }
+
+  [role="status"] { color: #64748b; font-size: 0.9rem; }
 }
 
 .btn-primary {
