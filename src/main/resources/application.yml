@@ -92,6 +92,12 @@ logging:
     org.springframework.web.client: ${WEB_CLIENT_LOG_LEVEL:INFO}
     de.samply.manager.jobsearch: ${JOBSOURCE_LOG_LEVEL:INFO}
     de.samply.manager.controller.AdvisorJobSearchController: ${JOBSOURCE_LOG_LEVEL:INFO}
+    # Job-import diagnostics: one pipe-separated line per import attempt
+    # (host|category|httpStatus|missingFields|url), routed by logback-spring.xml
+    # to stdout with a DIAG| prefix and to DIAGNOSTICS_LOG_FILE. Off by default;
+    # set DIAGNOSTICS_LOG_LEVEL=INFO on a demo system to collect the list of
+    # hosts that still need an adapter.
+    ajm.diagnostics: ${DIAGNOSTICS_LOG_LEVEL:OFF}
 job-manager:
   metrics:
     enabled: true

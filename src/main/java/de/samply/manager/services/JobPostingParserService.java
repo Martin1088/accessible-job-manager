@@ -165,7 +165,10 @@ public class JobPostingParserService {
                 response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
             } catch (IOException | InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new ApiException.BadGateway(message("error.posting.unreachable"));
+                // Cause kept: it is the only thing that still distinguishes a
+                // timeout from a refused connection once the message is the
+                // same user-facing sentence - see FailureCategory.of.
+                throw new ApiException.BadGateway(message("error.posting.unreachable"), e);
             }
 
             int status = response.statusCode();
@@ -193,9 +196,9 @@ public class JobPostingParserService {
      */
     ApiException upstreamFailure(int status) {
         return switch (status) {
-            case 401, 403, 429 -> new ApiException.BadGateway(message("error.posting.blocked", status));
-            case 404, 410 -> new ApiException.BadGateway(message("error.posting.notFound", status));
-            default -> new ApiException.BadGateway(message("error.posting.upstreamError", status));
+            case 401, 403, 429 -> new ApiException.BadGateway(message("error.posting.blocked", status), status);
+            case 404, 410 -> new ApiException.BadGateway(message("error.posting.notFound", status), status);
+            default -> new ApiException.BadGateway(message("error.posting.upstreamError", status), status);
         };
     }
 
