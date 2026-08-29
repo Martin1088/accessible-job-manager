@@ -60,7 +60,7 @@ main {
 
 .upload-filename {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0 0 1rem;
 }
 
@@ -144,7 +144,7 @@ main {
   label {
     font-size: 0.8rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }

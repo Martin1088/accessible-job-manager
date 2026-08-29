@@ -20,8 +20,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm start                      # dev server on :4200, proxies /api /login /oauth2 → :8060 (logout is POST /api/logout)
 npx ng test --watch=false --browsers=ChromeHeadless
-npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/**"
+npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/*.spec.ts"
+
+npm run lint                   # everything; advisory warnings, exit 0
+npm run lint:a11y              # template accessibility rules only, errors only - the CI gate
 ```
+
+The `--include` pattern has to end in `*.spec.ts`. A directory glob such as
+`**/company-form/**` also matches that component's `.html` and `.scss`, which the test
+builder then tries to bundle as entry points and fails with "No loader is configured
+for .scss files".
 
 Karma needs a Chrome/Chromium binary. The devcontainer installs Chromium and sets
 `CHROME_BIN` for you (see `.devcontainer/devcontainer.json`), and it is found
@@ -129,6 +137,32 @@ The build is configured with `-Dnet.bytebuddy.experimental=true` and the Mockito
 `@WebMvcTest` on controllers needs `@MockitoBean` for `CompanyService`, `RoleCheckSuccessHandler`, and `GroupsGrantedAuthoritiesMapper` (the latter two are referenced by `SecurityConfig`). Use `SecurityMockMvcRequestPostProcessors.oidcLogin()` to supply a test principal, with `.authorities(…)` to give it a role.
 
 `oidcLogin()` sets authorities directly and so bypasses the authorities mapper. To exercise the group-name-to-role translation together with the `hasRole` checks, import the real `GroupsGrantedAuthoritiesMapper` and run the claim through it to build the authorities — `RenamedGroupAuthorizationTest` does this, and is the regression guard for a deployment that renames its IdP groups.
+
+## Automated accessibility checks
+
+Three layers, each answering a question the one below it cannot:
+
+- **Template linting** (`npm run lint:a11y`, runs in CI) - `angular-eslint`'s
+  accessibility preset over every `.html` in `AppClient/src`. All templates pass today,
+  so any finding is a regression from the commit under test. The general `npm run lint`
+  additionally reports pre-existing TypeScript style debt as warnings; it is deliberately
+  not a gate, and `eslint.config.js` explains which rules were demoted and why.
+- **axe-core in Karma** - every component spec ends with
+  `await expectNoAxeViolations(fixture)`. The helper lives in
+  `AppClient/src/testing/a11y.ts`; it disables the page-level rules that are meaningless
+  against a component fragment, and collapses each violation to id/impact/selector rather
+  than dumping the full node HTML. This layer is what caught `#64748b` failing contrast
+  against `--color-bg`, which is why muted text now goes through `--color-text-muted`
+  rather than a hardcoded hex.
+- **PDF/UA-1 via veraPDF** (`CoverLetterPdfUaTest`) - reads the generated cover letter's
+  structure tree, where `Din5008PdfGeometryTest` reads only its coordinates. Requires the
+  dev Gotenberg and skips itself without it. `HtmlToPdfConverter` sends
+  `generateTaggedPdf` and `din5008.html` carries `th:lang` to make the format reachable
+  at all.
+
+Automated rules catch roughly a third of real barriers. This is a regression net, not
+evidence of conformance - whether a sort announcement is *useful*, or a braille line
+reads in a sensible order, still needs the manual pass.
 
 ## Accessibility requirements
 

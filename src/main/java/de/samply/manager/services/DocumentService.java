@@ -4,7 +4,6 @@ import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
-import de.samply.manager.model.Share;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.ShareRepository;
 import de.samply.manager.services.storage.StorageService;

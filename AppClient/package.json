@@ -6,7 +6,9 @@
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build --configuration=production && mv ../src/main/resources/static/browser/* ../src/main/resources/static && rmdir ../src/main/resources/static/browser",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "lint": "eslint . --format unix",
+    "lint:a11y": "eslint \"src/**/*.html\" --format unix --max-warnings 0"
   },
   "private": true,
   "dependencies": {
@@ -27,7 +29,12 @@
     "@angular/build": "^22.1.4",
     "@angular/cli": "^22.1.4",
     "@angular/compiler-cli": "^22.1.2",
+    "@eslint/js": "^10.0.1",
     "@types/jasmine": "~5.1.0",
+    "angular-eslint": "^22.1.0",
+    "axe-core": "^4.13.0",
+    "eslint": "^10.9.1",
+    "eslint-formatter-unix": "^9.0.1",
     "istanbul-lib-instrument": "^6.0.3",
     "jasmine-core": "~5.6.0",
     "karma": "~6.4.0",
@@ -36,6 +43,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "puppeteer": "^25.9.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.68.0"
   }
 }

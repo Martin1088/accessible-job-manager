@@ -34,7 +34,7 @@ import { Router } from '@angular/router';
     }
     .icon { font-size: 3rem; display: block; margin-bottom: 1rem; }
     h1 { margin: 0 0 0.5rem; font-size: 1.5rem; color: #1e293b; }
-    p  { color: #64748b; margin: 0 0 1.5rem; }
+    p  { color: var(--color-text-muted); margin: 0 0 1.5rem; }
     button {
       padding: 0.55rem 1.4rem;
       background: #005fcc;

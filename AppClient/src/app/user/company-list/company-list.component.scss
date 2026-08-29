@@ -41,7 +41,7 @@ main {
   label {
     font-size: 0.8rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -153,7 +153,7 @@ main {
   gap: 0.5rem 1.5rem;
   font-size: 0.95rem;
 
-  dt { font-weight: 600; color: #64748b; }
+  dt { font-weight: 600; color: var(--color-text-muted); }
   dd { margin: 0; }
 }
 

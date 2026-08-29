@@ -8,6 +8,7 @@ import { ProfileComponent } from './profile.component';
 import { UserProfile } from '../../model/user-profile';
 import { PreferencesService } from '../../services/preferences.service';
 import { DEFAULT_PREFERENCES, UserPreferences } from '../../model/user-preferences';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('ProfileComponent', () => {
   let http: HttpTestingController;
@@ -285,5 +286,12 @@ describe('ProfileComponent', () => {
       expect(fixture.componentInstance.networkActionError).toBeTrue();
       expect(fixture.componentInstance.networkBusy).toBeFalse();
     });
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    const fixture = create();
+    http.expectOne('/api/profile').flush(baseProfile);
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 });
