@@ -44,17 +44,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # The sample letter is the one artefact that cannot be faked: it is a real
-      # tagged PDF/UA document produced through Gotenberg, and it is what makes
-      # the accessibility claim checkable. Publishing the demo without it would
-      # ship a download button that 404s, so the build stops here instead.
-      - name: Require the sample PDF
+      # The sample letter is the one artefact that cannot be faked: it is what
+      # makes the accessibility claim checkable rather than merely stated. Its
+      # presence proves nothing - an export through the LibreOffice route yields
+      # a readable PDF 1.4 with no structure tree, indistinguishable from the
+      # real thing to a sighted reviewer - so the file is inspected, not counted.
+      - name: Require a tagged sample PDF
         run: |
-          if [ ! -f public/demo/anschreiben-muster.pdf ]; then
-            echo "public/demo/anschreiben-muster.pdf fehlt."
-            echo "Einmal über den echten Gotenberg-Weg erzeugen, mit veraPDF prüfen und einchecken."
-            exit 1
-          fi
+          python3 -m pip install --quiet pikepdf
+          python3 tools/check-sample-pdf.py public/demo/anschreiben-muster.pdf
 
       - name: Lint templates for accessibility
         run: npm run lint:a11y
