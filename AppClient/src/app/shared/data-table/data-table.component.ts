@@ -1,4 +1,5 @@
-import { Component, Input, OnChanges, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, OnChanges, ChangeDetectionStrategy, inject } from '@angular/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -12,6 +13,8 @@ export interface TableAction {
   label: string;
   ariaLabel: (row: any) => string;
   handler: (row: any) => void;
+  /** Omitted means the action shows on every row; used where rows are of mixed kinds. */
+  visible?: (row: any) => boolean;
 }
 
 type SortDirection = 'asc' | 'desc' | null;
@@ -38,9 +41,15 @@ export class DataTableComponent implements OnChanges {
   sortField: string | null = null;
   sortDirection: SortDirection = null;
 
+  private rowActions = new WeakMap<any, TableAction[]>();
+  private readonly announcer = inject(LiveAnnouncer);
+
   constructor(private translate: TranslateService) {}
 
   ngOnChanges(): void {
+    // The per-row action lists are keyed by row identity, so they have to go whenever
+    // the rows or the actions themselves are replaced.
+    this.rowActions = new WeakMap();
     this.sortedRows = [...this.rows];
     this.applySort();
   }
@@ -55,6 +64,20 @@ export class DataTableComponent implements OnChanges {
       this.sortDirection = 'asc';
     }
     this.applySort();
+    this.announceSort(field);
+  }
+
+  /**
+   * aria-sort alone is not reliably announced on change by VoiceOver - this
+   * confirms the sort event itself, while aria-sort covers state on re-read.
+   */
+  private announceSort(field: string): void {
+    const col = this.columns.find(c => c.field === field);
+    const column = col ? this.translate.instant(col.label) : field;
+    const key = this.sortField === field
+      ? (this.sortDirection === 'asc' ? 'TABLE.SORT_ANNOUNCE_ASC' : 'TABLE.SORT_ANNOUNCE_DESC')
+      : 'TABLE.SORT_ANNOUNCE_NONE';
+    this.announcer.announce(this.translate.instant(key, { column }), 'polite');
   }
 
   private applySort(): void {
@@ -69,6 +92,20 @@ export class DataTableComponent implements OnChanges {
       const bVal = (b[field] ?? '').toString().toLowerCase();
       return aVal < bVal ? -dir : aVal > bVal ? dir : 0;
     });
+  }
+
+  /**
+   * The actions that apply to one row, so a table can mix rows of different kinds.
+   * Called from the template on every change detection pass, so the filtered list is
+   * cached per row rather than rebuilt each time.
+   */
+  actionsFor(row: any): TableAction[] {
+    let actions = this.rowActions.get(row);
+    if (!actions) {
+      actions = this.actions.filter(action => !action.visible || action.visible(row));
+      this.rowActions.set(row, actions);
+    }
+    return actions;
   }
 
   sortIcon(field: string): string {

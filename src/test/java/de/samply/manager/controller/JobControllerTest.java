@@ -20,6 +20,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -87,6 +88,7 @@ class JobControllerTest {
         when(companyService.createCompany(any(), eq("test-sub"))).thenReturn(saved);
 
         mvc.perform(post("/api/companies")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(input)))
@@ -102,6 +104,7 @@ class JobControllerTest {
         doNothing().when(companyService).deleteCompany(1L, "test-sub");
 
         mvc.perform(delete("/api/companies/1")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("test-sub"))))
                 .andExpect(status().isNoContent());
     }
@@ -112,6 +115,7 @@ class JobControllerTest {
                 .when(companyService).deleteCompany(1L, "intruder");
 
         mvc.perform(delete("/api/companies/1")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("intruder"))))
                 .andExpect(status().isForbidden());
     }
@@ -127,6 +131,7 @@ class JobControllerTest {
                 .when(companyService).updateCompany(eq(1L), any(), eq("intruder"));
 
         mvc.perform(put("/api/companies/1")
+                        .with(csrf())
                         .with(oidcLogin().idToken(t -> t.subject("intruder")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(input)))

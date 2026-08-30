@@ -7,6 +7,7 @@ import { provideHttpClient, withXsrfConfiguration, withXhr } from '@angular/comm
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { LanguageService } from './core/language.service';
+import { AccessibilityService } from './core/accessibility.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,6 +26,9 @@ export const appConfig: ApplicationConfig = {
     // Blocks the first render until the initial language file has loaded, so
     // `| translate` pipes never briefly show their raw key (e.g. "LANGUAGE.EN")
     // before the translations arrive.
-    provideAppInitializer(() => firstValueFrom(inject(LanguageService).init()))
+    provideAppInitializer(() => firstValueFrom(inject(LanguageService).init())),
+    // Applies data-* attributes/CSS custom properties to <html> from the caller's
+    // stored accessibility preferences before first paint.
+    provideAppInitializer(() => firstValueFrom(inject(AccessibilityService).init()))
   ]
 };

@@ -8,38 +8,41 @@
   <button (click)="create()">{{ 'COMPANIES.ADD' | translate }}</button>
 
   <div class="filter-bar" role="search" [attr.aria-label]="'COMPANIES.FILTER_ARIA' | translate">
-    <div class="filter-group">
-      <label for="search-field">{{ 'COMPANIES.SEARCH_FIELD_LABEL' | translate }}</label>
-      <select id="search-field" [(ngModel)]="searchField">
-        @for (f of searchFields; track f) {
-          <option [value]="f.value">{{ f.label | translate }}</option>
-        }
-      </select>
-    </div>
-    <div class="filter-group">
-      <label for="search-term">{{ 'COMPANIES.SEARCH_LABEL' | translate }}</label>
-      <input id="search-term" type="search" [(ngModel)]="searchTerm"
-        [attr.placeholder]="'COMPANIES.SEARCH_PLACEHOLDER' | translate"
-        [attr.aria-label]="'COMPANIES.SEARCH_ARIA' | translate"/>
-    </div>
-    <div class="filter-group">
-      <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
-      <select id="filter-year" [(ngModel)]="filterYear">
-        <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
-        @for (y of availableYears; track y) {
-          <option [value]="y">{{ y }}</option>
-        }
-      </select>
-    </div>
-    <div class="filter-group">
-      <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
-      <select id="filter-month" [(ngModel)]="filterMonth">
-        <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
-        @for (i of monthIndexes; track i) {
-          <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
-        }
-      </select>
-    </div>
+    <fieldset class="filter-fieldset">
+      <legend class="sr-only">{{ 'COMPANIES.FILTER_ARIA' | translate }}</legend>
+      <div class="filter-group">
+        <label for="search-field">{{ 'COMPANIES.SEARCH_FIELD_LABEL' | translate }}</label>
+        <select id="search-field" [(ngModel)]="searchField">
+          @for (f of searchFields; track f) {
+            <option [value]="f.value">{{ f.label | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="search-term">{{ 'COMPANIES.SEARCH_LABEL' | translate }}</label>
+        <input id="search-term" type="search" [(ngModel)]="searchTerm"
+          [attr.placeholder]="'COMPANIES.SEARCH_PLACEHOLDER' | translate"
+          [attr.aria-label]="'COMPANIES.SEARCH_ARIA' | translate"/>
+      </div>
+      <div class="filter-group">
+        <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
+        <select id="filter-year" [(ngModel)]="filterYear">
+          <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
+          @for (y of availableYears; track y) {
+            <option [value]="y">{{ y }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
+        <select id="filter-month" [(ngModel)]="filterMonth">
+          <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
+          @for (i of monthIndexes; track i) {
+            <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+          }
+        </select>
+      </div>
+    </fieldset>
     @if (filterActive) {
       <button type="button" class="btn-clear" (click)="clearFilter()"
         [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
@@ -55,4 +58,82 @@
     [actions]="actions"
     emptyMessage="COMPANIES.EMPTY">
   </app-data-table>
+
+  @if (viewingRow) {
+    <section class="job-posting-view" aria-labelledby="job-posting-view-heading">
+      <div class="job-posting-view-header">
+        <h2 id="job-posting-view-heading" #jobPostingViewHeading tabindex="-1">
+          {{ 'COMPANIES.JOB_POSTING_VIEW_HEADING' | translate: { position: viewingRow.positionTitle, company: viewingRow.name } }}
+        </h2>
+        <button type="button" (click)="closeJobPostingView()">
+          {{ 'COMPANIES.JOB_POSTING_VIEW_CLOSE' | translate }}
+        </button>
+      </div>
+
+      <div class="view-toggle" role="group" [attr.aria-label]="'COMPANIES.JOB_POSTING_VIEW_TOGGLE_LABEL' | translate">
+        <button type="button"
+          [attr.aria-pressed]="viewMode === 'structure' ? 'true' : 'false'"
+          (click)="setViewMode('structure')">
+          {{ 'COMPANIES.STRUCTURE_VIEW' | translate }}
+        </button>
+        <button type="button"
+          [attr.aria-pressed]="viewMode === 'original' ? 'true' : 'false'"
+          (click)="setViewMode('original')">
+          {{ 'COMPANIES.ORIGINAL_VIEW' | translate }}
+        </button>
+      </div>
+
+      @if (viewMode === 'structure') {
+        <dl class="structure-view">
+          <dt>{{ 'COMPANIES.COL_NAME' | translate }}</dt>
+          <dd>{{ viewingCompany?.name }}</dd>
+
+          <dt>{{ 'COMPANIES.COL_POSITION' | translate }}</dt>
+          <dd>{{ viewingPosition?.title }}</dd>
+
+          @for (loc of viewingCompany?.locations ?? []; track loc) {
+            <dt>{{ 'COMPANIES.LOCATIONS_HEADING' | translate }}</dt>
+            <dd>{{ formatLocation(loc) }}</dd>
+          }
+
+          @if (viewingPosition?.contactLastName) {
+            <dt>{{ 'COMPANIES.CONTACT_LAST_NAME' | translate }}</dt>
+            <dd>{{ formatContact(viewingPosition) }}</dd>
+          }
+          @if (viewingPosition?.email) {
+            <dt>{{ 'COMPANIES.EMAIL' | translate }}</dt>
+            <dd><a [href]="'mailto:' + viewingPosition?.email">{{ viewingPosition?.email }}</a></dd>
+          }
+          @if (viewingPosition?.website) {
+            <dt>{{ 'COMPANIES.WEBSITE' | translate }}</dt>
+            <dd><a [href]="viewingPosition?.website" target="_blank" rel="noopener">{{ viewingPosition?.website }}</a></dd>
+          }
+          @if (viewingPosition?.notes) {
+            <dt>{{ 'COMPANIES.NOTES' | translate }}</dt>
+            <dd>{{ viewingPosition?.notes }}</dd>
+          }
+        </dl>
+      } @else {
+        @switch (snapshotState) {
+          @case ('loading') {
+            <p role="status">{{ 'COMPANIES.JOB_POSTING_LOADING' | translate }}</p>
+          }
+          @case ('none') {
+            <p role="status">{{ 'COMPANIES.NO_JOB_POSTING_FOUND' | translate }}</p>
+          }
+          @case ('error') {
+            <p role="alert">{{ 'COMPANIES.ERROR_LOAD_JOB_POSTING' | translate }}</p>
+          }
+          @case ('ready') {
+            <p class="original-view-link">
+              <a [href]="snapshotUrl" target="_blank" rel="noopener">
+                {{ 'COMPANIES.ACTION_VIEW_JOB_POSTING' | translate }} ({{ 'COMPANIES.OPEN_NEW_TAB' | translate }})
+              </a>
+            </p>
+            <iframe [src]="snapshotSrc" [title]="'COMPANIES.ORIGINAL_VIEW' | translate" class="snapshot-frame"></iframe>
+          }
+        }
+      }
+    </section>
+  }
 </main>

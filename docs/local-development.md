@@ -43,7 +43,8 @@ fresh instance comes up already carrying:
   uses as its defaults, and the redirect URI `http://localhost:8060/login/oauth2/code/authentik`
 - the application under the slug `access-job-manager`, which makes the issuer
   `http://localhost:9000/application/o/access-job-manager/`
-- the groups `Advisor` and `Reviewer` — users in neither are treated as `USER`
+- the groups `User`, `Advisor` and `Reviewer` — every account needs one of them, since
+  a login carrying none of the three roles is rejected
 
 The `groups` claim rides along with the standard `profile` scope: Authentik's
 default profile mapping already emits every group the user belongs to, which is why
@@ -154,7 +155,7 @@ npm install
 npm start
 ```
 
-Frontend dev server starts on `http://localhost:4200`. The proxy config forwards `/api`, `/login`, `/logout` and `/oauth2` to the backend.
+Frontend dev server starts on `http://localhost:4200`. The proxy config forwards `/api`, `/login` and `/oauth2` to the backend (logout is `POST /api/logout`, already covered by `/api`).
 
 ## 6. Build for production (embedded frontend)
 
@@ -189,8 +190,9 @@ npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/*
 
 Karma needs a Chrome or Chromium binary and finds it through `CHROME_BIN` when
 it is not on `PATH`. GitHub's runners ship one, so `.github/workflows/build.yml`
-sets nothing; a plain devcontainer does not, and the run fails before the first
-spec. Install one and point the variable at it:
+sets nothing. The devcontainer installs Chromium on create and sets `CHROME_BIN`
+in `.devcontainer/devcontainer.json`, so tests run there without further setup —
+an existing container built before that change still needs it done by hand:
 
 ```bash
 sudo apt-get update && sudo apt-get install -y chromium
@@ -243,6 +245,46 @@ volume as the images and `node_modules`:
 df -h /
 ```
 
+## 9. Optional: Adzuna key for advisor job search
+
+`/api/advisor/job-search` searches the [Adzuna](https://developer.adzuna.com)
+aggregator. It ships with no credentials on purpose: without both variables
+below the source reports itself unconfigured, the endpoints answer `503` and the
+frontend hides the feature. Everything else runs unaffected.
+
+Register an application at <https://developer.adzuna.com/> — the free tier is
+enough for development — and pass the pair the backend reads:
+
+```
+JOBSOURCE_ADZUNA_APP_ID=<your-app-id>
+JOBSOURCE_ADZUNA_APP_KEY=<your-app-key>
+JOBSOURCE_ADZUNA_COUNTRY=de     # optional, default de
+```
+
+Check that it answers:
+
+```bash
+curl -b cookies.txt 'http://localhost:8060/api/advisor/job-search/status'
+curl -b cookies.txt 'http://localhost:8060/api/advisor/job-search?what=java&where=K%C3%B6ln'
+```
+
+(Both need an advisor session — the endpoints are `ADVISOR`-only.)
+
+**For operators:** the key is per organisation, and Adzuna's terms bind the
+organisation using it, not the authors of this software. Two clauses matter in
+practice:
+
+- **Retention.** A result may be held for at most 14 days. This application
+  therefore stores none: searches are read-through, and a posting an advisor
+  picks is imported from the employer's own page through the normal snapshot
+  path, which is the operator's own data. Do not add a results cache or a
+  "saved search results" table without re-reading that clause.
+- **Attribution.** Every response carries an `attribution` field (`Jobs by
+  Adzuna`); it belongs next to the results wherever they are displayed.
+
+To turn the feature off again, unset the two variables and restart — no other
+configuration depends on them.
+
 ---
 
 ## Remote Development with DevPod
@@ -259,7 +301,7 @@ workspace. It works with any
 Pass the **repository URL**, not a local path:
 
 ```bash
-devpod up https://github.com/Martin1088/accessible-job-manager.git@feature/html-template --id ajm --ide none
+devpod up https://github.com/Martin1088/accessible-job-manager.git@feature/develop --id ajm --ide none
 ```
 
 With a local path (`devpod up .`) DevPod uploads the working directory to the

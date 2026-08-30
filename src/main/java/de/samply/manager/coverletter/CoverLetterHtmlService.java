@@ -1,20 +1,16 @@
 package de.samply.manager.coverletter;
 
-import de.samply.manager.exception.ApiException;
-import de.samply.manager.model.Application;
 import de.samply.manager.model.Company;
+import de.samply.manager.services.ApplicationService;
 import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
-import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.types.Gender;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Entry point for the HTML cover letter provider: loads the application the letter
@@ -28,21 +24,38 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class CoverLetterHtmlService {
 
-    private final ApplicationRepository applicationRepository;
+    private final ApplicationService applicationService;
     private final CoverLetterAssembler assembler;
     private final HtmlCoverLetterRenderer htmlRenderer;
     private final TextCoverLetterRenderer textRenderer;
     private final HtmlToPdfConverter pdfConverter;
     private final CoverLetterLabels labels;
-    private final MessageSource messageSource;
 
     /** A rendered letter together with everything the controller needs to serve it. */
     public record RenderedLetter(RenderFormat format, byte[] content, String filename, Language language) {}
+
+    /** A letter prepared for an email client: recipient, subject line and body text. */
+    public record EmailDraft(String to, String subject, String body) {}
 
     @Transactional(readOnly = true)
     public RenderedLetter render(Long applicationId, CoverLetterTemplate template, RenderFormat format, String userId) {
         CompanyPosition position = ownedPosition(applicationId, userId);
         return renderFor(position, template, format, languageOf(position));
+    }
+
+    /**
+     * The same letter handed to an email client instead of a printer: the linearized
+     * text as the body, and the recipient taken from the position being applied for.
+     * <p>
+     * Subject and body come off the same assembled model the PDF is printed from, so a
+     * template that writes its own subject line keeps it here rather than being given
+     * a second one derived somewhere else.
+     */
+    @Transactional(readOnly = true)
+    public EmailDraft renderAsEmail(Long applicationId, CoverLetterTemplate template, String userId) {
+        CompanyPosition position = ownedPosition(applicationId, userId);
+        CoverLetterModel letter = assembler.assemble(template, position, languageOf(position));
+        return new EmailDraft(position.getEmail(), letter.subject(), textRenderer.render(letter));
     }
 
     /**
@@ -125,13 +138,7 @@ public class CoverLetterHtmlService {
     }
 
     private CompanyPosition ownedPosition(Long applicationId, String userId) {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ApiException.NotFound(
-                        messageSource.getMessage("error.coverLetter.applicationNotFound", null, Locale.ROOT)));
-        if (!application.getUserId().equals(userId)) {
-            throw new ApiException.Forbidden();
-        }
-        return application.getCompanyPosition();
+        return applicationService.findOwned(applicationId, userId).getCompanyPosition();
     }
 
     /** The letter follows the language the position is applied for, German by default. */

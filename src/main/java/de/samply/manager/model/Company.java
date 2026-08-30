@@ -3,8 +3,11 @@ package de.samply.manager.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 @Data
 @Entity
@@ -25,4 +28,7 @@ public class Company {
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CompanyPosition> positions = new ArrayList<>();
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;   
 }

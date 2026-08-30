@@ -1,13 +1,31 @@
-import { Component, DestroyRef, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Application, ApplicationRequest, ApplicationStatus } from '../../model/application';
 import { ApplicationService } from '../../services/application.service';
+import { CoverLetterService } from '../../services/cover-letter.service';
+import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
 import { Document } from '../../model/document';
+
+/**
+ * One entry of the template picker. Both cover letter providers write a letter for
+ * an application, so the picker lists them side by side and the provider decides
+ * which endpoint answers - the user picks a template, not a technology.
+ */
+export interface TemplateOption {
+  id: string;
+  label: string;
+  provider: 'WORD' | 'HTML';
+}
+
+// The list has no attachment editor; attachments are chosen in the template editor.
+const NO_ATTACHMENTS: CoverLetterRenderRequest = { attachments: [] };
 
 function yearOf(iso: string | null | undefined): number | null {
   if (!iso) return null;
@@ -39,9 +57,12 @@ function matchesFilter(iso: string | null | undefined, filterYear: number | '', 
 export class ApplicationListComponent implements OnInit {
 
   private applications: Application[] = [];
-  templates: Document[] = [];
-  selectedTemplate: Record<number, string> = {};
+  wordTemplates: TemplateOption[] = [];
+  htmlTemplates: TemplateOption[] = [];
+  selectedTemplate: Record<number, TemplateOption | undefined> = {};
   downloading: Record<number, boolean> = {};
+  previewing: Record<number, boolean> = {};
+  preview: { company: string; template: string; text: string } | null = null;
   statusDraft: Record<number, ApplicationStatus> = {};
   updatingStatus: Record<number, boolean> = {};
   errorMessage = '';
@@ -58,6 +79,8 @@ export class ApplicationListComponent implements OnInit {
   };
   showForm = false;
   editingId: number | null = null;
+
+  @ViewChild('previewPanel') private previewPanel?: ElementRef<HTMLElement>;
 
   sortField: string | null = null;
   sortDir: 'asc' | 'desc' | null = null;
@@ -96,8 +119,11 @@ export class ApplicationListComponent implements OnInit {
   // changes, not on every change-detection pass.
   rows: any[] = [];
 
+  private readonly announcer = inject(LiveAnnouncer);
+
   constructor(
     private applicationService: ApplicationService,
+    private coverLetterService: CoverLetterService,
     private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
@@ -280,6 +306,20 @@ export class ApplicationListComponent implements OnInit {
       this.sortField = field;
       this.sortDir = 'asc';
     }
+    this.announceSort(field);
+  }
+
+  /**
+   * aria-sort alone is not reliably announced on change by VoiceOver - this
+   * confirms the sort event itself, while aria-sort covers state on re-read.
+   */
+  private announceSort(field: string): void {
+    const col = this.columns.find(c => c.field === field);
+    const column = col ? this.translate.instant(col.label) : field;
+    const key = this.sortField === field
+      ? (this.sortDir === 'asc' ? 'TABLE.SORT_ANNOUNCE_ASC' : 'TABLE.SORT_ANNOUNCE_DESC')
+      : 'TABLE.SORT_ANNOUNCE_NONE';
+    this.announcer.announce(this.translate.instant(key, { column }), 'polite');
   }
 
   sortIcon(field: string): string {
@@ -292,21 +332,44 @@ export class ApplicationListComponent implements OnInit {
     return this.sortDir === 'asc' ? 'ascending' : 'descending';
   }
 
+  get hasTemplates(): boolean {
+    return this.wordTemplates.length > 0 || this.htmlTemplates.length > 0;
+  }
+
+  /**
+   * .docx is a mail-merge output. An HTML template is printed by a browser engine,
+   * which has no Word document to hand back, so that one action stays unavailable
+   * while such a template is picked.
+   */
+  supportsWord(appId: number): boolean {
+    return this.selectedTemplate[appId]?.provider === 'WORD';
+  }
+
+  /** Both providers print a PDF; the picked template decides which one is asked. */
   downloadCoverLetter(appId: number): void {
-    this.fetchCoverLetter(appId, '', 'pdf');
+    const template = this.selectedTemplate[appId];
+    if (!template) return;
+    this.saveCoverLetter(appId, 'pdf', template.provider === 'HTML'
+      ? this.coverLetterService.renderPdf(appId, template.id, NO_ATTACHMENTS).pipe(map(res => res.body!))
+      : this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}`, null, { responseType: 'blob' }));
   }
 
   downloadCoverLetterWord(appId: number): void {
-    this.fetchCoverLetter(appId, '/word', 'docx');
+    const template = this.selectedTemplate[appId];
+    if (!template || template.provider !== 'WORD') return;
+    this.saveCoverLetter(appId, 'docx',
+      this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}/word`, null, { responseType: 'blob' }));
   }
 
   emailCoverLetter(appId: number): void {
-    const docId = this.selectedTemplate[appId];
-    if (!docId) return;
+    const template = this.selectedTemplate[appId];
+    if (!template) return;
+    const draft = template.provider === 'HTML'
+      ? this.coverLetterService.renderEmail(appId, template.id, NO_ATTACHMENTS)
+      : this.http.post<CoverLetterEmail>(`/api/word/cover-letter/${appId}/fill/${template.id}/email`, null);
+
     this.downloading[appId] = true;
-    this.http.post<{ to: string; subject: string; body: string }>(
-      `/api/word/cover-letter/${appId}/fill/${docId}/email`, null
-    ).subscribe({
+    draft.subscribe({
       next: (res) => {
         const to = res.to ?? '';
         const mailto = `mailto:${to}?subject=${encodeURIComponent(res.subject)}&body=${encodeURIComponent(res.body)}`;
@@ -322,11 +385,46 @@ export class ApplicationListComponent implements OnInit {
     });
   }
 
-  private fetchCoverLetter(appId: number, urlSuffix: string, extension: string): void {
-    const docId = this.selectedTemplate[appId];
-    if (!docId) return;
+  /**
+   * The letter read front to back before it is printed or sent. Both providers
+   * linearize the same letter they render, so the preview cannot describe a
+   * document other than the one that would come out.
+   */
+  previewCoverLetter(appId: number): void {
+    const template = this.selectedTemplate[appId];
+    if (!template) return;
+    const text = template.provider === 'HTML'
+      ? this.coverLetterService.renderText(appId, template.id, NO_ATTACHMENTS)
+      : this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}/text`, null, { responseType: 'text' });
+
+    this.previewing[appId] = true;
+    text.subscribe({
+      next: (rendered) => {
+        this.previewing[appId] = false;
+        this.preview = {
+          company: this.rows.find(r => r.id === appId)?.companyName ?? '',
+          template: template.label,
+          text: rendered,
+        };
+        // The panel opens at the top of the page while the button that opened it
+        // can be rows below, so move focus there rather than leaving the reader
+        // to find it - which also scrolls it into view.
+        setTimeout(() => this.previewPanel?.nativeElement.focus());
+      },
+      error: () => {
+        this.previewing[appId] = false;
+        this.errorMessage = this.translate.instant('APPLICATIONS.ERROR_COVER_LETTER');
+      },
+    });
+  }
+
+  closePreview(): void {
+    this.preview = null;
+  }
+
+  private saveCoverLetter(appId: number, extension: string, request: Observable<Blob>): void {
     this.downloading[appId] = true;
-    this.http.post(`/api/word/cover-letter/${appId}/fill/${docId}${urlSuffix}`, null, { responseType: 'blob' }).subscribe({
+    request.subscribe({
       next: (blob) => {
         const row = this.rows.find(r => r.id === appId);
         const name = `Anschreiben_${(row?.companyName ?? 'cover_letter').replace(/\s+/g, '_')}.${extension}`;
@@ -366,9 +464,16 @@ export class ApplicationListComponent implements OnInit {
     return this.translate.instant('STATUS.' + s);
   }
 
+  // Both providers are asked separately: they are independent, and a letter can be
+  // written with either, so one being unavailable must not empty the whole picker.
   private loadTemplates(): void {
     this.http.get<Document[]>('/api/documents', { params: { type: 'COVER_LETTER_TEMPLATE' } }).subscribe({
-      next: (docs) => this.templates = docs,
+      next: (docs) => this.wordTemplates = docs.map(
+        doc => ({ id: doc.id, label: doc.label, provider: 'WORD' })),
+    });
+    this.coverLetterService.listTemplates().subscribe({
+      next: (letters) => this.htmlTemplates = letters.map(
+        letter => ({ id: letter.id, label: letter.name, provider: 'HTML' })),
     });
   }
 

@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 fieldset {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -34,7 +36,7 @@ fieldset {
 
 .hint {
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
   max-width: 62ch;
 }
@@ -85,7 +87,9 @@ fieldset {
 
 .item-row {
   display: grid;
-  grid-template-columns: minmax(6rem, auto) 1fr auto;
+  // label | input | insert link | remove - the last two are separate buttons,
+  // so a three-column track would wrap one of them onto its own row.
+  grid-template-columns: minmax(6rem, auto) 1fr auto auto;
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.6rem;
@@ -99,6 +103,27 @@ fieldset {
     font-size: 0.9rem;
     font-family: inherit;
     &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
+// The 4-column grid (label | input | insert link | remove) has no room on a
+// phone-width viewport - minmax(6rem, auto) and two auto-sized buttons alone
+// exceed 375px. Stack it instead of shrinking columns further, which would
+// just squeeze the input to unusable width.
+@include bp.mobile {
+  .item-row {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    gap: 0.35rem;
+
+    input {
+      width: 100%;
+    }
+
+    .btn-secondary,
+    .btn-remove {
+      min-block-size: 44px;
+    }
   }
 }
 
@@ -167,4 +192,28 @@ fieldset {
   padding: 1rem 1.25rem;
   margin: 0.75rem 0 0;
   overflow-x: auto;
+}
+
+// Sits directly under the field it was opened from, indented and ruled so it
+// reads as belonging to that field rather than to the block as a whole.
+.link-editor {
+  margin: 0.6rem 0 0.9rem;
+  padding: 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #2563eb;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.link-editor-heading {
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.link-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
 }

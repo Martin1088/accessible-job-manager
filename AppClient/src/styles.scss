@@ -1,5 +1,119 @@
 @use '@angular/cdk/overlay-prebuilt.css';
 
+/*
+ * Accessibility preference tokens. AccessibilityService is the single place
+ * that resolves prefers-contrast/prefers-color-scheme/prefers-reduced-motion
+ * against the caller's stored overrides and writes the result here as
+ * data-* attributes and --font-scale/--line-height on <html>; this file only
+ * reacts to that output, it never duplicates the resolution logic.
+ */
+:root {
+  --color-text: #1a1a1a;
+  --color-bg: #f5f5f5;
+  --color-surface: #fff;
+  --color-border: #e5e5e5;
+  --color-header-bg: #1a1a2e;
+  --color-header-text: #fff;
+  --color-header-border: rgba(255, 255, 255, 0.5);
+  --color-link-hover-bg: rgba(255, 255, 255, 0.15);
+  --color-table-header-bg: #f0f0f0;
+  --color-table-header-text: #1a1a1a;
+  --color-table-hover-bg: #fafafa;
+  --color-alert-bg: #fde8e8;
+  --color-alert-border: #d00;
+  --color-alert-text: #900;
+  --color-focus: #005fcc;
+  --color-skip-link-bg: #000;
+  --color-skip-link-text: #fff;
+  --color-text-muted: #475569;
+
+  --font-scale: 1;
+  --line-height: 1.5;
+}
+
+/* html[data-contrast="high"] beats :root on specificity, so no !important is needed. */
+html[data-contrast='high'] {
+  --color-text: #000;
+  --color-bg: #fff;
+  --color-surface: #fff;
+  --color-border: #000;
+  --color-header-bg: #000;
+  --color-header-text: #fff;
+  --color-header-border: #fff;
+  --color-link-hover-bg: #333;
+  --color-table-header-bg: #000;
+  --color-table-header-text: #fff;
+  --color-table-hover-bg: #eee;
+  --color-alert-bg: #fff;
+  --color-alert-border: #900;
+  --color-alert-text: #900;
+  --color-focus: #000;
+  --color-skip-link-bg: #000;
+  --color-skip-link-text: #fff;
+  --color-text-muted: #000;
+}
+
+html[data-contrast='high'] a,
+html[data-contrast='high'] header nav a {
+  text-decoration: underline;
+}
+
+html[data-contrast='dark'] {
+  color-scheme: dark;
+  --color-text: #f2f2f2;
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-border: #3a3a3a;
+  --color-header-bg: #000;
+  --color-header-text: #f2f2f2;
+  --color-header-border: rgba(255, 255, 255, 0.35);
+  --color-link-hover-bg: rgba(255, 255, 255, 0.1);
+  --color-table-header-bg: #262626;
+  --color-table-header-text: #f2f2f2;
+  --color-table-hover-bg: #2a2a2a;
+  --color-alert-bg: #3a1414;
+  --color-alert-border: #d00;
+  --color-alert-text: #ff8080;
+  --color-focus: #6ab0ff;
+  --color-skip-link-bg: #f2f2f2;
+  --color-skip-link-text: #000;
+  --color-text-muted: #a3aec0;
+}
+
+/* Root font-size scaling so every rem-based measurement in this file scales with it,
+   the same way native browser zoom would - a user asking for larger text also gets
+   proportionally larger touch targets and spacing, not just bigger glyphs. */
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+
+html[data-reduce-motion='true'] * {
+  animation: none;
+  transition: none;
+  scroll-behavior: auto;
+}
+
+html[data-hide-images='true'] img {
+  display: none;
+}
+
+/* No bundled dyslexia-friendly webfont yet - this falls through to widely available
+   system fonts with the kind of open letterforms and spacing that helps, and picks
+   up a locally installed OpenDyslexic if the user already has one. */
+html[data-font-family='sans-serif'] body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+html[data-font-family='serif'] body {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+html[data-font-family='dyslexia-friendly'] body {
+  font-family: 'OpenDyslexic', Verdana, Tahoma, sans-serif;
+  letter-spacing: 0.03em;
+  word-spacing: 0.08em;
+}
+
 /* Base reset & typography */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -10,9 +124,9 @@
 body {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 1rem;
-  line-height: 1.5;
-  color: #1a1a1a;
-  background: #f5f5f5;
+  line-height: var(--line-height);
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 /* Skip link for keyboard/screen reader users */
@@ -20,8 +134,8 @@ body {
   position: absolute;
   top: -100%;
   left: 0;
-  background: #000;
-  color: #fff;
+  background: var(--color-skip-link-bg);
+  color: var(--color-skip-link-text);
   padding: 0.5rem 1rem;
   z-index: 999;
   &:focus {
@@ -31,21 +145,21 @@ body {
 
 /* Header */
 header {
-  background: #1a1a2e;
-  color: #fff;
+  background: var(--color-header-bg);
+  color: var(--color-header-text);
   padding: 0.75rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1.5rem;
 
   nav a {
-    color: #fff;
+    color: var(--color-header-text);
     text-decoration: none;
     font-weight: 500;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     &:hover, &:focus {
-      background: rgba(255,255,255,0.15);
+      background: var(--color-link-hover-bg);
       outline: none;
     }
   }
@@ -53,13 +167,13 @@ header {
   button {
     margin-left: auto;
     background: transparent;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.5);
+    color: var(--color-header-text);
+    border: 1px solid var(--color-header-border);
     padding: 0.35rem 0.85rem;
     border-radius: 4px;
     cursor: pointer;
     &:hover {
-      background: rgba(255,255,255,0.1);
+      background: var(--color-link-hover-bg);
     }
   }
 }
@@ -78,9 +192,9 @@ h1 {
 
 /* Alert */
 [role="alert"] {
-  background: #fde8e8;
-  border-left: 4px solid #d00;
-  color: #900;
+  background: var(--color-alert-bg);
+  border-left: 4px solid var(--color-alert-border);
+  color: var(--color-alert-text);
   padding: 0.75rem 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
@@ -96,7 +210,7 @@ button {
   font-weight: 500;
 
   &:focus-visible {
-    outline: 3px solid #005fcc;
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
 }
@@ -106,7 +220,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
@@ -114,11 +228,12 @@ table {
   th, td {
     text-align: left;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid var(--color-border);
   }
 
   th {
-    background: #f0f0f0;
+    background: var(--color-table-header-bg);
+    color: var(--color-table-header-text);
     font-weight: 600;
   }
 
@@ -127,6 +242,6 @@ table {
   }
 
   tr:hover td {
-    background: #fafafa;
+    background: var(--color-table-hover-bg);
   }
 }

@@ -9,10 +9,12 @@ import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.CompanyRepository;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -23,10 +25,18 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final ApplicationRepository applicationRepository;
+    private final MessageSource messageSource;
 
-    public CompanyService(CompanyRepository companyRepository, ApplicationRepository applicationRepository) {
+    public CompanyService(CompanyRepository companyRepository,
+                          ApplicationRepository applicationRepository,
+                          MessageSource messageSource) {
         this.companyRepository = companyRepository;
         this.applicationRepository = applicationRepository;
+        this.messageSource = messageSource;
+    }
+
+    private String message(String key, Object... args) {
+        return messageSource.getMessage(key, args, Locale.ROOT);
     }
 
     public List<CompanyDto> getAllCompanies(String userId) {
@@ -45,7 +55,7 @@ public class CompanyService {
     @Transactional
     public CompanyDto updateCompany(Long id, CompanyDto dto, String userId) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new ApiException.NotFound("Company not found: " + id));
+                .orElseThrow(() -> new ApiException.NotFound(message("error.company.notFound", id)));
         if (!company.getUserId().equals(userId))
             throw new ApiException.Forbidden();
         company.setName(dto.getName());
@@ -67,7 +77,7 @@ public class CompanyService {
 
         for (Long existingId : existingById.keySet()) {
             if (!incomingIds.contains(existingId) && applicationRepository.existsByCompanyPositionId(existingId)) {
-                throw new ApiException.Conflict("Cannot remove a position that has associated applications");
+                throw new ApiException.Conflict(message("error.company.positionInUse"));
             }
         }
 
@@ -88,7 +98,7 @@ public class CompanyService {
 
     public void deleteCompany(Long id, String userId) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new ApiException.NotFound("Company not found: " + id));
+                .orElseThrow(() -> new ApiException.NotFound(message("error.company.notFound", id)));
         if (!company.getUserId().equals(userId))
             throw new ApiException.Forbidden();
         companyRepository.deleteById(id);
@@ -112,6 +122,8 @@ public class CompanyService {
         dto.setId(l.getId());
         dto.setStreet(l.getStreet());
         dto.setCity(l.getCity());
+        dto.setPostcode(l.getPostcode());
+        dto.setCountry(l.getCountry());
         return dto;
     }
 
@@ -122,9 +134,11 @@ public class CompanyService {
         dto.setContactGender(p.getContactGender());
         dto.setContactTitle(p.getContactTitle());
         dto.setContactLastName(p.getContactLastName());
+        dto.setApplyLanguage(p.getApplyLanguage());
         dto.setEmail(p.getEmail());
         dto.setWebsite(p.getWebsite());
         dto.setNotes(p.getNotes());
+        dto.setApplicationMethod(p.getApplicationMethod());
         dto.setCreatedAt(p.getCreatedAt());
         return dto;
     }
@@ -149,6 +163,8 @@ public class CompanyService {
         CompanyLocation l = new CompanyLocation();
         l.setStreet(dto.getStreet());
         l.setCity(dto.getCity());
+        l.setPostcode(dto.getPostcode());
+        l.setCountry(dto.getCountry());
         l.setCompany(company);
         return l;
     }
@@ -158,9 +174,11 @@ public class CompanyService {
         p.setContactGender(dto.getContactGender());
         p.setContactTitle(dto.getContactTitle());
         p.setContactLastName(dto.getContactLastName());
+        p.setApplyLanguage(dto.getApplyLanguage());
         p.setEmail(dto.getEmail());
         p.setWebsite(dto.getWebsite());
         p.setNotes(dto.getNotes());
+        p.setApplicationMethod(dto.getApplicationMethod());
     }
 
     private CompanyPosition toPositionEntity(CompanyPositionDto dto, Company company) {

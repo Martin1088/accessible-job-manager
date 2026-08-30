@@ -6,7 +6,7 @@ spring:
   datasource:
     url: ${MANAGER_DB_URL:jdbc:postgresql://localhost:5432/manager}
     username: ${MANAGER_DB_USER:manager}
-    password: ${MANAGER_DB_PASSWORD:manager}
+    password: ${MANAGER_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -19,13 +19,16 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 22MB
+  threads:
+    virtual:
+      enabled: true
   security:
     oauth2:
       client:
         registration:
           authentik:
-            client-id: ${OIDC_CLIENT_ID:crwWfMQ8Ml9hSqnhzIjUNX8xsB2Q4pedrR2QU4jh}
-            client-secret: ${OIDC_CLIENT_SECRET:Vfc6Ebg5P6FPUhxk6qX7BFsd1YCB4tE4ia1MFhLRsfGZ3U72lF2rjah8tx5Psk1nU5N13hIrr5qgymwzs5twZniMfE1rwUlxs8HUWvhkkaN4AXxo9ZTlJ1lKqxhCMQOw}
+            client-id: ${OIDC_CLIENT_ID}
+            client-secret: ${OIDC_CLIENT_SECRET}
             client-authentication-method: client_secret_basic
             authorization-grant-type: authorization_code
             scope: "openid, email, profile"
@@ -34,6 +37,7 @@ spring:
           authentik:
             issuer-uri: ${OIDC_ISSUER_URI:http://localhost:9000/application/o/access-job-manager/}
             authorization-uri: ${OIDC_AUTH_URI:http://localhost:9000/application/o/authorize/}
+
 
 gotenberg:
   url: ${GOTENBERG_URL:http://localhost:3000}
@@ -48,6 +52,16 @@ job-posting:
       deployment: ${AZURE_OPENAI_DEPLOYMENT:}
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       api-key: ${AZURE_OPENAI_API_KEY:}
+    extended:
+      field-extraction: true
+
+job-source:
+  adzuna:
+    base-url: ${JOBSOURCE_ADZUNA_BASE_URL:https://api.adzuna.com/v1/api}
+    app-id: ${JOBSOURCE_ADZUNA_APP_ID:}
+    app-key: ${JOBSOURCE_ADZUNA_APP_KEY:}
+    country: ${JOBSOURCE_ADZUNA_COUNTRY:de}
+    max-results-per-page: ${JOBSOURCE_ADZUNA_MAX_RESULTS:50}
 
 storage:
   provider: ${STORAGE_PROVIDER:s3}
@@ -55,26 +69,41 @@ storage:
     endpoint: ${S3_ENDPOINT:http://localhost:3900}
     region: ${REGION:garage}
     bucket: ${S3_BUCKET:job-manager}
-    access-key: ${ACCESS_KEY:GK671d588f544252fc82ebfdf7}
-    secret-key: ${SECRET_KEY:f50541d1c15b75814e2c9c758dc42ff4302d3002391ca3e60db305e642a569a0}
+    access-key: ${ACCESS_KEY}
+    secret-key: ${SECRET_KEY}
   azure:
     connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
     container: ${AZURE_STORAGE_CONTAINER:documents}
 
 server:
   port: 8060
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${COOKIE_SECURE:false}
 
 logging:
   level:
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2.client: DEBUG
-    org.springframework.web.client: DEBUG
-    org.springframework.security.oauth2: TRACE
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+    org.springframework.security.oauth2: ${OAUTH2_LOG_LEVEL:INFO}
+    org.springframework.web.client: ${WEB_CLIENT_LOG_LEVEL:INFO}
+    de.samply.manager.jobsearch: ${JOBSOURCE_LOG_LEVEL:INFO}
+    de.samply.manager.controller.AdvisorJobSearchController: ${JOBSOURCE_LOG_LEVEL:INFO}
+    # Job-import diagnostics: one pipe-separated line per import attempt
+    # (host|category|httpStatus|missingFields|url), routed by logback-spring.xml
+    # to stdout with a DIAG| prefix and to DIAGNOSTICS_LOG_FILE. Off by default;
+    # set DIAGNOSTICS_LOG_LEVEL=INFO on a demo system to collect the list of
+    # hosts that still need an adapter.
+    ajm.diagnostics: ${DIAGNOSTICS_LOG_LEVEL:OFF}
 job-manager:
   metrics:
     enabled: true
     log-status-transitions: true
   security:
+    claim: ${OIDC_ROLES_CLAIM:groups}
     role-groups:
       USER: ${GROUP_USER:User}
       ADVISOR: ${GROUP_ADVISOR:Advisor}

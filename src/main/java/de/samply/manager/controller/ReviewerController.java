@@ -2,11 +2,13 @@ package de.samply.manager.controller;
 
 import de.samply.manager.dto.ReviewerUserDto;
 import de.samply.manager.exception.ApiException;
-import de.samply.manager.model.DocumentAccess;
+import de.samply.manager.model.Document;
+import de.samply.manager.model.Share;
 import de.samply.manager.model.UserProfile;
-import de.samply.manager.repository.DocumentAccessRepository;
 import de.samply.manager.repository.UserProfileRepository;
-import de.samply.manager.services.StorageService;
+import de.samply.manager.services.ShareService;
+import de.samply.manager.services.storage.StorageService;
+import de.samply.manager.types.SharedSubject;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -26,16 +28,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReviewerController {
 
-    private final DocumentAccessRepository documentAccessRepository;
+    private final ShareService shareService;
     private final UserProfileRepository userProfileRepository;
     private final StorageService storageService;
 
     @GetMapping("/users")
     public List<ReviewerUserDto> usersWithAccess(@AuthenticationPrincipal OidcUser reviewer) {
-        List<DocumentAccess> accesses = documentAccessRepository.findByReviewerId(reviewer.getSubject());
+        List<Share> shares = shareService.activeForCounterpart(reviewer.getSubject(), SharedSubject.DOCUMENT);
 
-        Map<String, List<DocumentAccess>> byOwner = accesses.stream()
-                .collect(Collectors.groupingBy(a -> a.getDocument().getUserId()));
+        Map<String, List<Share>> byOwner = shares.stream()
+                .collect(Collectors.groupingBy(share -> share.getRelationship().getApplicantId()));
 
         return byOwner.entrySet().stream().map(entry -> {
             String ownerId = entry.getKey();
@@ -44,12 +46,13 @@ public class ReviewerController {
             String email = profile != null ? profile.getEmail() : "";
 
             List<ReviewerUserDto.SharedDocumentDto> docs = entry.getValue().stream()
-                    .map(a -> new ReviewerUserDto.SharedDocumentDto(
-                            a.getDocument().getId(),
-                            a.getDocument().getLabel(),
-                            a.getDocument().getFilename(),
-                            a.getDocument().getType().name(),
-                            a.getGrantedAt() != null ? a.getGrantedAt().toLocalDate().toString() : ""
+                    .filter(share -> share.getDocument() != null)
+                    .map(share -> new ReviewerUserDto.SharedDocumentDto(
+                            share.getDocument().getId(),
+                            share.getDocument().getLabel(),
+                            share.getDocument().getFilename(),
+                            share.getDocument().getType().name(),
+                            share.getGrantedAt() != null ? share.getGrantedAt().toLocalDate().toString() : ""
                     ))
                     .toList();
 
@@ -62,22 +65,19 @@ public class ReviewerController {
             @PathVariable UUID documentId,
             @AuthenticationPrincipal OidcUser reviewer) throws IOException {
 
-        boolean hasAccess = documentAccessRepository
-                .existsByDocumentIdAndReviewerId(documentId, reviewer.getSubject());
-        if (!hasAccess)
-            throw new ApiException.Forbidden();
-
-        DocumentAccess access = documentAccessRepository.findByDocumentId(documentId).stream()
-                .filter(a -> a.getReviewerId().equals(reviewer.getSubject()))
+        Document document = shareService
+                .activeForCounterpart(reviewer.getSubject(), SharedSubject.DOCUMENT).stream()
+                .map(Share::getDocument)
+                .filter(Objects::nonNull)
+                .filter(doc -> doc.getId().equals(documentId))
                 .findFirst()
-                .orElseThrow(ApiException.NotFound::new);
+                .orElseThrow(ApiException.Forbidden::new);
 
-        var doc = access.getDocument();
-        byte[] bytes = storageService.download(doc.getStorageKey()).readAllBytes();
+        byte[] bytes = storageService.download(document.getStorageKey()).readAllBytes();
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.getFilename() + "\"")
-                .contentType(MediaType.parseMediaType(doc.getMimeType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getFilename() + "\"")
+                .contentType(MediaType.parseMediaType(document.getMimeType()))
                 .body(bytes);
     }
 }

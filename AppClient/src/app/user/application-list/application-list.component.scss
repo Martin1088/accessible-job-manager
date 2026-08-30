@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 main {
   max-width: 1600px;
   margin: 2rem auto;
@@ -24,6 +26,39 @@ main {
   h2 { margin: 0 0 1rem; font-size: 1.1rem; }
 }
 
+/*
+ * The letter read front to back. It takes focus when it opens, so the outline is
+ * the reader's landing mark rather than noise - never remove it.
+ */
+.letter-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+
+  h2 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+
+  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+
+  .preview-template {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    color: #4b5563;
+  }
+
+  // The letter is linearized text: its blank lines are the paragraph breaks, so
+  // it wraps rather than scrolling sideways, and keeps its own line breaks.
+  .preview-text {
+    margin: 0 0 1rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+}
+
 .position-info {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -31,7 +66,7 @@ main {
   margin: 0 0 1.25rem;
   font-size: 0.9rem;
 
-  dt { font-weight: 600; color: #64748b; }
+  dt { font-weight: 600; color: var(--color-text-muted); }
   dd { margin: 0; }
 }
 
@@ -57,6 +92,7 @@ main {
 
 .form-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.25rem;
 }
@@ -92,6 +128,17 @@ main {
   flex-wrap: wrap;
 }
 
+.filter-fieldset {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-inline-size: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
@@ -100,7 +147,7 @@ main {
   label {
     font-size: 0.8rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -116,6 +163,23 @@ main {
   }
 
   input[type="search"] { min-width: 12rem; }
+}
+
+@include bp.mobile {
+  .filter-fieldset {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filter-group {
+    width: 100%;
+
+    select, input[type="search"] {
+      width: 100%;
+      min-width: 0;
+    }
+  }
 }
 
 .table-wrapper {
@@ -156,7 +220,7 @@ main {
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: #64748b;
+      color: var(--color-text-muted);
 
       button {
         background: none;
@@ -165,14 +229,79 @@ main {
         font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: #64748b;
+        color: var(--color-text-muted);
         cursor: pointer;
         padding: 0;
+        display: inline-flex;
+        align-items: center;
+        min-inline-size: 44px;
+        min-block-size: 44px;
         &:focus-visible { outline: 2px solid #005fcc; border-radius: 2px; }
       }
     }
 
     tbody tr:hover { background: #f8fafc; }
+  }
+}
+
+// Mobile card layout: the DOM stays one <table> so VoiceOver still reports
+// table structure and per-cell header association - only the visual
+// presentation changes. Never use visibility:hidden/opacity:0 on thead here,
+// it would keep the header row reachable while looking hidden.
+@include bp.mobile {
+  .table-wrapper {
+    overflow-x: visible;
+
+    table {
+      table-layout: auto;
+
+      col { width: auto !important; }
+
+      caption { margin-bottom: 0.75rem; }
+
+      thead { display: none; }
+
+      tbody tr {
+        display: block;
+        margin-block-end: 1rem;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+      }
+
+      th, td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+
+        &::before {
+          content: attr(data-label);
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+      }
+
+      td:has(> div),
+      td:has(> button) {
+        flex-wrap: wrap;
+        align-items: flex-start;
+
+        &::before {
+          flex-basis: 100%;
+        }
+      }
+
+      td[colspan] {
+        display: block;
+
+        &::before { content: none; }
+      }
+
+      tr:last-child td:last-child { border-bottom: none; }
+    }
   }
 }
 
@@ -191,6 +320,14 @@ main {
     font-size: 0.85rem;
     font-family: inherit;
     &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+
+  // Says why a greyed-out action is greyed out. #4b5563 on the row background is
+  // ~7:1, so the explanation is not itself hard to read.
+  .template-note {
+    flex: 1 1 100%;
+    font-size: 0.75rem;
+    color: #4b5563;
   }
 }
 

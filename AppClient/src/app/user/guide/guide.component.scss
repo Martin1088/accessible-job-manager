@@ -61,7 +61,7 @@ main {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #64748b;
+    color: var(--color-text-muted);
     margin: 0 0 0.6rem;
   }
 
@@ -153,5 +153,5 @@ kbd {
 
 .shortcut-note {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }

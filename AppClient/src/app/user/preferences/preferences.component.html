@@ -1,0 +1,96 @@
+<main id="main-content" tabindex="-1">
+  <h1>{{ 'PREFERENCES.LEGEND' | translate }}</h1>
+  <p class="hint">{{ 'PREFERENCES.HELP' | translate }}</p>
+
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="icon-actions" role="group" [attr.aria-label]="'PREFERENCES.ACTIONS_LABEL' | translate">
+      <button type="submit" class="icon-btn icon-btn-save"
+        [disabled]="saving || form.pristine"
+        [attr.aria-label]="(saving ? 'PREFERENCES.SAVING' : 'PREFERENCES.SAVE') | translate"
+        title="{{ 'PREFERENCES.SAVE' | translate }} (Ctrl+S)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M8 12.5l2.5 2.5L16 9.5"></path>
+        </svg>
+      </button>
+      <button type="button" class="icon-btn icon-btn-reset"
+        [disabled]="saving"
+        (click)="reset()"
+        [attr.aria-label]="'PREFERENCES.RESET' | translate">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+          <polyline points="3 4 3 9 8 9"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <fieldset>
+      <legend>{{ 'PREFERENCES.FIELDSET_LEGEND' | translate }}</legend>
+
+      <div class="field">
+        <label for="pref-contrast">{{ 'PREFERENCES.CONTRAST' | translate }}</label>
+        <select id="pref-contrast" formControlName="contrastMode">
+          <option value="SYSTEM">{{ 'PREFERENCES.CONTRAST_SYSTEM' | translate }}</option>
+          <option value="HIGH">{{ 'PREFERENCES.CONTRAST_HIGH' | translate }}</option>
+          <option value="DARK">{{ 'PREFERENCES.CONTRAST_DARK' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pref-reduce-motion">{{ 'PREFERENCES.REDUCE_MOTION' | translate }}</label>
+        <select id="pref-reduce-motion" formControlName="reduceMotion">
+          <option value="SYSTEM">{{ 'PREFERENCES.OPTION_SYSTEM' | translate }}</option>
+          <option value="ON">{{ 'PREFERENCES.OPTION_ON' | translate }}</option>
+          <option value="OFF">{{ 'PREFERENCES.OPTION_OFF' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pref-hide-images">{{ 'PREFERENCES.HIDE_IMAGES' | translate }}</label>
+        <select id="pref-hide-images" formControlName="hideImages">
+          <option value="SYSTEM">{{ 'PREFERENCES.OPTION_SYSTEM' | translate }}</option>
+          <option value="ON">{{ 'PREFERENCES.OPTION_ON' | translate }}</option>
+          <option value="OFF">{{ 'PREFERENCES.OPTION_OFF' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pref-font-family">{{ 'PREFERENCES.FONT_FAMILY' | translate }}</label>
+        <select id="pref-font-family" formControlName="fontFamily">
+          <option value="SYSTEM">{{ 'PREFERENCES.FONT_FAMILY_SYSTEM' | translate }}</option>
+          <option value="SANS_SERIF">{{ 'PREFERENCES.FONT_FAMILY_SANS_SERIF' | translate }}</option>
+          <option value="SERIF">{{ 'PREFERENCES.FONT_FAMILY_SERIF' | translate }}</option>
+          <option value="DYSLEXIA_FRIENDLY">{{ 'PREFERENCES.FONT_FAMILY_DYSLEXIA_FRIENDLY' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pref-font-scale">{{ 'PREFERENCES.FONT_SCALE' | translate }}</label>
+        <input id="pref-font-scale" type="number" formControlName="fontScale" min="0.8" max="2" step="0.1"
+          [attr.aria-invalid]="invalid('fontScale') ? 'true' : null"
+          [attr.aria-describedby]="invalid('fontScale') ? 'pref-font-scale-error' : 'pref-font-scale-hint'">
+        <p id="pref-font-scale-hint" class="hint">{{ 'PREFERENCES.FONT_SCALE_HELP' | translate }}</p>
+        @if (invalid('fontScale')) {
+          <p id="pref-font-scale-error" role="alert" class="error">{{ 'PREFERENCES.FONT_SCALE_INVALID' | translate }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="pref-line-height">{{ 'PREFERENCES.LINE_HEIGHT' | translate }}</label>
+        <input id="pref-line-height" type="number" formControlName="lineHeight" min="1" max="3" step="0.1"
+          [attr.aria-invalid]="invalid('lineHeight') ? 'true' : null"
+          [attr.aria-describedby]="invalid('lineHeight') ? 'pref-line-height-error' : 'pref-line-height-hint'">
+        <p id="pref-line-height-hint" class="hint">{{ 'PREFERENCES.LINE_HEIGHT_HELP' | translate }}</p>
+        @if (invalid('lineHeight')) {
+          <p id="pref-line-height-error" role="alert" class="error">{{ 'PREFERENCES.LINE_HEIGHT_INVALID' | translate }}</p>
+        }
+      </div>
+    </fieldset>
+
+    @if (saveError) {
+      <p role="alert" class="error">{{ 'PREFERENCES.SAVE_ERROR' | translate }}</p>
+    }
+  </form>
+</main>

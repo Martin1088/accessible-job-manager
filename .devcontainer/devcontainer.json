@@ -5,7 +5,7 @@
 
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "26",
+      "version": "26.0.1-tem",
       "jdkDistro": "tem",
       "installGradle": false
     },
@@ -16,7 +16,16 @@
       "version": "latest",
       "dockerDashComposeVersion": "v2"
     },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+
+  // Karma needs a real browser binary and the base image ships without one.
+  // CHROME_BIN is what karma.conf.js looks for; without it `ng test` cannot start.
+  "containerEnv": {
+    "CHROME_BIN": "/usr/bin/chromium"
   },
 
   "forwardPorts": [8060, 9000, 9443, 5432, 3900, 3901, 3909, 3000],
@@ -31,7 +40,21 @@
     "3000": { "label": "Gotenberg (PDF)" }
   },
 
-  "postCreateCommand": "chmod +x gradlew && ./gradlew --version && npm ci --prefix AppClient",
+  // /root lives in the container layer, so a `Rebuild Container` otherwise
+  // discards the Claude Code login, the plugin cache and the registered
+  // marketplaces. The volume keeps that state; .claude/settings.json in the
+  // repo keeps the *activation* portable to another machine.
+  //
+  // The mount overlays whatever the claude-code feature wrote to /root/.claude
+  // at build time. If something looks missing after the first rebuild, drop the
+  // volume once: docker volume rm ajm-claude-home
+  "mounts": [
+    "source=ajm-claude-home,target=/root/.claude,type=volume"
+  ],
+
+  "onCreateCommand": "apt-get update && apt-get install -y chromium && rm -rf /var/lib/apt/lists/*",
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
 
   "customizations": {
     "jetbrains": {

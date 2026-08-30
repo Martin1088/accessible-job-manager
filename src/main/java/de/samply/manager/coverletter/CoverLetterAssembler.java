@@ -53,7 +53,8 @@ public class CoverLetterAssembler {
                 template.sender().name(),
                 labels.label("coverLetter.attachmentsLabel", language),
                 template.attachments().stream().map(a -> placeholders.resolvePlain(a, values)).toList(),
-                styleValidator.validated(template.style()));
+                styleValidator.validated(template.style()),
+                language);
     }
 
     /**

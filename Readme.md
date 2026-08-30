@@ -1,4 +1,4 @@
-![Accessible Job Manager Logo](docs/Juke.png)
+![Accessible Job Manager Logo](docs/assets/Juke.png)
 # Accessible Job Manager
 
 **A job application manager for blind and visually impaired users.** Screen reader
@@ -49,6 +49,7 @@ vocational rehabilitation can run their own instance and connect it to existing
 systems.
 
 ---
+![Accessible Job Manager Home Screenshot](docs/assets/Home.png)
 
 ## Tech Stack
 
@@ -142,6 +143,7 @@ automated accessibility gate (axe, pa11y, Lighthouse) in the build yet.
 ### Advisor
 - **My Users** — table of all users assigned to this advisor
 - **Suggestions** — create position suggestions for a user (company + position + optional message), view all past suggestions with status
+- **Job search** — search the Adzuna job aggregator (search term, location, radius, age, salary, contract type, category) and hand a result's URL to the existing posting import; off unless the operator configures their own Adzuna key
 
 ### Reviewer
 - **Dashboard** — shows all users who have shared documents, grouped as cards with name, email and a document table; one-click download per document
@@ -159,6 +161,12 @@ automated accessibility gate (axe, pa11y, Lighthouse) in the build yet.
 ### Job Posting Import
 - `POST /api/posting/overview?url=...` fetches the given URL's visible text (via Jsoup) and sends it to a local Ollama model (`qwen2.5:3b` by default) with a structured-output prompt to extract job posting fields
 - Requires a locally running Ollama instance (`OLLAMA_URL`, default `http://localhost:11434`) — not part of the Docker Compose dev stack, must be started separately
+
+### Job Search (Adzuna)
+- `GET /api/advisor/job-search?what=&where=…` proxies a search to [Adzuna](https://developer.adzuna.com); `GET /api/advisor/job-search/categories` lists the category filters, `GET /api/advisor/job-search/status` reports whether the feature is configured at all
+- Requires an operator-registered `JOBSOURCE_ADZUNA_APP_ID` / `JOBSOURCE_ADZUNA_APP_KEY`. There is no default and no key in the image — without both, every endpoint answers `503` and the frontend hides the feature
+- Results are passed straight through and never stored: Adzuna's terms allow a result to be held for at most 14 days, and holding nothing is the simplest way to keep that promise. An advisor who picks a hit imports it from the employer's own page through the normal snapshot path
+- The `attribution` field in every response (`Jobs by Adzuna`) is the credit line Adzuna's terms require next to its results
 
 ### Legal Pages
 - `/impressum` and `/datenschutz` — Impressum (§5 DDG) and GDPR-compliant Datenschutzerklärung, publicly reachable without login (including from the login page footer)
@@ -219,6 +227,9 @@ work — see [Bootstrapping Garage](docs/local-development.md#bootstrapping-gara
 | POST   | `/api/cover-letter/personalize`                   | USER     | Generate a template with sender header filled|
 | POST   | `/api/posting/overview?url=`                      | USER     | Extract job posting fields from a URL (LLM)  |
 | GET    | `/api/advisor/my-users`                           | ADVISOR  | Users assigned to this advisor               |
+| GET    | `/api/advisor/job-search?what=&where=`            | ADVISOR  | Search external job boards (Adzuna)          |
+| GET    | `/api/advisor/job-search/categories`              | ADVISOR  | Category filters the source accepts          |
+| GET    | `/api/advisor/job-search/status`                  | ADVISOR  | Whether a job search source is configured    |
 | POST   | `/api/advisor/suggestions`                        | ADVISOR  | Create a position suggestion                 |
 | GET    | `/api/advisor/suggestions`                        | ADVISOR  | All suggestions by this advisor              |
 | GET    | `/api/reviewer/users`                             | REVIEWER | Users who shared documents with this reviewer|

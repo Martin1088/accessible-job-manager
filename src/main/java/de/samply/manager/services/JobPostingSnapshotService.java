@@ -1,12 +1,16 @@
 package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
+import de.samply.manager.jobimport.diagnostics.FailureCategory;
+import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
 import de.samply.manager.types.Language;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
+import de.samply.manager.services.storage.StorageService;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
@@ -44,19 +48,25 @@ public class JobPostingSnapshotService {
     private final String gotenbergUrl;
     private final StorageService storageService;
     private final DocumentRepository documentRepository;
+    private final DocumentService documentService;
     private final CompanyPositionRepository companyPositionRepository;
     private final MessageSource messageSource;
+    private final ImportDiagnostics diagnostics;
 
     public JobPostingSnapshotService(@Value("${gotenberg.url}") String gotenbergUrl,
                                      StorageService storageService,
                                      DocumentRepository documentRepository,
+                                     DocumentService documentService,
                                      CompanyPositionRepository companyPositionRepository,
-                                     MessageSource messageSource) {
+                                     MessageSource messageSource,
+                                     ImportDiagnostics diagnostics) {
         this.gotenbergUrl = gotenbergUrl;
         this.storageService = storageService;
         this.documentRepository = documentRepository;
+        this.documentService = documentService;
         this.companyPositionRepository = companyPositionRepository;
         this.messageSource = messageSource;
+        this.diagnostics = diagnostics;
         this.restClient = RestClient.create();
     }
 
@@ -70,15 +80,22 @@ public class JobPostingSnapshotService {
         body.add("url", uri.toString());
 
         try {
-            return restClient.post()
+            byte[] pdf = restClient.post()
                     .uri(gotenbergUrl + "/forms/chromium/convert/url")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(body)
                     .retrieve()
                     .body(byte[].class);
+            diagnostics.record(uri.toString(), FailureCategory.OK, null);
+            return pdf;
         } catch (RestClientResponseException e) {
-            throw new ApiException.BadRequest(describeConversionFailure(e));
+            ApiException failure = conversionFailure(e);
+            diagnostics.record(uri.toString(), FailureCategory.PDF_FETCH_FAILED, failure.getUpstreamStatus());
+            throw failure;
         } catch (RestClientException e) {
+            // Gotenberg itself is down: our problem, not the host's, so it is
+            // recorded under a category that keeps the host off the work list.
+            diagnostics.record(uri.toString(), FailureCategory.PDF_SERVICE_UNAVAILABLE, null);
             throw new ApiException.BadGateway(message("error.snapshot.serviceUnavailable"));
         }
     }
@@ -86,19 +103,22 @@ public class JobPostingSnapshotService {
     /**
      * Gotenberg reports a failed page load as "...HTTP status code from the main page: {status}: ..."
      * in its error body (e.g. a job posting that was taken down surfaces as a 404 there).
-     * Extracting that status lets us tell the user why their URL failed instead of a generic 502.
+     * Extracting that status lets us tell the user why their URL failed instead of a generic 502,
+     * and carrying it on the exception lets the diagnostics line name the status without
+     * re-parsing the localized message it ends up in.
      */
-    private String describeConversionFailure(RestClientResponseException e) {
+    private ApiException conversionFailure(RestClientResponseException e) {
         Matcher matcher = UPSTREAM_STATUS_PATTERN.matcher(e.getResponseBodyAsString());
         if (!matcher.find()) {
-            return message("error.snapshot.conversionFailed");
+            return new ApiException.BadRequest(message("error.snapshot.conversionFailed"));
         }
         int upstreamStatus = Integer.parseInt(matcher.group(1));
-        return switch (upstreamStatus) {
+        String description = switch (upstreamStatus) {
             case 404 -> message("error.snapshot.notFound404");
             case 401, 403 -> message("error.snapshot.deniedAccess", upstreamStatus);
             default -> message("error.snapshot.upstreamError", upstreamStatus);
         };
+        return new ApiException.BadRequest(description, upstreamStatus);
     }
 
     private String message(String key, Object... args) {
@@ -138,7 +158,7 @@ public class JobPostingSnapshotService {
     }
 
     public SnapshotContent download(UUID documentId, String userId) {
-        Document doc = findOwned(documentId, userId);
+        Document doc = documentService.findOwned(documentId, userId, DocumentType.JOB_POSTING_SNAPSHOT);
         try (InputStream in = storageService.download(doc.getStorageKey())) {
             return new SnapshotContent(doc, in.readAllBytes());
         } catch (IOException e) {
@@ -147,7 +167,7 @@ public class JobPostingSnapshotService {
     }
 
     public Document update(UUID documentId, String userId, String label, Language language) {
-        Document doc = findOwned(documentId, userId);
+        Document doc = documentService.findOwned(documentId, userId, DocumentType.JOB_POSTING_SNAPSHOT);
         if (label != null) doc.setLabel(label);
         if (language != null) doc.setLanguage(language);
         doc.setUpdatedAt(LocalDateTime.now());
@@ -163,35 +183,25 @@ public class JobPostingSnapshotService {
         return position;
     }
 
-    private Document findOwned(UUID documentId, String userId) {
-        Document doc = documentRepository.findById(documentId)
-                .filter(d -> d.getType() == DocumentType.JOB_POSTING_SNAPSHOT)
-                .orElseThrow(ApiException.NotFound::new);
-        if (!doc.getUserId().equals(userId)) {
-            throw new ApiException.Forbidden();
-        }
-        return doc;
-    }
-
     public record SnapshotContent(Document document, byte[] content) {}
 
     private URI validate(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            throw new ApiException.BadRequest(message("error.snapshot.urlEmpty"));
+            throw new ApiException.BadRequest(message("error.url.empty"));
         }
 
         URI uri;
         try {
             uri = new URI(rawUrl.trim());
         } catch (URISyntaxException e) {
-            throw new ApiException.BadRequest(message("error.snapshot.malformedUrl"));
+            throw new ApiException.BadRequest(message("error.url.malformed"));
         }
 
         if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new ApiException.BadRequest(message("error.snapshot.urlScheme"));
+            throw new ApiException.BadRequest(message("error.url.scheme"));
         }
         if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ApiException.BadRequest(message("error.snapshot.urlHost"));
+            throw new ApiException.BadRequest(message("error.url.host"));
         }
 
         rejectIfDisallowedHost(uri.getHost());
@@ -203,13 +213,13 @@ public class JobPostingSnapshotService {
         try {
             addresses = InetAddress.getAllByName(host);
         } catch (UnknownHostException e) {
-            throw new ApiException.BadRequest(message("error.snapshot.hostUnresolved"));
+            throw new ApiException.BadRequest(message("error.url.hostUnresolved"));
         }
         for (InetAddress address : addresses) {
             if (address.isLoopbackAddress() || address.isAnyLocalAddress()
                     || address.isLinkLocalAddress() || address.isSiteLocalAddress()
                     || address.isMulticastAddress() || isUniqueLocalIpv6(address)) {
-                throw new ApiException.BadRequest(message("error.snapshot.disallowedHost"));
+                throw new ApiException.BadRequest(message("error.url.disallowedHost"));
             }
         }
     }

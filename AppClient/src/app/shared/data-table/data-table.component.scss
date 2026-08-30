@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 :host {
   display: block;
 }
@@ -30,6 +32,7 @@ th {
     align-items: center;
     gap: 0.4rem;
     padding: 0.75rem 1rem;
+    min-block-size: 44px;
     background: none;
     border: none;
     font-weight: 600;
@@ -77,6 +80,8 @@ tr:hover td {
 td button {
   margin-right: 0.5rem;
   padding: 0.3rem 0.75rem;
+  min-inline-size: 44px;
+  min-block-size: 44px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -89,5 +94,73 @@ td button {
   &:focus-visible {
     outline: 3px solid #005fcc;
     outline-offset: 2px;
+  }
+}
+
+// Mobile card layout: the DOM stays one <table>, so VoiceOver still reports
+// table structure and per-cell header association - only the visual
+// presentation changes. Never use visibility:hidden/opacity:0 on thead here,
+// it would keep the header row reachable while looking hidden.
+@include bp.mobile {
+  table {
+    box-shadow: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  caption {
+    border-radius: 4px 4px 0 0;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    display: block;
+    margin-block-end: 1rem;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid #e5e5e5;
+    // A cell value can be a long unbroken token (email, filename); without
+    // this it overflows the card instead of wrapping onto its own line.
+    overflow-wrap: anywhere;
+
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    // Action cells hold several buttons rather than one value; wrap them
+    // below a full-width label instead of squeezing them next to it.
+    &:has(button) {
+      flex-wrap: wrap;
+
+      &::before {
+        flex-basis: 100%;
+      }
+    }
+  }
+
+  tr:last-child td:last-child {
+    border-bottom: none;
+  }
+
+  td[colspan] {
+    display: block;
+
+    &::before {
+      content: none;
+    }
   }
 }

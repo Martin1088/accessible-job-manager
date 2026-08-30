@@ -7,7 +7,7 @@
     <input #fileInput type="file"
       accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       style="display:none" tabindex="-1" aria-hidden="true"
-      (change)="onFileSelected($event)">
+      (change)="onFileSelected($event, 'TEMPLATE')">
   </div>
 
   @if (errorMessage) {
@@ -27,6 +27,16 @@
           aria-required="true"
           [attr.placeholder]="'DOCUMENTS.LABEL_PLACEHOLDER' | translate"/>
       </div>
+      @if (uploadMode === 'DOCUMENT') {
+        <div class="field">
+          <label for="doc-type">{{ 'DOCUMENTS.TYPE_FIELD' | translate }}</label>
+          <select id="doc-type" name="doc-type" [(ngModel)]="pendingType">
+            @for (t of pdfTypeOptions; track t.value) {
+              <option [value]="t.value">{{ t.label | translate }}</option>
+            }
+          </select>
+        </div>
+      }
       <div class="field">
         <label for="doc-language">{{ 'DOCUMENTS.LANGUAGE_FIELD' | translate }}</label>
         <select id="doc-language" name="doc-language" [(ngModel)]="pendingLanguage">
@@ -48,38 +58,41 @@
   }
 
   <div class="filter-bar" role="search" [attr.aria-label]="'DOCUMENTS.FILTER_ARIA' | translate">
-    <div class="filter-group">
-      <label for="search-field">{{ 'DOCUMENTS.SEARCH_FIELD_LABEL' | translate }}</label>
-      <select id="search-field" [(ngModel)]="searchField">
-        @for (f of searchFields; track f) {
-          <option [value]="f.value">{{ f.label | translate }}</option>
-        }
-      </select>
-    </div>
-    <div class="filter-group">
-      <label for="search-term">{{ 'DOCUMENTS.SEARCH_LABEL' | translate }}</label>
-      <input id="search-term" type="search" [(ngModel)]="searchTerm"
-        [attr.placeholder]="'DOCUMENTS.SEARCH_PLACEHOLDER' | translate"
-        [attr.aria-label]="'DOCUMENTS.SEARCH_ARIA' | translate"/>
-    </div>
-    <div class="filter-group">
-      <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
-      <select id="filter-year" [(ngModel)]="filterYear">
-        <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
-        @for (y of availableYears; track y) {
-          <option [value]="y">{{ y }}</option>
-        }
-      </select>
-    </div>
-    <div class="filter-group">
-      <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
-      <select id="filter-month" [(ngModel)]="filterMonth">
-        <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
-        @for (i of monthIndexes; track i) {
-          <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
-        }
-      </select>
-    </div>
+    <fieldset class="filter-fieldset">
+      <legend class="sr-only">{{ 'DOCUMENTS.FILTER_ARIA' | translate }}</legend>
+      <div class="filter-group">
+        <label for="search-field">{{ 'DOCUMENTS.SEARCH_FIELD_LABEL' | translate }}</label>
+        <select id="search-field" [(ngModel)]="searchField">
+          @for (f of searchFields; track f) {
+            <option [value]="f.value">{{ f.label | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="search-term">{{ 'DOCUMENTS.SEARCH_LABEL' | translate }}</label>
+        <input id="search-term" type="search" [(ngModel)]="searchTerm"
+          [attr.placeholder]="'DOCUMENTS.SEARCH_PLACEHOLDER' | translate"
+          [attr.aria-label]="'DOCUMENTS.SEARCH_ARIA' | translate"/>
+      </div>
+      <div class="filter-group">
+        <label for="filter-year">{{ 'COMMON.YEAR' | translate }}</label>
+        <select id="filter-year" [(ngModel)]="filterYear">
+          <option [value]="''">{{ 'COMMON.ALL_YEARS' | translate }}</option>
+          @for (y of availableYears; track y) {
+            <option [value]="y">{{ y }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-month">{{ 'COMMON.MONTH' | translate }}</label>
+        <select id="filter-month" [(ngModel)]="filterMonth">
+          <option [value]="''">{{ 'COMMON.ALL_MONTHS' | translate }}</option>
+          @for (i of monthIndexes; track i) {
+            <option [value]="i">{{ ('COMMON.MONTH_' + i) | translate }}</option>
+          }
+        </select>
+      </div>
+    </fieldset>
     @if (filterActive) {
       <button type="button" class="btn-cancel" (click)="clearFilter()"
         [attr.aria-label]="'COMMON.CLEAR_FILTER_ARIA' | translate">
@@ -88,11 +101,34 @@
     }
   </div>
 
-  <app-data-table
-    caption="DOCUMENTS.TABLE_CAPTION"
-    [columns]="columns"
-    [rows]="filteredRows"
-    [actions]="actions"
-    emptyMessage="DOCUMENTS.EMPTY">
-  </app-data-table>
+  <section aria-labelledby="templates-heading">
+    <h2 id="templates-heading">{{ 'DOCUMENTS.TEMPLATES_HEADING' | translate }}</h2>
+    <app-data-table
+      caption="DOCUMENTS.TABLE_CAPTION"
+      [columns]="columns"
+      [rows]="filteredRows"
+      [actions]="actions"
+      emptyMessage="DOCUMENTS.EMPTY">
+    </app-data-table>
+  </section>
+
+  <section aria-labelledby="documents-heading">
+    <div class="page-header">
+      <h2 id="documents-heading">{{ 'DOCUMENTS.DOCUMENTS_HEADING' | translate }}</h2>
+      <button type="button" class="btn-upload" (click)="pdfInput.click()" [disabled]="uploading">
+        <span aria-hidden="true">↑</span> {{ (uploading ? 'DOCUMENTS.UPLOADING' : 'DOCUMENTS.UPLOAD_PDF') | translate }}
+      </button>
+      <input #pdfInput type="file" accept=".pdf,application/pdf"
+        style="display:none" tabindex="-1" aria-hidden="true"
+        (change)="onFileSelected($event, 'DOCUMENT')">
+    </div>
+    <p class="hint">{{ 'DOCUMENTS.DOCUMENTS_HELP' | translate }}</p>
+    <app-data-table
+      caption="DOCUMENTS.DOCUMENTS_CAPTION"
+      [columns]="documentColumns"
+      [rows]="filteredDocumentRows"
+      [actions]="documentActions"
+      emptyMessage="DOCUMENTS.DOCUMENTS_EMPTY">
+    </app-data-table>
+  </section>
 </main>

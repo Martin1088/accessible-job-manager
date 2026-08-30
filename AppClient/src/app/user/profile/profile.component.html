@@ -8,7 +8,7 @@
   @if (auth.me$ | async; as me) {
     <dl class="profile-info">
       <dt>{{ 'PROFILE.ROLES' | translate }}</dt>
-      <dd>{{ me.groups.length ? me.groups.join(', ') : ('PROFILE.ROLE_USER' | translate) }}</dd>
+      <dd>{{ me.roles.length ? me.roles.join(', ') : ('PROFILE.ROLE_USER' | translate) }}</dd>
     </dl>
   }
 
@@ -101,4 +101,51 @@
       <p role="alert" class="error">{{ 'PROFILE.SAVE_ERROR' | translate }}</p>
     }
   </form>
+
+  @if (isUser$ | async) {
+    <section class="network" aria-labelledby="network-heading">
+      <h2 id="network-heading">{{ 'PROFILE.REL_HEADING' | translate }}</h2>
+      <p id="network-help" class="hint">{{ 'PROFILE.REL_HELP' | translate }}</p>
+
+      @if (networkError) {
+        <p role="alert" class="error">{{ 'PROFILE.REL_LOAD_ERROR' | translate }}</p>
+      }
+      @if (networkActionError) {
+        <p role="alert" class="error">{{ 'PROFILE.REL_ACTION_ERROR' | translate }}</p>
+      }
+
+      @if (networkLoading) {
+        <p role="status">{{ 'PROFILE.REL_LOADING' | translate }}</p>
+      } @else if (!networkError) {
+        <app-data-table
+          caption="PROFILE.REL_CAPTION"
+          [columns]="networkColumns"
+          [rows]="networkRows"
+          [actions]="networkActions"
+          emptyMessage="PROFILE.REL_EMPTY">
+        </app-data-table>
+      }
+    </section>
+  }
+
+  <!-- Outside the profile form: these buttons must not submit it. -->
+  <section class="export" aria-labelledby="export-heading">
+    <h2 id="export-heading">{{ 'PROFILE.EXPORT_HEADING' | translate }}</h2>
+    <p id="export-help" class="hint">{{ 'PROFILE.EXPORT_HELP' | translate }}</p>
+
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" [disabled]="!!exporting"
+        aria-describedby="export-help" (click)="exportData('XLSX')">
+        {{ (exporting === 'XLSX' ? 'PROFILE.EXPORTING' : 'PROFILE.EXPORT_XLSX') | translate }}
+      </button>
+      <button type="button" class="btn-secondary" [disabled]="!!exporting"
+        aria-describedby="export-help" (click)="exportData('CSV')">
+        {{ (exporting === 'CSV' ? 'PROFILE.EXPORTING' : 'PROFILE.EXPORT_CSV') | translate }}
+      </button>
+    </div>
+
+    @if (exportError) {
+      <p role="alert" class="error">{{ 'PROFILE.EXPORT_ERROR' | translate }}</p>
+    }
+  </section>
 </main>

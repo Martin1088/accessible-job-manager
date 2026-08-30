@@ -1,11 +1,13 @@
 package de.samply.manager.services;
 
 import de.samply.manager.dto.JobPostingExtraction;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import org.jsoup.Jsoup;
-import org.springframework.http.HttpStatus;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +20,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.Locale;
 
 /**
  * Fetches a job posting from a user-supplied URL (with SSRF-safe host
@@ -32,12 +36,15 @@ public class JobPostingParserService {
     private static final int MAX_HTML_BYTES = 3_000_000;
     private static final int MAX_TEXT_CHARS = 8_000;
     private static final int MAX_REDIRECTS = 5;
+    private static final int MAX_LINKS = 60;
 
     private final JobPostingLlmClient llmClient;
     private final HttpClient httpClient;
+    private final MessageSource messageSource;
 
-    public JobPostingParserService(JobPostingLlmClient llmClient) {
+    public JobPostingParserService(JobPostingLlmClient llmClient, MessageSource messageSource) {
         this.llmClient = llmClient;
+        this.messageSource = messageSource;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -62,23 +69,60 @@ public class JobPostingParserService {
         return fetchHtml(validate(rawUrl));
     }
 
+    /** The posting's visible text, fetched through the same validated path. */
+    public String postingText(String rawUrl) {
+        return visibleText(fetchHtml(validate(rawUrl)));
+    }
+
+    /**
+     * The posting's visible text followed by the links found on the page.
+     *
+     * <p>For deciding <em>how</em> to apply, the text alone is not enough: an
+     * apply button carries its destination in an href, and a mailto: address
+     * may never appear as text at all. Without the hrefs a model asked for an
+     * application URL can only invent one.
+     *
+     * <p>The links are listed unfiltered (beyond de-duplication and a size
+     * cap) rather than pre-selected by an apply-looking heuristic, so the
+     * choice of which link is the application link stays with the model.
+     */
+    public String postingTextWithLinks(String rawUrl) {
+        FetchedPage page = fetchHtml(validate(rawUrl));
+        Document document = Jsoup.parse(page.html(), page.url().toString());
+        String text = truncateText(document.text());
+
+        LinkedHashSet<String> links = new LinkedHashSet<>();
+        for (Element anchor : document.select("a[href]")) {
+            if (links.size() >= MAX_LINKS) break;
+            String href = anchor.absUrl("href");
+            if (href.isBlank()) href = anchor.attr("href");
+            if (href.isBlank() || href.startsWith("javascript:")) continue;
+            String label = anchor.text().strip();
+            links.add(label.isBlank() ? href : label + " -> " + href);
+        }
+        if (links.isEmpty()) {
+            return text;
+        }
+        return text + "\n\nLinks on the page:\n" + String.join("\n", links);
+    }
+
     private URI validate(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL must not be empty");
+            throw new ApiException.BadRequest(message("error.url.empty"));
         }
 
         URI uri;
         try {
             uri = new URI(rawUrl.trim());
         } catch (URISyntaxException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed URL");
+            throw new ApiException.BadRequest(message("error.url.malformed"));
         }
 
         if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL must use http or https");
+            throw new ApiException.BadRequest(message("error.url.scheme"));
         }
         if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL must include a host");
+            throw new ApiException.BadRequest(message("error.url.host"));
         }
 
         rejectIfDisallowedHost(uri.getHost());
@@ -90,14 +134,13 @@ public class JobPostingParserService {
         try {
             addresses = InetAddress.getAllByName(host);
         } catch (UnknownHostException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not resolve host");
+            throw new ApiException.BadRequest(message("error.url.hostUnresolved"));
         }
         for (InetAddress address : addresses) {
             if (address.isLoopbackAddress() || address.isAnyLocalAddress()
                     || address.isLinkLocalAddress() || address.isSiteLocalAddress()
                     || address.isMulticastAddress() || isUniqueLocalIpv6(address)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "URL points to a disallowed network address");
+                throw new ApiException.BadRequest(message("error.url.disallowedHost"));
             }
         }
     }
@@ -122,28 +165,52 @@ public class JobPostingParserService {
                 response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
             } catch (IOException | InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not reach the given URL");
+                // Cause kept: it is the only thing that still distinguishes a
+                // timeout from a refused connection once the message is the
+                // same user-facing sentence - see FailureCategory.of.
+                throw new ApiException.BadGateway(message("error.posting.unreachable"), e);
             }
 
             int status = response.statusCode();
             if (status >= 300 && status < 400) {
                 String location = response.headers().firstValue("Location")
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Redirect without Location header"));
+                        .orElseThrow(() -> new ApiException.BadGateway(message("error.posting.redirectNoLocation")));
                 target = validate(target.resolve(location).toString());
                 continue;
             }
             if (status < 200 || status >= 300) {
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "URL responded with status " + status);
+                throw upstreamFailure(status);
             }
 
             byte[] html = readBounded(response.body());
             return new FetchedPage(target, new String(html, StandardCharsets.UTF_8));
         }
-        throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Too many redirects");
+        throw new ApiException.BadGateway(message("error.posting.tooManyRedirects"));
+    }
+
+    /**
+     * A site that refuses automated access is a different problem from a broken
+     * link, and saying so matters: aggregators like Indeed answer 403 to every
+     * request from a server, so "check the URL and try again" sends the caller
+     * back to retry an address that will never work.
+     */
+    ApiException upstreamFailure(int status) {
+        return switch (status) {
+            case 401, 403, 429 -> new ApiException.BadGateway(message("error.posting.blocked", status), status);
+            case 404, 410 -> new ApiException.BadGateway(message("error.posting.notFound", status), status);
+            default -> new ApiException.BadGateway(message("error.posting.upstreamError", status), status);
+        };
+    }
+
+    private String message(String key, Object... args) {
+        return messageSource.getMessage(key, args, Locale.ROOT);
     }
 
     private String visibleText(FetchedPage page) {
-        String text = Jsoup.parse(page.html(), page.url().toString()).text();
+        return truncateText(Jsoup.parse(page.html(), page.url().toString()).text());
+    }
+
+    private String truncateText(String text) {
         return text.length() > MAX_TEXT_CHARS ? text.substring(0, MAX_TEXT_CHARS) : text;
     }
 
@@ -151,7 +218,7 @@ public class JobPostingParserService {
         try (in) {
             return in.readNBytes(MAX_HTML_BYTES);
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not read response from the given URL");
+            throw new ApiException.BadGateway(message("error.posting.readFailed"));
         }
     }
 

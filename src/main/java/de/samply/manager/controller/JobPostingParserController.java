@@ -5,12 +5,11 @@ import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.jobimport.extractor.ExtractionDebugReport;
 import de.samply.manager.jobimport.extractor.JobPosting;
-import de.samply.manager.jobimport.extractor.JobPostingExtractionPipeline;
 import de.samply.manager.types.Language;
+import de.samply.manager.services.JobPostingImportService;
 import de.samply.manager.services.JobPostingParserService;
 import de.samply.manager.services.JobPostingSnapshotService;
 import lombok.RequiredArgsConstructor;
-import org.jsoup.Jsoup;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,7 +28,7 @@ public class JobPostingParserController {
 
     private final JobPostingParserService jobPostingParserService;
     private final JobPostingSnapshotService jobPostingSnapshotService;
-    private final JobPostingExtractionPipeline extractionPipeline;
+    private final JobPostingImportService jobPostingImportService;
 
     @PostMapping("/overview")
     public JobPostingExtraction parse(@RequestParam("url") String url) {
@@ -46,10 +45,7 @@ public class JobPostingParserController {
     public ExtractionDebugReport testExtractors(
             @RequestParam("url") String url,
             @RequestParam(value = "boardHint", required = false) String boardHint) {
-        JobPostingParserService.FetchedPage page = jobPostingParserService.fetchPage(url);
-        org.jsoup.nodes.Document document = Jsoup.parse(page.html(), page.url().toString());
-        String plainText = document.text();
-        return extractionPipeline.runDebug(document, plainText, page.url().toString(), boardHint);
+        return jobPostingImportService.extractDebug(url, boardHint);
     }
 
     /**
@@ -62,10 +58,7 @@ public class JobPostingParserController {
     public JobPosting fullChain(
             @RequestParam("url") String url,
             @RequestParam(value = "boardHint", required = false) String boardHint) {
-        JobPostingParserService.FetchedPage page = jobPostingParserService.fetchPage(url);
-        org.jsoup.nodes.Document document = Jsoup.parse(page.html(), page.url().toString());
-        String plainText = document.text();
-        return extractionPipeline.run(document, plainText, page.url().toString(), boardHint);
+        return jobPostingImportService.extract(url, boardHint);
     }
 
     @PostMapping("/snapshot-validate")

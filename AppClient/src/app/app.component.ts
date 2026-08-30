@@ -1,21 +1,27 @@
 import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
-import { Component, HostListener, Inject, OnInit, DOCUMENT, ChangeDetectionStrategy } from '@angular/core';
+import { Component, HostListener, Inject, OnInit, DOCUMENT, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CdkMenuModule } from '@angular/cdk/menu';
 import { TranslatePipe } from '@ngx-translate/core';
 import { filter } from 'rxjs/operators';
 import { AuthService } from './core/auth.service';
 import { LanguageService } from './core/language.service';
+import { DEMO_MODE } from './demo/demo-mode';
+import { DemoBarComponent } from './demo/demo-bar/demo-bar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, CdkMenuModule, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AsyncPipe, CdkMenuModule, TranslatePipe, DemoBarComponent],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
+
+  /** False in every build but `demo`, where app.config.demo.ts overrides the token. */
+  readonly demoMode = inject(DEMO_MODE);
+
   constructor(
     public auth: AuthService,
     public language: LanguageService,
@@ -30,6 +36,8 @@ export class AppComponent implements OnInit {
     'c': '/companies',
     't': '/cover-letter-template',
     'h': '/guide',
+    'p': '/profile',
+    'e': '/preferences',
   };
 
   // Windows screen readers (JAWS/NVDA) reserve bare letter keys for their own

@@ -37,11 +37,11 @@
               <tbody>
                 @for (doc of user.documents; track doc) {
                   <tr>
-                    <td>{{ doc.label }}</td>
-                    <td>{{ doc.filename }}</td>
-                    <td>{{ doc.type }}</td>
-                    <td>{{ doc.grantedAt }}</td>
-                    <td>
+                    <td [attr.data-label]="'REVIEWER.COL_LABEL' | translate">{{ doc.label }}</td>
+                    <td [attr.data-label]="'REVIEWER.COL_FILE' | translate">{{ doc.filename }}</td>
+                    <td [attr.data-label]="'REVIEWER.COL_TYPE' | translate">{{ doc.type }}</td>
+                    <td [attr.data-label]="'REVIEWER.COL_GRANTED' | translate">{{ doc.grantedAt }}</td>
+                    <td [attr.data-label]="'REVIEWER.COL_DOWNLOAD' | translate">
                       <button type="button"
                         class="btn-download"
                         (click)="download(doc)"

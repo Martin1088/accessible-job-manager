@@ -2,25 +2,24 @@ package de.samply.manager.jobimport.llm;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.samply.manager.dto.JobPostingExtraction;
+import de.samply.manager.exception.ApiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import static de.samply.manager.jobimport.llm.JobPostingLlmPrompt.SYSTEM_PROMPT;
-import static de.samply.manager.jobimport.llm.JobPostingLlmPrompt.truncate;
+import static de.samply.manager.jobimport.llm.JobPostingLlmPrompt.truncateFields;
 
 /** Calls a local Ollama instance's /api/chat in structured-output mode. */
 @Service
@@ -29,15 +28,18 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+    private final MessageSource messageSource;
     private final String ollamaUrl;
     private final String ollamaModel;
 
     public OllamaJobPostingLlmClient(@Value("${job-posting.parser.ollama-url}") String ollamaUrl,
                                       @Value("${job-posting.parser.model}") String ollamaModel,
-                                      ObjectMapper objectMapper) {
+                                      ObjectMapper objectMapper,
+                                      MessageSource messageSource) {
         this.ollamaUrl = ollamaUrl;
         this.ollamaModel = ollamaModel;
         this.objectMapper = objectMapper;
+        this.messageSource = messageSource;
 
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
@@ -48,16 +50,11 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
     }
 
     @Override
-    public JobPostingExtraction extract(String postingText) {
+    public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
         Map<String, Object> format = Map.of(
                 "type", "object",
-                "properties", Map.of(
-                        "title", Map.of("type", List.of("string", "null")),
-                        "company", Map.of("type", List.of("string", "null")),
-                        "location", Map.of("type", List.of("string", "null")),
-                        "employmentType", Map.of("type", List.of("string", "null"))
-                ),
-                "required", List.of("title", "company", "location", "employmentType")
+                "properties", spec.properties(),
+                "required", spec.requiredFields()
         );
 
         Map<String, Object> body = Map.of(
@@ -65,7 +62,7 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
                 "stream", false,
                 "options", Map.of("temperature", 0),
                 "messages", List.of(
-                        Map.of("role", "system", "content", SYSTEM_PROMPT),
+                        Map.of("role", "system", "content", spec.systemPrompt()),
                         Map.of("role", "user", "content", postingText)
                 ),
                 "format", format
@@ -80,18 +77,20 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
                     .retrieve()
                     .body(String.class);
         } catch (RestClientException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Job posting extraction service unavailable");
+            throw new ApiException.BadGateway(message("error.llm.unavailable"));
         }
 
         try {
             JsonNode root = objectMapper.readTree(response);
             String content = root.path("message").path("content").asText();
-            JobPostingExtraction raw = objectMapper.readValue(content, JobPostingExtraction.class);
-            return new JobPostingExtraction(
-                    truncate(raw.title()), truncate(raw.company()),
-                    truncate(raw.location()), truncate(raw.employmentType()));
+            JsonNode fields = truncateFields(objectMapper.readTree(content), spec.maxFieldLength());
+            return objectMapper.treeToValue(fields, spec.type());
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Could not parse extraction result");
+            throw new ApiException.BadGateway(message("error.llm.unparsable"));
         }
+    }
+
+    private String message(String key) {
+        return messageSource.getMessage(key, null, Locale.ROOT);
     }
 }

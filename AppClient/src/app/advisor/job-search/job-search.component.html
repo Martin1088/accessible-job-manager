@@ -1,0 +1,187 @@
+<main id="main-content" tabindex="-1">
+  <div class="masthead">
+    <h1>{{ 'JOB_SEARCH.TITLE' | translate }}</h1>
+    <p class="lede">{{ 'JOB_SEARCH.INTRO' | translate }}</p>
+  </div>
+
+  @if (statusLoading) {
+    <p role="status">{{ 'JOB_SEARCH.STATUS_LOADING' | translate }}</p>
+  }
+
+  @if (statusError) {
+    <p role="alert" class="notice notice--error">{{ 'JOB_SEARCH.ERROR_STATUS' | translate }}</p>
+  }
+
+  @if (status && !status.configured) {
+    <p role="status" class="notice notice--info">{{ 'JOB_SEARCH.NOT_CONFIGURED' | translate }}</p>
+  }
+
+  @if (status?.configured) {
+    <section aria-labelledby="search-heading">
+      <h2 id="search-heading" class="section-tab">{{ 'JOB_SEARCH.FILTERS_HEADING' | translate }}</h2>
+
+      @if (searchError) {
+        <p role="alert" class="notice notice--error">{{ searchError }}</p>
+      }
+
+      <form (ngSubmit)="search()" #searchForm="ngForm" novalidate>
+        <fieldset class="filters">
+        <legend class="sr-only">{{ 'JOB_SEARCH.FILTERS_HEADING' | translate }}</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="what">{{ 'JOB_SEARCH.FIELD_WHAT' | translate }}</label>
+            <input id="what" name="what" type="text" [(ngModel)]="form.what" aria-describedby="criteria-hint">
+          </div>
+
+          <div class="form-group">
+            <label for="whatExclude">{{ 'JOB_SEARCH.FIELD_WHAT_EXCLUDE' | translate }}</label>
+            <input id="whatExclude" name="whatExclude" type="text" [(ngModel)]="form.whatExclude">
+          </div>
+
+          <div class="form-group">
+            <label for="where">{{ 'JOB_SEARCH.FIELD_WHERE' | translate }}</label>
+            <input id="where" name="where" type="text" [(ngModel)]="form.where" aria-describedby="criteria-hint">
+          </div>
+
+          <div class="form-group">
+            <label for="distanceKm">{{ 'JOB_SEARCH.FIELD_DISTANCE' | translate }}</label>
+            <input id="distanceKm" name="distanceKm" type="number" min="1" [(ngModel)]="form.distanceKm">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="maxDaysOld">{{ 'JOB_SEARCH.FIELD_MAX_DAYS_OLD' | translate }}</label>
+            <input id="maxDaysOld" name="maxDaysOld" type="number" min="1" [(ngModel)]="form.maxDaysOld">
+          </div>
+
+          <div class="form-group">
+            <label for="salaryMin">{{ 'JOB_SEARCH.FIELD_SALARY_MIN' | translate }}</label>
+            <input id="salaryMin" name="salaryMin" type="number" min="0" [(ngModel)]="form.salaryMin">
+          </div>
+
+          <div class="form-group">
+            <label for="fullTime">{{ 'JOB_SEARCH.FIELD_FULL_TIME' | translate }}</label>
+            <select id="fullTime" name="fullTime" [(ngModel)]="form.fullTime">
+              <option value="any">{{ 'JOB_SEARCH.OPTION_ANY' | translate }}</option>
+              <option value="true">{{ 'JOB_SEARCH.OPTION_YES' | translate }}</option>
+              <option value="false">{{ 'JOB_SEARCH.OPTION_NO' | translate }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="permanent">{{ 'JOB_SEARCH.FIELD_PERMANENT' | translate }}</label>
+            <select id="permanent" name="permanent" [(ngModel)]="form.permanent">
+              <option value="any">{{ 'JOB_SEARCH.OPTION_ANY' | translate }}</option>
+              <option value="true">{{ 'JOB_SEARCH.OPTION_YES' | translate }}</option>
+              <option value="false">{{ 'JOB_SEARCH.OPTION_NO' | translate }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">{{ 'JOB_SEARCH.FIELD_CATEGORY' | translate }}</label>
+            <select id="category" name="category" [(ngModel)]="form.category" aria-describedby="criteria-hint">
+              <option value="">{{ 'JOB_SEARCH.SELECT_CATEGORY_PLACEHOLDER' | translate }}</option>
+              @for (c of categories; track c.tag) {
+                <option [value]="c.tag">{{ c.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="sortBy">{{ 'JOB_SEARCH.FIELD_SORT' | translate }}</label>
+            <select id="sortBy" name="sortBy" [(ngModel)]="form.sortBy">
+              <option value="RELEVANCE">{{ 'JOB_SEARCH.SORT_RELEVANCE' | translate }}</option>
+              <option value="DATE">{{ 'JOB_SEARCH.SORT_DATE' | translate }}</option>
+              <option value="SALARY">{{ 'JOB_SEARCH.SORT_SALARY' | translate }}</option>
+              <option value="HYBRID">{{ 'JOB_SEARCH.SORT_HYBRID' | translate }}</option>
+            </select>
+          </div>
+        </div>
+        </fieldset>
+
+        <p id="criteria-hint" class="hint">{{ 'JOB_SEARCH.CRITERIA_HINT' | translate }}</p>
+
+        <button type="submit" [disabled]="searching" class="btn-send">
+          {{ (searching ? 'JOB_SEARCH.SEARCHING' : 'JOB_SEARCH.SEARCH') | translate }}
+        </button>
+      </form>
+    </section>
+
+    @if (hasSearched && results) {
+      <section aria-labelledby="results-heading">
+        <h2 id="results-heading" class="section-tab">{{ 'JOB_SEARCH.RESULTS_HEADING' | translate }}</h2>
+
+        <p role="status" class="results-count">{{ 'JOB_SEARCH.RESULTS_COUNT' | translate: { count: results.totalCount } }}</p>
+
+        @if (results.hits.length === 0) {
+          <p role="status">{{ 'JOB_SEARCH.RESULTS_EMPTY' | translate }}</p>
+        } @else {
+          <ul role="list" class="job-list">
+            @for (hit of results.hits; track hit.id) {
+              <li class="job-card">
+                <article [attr.aria-labelledby]="'job-title-' + hit.id">
+                  <h3 [id]="'job-title-' + hit.id">
+                    <a [href]="hit.url" target="_blank" rel="noopener"
+                      [attr.aria-label]="'JOB_SEARCH.VIEW_POSTING_ARIA' | translate: { title: hit.title, company: hit.company }">
+                      {{ hit.title }}
+                    </a>
+                  </h3>
+
+                  <dl>
+                    @if (hit.company) {
+                      <div class="detail">
+                        <dt>{{ 'JOB_SEARCH.DETAIL_COMPANY' | translate }}</dt>
+                        <dd>{{ hit.company }}</dd>
+                      </div>
+                    }
+                    @if (hit.location) {
+                      <div class="detail">
+                        <dt>{{ 'JOB_SEARCH.DETAIL_LOCATION' | translate }}</dt>
+                        <dd>{{ hit.location }}</dd>
+                      </div>
+                    }
+                    @if (formatSalary(hit); as salary) {
+                      <div class="detail">
+                        <dt>{{ 'JOB_SEARCH.DETAIL_SALARY' | translate }}</dt>
+                        <dd>{{ salary }}</dd>
+                      </div>
+                    }
+                    @if (formatContract(hit); as contract) {
+                      <div class="detail">
+                        <dt>{{ 'JOB_SEARCH.DETAIL_CONTRACT' | translate }}</dt>
+                        <dd>{{ contract }}</dd>
+                      </div>
+                    }
+                    <div class="detail">
+                      <dt>{{ 'JOB_SEARCH.DETAIL_POSTED' | translate }}</dt>
+                      <dd>{{ formatDate(hit.created) }}</dd>
+                    </div>
+                  </dl>
+
+                  @if (hit.summary) {
+                    <p class="summary">{{ hit.summary }}</p>
+                  }
+                </article>
+              </li>
+            }
+          </ul>
+
+          <nav [attr.aria-label]="'JOB_SEARCH.RESULTS_HEADING' | translate" class="pagination">
+            <button type="button" (click)="previousPage()" [disabled]="results.page <= 1">
+              {{ 'JOB_SEARCH.PREVIOUS_PAGE' | translate }}
+            </button>
+            <span role="status">{{ 'JOB_SEARCH.PAGE_INFO' | translate: { page: results.page, totalPages } }}</span>
+            <button type="button" (click)="nextPage()" [disabled]="results.page >= totalPages">
+              {{ 'JOB_SEARCH.NEXT_PAGE' | translate }}
+            </button>
+          </nav>
+        }
+
+        <p class="attribution">{{ results.attribution }}</p>
+      </section>
+    }
+  }
+</main>

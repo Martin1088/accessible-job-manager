@@ -1,6 +1,7 @@
 package de.samply.manager.services;
 
 import de.samply.manager.coverletter.CoverLetterLabels;
+import de.samply.manager.coverletter.CoverLetterTemplate;
 import de.samply.manager.types.Language;
 import org.docx4j.TextUtils;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
@@ -30,17 +31,12 @@ class WordCoverLetterServiceTest {
     private final WordCoverLetterService service = new WordCoverLetterService(
             "http://localhost:1234", new CoverLetterLabels(MESSAGE_SOURCE));
 
-    private static final Map<String, String> PERSONAL_DATA = Map.of(
-            "senderName", "Jane Doe",
-            "senderStreet", "Main Street 1",
-            "senderPostalCode", "12345",
-            "senderCity", "Springfield",
-            "senderEmail", "jane@example.com"
-    );
+    private static final CoverLetterTemplate.Sender SENDER = new CoverLetterTemplate.Sender(
+            "Jane Doe", "Main Street 1", "12345", "Springfield", "jane@example.com", null);
 
     @Test
     void createTemplateWithHeader_buildsHeaderAndMergeFieldSkeleton() throws Exception {
-        byte[] result = service.createTemplateWithHeader(PERSONAL_DATA, Language.GERMAN);
+        byte[] result = service.createTemplateWithHeader(SENDER, Language.GERMAN);
 
         WordprocessingMLPackage doc = WordprocessingMLPackage.load(new ByteArrayInputStream(result));
 
@@ -86,7 +82,7 @@ class WordCoverLetterServiceTest {
 
     @Test
     void createTemplateWithHeader_producesTemplateThatFillTemplateCanMerge() throws Exception {
-        byte[] template = service.createTemplateWithHeader(PERSONAL_DATA, Language.GERMAN);
+        byte[] template = service.createTemplateWithHeader(SENDER, Language.GERMAN);
 
         Map<String, String> replacements = Map.of(
                 "company", "Acme Corp",
@@ -108,7 +104,7 @@ class WordCoverLetterServiceTest {
 
     @Test
     void extractPlainText_returnsBodyTextWithoutSenderHeaderBlock() throws Exception {
-        byte[] template = service.createTemplateWithHeader(PERSONAL_DATA, Language.GERMAN);
+        byte[] template = service.createTemplateWithHeader(SENDER, Language.GERMAN);
 
         Map<String, String> replacements = Map.of(
                 "company", "Acme Corp",

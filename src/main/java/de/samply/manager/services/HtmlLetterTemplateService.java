@@ -6,6 +6,7 @@ import de.samply.manager.coverletter.CoverLetterHtmlService;
 import de.samply.manager.coverletter.CoverLetterTemplate;
 import de.samply.manager.coverletter.StyleSettingsValidator;
 import de.samply.manager.dto.CoverLetterRenderRequest;
+import de.samply.manager.dto.HtmlLetterTemplateDto;
 import de.samply.manager.dto.HtmlLetterTemplateRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.HtmlLetterTemplate;
@@ -36,32 +37,66 @@ public class HtmlLetterTemplateService {
     private final MessageSource messageSource;
 
     @Transactional(readOnly = true)
-    public List<HtmlLetterTemplate> findAll(String userId) {
-        return repository.findByUserId(userId);
+    public List<HtmlLetterTemplateDto> findAll(String userId) {
+        return repository.findByUserIdOrderByUpdatedAtDesc(userId).stream()
+                .map(HtmlLetterTemplateDto::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public HtmlLetterTemplate find(UUID id, String userId) {
-        return owned(id, userId);
+    public HtmlLetterTemplateDto find(UUID id, String userId) {
+        return HtmlLetterTemplateDto.from(owned(id, userId));
     }
 
     @Transactional
-    public HtmlLetterTemplate create(HtmlLetterTemplateRequest request, Language language, String userId) {
-        return repository.save(HtmlLetterTemplate.builder()
+    public HtmlLetterTemplateDto create(HtmlLetterTemplateRequest request, Language language, String userId) {
+        return HtmlLetterTemplateDto.from(repository.save(HtmlLetterTemplate.builder()
                 .userId(userId)
+                .name(requiredName(request))
+                .language(language)
                 .layoutLetter(layoutOf(request))
                 .style(styleSettingsValidator.validated(request == null ? null : request.style()))
                 .blocks(blocksOf(request, language))
-                .build());
+                .build()));
     }
 
     @Transactional
-    public HtmlLetterTemplate update(UUID id, HtmlLetterTemplateRequest request, Language language, String userId) {
+    public HtmlLetterTemplateDto update(UUID id, HtmlLetterTemplateRequest request, Language language, String userId) {
         HtmlLetterTemplate template = owned(id, userId);
+        template.setName(nameOf(request, language, template.getName()));
+        template.setLanguage(language);
         template.setLayoutLetter(layoutOf(request));
         template.setStyle(styleSettingsValidator.validated(request == null ? null : request.style()));
         template.setBlocks(blocksOf(request, language));
-        return repository.save(template);
+        return HtmlLetterTemplateDto.from(repository.save(template));
+    }
+
+    /**
+     * A new template has to be named. Falling back to a localized default
+     * instead is what let several letters end up sharing one name, which makes
+     * the documents list unusable for telling them apart - the name is how a
+     * stored letter is picked out.
+     *
+     * <p>Update keeps the fallback: there a blank name means "leave the stored
+     * one alone", not "no name".
+     */
+    private String requiredName(HtmlLetterTemplateRequest request) {
+        String name = request == null || request.name() == null ? null : request.name().trim();
+        if (name == null || name.isEmpty()) {
+            throw new ApiException.BadRequest(
+                    messageSource.getMessage("error.letterTemplate.nameRequired", null, Locale.ROOT));
+        }
+        return name;
+    }
+
+    private String nameOf(HtmlLetterTemplateRequest request, Language language, String fallback) {
+        String name = request == null || request.name() == null ? null : request.name().trim();
+        if (name != null && !name.isEmpty()) return name;
+        return fallback == null || fallback.isBlank() ? defaultName(language) : fallback;
+    }
+
+    private String defaultName(Language language) {
+        return messageSource.getMessage("coverLetter.defaultTemplateName", null, language.locale());
     }
 
     @Transactional
@@ -69,11 +104,6 @@ public class HtmlLetterTemplateService {
         repository.delete(owned(id, userId));
     }
 
-    /**
-     * Rebuilds the renderable letter from a stored template plus the parts that belong
-     * to this one sending. Placeholders inside the blocks are left untouched - they are
-     * resolved further down the pipeline, against the application being rendered for.
-     */
     @Transactional(readOnly = true)
     public CoverLetterTemplate asCoverLetterTemplate(UUID id, CoverLetterRenderRequest request, String userId) {
         HtmlLetterTemplate stored = owned(id, userId);
@@ -111,6 +141,16 @@ public class HtmlLetterTemplateService {
                         profile.getName(), profile.getStreet(), profile.getPostalCode(),
                         profile.getCity(), profile.getEmail(), profile.getPhone()))
                 .orElse(null);
+    }
+
+    /**
+     * The starting text the editor offers for a language, without storing
+     * anything. The same skeleton a first save would persist, so what the form
+     * shows as a suggestion and what an untouched template contains cannot
+     * drift apart.
+     */
+    public List<Block> suggestions(Language language) {
+        return skeleton(language);
     }
 
     private List<Block> blocksOf(HtmlLetterTemplateRequest request, Language language) {

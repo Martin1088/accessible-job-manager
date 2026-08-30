@@ -11,7 +11,12 @@
 //                    oidcAuthUri='https://.../application/o/authorize/' \
 //                    oidcRedirectUri='https://<expected-app-fqdn>/login/oauth2/code/authentik' \
 //                    azureOpenAiEndpoint='https://ajm-openai.openai.azure.com/' \
-//                    azureOpenAiApiKey='<AZURE_OPENAI_API_KEY>'
+//                    azureOpenAiApiKey='<AZURE_OPENAI_API_KEY>' \
+//                    adzunaAppId='<ADZUNA_APP_ID>' \
+//                    adzunaAppKey='<ADZUNA_APP_KEY>'
+//
+// adzunaAppId/adzunaAppKey turn on the advisor job search (Adzuna). Leave both
+// unset to keep the feature switched off - see dev/.env.example.
 //
 // azureOpenAiEndpoint/azureOpenAiApiKey wire up the job-posting LLM extractor
 // (jobPostingLlmProvider defaults to "azure" since no Ollama container is
@@ -92,6 +97,16 @@ param azureOpenAiApiVersion string = '2024-08-01-preview'
 @description('Azure OpenAI API key')
 @secure()
 param azureOpenAiApiKey string = ''
+
+@description('Adzuna application id for the advisor job search. Leave empty to keep the job search feature switched off')
+param adzunaAppId string = ''
+
+@description('Adzuna application key. Register your own at https://developer.adzuna.com - the API terms bind the organisation using the key')
+@secure()
+param adzunaAppKey string = ''
+
+@description('Country board the advisor job search defaults to')
+param adzunaCountry string = 'de'
 
 // ---------------------------------------------------------------------------
 // Storage: account + blob container (documents)
@@ -283,6 +298,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'azure-openai-api-key'
           value: azureOpenAiApiKey
         }
+        {
+          name: 'adzuna-app-key'
+          value: adzunaAppKey
+        }
       ]
     }
     template: {
@@ -306,6 +325,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'OIDC_REDIRECT_URI', value: oidcRedirectUri }
             { name: 'OIDC_ISSUER_URI', value: oidcIssuerUri }
             { name: 'OIDC_AUTH_URI', value: oidcAuthUri }
+            { name: 'COOKIE_SECURE', value: 'true' }
             { name: 'GOTENBERG_URL', value: 'http://${gotenberg.name}' }
             { name: 'STORAGE_PROVIDER', value: 'azure' }
             { name: 'AZURE_STORAGE_CONNECTION_STRING', secretRef: 'storage-connection' }
@@ -318,6 +338,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'AZURE_OPENAI_DEPLOYMENT', value: azureOpenAiDeployment }
             { name: 'AZURE_OPENAI_API_VERSION', value: azureOpenAiApiVersion }
             { name: 'AZURE_OPENAI_API_KEY', secretRef: 'azure-openai-api-key' }
+            { name: 'JOBSOURCE_ADZUNA_APP_ID', value: adzunaAppId }
+            { name: 'JOBSOURCE_ADZUNA_APP_KEY', secretRef: 'adzuna-app-key' }
+            { name: 'JOBSOURCE_ADZUNA_COUNTRY', value: adzunaCountry }
           ]
         }
       ]
