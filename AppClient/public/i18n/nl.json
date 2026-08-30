@@ -717,5 +717,18 @@
     "RIGHTS_OBJECTION": "Bezwaar tegen verwerking op basis van gerechtvaardigd belang (art. 21 AVG).",
     "RIGHTS_COMPLAINT": "Het indienen van een klacht bij een toezichthoudende autoriteit voor gegevensbescherming.",
     "RIGHTS_CONTACT": "Om een van deze rechten uit te oefenen, kunt u contact opnemen via bovenstaand e-mailadres."
+  },
+  "DEMO": {
+    "BANNER_LABEL": "Over deze demo",
+    "BANNER_HEADING": "Demoversie",
+    "BANNER_TEXT": "Alle gegevens zijn verzonnen. Wijzigingen worden niet opgeslagen en gaan bij herladen verloren.",
+    "ROLE_LABEL": "Rol wisselen",
+    "ROLE_USER": "Sollicitant",
+    "ROLE_ADVISOR": "Adviseur",
+    "ROLE_REVIEWER": "Beoordelaar",
+    "ROLE_CHANGED": "Rol gewisseld: {{role}}",
+    "RESET": "Demo herstellen",
+    "RESET_DONE": "De demo is hersteld.",
+    "SAMPLE_RESULT": "Voorbeeldresultaat — de demo leest niets uit; dit resultaat ligt vast."
   }
 }

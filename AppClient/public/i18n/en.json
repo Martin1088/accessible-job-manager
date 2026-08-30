@@ -717,5 +717,18 @@
     "RIGHTS_OBJECTION": "Object to processing based on legitimate interest (Art. 21 GDPR).",
     "RIGHTS_COMPLAINT": "Lodge a complaint with a data protection supervisory authority.",
     "RIGHTS_CONTACT": "To exercise any of these rights, please contact us at the email address above."
+  },
+  "DEMO": {
+    "BANNER_LABEL": "About this demo",
+    "BANNER_HEADING": "Demo version",
+    "BANNER_TEXT": "All data is fictional. Changes are not saved and are lost on reload.",
+    "ROLE_LABEL": "Switch role",
+    "ROLE_USER": "Applicant",
+    "ROLE_ADVISOR": "Advisor",
+    "ROLE_REVIEWER": "Reviewer",
+    "ROLE_CHANGED": "Role switched: {{role}}",
+    "RESET": "Reset demo",
+    "RESET_DONE": "The demo has been reset.",
+    "SAMPLE_RESULT": "Example result — the demo extracts nothing; this result is fixed."
   }
 }

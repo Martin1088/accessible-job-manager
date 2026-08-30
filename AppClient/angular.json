@@ -56,6 +56,16 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "demo": {
+              "outputPath": "dist/demo",
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/app.config.ts",
+                  "with": "src/app/app.config.demo.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -68,6 +78,9 @@
             },
             "development": {
               "buildTarget": "AppClient:build:development"
+            },
+            "demo": {
+              "buildTarget": "AppClient:build:demo"
             }
           },
           "defaultConfiguration": "development"

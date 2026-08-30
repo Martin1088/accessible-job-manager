@@ -1,5 +1,9 @@
 <a class="skip-link" href="#main-content">{{ 'SKIP_LINK' | translate }}</a>
 
+@if (demoMode) {
+  <app-demo-bar />
+}
+
 <header>
   <!-- User nav -->
   @if (auth.isUser$ | async) {
