@@ -15,14 +15,6 @@ import org.springframework.web.client.RestClientResponseException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-/**
- * Prints a self-contained HTML document to PDF through Gotenberg's Chromium route.
- * <p>
- * Gotenberg requires the main file to be named {@code index.html}. Its own margin
- * parameters are set to zero and {@code preferCssPageSize} is enabled so the page
- * box comes from the {@code @page} rule in the template - otherwise Chromium's
- * default half-inch margins would silently shift every DIN 5008 measurement.
- */
 @Component
 public class HtmlToPdfConverter {
 
@@ -46,6 +38,7 @@ public class HtmlToPdfConverter {
         });
         body.add("preferCssPageSize", "true");
         body.add("printBackground", "true");
+        body.add("generateTaggedPdf", "true");
         body.add("marginTop", "0");
         body.add("marginBottom", "0");
         body.add("marginLeft", "0");

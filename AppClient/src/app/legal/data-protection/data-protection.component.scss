@@ -37,7 +37,7 @@ ul[role="list"] {
   margin: 1rem 0 0;
   font-size: 0.95rem;
 
-  dt { font-weight: 600; color: #64748b; }
+  dt { font-weight: 600; color: var(--color-text-muted); }
   dd { margin: 0; }
 
   a { color: #005fcc; }

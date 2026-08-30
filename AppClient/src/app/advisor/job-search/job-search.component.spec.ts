@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { JobSearchComponent } from './job-search.component';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('JobSearchComponent', () => {
   let http: HttpTestingController;
@@ -115,5 +116,13 @@ describe('JobSearchComponent', () => {
     });
 
     expect(component.searchError).toBe('');
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    const fixture = create();
+    http.expectOne('/api/advisor/job-search/status')
+      .flush({ configured: false, source: 'adzuna', country: 'de', attribution: 'Jobs by Adzuna' });
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 });

@@ -9,6 +9,7 @@ import { CompanyFormComponent } from './company-form.component';
 import { Company } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { SuggestionService } from '../../services/suggestion.service';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('CompanyFormComponent', () => {
   let component: CompanyFormComponent;
@@ -430,5 +431,10 @@ describe('CompanyFormComponent', () => {
 
     expect(companyServiceSpy.create).toHaveBeenCalled();
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/companies']);
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 });

@@ -72,7 +72,31 @@
     "EXPORT_CSV": "Export as CSV",
     "EXPORTING": "Preparing download…",
     "EXPORT_STARTED": "The export has been downloaded.",
-    "EXPORT_ERROR": "The export could not be created."
+    "EXPORT_ERROR": "The export could not be created.",
+    "ROLE_ADVISOR": "Advisor",
+    "ROLE_REVIEWER": "Reviewer",
+    "REL_HEADING": "Advisors and reviewers",
+    "REL_HELP": "Ask an advisor or reviewer to work with you. Your request appears on their own dashboard, where they can accept or decline it. You can end an active link at any time.",
+    "REL_CAPTION": "Advisors and reviewers you can work with",
+    "REL_EMPTY": "No advisors or reviewers are listed yet.",
+    "REL_LOADING": "Loading advisors and reviewers…",
+    "REL_LOAD_ERROR": "The list of advisors and reviewers could not be loaded.",
+    "REL_ACTION_ERROR": "That did not work. Please try again.",
+    "REL_COL_NAME": "Name",
+    "REL_COL_EMAIL": "Email",
+    "REL_COL_ROLE": "Role",
+    "REL_COL_STATUS": "Status",
+    "REL_STATUS_NONE": "Not linked",
+    "REL_STATUS_REQUESTED": "Request sent",
+    "REL_STATUS_ACTIVE": "Active",
+    "REL_STATUS_DECLINED": "Declined",
+    "REL_STATUS_ENDED": "Ended",
+    "REL_ACTION_REQUEST": "Request",
+    "REL_ACTION_REQUEST_ARIA": "Request {{name}} as your {{role}}",
+    "REL_ACTION_END": "End",
+    "REL_ACTION_END_ARIA": "End your link with {{name}}",
+    "REL_REQUEST_SENT": "Request sent to {{name}}.",
+    "REL_ENDED": "Link with {{name}} ended."
   },
   "PREFERENCES": {
     "LEGEND": "Display & accessibility",
@@ -137,7 +161,11 @@
     "COL_DATE": "Date",
     "STATUS_PENDING": "Pending",
     "STATUS_ACCEPTED": "Accepted",
-    "STATUS_REJECTED": "Rejected"
+    "STATUS_REJECTED": "Rejected",
+    "REF_USERS": "Users",
+    "REF_OPEN": "Open suggestions",
+    "REF_UPDATED": "As of",
+    "SLIP_FROM": "From"
   },
   "JOB_SEARCH": {
     "TITLE": "Job Search",
@@ -689,5 +717,18 @@
     "RIGHTS_OBJECTION": "Object to processing based on legitimate interest (Art. 21 GDPR).",
     "RIGHTS_COMPLAINT": "Lodge a complaint with a data protection supervisory authority.",
     "RIGHTS_CONTACT": "To exercise any of these rights, please contact us at the email address above."
+  },
+  "DEMO": {
+    "BANNER_LABEL": "About this demo",
+    "BANNER_HEADING": "Demo version",
+    "BANNER_TEXT": "All data is fictional. Changes are not saved and are lost on reload.",
+    "ROLE_LABEL": "Switch role",
+    "ROLE_USER": "Applicant",
+    "ROLE_ADVISOR": "Advisor",
+    "ROLE_REVIEWER": "Reviewer",
+    "ROLE_CHANGED": "Role switched: {{role}}",
+    "RESET": "Reset demo",
+    "RESET_DONE": "The demo has been reset.",
+    "SAMPLE_RESULT": "Example result — the demo extracts nothing; this result is fixed."
   }
 }

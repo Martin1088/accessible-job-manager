@@ -1,0 +1,17 @@
+<aside class="demo-bar" [attr.aria-label]="'DEMO.BANNER_LABEL' | translate">
+  <p class="demo-bar__notice">
+    <strong>{{ 'DEMO.BANNER_HEADING' | translate }}</strong>
+    {{ 'DEMO.BANNER_TEXT' | translate }}
+  </p>
+
+  <div class="demo-bar__controls">
+    <label for="demo-role-select">{{ 'DEMO.ROLE_LABEL' | translate }}</label>
+    <select id="demo-role-select" [value]="role()" (change)="onRoleChange($event)">
+      @for (option of roles; track option) {
+        <option [value]="option">{{ 'DEMO.ROLE_' + option | translate }}</option>
+      }
+    </select>
+
+    <button type="button" (click)="reset()">{{ 'DEMO.RESET' | translate }}</button>
+  </div>
+</aside>

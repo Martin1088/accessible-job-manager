@@ -40,9 +40,21 @@
     "3000": { "label": "Gotenberg (PDF)" }
   },
 
+  // /root lives in the container layer, so a `Rebuild Container` otherwise
+  // discards the Claude Code login, the plugin cache and the registered
+  // marketplaces. The volume keeps that state; .claude/settings.json in the
+  // repo keeps the *activation* portable to another machine.
+  //
+  // The mount overlays whatever the claude-code feature wrote to /root/.claude
+  // at build time. If something looks missing after the first rebuild, drop the
+  // volume once: docker volume rm ajm-claude-home
+  "mounts": [
+    "source=ajm-claude-home,target=/root/.claude,type=volume"
+  ],
+
   "onCreateCommand": "apt-get update && apt-get install -y chromium && rm -rf /var/lib/apt/lists/*",
 
-  "postCreateCommand": "chmod +x gradlew && ./gradlew --version && npm ci --prefix AppClient",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
 
   "customizations": {
     "jetbrains": {

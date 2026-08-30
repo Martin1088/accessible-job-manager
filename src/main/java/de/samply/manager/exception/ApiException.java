@@ -11,14 +11,33 @@ import org.springframework.http.HttpStatus;
 public abstract class ApiException extends RuntimeException {
 
     private final HttpStatus status;
+    private final Integer upstreamStatus;
 
     protected ApiException(HttpStatus status, String message) {
-        super(message);
+        this(status, message, null, null);
+    }
+
+    protected ApiException(HttpStatus status, String message, Integer upstreamStatus, Throwable cause) {
+        super(message, cause);
         this.status = status;
+        this.upstreamStatus = upstreamStatus;
     }
 
     public HttpStatus getStatus() {
         return status;
+    }
+
+    /**
+     * The status the <em>remote</em> host answered with, where that is a
+     * different thing from the status we answer our own caller with: a job
+     * posting site replying 403 becomes a 502 for our API, and only this
+     * field still says which. Null when the failure was not an HTTP one.
+     *
+     * <p>Carried so import diagnostics can tell a bot block from a rate limit
+     * from a removed posting without re-parsing the user-facing message.
+     */
+    public Integer getUpstreamStatus() {
+        return upstreamStatus;
     }
 
     public static final class NotFound extends ApiException {
@@ -51,6 +70,10 @@ public abstract class ApiException extends RuntimeException {
         public BadRequest(String message) {
             super(HttpStatus.BAD_REQUEST, message);
         }
+
+        public BadRequest(String message, Integer upstreamStatus) {
+            super(HttpStatus.BAD_REQUEST, message, upstreamStatus, null);
+        }
     }
 
     public static final class UnsupportedMediaType extends ApiException {
@@ -74,6 +97,14 @@ public abstract class ApiException extends RuntimeException {
     public static final class BadGateway extends ApiException {
         public BadGateway(String message) {
             super(HttpStatus.BAD_GATEWAY, message);
+        }
+
+        public BadGateway(String message, Integer upstreamStatus) {
+            super(HttpStatus.BAD_GATEWAY, message, upstreamStatus, null);
+        }
+
+        public BadGateway(String message, Throwable cause) {
+            super(HttpStatus.BAD_GATEWAY, message, null, cause);
         }
     }
 

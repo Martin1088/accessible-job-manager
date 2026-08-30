@@ -8,6 +8,7 @@ import { ProfileComponent } from './profile.component';
 import { UserProfile } from '../../model/user-profile';
 import { PreferencesService } from '../../services/preferences.service';
 import { DEFAULT_PREFERENCES, UserPreferences } from '../../model/user-preferences';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('ProfileComponent', () => {
   let http: HttpTestingController;
@@ -39,8 +40,18 @@ describe('ProfileComponent', () => {
     const fixture = TestBed.createComponent(ProfileComponent);
     fixture.detectChanges();
     http.match('/api/me').forEach(req => req.flush({ sub: 'u1', name: 'Alice', email: 'a@b.com', roles: ['USER'] }));
+    // The advisor/reviewer section loads once /api/me confirms the USER role.
+    http.match('/api/directory/advisors').forEach(req => req.flush([]));
+    http.match('/api/directory/reviewers').forEach(req => req.flush([]));
+    http.match('/api/relationships/mine').forEach(req => req.flush([]));
     return fixture;
   }
+
+  const link = (over: Partial<Record<string, unknown>> = {}) => ({
+    id: 'r1', applicantId: 'u1', applicantName: 'Alice',
+    counterpartId: 'adv-1', counterpartName: 'Bob',
+    kind: 'ADVISOR', status: 'ACTIVE', createdAt: '2026-08-20T09:00:00', ...over,
+  });
 
   it('should create', () => {
     const fixture = create();
@@ -183,5 +194,104 @@ describe('ProfileComponent', () => {
       expect(fixture.componentInstance.exporting).toBeNull();
       expect(saved).toEqual([]);
     });
+  });
+
+  describe('advisor and reviewer links', () => {
+    function createWithNetwork(data: {
+      advisors?: unknown[]; reviewers?: unknown[]; relationships?: unknown[];
+    } = {}) {
+      const fixture = TestBed.createComponent(ProfileComponent);
+      fixture.detectChanges();
+      http.match('/api/me').forEach(req =>
+        req.flush({ sub: 'u1', name: 'Alice', email: 'a@b.com', roles: ['USER'] }));
+      http.expectOne('/api/directory/advisors').flush(data.advisors ?? []);
+      http.expectOne('/api/directory/reviewers').flush(data.reviewers ?? []);
+      http.expectOne('/api/relationships/mine').flush(data.relationships ?? []);
+      http.expectOne('/api/profile').flush(baseProfile);
+      return fixture;
+    }
+
+    it('lists advisors and reviewers, all requestable when no link exists', () => {
+      const fixture = createWithNetwork({
+        advisors: [{ userId: 'adv-1', name: 'Bob', email: 'bob@x.org' }],
+        reviewers: [{ userId: 'rev-1', name: 'Cara', email: 'cara@x.org' }],
+      });
+
+      const rows = fixture.componentInstance.networkRows;
+      expect(rows.map(r => r.name)).toEqual(['Bob', 'Cara']);
+      expect(rows.map(r => r.kind)).toEqual(['ADVISOR', 'REVIEWER']);
+      expect(rows.every(r => r.canRequest)).toBeTrue();
+      expect(rows.some(r => r.canEnd)).toBeFalse();
+    });
+
+    it('does not load the section for a non-user role', () => {
+      const fixture = TestBed.createComponent(ProfileComponent);
+      fixture.detectChanges();
+      http.match('/api/me').forEach(req =>
+        req.flush({ sub: 'r1', name: 'Rae', email: 'r@b.com', roles: ['REVIEWER'] }));
+      http.expectOne('/api/profile').flush(baseProfile);
+
+      http.expectNone('/api/directory/advisors');
+      expect(fixture.componentInstance.networkRows).toEqual([]);
+    });
+
+    it('POSTs a request and refreshes the row to "request sent"', () => {
+      const fixture = createWithNetwork({
+        advisors: [{ userId: 'adv-1', name: 'Bob', email: 'bob@x.org' }],
+      });
+
+      fixture.componentInstance.requestLink(fixture.componentInstance.networkRows[0]);
+
+      const req = http.expectOne({ url: '/api/relationships', method: 'POST' });
+      expect(req.request.body).toEqual({ counterpartId: 'adv-1', kind: 'ADVISOR' });
+      req.flush(link({ status: 'REQUESTED' }));
+
+      http.expectOne('/api/relationships/mine').flush([link({ status: 'REQUESTED' })]);
+
+      const row = fixture.componentInstance.networkRows[0];
+      expect(row.canRequest).toBeFalse();
+      expect(row.canEnd).toBeFalse();
+      expect(row.status).toBe('PROFILE.REL_STATUS_REQUESTED');
+      expect(fixture.componentInstance.networkBusy).toBeFalse();
+    });
+
+    it('offers End for an active link and calls the end endpoint', () => {
+      const fixture = createWithNetwork({
+        advisors: [{ userId: 'adv-1', name: 'Bob', email: 'bob@x.org' }],
+        relationships: [link({ status: 'ACTIVE' })],
+      });
+
+      const row = fixture.componentInstance.networkRows[0];
+      expect(row.canEnd).toBeTrue();
+      expect(row.canRequest).toBeFalse();
+
+      fixture.componentInstance.endLink(row);
+      http.expectOne({ url: '/api/relationships/r1/end', method: 'POST' }).flush(link({ status: 'ENDED' }));
+      http.expectOne('/api/relationships/mine').flush([link({ status: 'ENDED' })]);
+
+      const refreshed = fixture.componentInstance.networkRows[0];
+      expect(refreshed.canEnd).toBeFalse();
+      expect(refreshed.canRequest).toBeTrue();
+    });
+
+    it('shows an alert when a request fails', () => {
+      const fixture = createWithNetwork({
+        advisors: [{ userId: 'adv-1', name: 'Bob', email: 'bob@x.org' }],
+      });
+
+      fixture.componentInstance.requestLink(fixture.componentInstance.networkRows[0]);
+      http.expectOne({ url: '/api/relationships', method: 'POST' })
+        .flush({ message: 'nope' }, { status: 409, statusText: 'Conflict' });
+
+      expect(fixture.componentInstance.networkActionError).toBeTrue();
+      expect(fixture.componentInstance.networkBusy).toBeFalse();
+    });
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    const fixture = create();
+    http.expectOne('/api/profile').flush(baseProfile);
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 });

@@ -72,7 +72,31 @@
     "EXPORT_CSV": "Exporteren als CSV",
     "EXPORTING": "Download wordt voorbereid…",
     "EXPORT_STARTED": "De export is gedownload.",
-    "EXPORT_ERROR": "De export kon niet worden gemaakt."
+    "EXPORT_ERROR": "De export kon niet worden gemaakt.",
+    "ROLE_ADVISOR": "Adviseur",
+    "ROLE_REVIEWER": "Beoordelaar",
+    "REL_HEADING": "Adviseurs en beoordelaars",
+    "REL_HELP": "Vraag een adviseur of beoordelaar om samen te werken. Uw verzoek verschijnt op hun eigen dashboard, waar ze het kunnen accepteren of weigeren. Een actieve koppeling kunt u op elk moment beëindigen.",
+    "REL_CAPTION": "Adviseurs en beoordelaars met wie u kunt samenwerken",
+    "REL_EMPTY": "Er zijn nog geen adviseurs of beoordelaars vermeld.",
+    "REL_LOADING": "Adviseurs en beoordelaars laden…",
+    "REL_LOAD_ERROR": "De lijst met adviseurs en beoordelaars kon niet worden geladen.",
+    "REL_ACTION_ERROR": "Dat is niet gelukt. Probeer het opnieuw.",
+    "REL_COL_NAME": "Naam",
+    "REL_COL_EMAIL": "E-mail",
+    "REL_COL_ROLE": "Rol",
+    "REL_COL_STATUS": "Status",
+    "REL_STATUS_NONE": "Niet gekoppeld",
+    "REL_STATUS_REQUESTED": "Verzoek verzonden",
+    "REL_STATUS_ACTIVE": "Actief",
+    "REL_STATUS_DECLINED": "Geweigerd",
+    "REL_STATUS_ENDED": "Beëindigd",
+    "REL_ACTION_REQUEST": "Aanvragen",
+    "REL_ACTION_REQUEST_ARIA": "{{name}} als {{role}} aanvragen",
+    "REL_ACTION_END": "Beëindigen",
+    "REL_ACTION_END_ARIA": "Koppeling met {{name}} beëindigen",
+    "REL_REQUEST_SENT": "Verzoek verzonden naar {{name}}.",
+    "REL_ENDED": "Koppeling met {{name}} beëindigd."
   },
   "PREFERENCES": {
     "LEGEND": "Weergave & toegankelijkheid",
@@ -137,7 +161,11 @@
     "COL_DATE": "Datum",
     "STATUS_PENDING": "In behandeling",
     "STATUS_ACCEPTED": "Geaccepteerd",
-    "STATUS_REJECTED": "Afgewezen"
+    "STATUS_REJECTED": "Afgewezen",
+    "REF_USERS": "Gebruikers",
+    "REF_OPEN": "Openstaande suggesties",
+    "REF_UPDATED": "Peildatum",
+    "SLIP_FROM": "Van"
   },
   "JOB_SEARCH": {
     "TITLE": "Vacaturezoeker",
@@ -689,5 +717,18 @@
     "RIGHTS_OBJECTION": "Bezwaar tegen verwerking op basis van gerechtvaardigd belang (art. 21 AVG).",
     "RIGHTS_COMPLAINT": "Het indienen van een klacht bij een toezichthoudende autoriteit voor gegevensbescherming.",
     "RIGHTS_CONTACT": "Om een van deze rechten uit te oefenen, kunt u contact opnemen via bovenstaand e-mailadres."
+  },
+  "DEMO": {
+    "BANNER_LABEL": "Over deze demo",
+    "BANNER_HEADING": "Demoversie",
+    "BANNER_TEXT": "Alle gegevens zijn verzonnen. Wijzigingen worden niet opgeslagen en gaan bij herladen verloren.",
+    "ROLE_LABEL": "Rol wisselen",
+    "ROLE_USER": "Sollicitant",
+    "ROLE_ADVISOR": "Adviseur",
+    "ROLE_REVIEWER": "Beoordelaar",
+    "ROLE_CHANGED": "Rol gewisseld: {{role}}",
+    "RESET": "Demo herstellen",
+    "RESET_DONE": "De demo is hersteld.",
+    "SAMPLE_RESULT": "Voorbeeldresultaat — de demo leest niets uit; dit resultaat ligt vast."
   }
 }

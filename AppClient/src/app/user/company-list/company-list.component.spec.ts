@@ -6,6 +6,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 
 import { CompanyListComponent } from './company-list.component';
 import { Company } from '../../model/company';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('CompanyListComponent', () => {
   let http: HttpTestingController;
@@ -105,5 +106,10 @@ describe('CompanyListComponent', () => {
   it('formatContact() joins title and last name, tolerating a missing title', () => {
     const fixture = create();
     expect(fixture.componentInstance.formatContact({ id: 5, title: 'Developer', contactLastName: 'Schmidt' })).toBe('Schmidt');
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    const fixture = create();
+    await expectNoAxeViolations(fixture);
   });
 });

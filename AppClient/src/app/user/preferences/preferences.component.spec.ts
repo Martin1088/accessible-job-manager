@@ -7,6 +7,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { PreferencesComponent } from './preferences.component';
 import { PreferencesService } from '../../services/preferences.service';
 import { DEFAULT_PREFERENCES, UserPreferences } from '../../model/user-preferences';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('PreferencesComponent', () => {
   let http: HttpTestingController;
@@ -112,5 +113,12 @@ describe('PreferencesComponent', () => {
       userId: 'u1', name: null, email: null, street: null, postalCode: null, city: null,
       phone: null, roles: ['USER'], preferences: DEFAULT_PREFERENCES,
     });
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    preferences.seed(DEFAULT_PREFERENCES);
+    const fixture = TestBed.createComponent(PreferencesComponent);
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 });

@@ -1,8 +1,6 @@
 package de.samply.manager.dto;
 
 import de.samply.manager.security.AppRole;
-
-import java.util.List;
 import java.util.Set;
 
 

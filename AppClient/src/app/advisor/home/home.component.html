@@ -1,13 +1,35 @@
 <main id="main-content" tabindex="-1">
-  <h1>{{ 'ADVISOR.TITLE' | translate }}</h1>
+  <div class="masthead">
+    <h1>{{ 'ADVISOR.TITLE' | translate }}</h1>
+
+    <!--
+      A DIN 5008 reference line (Bezugszeichenzeile): the standing block a
+      business letter carries above its subject. Here it holds the figures the
+      advisor opens the page to check - it is key/value data, so it is a <dl>.
+    -->
+    <dl class="reference-line">
+      <div class="reference-line__entry">
+        <dt>{{ 'ADVISOR.REF_USERS' | translate }}</dt>
+        <dd>{{ userCount }}</dd>
+      </div>
+      <div class="reference-line__entry">
+        <dt>{{ 'ADVISOR.REF_OPEN' | translate }}</dt>
+        <dd>{{ openSuggestionCount }}</dd>
+      </div>
+      <div class="reference-line__entry">
+        <dt>{{ 'ADVISOR.REF_UPDATED' | translate }}</dt>
+        <dd>{{ asOfDate }}</dd>
+      </div>
+    </dl>
+  </div>
 
   @if (errorMessage) {
-    <p role="alert" class="error">{{ errorMessage }}</p>
+    <p role="alert" class="notice notice--error">{{ errorMessage }}</p>
   }
 
   <!-- My Users -->
   <section aria-labelledby="my-users-heading">
-    <h2 id="my-users-heading">{{ 'ADVISOR.MY_USERS_HEADING' | translate }}</h2>
+    <h2 id="my-users-heading" class="section-tab">{{ 'ADVISOR.MY_USERS_HEADING' | translate }}</h2>
     <app-data-table
       caption="ADVISOR.MY_USERS_CAPTION"
       [columns]="userColumns"
@@ -17,17 +39,22 @@
   </section>
 
   <!-- Create Suggestion -->
-  <section aria-labelledby="suggest-heading">
-    <h2 id="suggest-heading">{{ 'ADVISOR.SUGGEST_HEADING' | translate }}</h2>
+  <section aria-labelledby="suggest-heading" class="composer">
+    <h2 id="suggest-heading" class="section-tab">{{ 'ADVISOR.SUGGEST_HEADING' | translate }}</h2>
 
     @if (formSuccess) {
-      <p role="status" class="success">{{ 'ADVISOR.SUGGESTION_SUCCESS' | translate }}</p>
+      <p role="status" class="notice notice--ok">{{ 'ADVISOR.SUGGESTION_SUCCESS' | translate }}</p>
     }
     @if (formError) {
-      <p role="alert"  class="error"  >{{ formError }}</p>
+      <p role="alert" class="notice notice--error">{{ formError }}</p>
     }
 
-    <form (ngSubmit)="submitSuggestion()" #suggestionForm="ngForm" novalidate>
+    <form (ngSubmit)="submitSuggestion()" #suggestionForm="ngForm" novalidate class="slip">
+      <p class="slip__from">
+        <span class="slip__from-label">{{ 'ADVISOR.SLIP_FROM' | translate }}</span>
+        <span class="slip__from-value">{{ (auth.me$ | async)?.name }}</span>
+      </p>
+
       <div class="form-group">
         <label for="targetUser">{{ 'ADVISOR.FIELD_USER' | translate }}</label>
         <select id="targetUser"
@@ -69,7 +96,7 @@
         [attr.placeholder]="'ADVISOR.MESSAGE_PLACEHOLDER' | translate"></textarea>
       </div>
 
-      <button type="submit" [disabled]="submitting">
+      <button type="submit" [disabled]="submitting" class="btn-send">
         {{ (submitting ? 'ADVISOR.SENDING' : 'ADVISOR.SEND_SUGGESTION') | translate }}
       </button>
     </form>
@@ -77,7 +104,7 @@
 
   <!-- Suggestions Overview -->
   <section aria-labelledby="suggestions-heading">
-    <h2 id="suggestions-heading">{{ 'ADVISOR.MY_SUGGESTIONS_HEADING' | translate }}</h2>
+    <h2 id="suggestions-heading" class="section-tab">{{ 'ADVISOR.MY_SUGGESTIONS_HEADING' | translate }}</h2>
     <app-data-table
       caption="ADVISOR.SUGGESTIONS_CAPTION"
       [columns]="suggestionColumns"

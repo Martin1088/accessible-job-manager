@@ -11,6 +11,7 @@ import { CoverLetterService } from '../../services/cover-letter.service';
 import { Application } from '../../model/application';
 import { Document } from '../../model/document';
 import { HtmlLetterTemplate } from '../../model/cover-letter';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 const APPLICATION: Application = {
   id: 7,
@@ -179,5 +180,10 @@ describe('ApplicationListComponent', () => {
 
     component.selectedTemplate[7] = component.wordTemplates[0];
     expect(component.supportsWord(7)).toBeTrue();
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 });

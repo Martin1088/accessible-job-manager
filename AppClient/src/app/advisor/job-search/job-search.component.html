@@ -1,28 +1,32 @@
 <main id="main-content" tabindex="-1">
-  <h1>{{ 'JOB_SEARCH.TITLE' | translate }}</h1>
-  <p>{{ 'JOB_SEARCH.INTRO' | translate }}</p>
+  <div class="masthead">
+    <h1>{{ 'JOB_SEARCH.TITLE' | translate }}</h1>
+    <p class="lede">{{ 'JOB_SEARCH.INTRO' | translate }}</p>
+  </div>
 
   @if (statusLoading) {
     <p role="status">{{ 'JOB_SEARCH.STATUS_LOADING' | translate }}</p>
   }
 
   @if (statusError) {
-    <p role="alert" class="error">{{ 'JOB_SEARCH.ERROR_STATUS' | translate }}</p>
+    <p role="alert" class="notice notice--error">{{ 'JOB_SEARCH.ERROR_STATUS' | translate }}</p>
   }
 
   @if (status && !status.configured) {
-    <p role="status" class="notice">{{ 'JOB_SEARCH.NOT_CONFIGURED' | translate }}</p>
+    <p role="status" class="notice notice--info">{{ 'JOB_SEARCH.NOT_CONFIGURED' | translate }}</p>
   }
 
   @if (status?.configured) {
     <section aria-labelledby="search-heading">
-      <h2 id="search-heading">{{ 'JOB_SEARCH.FILTERS_HEADING' | translate }}</h2>
+      <h2 id="search-heading" class="section-tab">{{ 'JOB_SEARCH.FILTERS_HEADING' | translate }}</h2>
 
       @if (searchError) {
-        <p role="alert" class="error">{{ searchError }}</p>
+        <p role="alert" class="notice notice--error">{{ searchError }}</p>
       }
 
       <form (ngSubmit)="search()" #searchForm="ngForm" novalidate>
+        <fieldset class="filters">
+        <legend class="sr-only">{{ 'JOB_SEARCH.FILTERS_HEADING' | translate }}</legend>
         <div class="form-row">
           <div class="form-group">
             <label for="what">{{ 'JOB_SEARCH.FIELD_WHAT' | translate }}</label>
@@ -96,10 +100,11 @@
             </select>
           </div>
         </div>
+        </fieldset>
 
         <p id="criteria-hint" class="hint">{{ 'JOB_SEARCH.CRITERIA_HINT' | translate }}</p>
 
-        <button type="submit" [disabled]="searching">
+        <button type="submit" [disabled]="searching" class="btn-send">
           {{ (searching ? 'JOB_SEARCH.SEARCHING' : 'JOB_SEARCH.SEARCH') | translate }}
         </button>
       </form>
@@ -107,9 +112,9 @@
 
     @if (hasSearched && results) {
       <section aria-labelledby="results-heading">
-        <h2 id="results-heading">{{ 'JOB_SEARCH.RESULTS_HEADING' | translate }}</h2>
+        <h2 id="results-heading" class="section-tab">{{ 'JOB_SEARCH.RESULTS_HEADING' | translate }}</h2>
 
-        <p role="status">{{ 'JOB_SEARCH.RESULTS_COUNT' | translate: { count: results.totalCount } }}</p>
+        <p role="status" class="results-count">{{ 'JOB_SEARCH.RESULTS_COUNT' | translate: { count: results.totalCount } }}</p>
 
         @if (results.hits.length === 0) {
           <p role="status">{{ 'JOB_SEARCH.RESULTS_EMPTY' | translate }}</p>

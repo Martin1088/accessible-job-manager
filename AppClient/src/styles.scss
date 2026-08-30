@@ -25,6 +25,7 @@
   --color-focus: #005fcc;
   --color-skip-link-bg: #000;
   --color-skip-link-text: #fff;
+  --color-text-muted: #475569;
 
   --font-scale: 1;
   --line-height: 1.5;
@@ -49,6 +50,7 @@ html[data-contrast='high'] {
   --color-focus: #000;
   --color-skip-link-bg: #000;
   --color-skip-link-text: #fff;
+  --color-text-muted: #000;
 }
 
 html[data-contrast='high'] a,
@@ -75,6 +77,7 @@ html[data-contrast='dark'] {
   --color-focus: #6ab0ff;
   --color-skip-link-bg: #f2f2f2;
   --color-skip-link-text: #000;
+  --color-text-muted: #a3aec0;
 }
 
 /* Root font-size scaling so every rem-based measurement in this file scales with it,

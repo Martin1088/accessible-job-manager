@@ -1,24 +1,9 @@
 package de.samply.manager.jobimport.extractor;
 
 import de.samply.manager.types.Gender;
-import org.jsoup.nodes.Document;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * Result of ONE extractor (one tier). Each field carries its own confidence
- * via FieldValue<T> - not the whole result. This lets the merger decide per
- * field, instead of first-wins over the whole object.
- *
- * Example: the contact tier yields contactGender with ADAPTER confidence
- * (from "Frau"), but contactLastName only with HTML_REGEX - two different
- * tiers in the same result.
- *
- * Empty fields are Optional.empty(), NOT guessed. An empty fetch must never
- * pass as HEURISTIC (otherwise the LLM fallback would hallucinate on top of it).
- */
 public final class ExtractionResult {
 
     private final FieldValue<String> title;
@@ -126,6 +111,5 @@ public final class ExtractionResult {
         }
     }
 
-    /** Location with its own confidence - city and street can be rated separately. */
     public record LocationValue(String city, String street, ConfidenceTier tier) {}
 }

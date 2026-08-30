@@ -36,7 +36,7 @@ fieldset {
 
 .hint {
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
   max-width: 62ch;
 }

@@ -17,6 +17,10 @@ repositories {
 
 configurations { mockitoAgent }
 
+configurations.testRuntimeClasspath {
+    resolutionStrategy.force 'com.sun.xml.bind:jaxb-impl:2.3.2', 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -43,6 +47,7 @@ dependencies {
     testImplementation libs.org.springframework.boot.spring.boot.starter.test
     testRuntimeOnly 'com.h2database:h2'
     testImplementation 'org.apache.pdfbox:pdfbox:3.0.3'
+    testImplementation 'org.verapdf:validation-model:1.28.1'
     testImplementation libs.org.springframework.security.spring.security.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'

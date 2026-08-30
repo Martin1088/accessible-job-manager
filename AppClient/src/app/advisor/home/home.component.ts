@@ -1,10 +1,12 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
+import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DataTableComponent, TableColumn } from '../../shared/data-table/data-table.component';
+import { AuthService } from '../../core/auth.service';
 import { Company } from '../../model/company';
 
 interface AdvisorUser {
@@ -31,7 +33,7 @@ interface PositionOption {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [FormsModule, DataTableComponent, TranslatePipe],
+  imports: [FormsModule, DataTableComponent, TranslatePipe, AsyncPipe],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss'
@@ -66,10 +68,27 @@ export class HomeComponent implements OnInit {
 
   errorMessage = '';
 
-  constructor(private http: HttpClient, private translate: TranslateService) {
+  constructor(
+    private http: HttpClient,
+    private translate: TranslateService,
+    protected auth: AuthService,
+  ) {
     this.translate.onLangChange.pipe(takeUntilDestroyed()).subscribe(() => {
       this.suggestionRows = this.toSuggestionRows(this.suggestions);
     });
+  }
+
+  /** Reference-line figures: caseload size, suggestions still awaiting a reply, and the date the page was drawn. */
+  get userCount(): number {
+    return this.assignedUsers.length;
+  }
+
+  get openSuggestionCount(): number {
+    return this.suggestions.filter(s => s.status === 'PENDING').length;
+  }
+
+  get asOfDate(): string {
+    return new Date().toISOString().slice(0, 10);
   }
 
   ngOnInit(): void {
