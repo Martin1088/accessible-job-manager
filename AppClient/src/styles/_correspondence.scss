@@ -4,12 +4,12 @@
 // blue-grey "paper" ground, navy ink, one terracotta accent, and a serif +
 // monospace pairing standing in for a typeset business letter - which is what
 // this app produces. This partial carries the palette and font stacks inward
-// so the advisor screens read as the same stationery, without each component
+// so the other screens read as the same stationery, without each component
 // re-declaring the values.
 //
-// Scope: imported only by the advisor screens for now. It does not restyle the
-// shell (navy header) or the other roles - extend it there in one move if that
-// ever becomes the goal.
+// Scope: the advisor screens and the user home (`user/home`). It does not
+// restyle the shell (navy header) or the reviewer screen yet - extend it there
+// in one move if that becomes the goal.
 //
 // The light and dark values are the login page's own. Colour *mode* here
 // follows the app rather than the browser: `AccessibilityService` writes

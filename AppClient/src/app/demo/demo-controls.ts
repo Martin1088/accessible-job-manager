@@ -5,6 +5,7 @@ import { filter, take } from 'rxjs/operators';
 import { AuthService } from '../core/auth.service';
 import { DemoControls, DemoRole } from './demo-mode';
 import { DemoDb } from './demo-db';
+import { PEOPLE } from './seed/people';
 
 /** Where each role lands. The role guards would redirect anyway; this skips the bounce. */
 const HOME_ROUTE: Readonly<Record<DemoRole, string>> = {
@@ -36,6 +37,14 @@ export function createDemoControls(injector: EnvironmentInjector): DemoControls 
 
     return {
       role: db.role.asReadonly(),
+
+      // The seed always names its people; `?? ''` only narrows the
+      // `string | null` of the shared UserProfile type.
+      people: {
+        USER: { name: PEOPLE.USER.profile.name ?? '' },
+        ADVISOR: { name: PEOPLE.ADVISOR.profile.name ?? '' },
+        REVIEWER: { name: PEOPLE.REVIEWER.profile.name ?? '' },
+      },
 
       switchTo(role: DemoRole): void {
         db.role.set(role);

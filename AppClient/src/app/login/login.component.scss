@@ -267,6 +267,110 @@ button {
   }
 }
 
+// --- Demo letter anatomy -------------------------------------------------
+// Rendered only in the demo build, where the card is not a sign-in form but a
+// letter of invitation. Same tokens, same faces - these are the parts of a
+// DIN 5008 letter the card was missing: return line, dateline, Betreff,
+// salutation, closing.
+
+.letter__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin: 0 0 1.75rem;
+  font-family: $mono;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.letter__return {
+  // The Rücksendeangabe above a window envelope's address field is set off
+  // with a thin rule in real stationery.
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 2px;
+}
+
+.letter__subject {
+  // DIN 5008: the Betreff is bold, carries no "Betreff:" prefix, and stands
+  // alone between the info block and the salutation. It is also this page's
+  // headline - the letter's own convention does the hero's job.
+  margin: 0 0 1.25rem;
+  font-family: $serif;
+  font-size: 1.3rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+}
+
+.letter__body {
+  margin: 0 0 1rem;
+  font-family: $serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink);
+  text-align: left;
+}
+
+.letter__body--salutation {
+  margin-bottom: 0.75rem;
+}
+
+.persona-list {
+  list-style: none;
+  margin: 1.25rem 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.persona__button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.persona__name {
+  font-weight: 700;
+}
+
+.persona__role {
+  font-weight: 400;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.persona__desc {
+  margin: 0.35rem 0 0;
+  font-family: $serif;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+.letter__closing {
+  margin: 0.5rem 0 0;
+  font-family: $serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink);
+  text-align: left;
+}
+
+.letter__signature {
+  // Stands in for the handwritten signature without shipping a script
+  // webfont - the page's no-third-party-fetch rule applies to the demo too.
+  font-style: italic;
+  font-size: 1.05rem;
+}
+
 // --- Enclosure column ---------------------------------------------------
 // A cover letter lists its enclosures (CV, references) at the bottom; the
 // portal preview is framed the same way rather than as a bolted-on marketing

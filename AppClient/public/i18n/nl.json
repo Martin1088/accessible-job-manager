@@ -1,7 +1,7 @@
 {
   "SKIP_LINK": "Naar de hoofdinhoud springen",
   "LOGIN": {
-    "TITLE": "Job Manager",
+    "TITLE": "Job Application Manager",
     "TAGLINE": "Sollicitaties bijhouden en sollicitatiebrieven opstellen",
     "SIGN_IN_HEADING": "Aanmelden",
     "CONTINUE_AS_USER": "Doorgaan als Gebruiker",
@@ -10,14 +10,22 @@
     "CONTINUE_AS_REVIEWER": "Doorgaan als Beoordelaar",
     "ENCLOSURE_LABEL": "Bijlage",
     "WHATS_INSIDE": "Dit vindt u binnen",
-    "SCREENSHOT_ALT": "Het Job Manager-dashboard: een veld om een vacature via URL te importeren en snelkoppelingen naar Bedrijven, Sollicitaties, Sollicitatiebriefsjabloon en Profiel.",
+    "SCREENSHOT_ALT": "Het Job Application Manager-dashboard: een veld om een vacature via URL te importeren en snelkoppelingen naar Bedrijven, Sollicitaties, Sollicitatiebriefsjabloon en Profiel.",
     "CAPTION": "Importeer een vacature via de URL, volg elke sollicitatie van concept tot aanbod, en maak sollicitatiebrieven volgens DIN 5008 — even goed te gebruiken met een schermlezer als met een muis.",
     "BUILT_BY": "Gebouwd door",
     "SOURCE_ON_GITHUB": "broncode op GitHub",
     "OPENS_NEW_TAB": "opent in een nieuw tabblad",
     "ERROR_WRONG_ROLE": "Uw account heeft niet de vereiste rol. Probeer een andere aanmeldoptie.",
     "ERROR_ACCESS_DENIED": "Toegang geweigerd. Probeer het opnieuw.",
-    "ERROR_GENERIC": "Aanmelden mislukt ({{code}}). Probeer het opnieuw."
+    "ERROR_GENERIC": "Aanmelden mislukt ({{code}}). Probeer het opnieuw.",
+    "DEMO_SUBJECT": "Uw uitnodiging om Job Application Manager uit te proberen",
+    "DEMO_SALUTATION": "Beste bezoeker,",
+    "DEMO_BODY": "Dit is een live demo. Alle personen, bedrijven en brieven erin zijn fictief, en niets wat u wijzigt wordt opgeslagen — de pagina herladen begint opnieuw. Drie mensen delen dit systeem. Kies aan wiens bureau u plaatsneemt:",
+    "DEMO_NAV_LABEL": "Kies een rol voor de demo",
+    "DEMO_ROLE_USER_DESC": "Volgt elke sollicitatie, schrijft DIN 5008-brieven, beheert bedrijven en documenten.",
+    "DEMO_ROLE_ADVISOR_DESC": "Volgt de zoektocht van {{name}} en stelt concrete vacatures voor.",
+    "DEMO_ROLE_REVIEWER_DESC": "Leest de documenten na die {{name}} deelt voordat een sollicitatie wordt verstuurd.",
+    "DEMO_CLOSING": "Met vriendelijke groet,"
   },
   "NAV": {
     "USER_LABEL": "Hoofdnavigatie",
@@ -441,7 +449,7 @@
     "APPLY_METHOD_HINT": "Zelf instellen of via \"Hoe solliciteren?\" uit de vacature laten lezen."
   },
   "HOME": {
-    "TITLE": "Job Manager",
+    "TITLE": "Job Application Manager",
     "JOB_IMPORT_HEADING": "Vacature importeren",
     "JOB_URL_LABEL": "URL van de vacature",
     "JOB_URL_PLACEHOLDER": "https://voorbeeld.nl/vacatures/job-123",

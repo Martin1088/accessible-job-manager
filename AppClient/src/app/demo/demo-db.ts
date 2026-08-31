@@ -36,8 +36,13 @@ function copy<T>(value: T): T {
 @Injectable({ providedIn: 'root' })
 export class DemoDb {
 
-  /** Which of the three people is looking. Replaces the login. */
-  readonly role = signal<DemoRole>('USER');
+  /**
+   * Which of the three people is looking. `null` until the visitor picks one
+   * on the login letter - while null, `/api/me` answers 401 and the auth guard
+   * sends every route to `/login`, which is what makes the letter the front
+   * door of the demo rather than a page nobody ever sees.
+   */
+  readonly role = signal<DemoRole | null>(null);
 
   readonly companies = signal<Company[]>(copy(COMPANIES));
   readonly applications = signal<Application[]>(copy(APPLICATIONS));
@@ -52,13 +57,17 @@ export class DemoDb {
     REVIEWER: PEOPLE.REVIEWER.profile,
   }));
 
-  /** The profile of whoever is currently looking. */
+  /**
+   * The profile of whoever is currently looking. Handlers that reach this only
+   * run behind the guards, i.e. after a role was picked - the fallback covers
+   * a direct API poke before entering, not a real flow.
+   */
   profile(): UserProfile {
-    return this.profiles()[this.role()];
+    return this.profiles()[this.role() ?? 'USER'];
   }
 
   patchProfile(change: Partial<UserProfile>): UserProfile {
-    const role = this.role();
+    const role = this.role() ?? 'USER';
     const updated = { ...this.profiles()[role], ...change };
     this.profiles.update(all => ({ ...all, [role]: updated }));
     return updated;

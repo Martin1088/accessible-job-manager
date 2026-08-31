@@ -1,5 +1,5 @@
-![Accessible Job Manager Logo](docs/assets/Juke.png)
-# Accessible Job Manager
+![Job Application Manager Logo](docs/assets/Juke.png)
+# Job Application Manager
 
 [![Lizenz: MIT](https://img.shields.io/github/license/Martin1088/accessible-job-manager)](./LICENSE)
 [![Spring Boot 3.5](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -11,7 +11,7 @@
 
 **Live demo:** <https://martin1088.github.io/accessible-job-manager/#/> — the full frontend running on GitHub Pages with in-memory demo data and no backend; use the demo bar to switch role and language.
 
-**A job application manager for blind and visually impaired users.** Screen reader
+**An accessible job application manager for blind and visually impaired users.** Screen reader
 operation is not a feature added on top here — it is the premise the architecture is
 built on.
 

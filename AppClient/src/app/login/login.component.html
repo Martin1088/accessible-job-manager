@@ -3,7 +3,9 @@
 
     <div class="brand">
       <!-- Decorative: the h1 text below it already gives the accessible name. -->
-      <img class="brand__logo" src="/juke.png" alt="" width="480" height="480" />
+      <!-- Relative on purpose: resolves against the base href, so it works at
+           the server root and under the demo's /accessible-job-manager/ path. -->
+      <img class="brand__logo" src="juke.png" alt="" width="480" height="480" />
       <h1 class="brand__title">{{ 'LOGIN.TITLE' | translate }}</h1>
       <p class="brand__tagline">{{ 'LOGIN.TAGLINE' | translate }}</p>
     </div>
@@ -35,40 +37,87 @@
         </p>
       }
 
-      <h2 id="sign-in-heading" class="section-label">{{ 'LOGIN.SIGN_IN_HEADING' | translate }}</h2>
+      @if (demoMode) {
+        <!--
+          The demo's front door is written as the thing this app produces: a
+          DIN 5008 letter. Return line, dateline, bold Betreff, salutation,
+          body, and the three seeded people as the ways to answer it. The
+          names come through DEMO_CONTROLS, so the seed tree stays out of
+          every non-demo build.
+        -->
+        <p class="letter__meta">
+          <!-- Same key as the brand title above, so the product name is
+               stated in one place and a rename reaches both. -->
+          <span class="letter__return">{{ 'LOGIN.TITLE' | translate }}</span>
+          <span class="letter__dateline">Freiburg, {{ demoDate() }}</span>
+        </p>
 
-      <nav aria-labelledby="sign-in-heading">
-        <ul role="list" class="login-options login-options--primary">
-          <li>
-            <button type="button" (click)="loginAsUser()" class="btn-primary">
-              {{ 'LOGIN.CONTINUE_AS_USER' | translate }}
-            </button>
-          </li>
-        </ul>
+        <h2 class="letter__subject">{{ 'LOGIN.DEMO_SUBJECT' | translate }}</h2>
 
-        <div role="group" aria-labelledby="other-roles-heading" class="other-roles">
-          <p id="other-roles-heading" class="section-label">{{ 'LOGIN.OTHER_ROLES' | translate }}</p>
-          <ul role="list" class="login-options login-options--secondary">
+        <p class="letter__body letter__body--salutation">{{ 'LOGIN.DEMO_SALUTATION' | translate }}</p>
+        <p class="letter__body">{{ 'LOGIN.DEMO_BODY' | translate }}</p>
+
+        <nav [attr.aria-label]="'LOGIN.DEMO_NAV_LABEL' | translate">
+          <ul role="list" class="persona-list">
+            @for (persona of personas; track persona.role; let first = $first) {
+              <li class="persona">
+                <button type="button"
+                  class="persona__button"
+                  [class.btn-primary]="first"
+                  [class.btn-secondary]="!first"
+                  [attr.aria-describedby]="'persona-desc-' + persona.role"
+                  (click)="enterDemo(persona.role)">
+                  <span class="persona__name">{{ persona.name }}</span>
+                  <span class="persona__role">{{ 'DEMO.ROLE_' + persona.role | translate }}</span>
+                </button>
+                <p class="persona__desc" [id]="'persona-desc-' + persona.role">
+                  {{ 'LOGIN.DEMO_ROLE_' + persona.role + '_DESC' | translate: { name: personas[0].name } }}
+                </p>
+              </li>
+            }
+          </ul>
+        </nav>
+
+        <p class="letter__closing">
+          {{ 'LOGIN.DEMO_CLOSING' | translate }}<br />
+          <span class="letter__signature">Martin Jurk</span>
+        </p>
+      } @else {
+        <h2 id="sign-in-heading" class="section-label">{{ 'LOGIN.SIGN_IN_HEADING' | translate }}</h2>
+
+        <nav aria-labelledby="sign-in-heading">
+          <ul role="list" class="login-options login-options--primary">
             <li>
-              <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
-                {{ 'LOGIN.CONTINUE_AS_ADVISOR' | translate }}
-              </button>
-            </li>
-            <li>
-              <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
-                {{ 'LOGIN.CONTINUE_AS_REVIEWER' | translate }}
+              <button type="button" (click)="loginAsUser()" class="btn-primary">
+                {{ 'LOGIN.CONTINUE_AS_USER' | translate }}
               </button>
             </li>
           </ul>
-        </div>
-      </nav>
+
+          <div role="group" aria-labelledby="other-roles-heading" class="other-roles">
+            <p id="other-roles-heading" class="section-label">{{ 'LOGIN.OTHER_ROLES' | translate }}</p>
+            <ul role="list" class="login-options login-options--secondary">
+              <li>
+                <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
+                  {{ 'LOGIN.CONTINUE_AS_ADVISOR' | translate }}
+                </button>
+              </li>
+              <li>
+                <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
+                  {{ 'LOGIN.CONTINUE_AS_REVIEWER' | translate }}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      }
     </div>
 
     <div class="enclosure">
       <p class="enclosure__label">{{ 'LOGIN.ENCLOSURE_LABEL' | translate }}</p>
       <h2>{{ 'LOGIN.WHATS_INSIDE' | translate }}</h2>
       <img class="enclosure__screenshot"
-        src="/home-preview.png"
+        src="home-preview.png"
         [attr.alt]="'LOGIN.SCREENSHOT_ALT' | translate"
         width="1919" height="878" />
       <p class="enclosure__caption">{{ 'LOGIN.CAPTION' | translate }}</p>

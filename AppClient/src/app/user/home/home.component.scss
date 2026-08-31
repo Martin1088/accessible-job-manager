@@ -1,58 +1,110 @@
+@use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
+
+// Same DIN 5008 stationery as the login page and the advisor screens: the page
+// is a desk, each section a sheet, labels in the monospace "typewriter" voice,
+// body copy in the serif. See `styles/_correspondence.scss`.
+@include corr.corr-tokens;
+
+:host { display: block; }
+
+// Global `main` (styles.scss) still supplies max-width / margin / padding.
 main {
-  max-width: 720px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* visually hidden but available to screen readers */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
+// --- Shared voices ----------------------------------------------------
+
+// The monospace label voice. Size and tracking are set per use below.
+.section-tab,
+.field label,
+h3,
+.job-result dt,
+.merge-panel legend,
+.merge-source,
+.quick-nav__title {
+  font-family: corr.$corr-mono;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
-/* Job posting import */
-.job-import-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
+// The serif body voice.
+h1,
+.notice,
+.job-result,
+.merge-panel p,
+.merge-panel label,
+.quick-nav__desc {
+  font-family: corr.$corr-serif;
+  color: var(--ink);
 }
+
+// --- Masthead --------------------------------------------------------
+
+h1 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.25;
+}
+
+// --- Section shell (each one a sheet on the desk) -------------------
+
+section {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 1.5rem;
+}
+
+// A tab clipped to the top of the sheet.
+.section-tab {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+
+// Grouping element only now - the section around it is the sheet.
+.job-import-card { margin: 0; }
+
+// --- Import field --------------------------------------------------
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
   margin-bottom: 1rem;
 
-  label { font-size: 0.875rem; font-weight: 500; }
+  label { font-size: 0.7rem; }
 
   kbd {
-    display: inline-block;
-    font-size: 0.7rem;
-    font-family: inherit;
-    font-weight: 400;
-    color: var(--color-text-muted);
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    border-radius: 3px;
+    font-family: corr.$corr-mono;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
     padding: 0.05rem 0.3rem;
-    line-height: 1.4;
   }
 
   input {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
     font-family: inherit;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+    font-size: 1rem;
   }
 }
 
@@ -62,89 +114,140 @@ main {
   gap: 0.75rem;
 }
 
+// --- Notices -----------------------------------------------------
+
+.notice {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-alert-border);
+  border-radius: 2px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  background: var(--color-alert-bg);
+  color: var(--color-alert-text);
+}
+
+// --- Extraction results --------------------------------------
+
 .job-result-columns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-top: 1.25rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--rule);
+}
 
-  h3 {
-    font-size: 0.95rem;
-    margin: 0 0 0.5rem;
-  }
+h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
 }
 
 .job-result {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.5rem 1.25rem;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 
-  dt { font-weight: 600; color: var(--color-text-muted); }
+  dt {
+    font-size: 0.68rem;
+    letter-spacing: 0.07em;
+    padding-top: 0.15rem;
+  }
+
   dd { margin: 0; }
 }
+
+// --- Merge panel -------------------------------------------
 
 .merge-panel {
   margin-top: 1.25rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--rule);
 
-  h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
-
-  fieldset {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 0.6rem 0.9rem;
-    margin: 0 0 0.75rem;
-
-    legend { font-size: 0.85rem; font-weight: 600; padding: 0 0.3rem; }
-
-    label {
-      display: block;
-      font-size: 0.875rem;
-      padding: 0.2rem 0;
-      cursor: pointer;
-    }
+  p {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
   }
 
-  .merge-source {
-    color: var(--color-text-muted);
-    font-size: 0.8rem;
+  fieldset {
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.6rem 0.9rem;
+    margin: 0 0 0.75rem;
+  }
+
+  legend {
+    font-size: 0.68rem;
+    letter-spacing: 0.07em;
+    padding: 0 0.3rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.95rem;
+    padding: 0.2rem 0;
+    cursor: pointer;
+  }
+}
+
+.merge-source {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+}
+
+// --- Buttons ---------------------------------------------
+
+.btn-primary,
+.btn-secondary {
+  min-block-size: 44px;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  // Disabled state uses explicit muted-but-legible tokens, not `opacity`:
+  // fading white-on-navy to 55% dropped the label to ~3.5:1. `--ink-soft`
+  // on `--paper` clears AA (5.1:1) in all three contrast modes, and the
+  // flat fill plus `not-allowed` cursor still read as inert.
+  &:disabled {
+    background: var(--paper);
+    border-color: var(--rule);
+    color: var(--ink-soft);
+    cursor: not-allowed;
   }
 }
 
 .btn-primary {
-  padding: 0.5rem 1.2rem;
-  background: #005fcc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  &:hover:not(:disabled) { background: #004aaa; }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
 }
 
 .btn-secondary {
-  padding: 0.5rem 1.2rem;
-  background: #fff;
-  color: #374151;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  cursor: pointer;
-  &:hover:not(:disabled) { background: #f1f5f9; }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  background: var(--paper);
+  color: var(--ink);
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
 }
 
-/* Quick navigation cards */
+// --- Quick navigation -----------------------------------
+// Enclosures at the foot of a letter, flagged on the edge the way the
+// advisor's outgoing sheet is.
+
 .quick-nav {
   list-style: none;
   margin: 0;
@@ -156,34 +259,43 @@ main {
   a {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.4rem;
     padding: 1.1rem 1.25rem;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-left-width: 3px;
+    border-radius: 2px;
     text-decoration: none;
-    border: 2px solid transparent;
-    transition: border-color 0.15s, box-shadow 0.15s;
 
     &:hover {
-      border-color: #005fcc;
-      box-shadow: 0 2px 8px rgba(0, 95, 204, 0.12);
-    }
-
-    &:focus-visible {
-      outline: 3px solid #005fcc;
-      outline-offset: 2px;
+      border-left-color: var(--accent);
+      background: var(--paper);
     }
   }
 }
 
 .quick-nav__title {
-  font-weight: 600;
-  font-size: 1rem;
-  color: #005fcc;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
 }
 
 .quick-nav__desc {
-  font-size: 0.875rem;
-  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+// --- Focus: one ring for every control on the sheet ----
+
+.field input:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.quick-nav a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@include bp.mobile {
+  section { padding: 1.1rem; }
 }

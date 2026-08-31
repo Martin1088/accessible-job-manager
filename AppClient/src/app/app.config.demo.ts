@@ -59,6 +59,6 @@ export const appConfig: ApplicationConfig = {
     // Screen readers read the document title on load, which is more reliable
     // than announcing into a live region while the page is still bootstrapping.
     // It is the first thing a visitor hears, and it says what this is.
-    provideAppInitializer(() => { inject(Title).setTitle('Demo — Job Manager'); }),
+    provideAppInitializer(() => { inject(Title).setTitle('Demo — Job Application Manager'); }),
   ]
 };

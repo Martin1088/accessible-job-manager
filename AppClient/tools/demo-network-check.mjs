@@ -36,7 +36,18 @@ async function visit(hash, label) {
   console.log(`  ${label.padEnd(28)} h1: ${h1}`);
 }
 
-console.log('--- Routen durchklicken ---');
+// The demo starts signed out: every route redirects to the login letter until
+// a persona is picked there. Enter as the applicant first, the way a visitor
+// does - which also proves the front door itself works.
+console.log('--- Eintritt über den Demo-Brief ---');
+await page.goto(BASE, { waitUntil: 'networkidle0' });
+await new Promise(r => setTimeout(r, 700));
+const subject = await page.$eval('.letter__subject', el => el.textContent.trim()).catch(() => '(kein Betreff)');
+console.log(`  Betreff: ${subject}`);
+await page.click('.persona__button.btn-primary');
+await new Promise(r => setTimeout(r, 800));
+
+console.log('\n--- Routen durchklicken ---');
 await visit('#/', 'Dashboard (Bewerberin)');
 await visit('#/companies', 'Unternehmen');
 await visit('#/applications', 'Bewerbungen');
