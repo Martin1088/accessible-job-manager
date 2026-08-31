@@ -59,7 +59,7 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
   strong { font-size: 1rem; color: #1e293b; }
   // An email address has no spaces to break on, so it needs its own wrap
   // rule to avoid pushing the card wider than the viewport on a phone.
-  span   { font-size: 0.85rem; color: #64748b; overflow-wrap: anywhere; }
+  span   { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
 }
 
 .doc-table {
@@ -78,7 +78,7 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #64748b;
+    color: var(--color-text-muted);
   }
 }
 

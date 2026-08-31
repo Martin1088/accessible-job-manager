@@ -730,5 +730,18 @@
     "RIGHTS_OBJECTION": "Widerspruch gegen eine auf berechtigtem Interesse beruhende Verarbeitung (Art. 21 DSGVO).",
     "RIGHTS_COMPLAINT": "Beschwerde bei einer Datenschutz-Aufsichtsbehörde.",
     "RIGHTS_CONTACT": "Um eines dieser Rechte auszuüben, wenden Sie sich bitte an die oben genannte E-Mail-Adresse."
+  },
+  "DEMO": {
+    "BANNER_LABEL": "Hinweis zur Demo",
+    "BANNER_HEADING": "Demo-Version",
+    "BANNER_TEXT": "Alle Daten sind erfunden. Änderungen werden nicht gespeichert und gehen beim Neuladen verloren.",
+    "ROLE_LABEL": "Rolle wechseln",
+    "ROLE_USER": "Bewerberin",
+    "ROLE_ADVISOR": "Berater",
+    "ROLE_REVIEWER": "Gutachterin",
+    "ROLE_CHANGED": "Rolle gewechselt: {{role}}",
+    "RESET": "Demo zurücksetzen",
+    "RESET_DONE": "Demo wurde zurückgesetzt.",
+    "SAMPLE_RESULT": "Beispielergebnis — in der Demo wird nichts ausgelesen, dieses Ergebnis ist fest hinterlegt."
   }
 }

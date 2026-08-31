@@ -38,7 +38,7 @@ main {
     font-size: 0.7rem;
     font-family: inherit;
     font-weight: 400;
-    color: #64748b;
+    color: var(--color-text-muted);
     background: #f1f5f9;
     border: 1px solid #cbd5e1;
     border-radius: 3px;
@@ -82,7 +82,7 @@ main {
   gap: 0.5rem 1.25rem;
   font-size: 0.9rem;
 
-  dt { font-weight: 600; color: #64748b; }
+  dt { font-weight: 600; color: var(--color-text-muted); }
   dd { margin: 0; }
 }
 
@@ -110,7 +110,7 @@ main {
   }
 
   .merge-source {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.8rem;
   }
 }

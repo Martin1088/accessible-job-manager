@@ -66,7 +66,7 @@ main {
   margin: 0 0 1.25rem;
   font-size: 0.9rem;
 
-  dt { font-weight: 600; color: #64748b; }
+  dt { font-weight: 600; color: var(--color-text-muted); }
   dd { margin: 0; }
 }
 
@@ -147,7 +147,7 @@ main {
   label {
     font-size: 0.8rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -220,7 +220,7 @@ main {
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: #64748b;
+      color: var(--color-text-muted);
 
       button {
         background: none;
@@ -229,7 +229,7 @@ main {
         font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: #64748b;
+        color: var(--color-text-muted);
         cursor: pointer;
         padding: 0;
         display: inline-flex;

@@ -11,7 +11,7 @@ main {
   margin: 1.5rem 0 0;
   font-size: 0.95rem;
 
-  dt { font-weight: 600; color: #64748b; }
+  dt { font-weight: 600; color: var(--color-text-muted); }
   dd { margin: 0; }
 }
 
@@ -49,7 +49,7 @@ fieldset {
 
 .hint {
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
   max-width: 62ch;
 }
@@ -96,7 +96,7 @@ fieldset {
 .network {
   .hint { margin-bottom: 1rem; }
 
-  [role="status"] { color: #64748b; font-size: 0.9rem; }
+  [role="status"] { color: var(--color-text-muted); font-size: 0.9rem; }
 }
 
 .btn-primary {

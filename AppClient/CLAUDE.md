@@ -32,6 +32,12 @@ Accessibility is a core requirement, not an afterthought:
 - **Forms** — `aria-required`, `aria-describedby`, `<label>` for every input
 - **Alerts** — `role="alert"` on error messages for live-region announcement
 - **Definition lists** — `<dl>`/`<dt>`/`<dd>` for key-value profile data
+- **Colour** — never hardcode a text colour. Muted/secondary text uses
+  `var(--color-text-muted)`, defined once per theme in `src/styles.scss`. The hardcoded
+  `#64748b` it replaced measured 4.37:1 against `--color-bg` (`#f5f5f5`) and failed AA;
+  it passed only when it happened to sit on a white card, which is exactly the kind of
+  background-dependent bug a literal hex hides. A new colour needs checking against the
+  surface it will actually render on, in all three themes (default, high-contrast, dark).
 
 ## Internationalization (i18n)
 
@@ -188,6 +194,10 @@ values, and is required for the sticky-element rule above.
 Run before merging any layout change:
 
 - [ ] `ng build` passes
+- [ ] `npm run lint:a11y` passes (template accessibility rules)
+- [ ] `npx ng test --watch=false --browsers=ChromeHeadless` passes — every component
+      spec runs axe via `expectNoAxeViolations`, so a contrast or labelling regression
+      fails here rather than at review
 - [ ] No horizontal scroll at 375px viewport width
 - [ ] VoiceOver rotor "Headings": every page section reachable
 - [ ] VoiceOver rotor "Form Controls": every input has a distinct name

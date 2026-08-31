@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { HomeComponent } from './home.component';
+import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('HomeComponent', () => {
   beforeEach(async () => {
@@ -22,5 +23,11 @@ describe('HomeComponent', () => {
   it('should create', () => {
     const fixture = TestBed.createComponent(HomeComponent);
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('has no axe-detectable accessibility violations', async () => {
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 });
