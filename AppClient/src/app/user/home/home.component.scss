@@ -4,8 +4,6 @@
 // Same DIN 5008 stationery as the login page and the advisor screens: the page
 // is a desk, each section a sheet, labels in the monospace "typewriter" voice,
 // body copy in the serif. See `styles/_correspondence.scss`.
-@include corr.corr-tokens;
-
 :host { display: block; }
 
 // Global `main` (styles.scss) still supplies max-width / margin / padding.
@@ -61,6 +59,25 @@ section {
   padding: 1.5rem;
 }
 
+// The job-posting import is where a new user starts, so it is the one sheet
+// framed like a picture: a thick terracotta edge with a thin inner lip, over a
+// faint accent wash. The rest of the page stays quiet so this reads as
+// "begin here".
+.job-import {
+  border: 6px double var(--accent);
+  padding: 1.75rem;
+  background: color-mix(in srgb, var(--accent) 5%, var(--card));
+}
+
+.job-import__lead {
+  margin: 0 0 1.5rem;
+  max-width: 58ch;
+  font-family: corr.$corr-serif;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
 // A tab clipped to the top of the sheet.
 .section-tab {
   display: inline-block;
@@ -112,6 +129,28 @@ section {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+// The hero field and its filled primary action. After `.field` above so these
+// win on equal specificity.
+.job-import__field {
+  margin-bottom: 1.25rem;
+
+  label { font-size: 0.75rem; }
+
+  input {
+    padding: 0.8rem 1rem;
+    font-size: 1.15rem;
+  }
+}
+
+.job-import .btn-primary {
+  padding: 0.85rem 1.9rem;
+  font-size: 0.82rem;
+
+  // Even before a URL is typed, keep the ink frame so it still reads as the
+  // primary action-in-waiting, not just another outlined button.
+  &:disabled { border-color: var(--ink); }
 }
 
 // --- Notices -----------------------------------------------------

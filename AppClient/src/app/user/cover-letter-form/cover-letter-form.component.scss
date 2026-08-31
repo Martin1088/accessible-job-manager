@@ -1,219 +1,243 @@
 @use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
+
+// The DIN 5008 stationery (see `styles/_correspondence.scss`). This form is
+// rendered inside a page section (a sheet), so its own fieldsets are nested
+// groups rather than sheets.
+:host { display: block; }
 
 fieldset {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem 1.25rem 1.25rem;
   margin: 0 0 1.5rem;
-  background: #fff;
+  padding: 1rem 1.25rem 1.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
 
-  legend {
-    font-size: 0.95rem;
-    font-weight: 600;
-    padding: 0 0.4rem;
-  }
+legend,
+.field label,
+.item-row label,
+h3,
+.link-editor-heading {
+  font-family: corr.$corr-mono;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+legend { padding: 0 0.4rem; }
+
+h3 { margin: 1.25rem 0 0.4rem; font-size: 0.72rem; }
+
+// A content block within the letter - one shade in from the sheet.
+.block {
+  margin-bottom: 1rem;
+  background: var(--paper);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
   margin-bottom: 1rem;
-
-  label { font-size: 0.875rem; font-weight: 500; }
-
-  input, select, textarea {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-  }
-
-  textarea { resize: vertical; }
 }
 
+input,
+select,
+textarea {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+// Invert the field fill on the shaded block so inputs still read as fields.
+.block :is(input, select, textarea) { background: var(--card); }
+
+textarea { resize: vertical; }
+
+// Serif, like every other help text in the app - mono names controls, serif
+// carries sentences. This screen makes the case on its own: RECIPIENT_HELP runs
+// to three sentences, which is the longest help text anywhere here.
 .hint {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
   margin: 0;
   max-width: 62ch;
-}
-
-.error {
-  color: #b3261e;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin: 0;
-}
-
-/* Focus lands here after a failed submit, so it must show a focus ring. */
-.error-summary {
-  border: 2px solid #b3261e;
-  border-radius: 8px;
-  padding: 0.9rem 1.1rem;
-  margin-bottom: 1.5rem;
-  background: #fff5f5;
-
-  h3 { margin: 0 0 0.5rem; font-size: 1rem; color: #b3261e; }
-  ul { margin: 0; padding-left: 1.2rem; }
-  li { margin-bottom: 0.25rem; }
-  a { color: #b3261e; font-weight: 500; }
-
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
 }
 
 .derived {
-  font-size: 0.875rem;
-  color: #374151;
   margin: 0;
   min-height: 1.4rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
 }
 
-.block {
-  background: #f8fafc;
-  margin-bottom: 1rem;
+// Field-level validation text - plain red text, not a box. Clears the global
+// `[role="alert"]` box styling (styles.scss) that would otherwise give the
+// empty live-region `<p>` a pink bar.
+.error {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: corr.$corr-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
+// Standalone alert bars (load / save / render failed).
+.notice {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-alert-border);
+  border-radius: 2px;
+  background: var(--color-alert-bg);
+  color: var(--color-alert-text);
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .block-actions,
-.form-actions {
+.form-actions,
+.link-editor-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
 }
 
 .form-actions { margin: 1.5rem 0 1rem; }
+.link-editor-actions { margin-top: 0.6rem; }
 
 .item-row {
   display: grid;
-  // label | input | insert link | remove - the last two are separate buttons,
-  // so a three-column track would wrap one of them onto its own row.
+  // label | input | insert link | remove - two separate trailing buttons.
   grid-template-columns: minmax(6rem, auto) 1fr auto auto;
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.6rem;
-
-  label { font-size: 0.875rem; font-weight: 500; }
-
-  input {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-  }
 }
 
-// The 4-column grid (label | input | insert link | remove) has no room on a
-// phone-width viewport - minmax(6rem, auto) and two auto-sized buttons alone
-// exceed 375px. Stack it instead of shrinking columns further, which would
-// just squeeze the input to unusable width.
 @include bp.mobile {
   .item-row {
     grid-template-columns: 1fr;
     justify-items: start;
     gap: 0.35rem;
 
-    input {
-      width: 100%;
-    }
-
+    input { width: 100%; }
     .btn-secondary,
-    .btn-remove {
-      min-block-size: 44px;
-    }
+    .btn-remove { min-block-size: 44px; }
   }
 }
+
+// --- Buttons -----------------------------------------------------
 
 .btn-primary,
 .btn-secondary,
 .btn-remove {
-  padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
+  min-block-size: 44px;
+  padding: 0.55rem 1.2rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+
+  &:disabled {
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
 }
 
 .btn-primary {
-  background: #005fcc;
-  color: #fff;
-  border: none;
-  &:hover:not(:disabled) { background: #004aaa; }
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
 }
 
-.btn-secondary {
-  background: #fff;
-  color: #374151;
-  border: 1px solid #cbd5e1;
-  &:hover:not(:disabled) { background: #f1f5f9; }
-}
-
-.btn-remove {
-  background: #fff;
-  color: #b3261e;
-  border: 1px solid #f0c2be;
-  padding: 0.4rem 0.8rem;
-  &:hover:not(:disabled) { background: #fff5f5; }
-}
+.btn-remove:not(:disabled) { color: var(--accent-deep); }
 
 .pdf-link {
   margin: 0 0 1.5rem;
 
   a {
-    font-weight: 600;
-    color: #005fcc;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+    font-family: corr.$corr-mono;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink);
+
+    &:hover { color: var(--accent-deep); }
   }
 }
 
-.preview {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 1.25rem;
+// --- Preview: the server's linearized letter, verbatim -----------
 
-  h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+.preview {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
 }
 
-/* The server's linearized letter, shown verbatim: its line and paragraph breaks are
-   the reading order, so they are preserved rather than re-flowed. */
 .preview-text {
-  white-space: pre-wrap;
-  font-family: inherit;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
   margin: 0.75rem 0 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  white-space: pre-wrap;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink);
   overflow-x: auto;
 }
 
-// Sits directly under the field it was opened from, indented and ruled so it
-// reads as belonging to that field rather than to the block as a whole.
+// --- Link editor: belongs to the field it opened from ----------
+
 .link-editor {
   margin: 0.6rem 0 0.9rem;
   padding: 0.8rem;
-  border: 1px solid #cbd5e1;
-  border-left: 4px solid #2563eb;
-  border-radius: 4px;
-  background: #fff;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
+  background: var(--paper);
 }
 
-.link-editor-heading {
-  margin: 0 0 0.6rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
+.link-editor-heading { margin: 0 0 0.6rem; }
 
-.link-editor-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 0.6rem;
+// --- Focus ----------------------------------------------------
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-remove:focus-visible,
+.pdf-link a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }

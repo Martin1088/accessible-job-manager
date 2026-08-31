@@ -2,7 +2,7 @@
   <h1>{{ (isEditMode ? 'COMPANIES.EDIT_TITLE' : 'COMPANIES.NEW_TITLE') | translate }}</h1>
 
   @if (errorMessage) {
-    <div role="alert">{{ errorMessage }}</div>
+    <div role="alert" class="notice notice--error">{{ errorMessage }}</div>
   }
 
   @if (!isEditMode) {
@@ -24,7 +24,7 @@
   }
 
   <section class="suggestions" aria-labelledby="suggestions-heading">
-    <h2 id="suggestions-heading">{{ 'COMPANIES.SUGGEST_HEADING' | translate }}</h2>
+    <h2 id="suggestions-heading" class="section-tab">{{ 'COMPANIES.SUGGEST_HEADING' | translate }}</h2>
     <div>
       <label for="suggestion-url">{{ 'COMPANIES.SUGGEST_URL_LABEL' | translate }}</label>
       <input id="suggestion-url" type="url" [(ngModel)]="suggestionUrl" name="suggestion-url"
@@ -49,57 +49,60 @@
     }
   </ng-template>
 
-  <div>
-    <div>
-      <label for="name">{{ 'COMPANIES.NAME_LABEL' | translate }}</label>
-      <input id="name" [ngModel]="company.name" (ngModelChange)="onNameChange($event)"
-             required aria-required="true" aria-describedby="existing-companies"/>
-      <button type="button" (click)="suggestCompany()" [disabled]="isSuggesting('company')">
-        {{ (isSuggesting('company') ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_COMPANY') | translate }}
-      </button>
-      <ng-container *ngTemplateOutlet="suggestionFeedback; context: { $implicit: 'company' }"></ng-container>
+  <div class="form-body">
+    <section aria-labelledby="company-details-heading">
+      <h2 id="company-details-heading" class="section-tab">{{ 'COMPANIES.DETAILS_HEADING' | translate }}</h2>
+      <div>
+        <label for="name">{{ 'COMPANIES.NAME_LABEL' | translate }}</label>
+        <input id="name" [ngModel]="company.name" (ngModelChange)="onNameChange($event)"
+               required aria-required="true" aria-describedby="existing-companies"/>
+        <button type="button" (click)="suggestCompany()" [disabled]="isSuggesting('company')">
+          {{ (isSuggesting('company') ? 'COMPANIES.SUGGEST_RUNNING' : 'COMPANIES.SUGGEST_COMPANY') | translate }}
+        </button>
+        <ng-container *ngTemplateOutlet="suggestionFeedback; context: { $implicit: 'company' }"></ng-container>
 
-      <!--
-        What the user already has under this name. Stays in the DOM empty so a
-        screen reader announces into it: a live region first added to the page
-        at the moment it has something to say is announced unreliably.
-      -->
-      <div id="existing-companies" class="existing-companies" role="status">
-        @if (duplicateOf(); as existing) {
-          <p class="is-duplicate">
-            @if (existing.cities) {
-              {{ 'COMPANIES.DUPLICATE_HINT_AT' | translate: { name: existing.company.name, cities: existing.cities } }}
-            } @else {
-              {{ 'COMPANIES.DUPLICATE_HINT' | translate: { name: existing.company.name } }}
-            }
-            <a [routerLink]="['/companies/edit', existing.company.id]">{{ 'COMPANIES.DUPLICATE_OPEN' | translate }}</a>
-          </p>
-        } @else if (sameNameElsewhere().length) {
-          <p id="elsewhere-companies-label">{{ 'COMPANIES.SAME_NAME_ELSEWHERE' | translate }}</p>
-          <ul aria-labelledby="elsewhere-companies-label">
-            @for (existing of sameNameElsewhere(); track existing.company.id) {
-              <li>
-                <a [routerLink]="['/companies/edit', existing.company.id]">{{ existing.company.name }}</a>
-                @if (existing.cities) { <span class="at-city">{{ existing.cities }}</span> }
-              </li>
-            }
-          </ul>
-        } @else if (similarCompanies().length) {
-          <p id="similar-companies-label">{{ 'COMPANIES.SIMILAR_HEADING' | translate }}</p>
-          <ul aria-labelledby="similar-companies-label">
-            @for (existing of similarCompanies(); track existing.company.id) {
-              <li>
-                <a [routerLink]="['/companies/edit', existing.company.id]">{{ existing.company.name }}</a>
-                @if (existing.cities) { <span class="at-city">{{ existing.cities }}</span> }
-              </li>
-            }
-          </ul>
-        }
+        <!--
+          What the user already has under this name. Stays in the DOM empty so a
+          screen reader announces into it: a live region first added to the page
+          at the moment it has something to say is announced unreliably.
+        -->
+        <div id="existing-companies" class="existing-companies" role="status">
+          @if (duplicateOf(); as existing) {
+            <p class="is-duplicate">
+              @if (existing.cities) {
+                {{ 'COMPANIES.DUPLICATE_HINT_AT' | translate: { name: existing.company.name, cities: existing.cities } }}
+              } @else {
+                {{ 'COMPANIES.DUPLICATE_HINT' | translate: { name: existing.company.name } }}
+              }
+              <a [routerLink]="['/companies/edit', existing.company.id]">{{ 'COMPANIES.DUPLICATE_OPEN' | translate }}</a>
+            </p>
+          } @else if (sameNameElsewhere().length) {
+            <p id="elsewhere-companies-label">{{ 'COMPANIES.SAME_NAME_ELSEWHERE' | translate }}</p>
+            <ul aria-labelledby="elsewhere-companies-label">
+              @for (existing of sameNameElsewhere(); track existing.company.id) {
+                <li>
+                  <a [routerLink]="['/companies/edit', existing.company.id]">{{ existing.company.name }}</a>
+                  @if (existing.cities) { <span class="at-city">{{ existing.cities }}</span> }
+                </li>
+              }
+            </ul>
+          } @else if (similarCompanies().length) {
+            <p id="similar-companies-label">{{ 'COMPANIES.SIMILAR_HEADING' | translate }}</p>
+            <ul aria-labelledby="similar-companies-label">
+              @for (existing of similarCompanies(); track existing.company.id) {
+                <li>
+                  <a [routerLink]="['/companies/edit', existing.company.id]">{{ existing.company.name }}</a>
+                  @if (existing.cities) { <span class="at-city">{{ existing.cities }}</span> }
+                </li>
+              }
+            </ul>
+          }
+        </div>
       </div>
-    </div>
+    </section>
 
     <section aria-labelledby="locations-heading">
-      <h2 id="locations-heading">{{ 'COMPANIES.LOCATIONS_HEADING' | translate }}</h2>
+      <h2 id="locations-heading" class="section-tab">{{ 'COMPANIES.LOCATIONS_HEADING' | translate }}</h2>
       @for (loc of company.locations; track loc; let i = $index) {
         <div>
           <fieldset>
@@ -134,7 +137,7 @@
     </section>
 
     <section aria-labelledby="positions-heading">
-      <h2 id="positions-heading">{{ 'COMPANIES.POSITIONS_HEADING' | translate }}</h2>
+      <h2 id="positions-heading" class="section-tab">{{ 'COMPANIES.POSITIONS_HEADING' | translate }}</h2>
       @for (pos of company.positions; track pos; let i = $index) {
         <div>
           <fieldset>

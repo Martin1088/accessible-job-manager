@@ -29,8 +29,18 @@
     <fieldset>
       <legend>{{ 'PREFERENCES.FIELDSET_LEGEND' | translate }}</legend>
 
-      <div class="field">
-        <label for="pref-contrast">{{ 'PREFERENCES.CONTRAST' | translate }}</label>
+      <!-- Every setting here inherits from the operating system until it is given a
+           value of its own, so each row states whether it is currently doing that.
+           The flag lives inside the <label> rather than beside it: it is part of what
+           distinguishes this control from the others, and a marker that only existed
+           as a coloured edge would not reach a screen reader at all. -->
+      <div class="field" [class.is-overridden]="isOverridden('contrastMode')">
+        <label for="pref-contrast">
+          {{ 'PREFERENCES.CONTRAST' | translate }}
+          @if (isOverridden('contrastMode')) {
+            <span class="override-flag">{{ 'PREFERENCES.OVERRIDDEN' | translate }}</span>
+          }
+        </label>
         <select id="pref-contrast" formControlName="contrastMode">
           <option value="SYSTEM">{{ 'PREFERENCES.CONTRAST_SYSTEM' | translate }}</option>
           <option value="HIGH">{{ 'PREFERENCES.CONTRAST_HIGH' | translate }}</option>
@@ -38,8 +48,13 @@
         </select>
       </div>
 
-      <div class="field">
-        <label for="pref-reduce-motion">{{ 'PREFERENCES.REDUCE_MOTION' | translate }}</label>
+      <div class="field" [class.is-overridden]="isOverridden('reduceMotion')">
+        <label for="pref-reduce-motion">
+          {{ 'PREFERENCES.REDUCE_MOTION' | translate }}
+          @if (isOverridden('reduceMotion')) {
+            <span class="override-flag">{{ 'PREFERENCES.OVERRIDDEN' | translate }}</span>
+          }
+        </label>
         <select id="pref-reduce-motion" formControlName="reduceMotion">
           <option value="SYSTEM">{{ 'PREFERENCES.OPTION_SYSTEM' | translate }}</option>
           <option value="ON">{{ 'PREFERENCES.OPTION_ON' | translate }}</option>
@@ -47,8 +62,13 @@
         </select>
       </div>
 
-      <div class="field">
-        <label for="pref-hide-images">{{ 'PREFERENCES.HIDE_IMAGES' | translate }}</label>
+      <div class="field" [class.is-overridden]="isOverridden('hideImages')">
+        <label for="pref-hide-images">
+          {{ 'PREFERENCES.HIDE_IMAGES' | translate }}
+          @if (isOverridden('hideImages')) {
+            <span class="override-flag">{{ 'PREFERENCES.OVERRIDDEN' | translate }}</span>
+          }
+        </label>
         <select id="pref-hide-images" formControlName="hideImages">
           <option value="SYSTEM">{{ 'PREFERENCES.OPTION_SYSTEM' | translate }}</option>
           <option value="ON">{{ 'PREFERENCES.OPTION_ON' | translate }}</option>
@@ -56,8 +76,13 @@
         </select>
       </div>
 
-      <div class="field">
-        <label for="pref-font-family">{{ 'PREFERENCES.FONT_FAMILY' | translate }}</label>
+      <div class="field" [class.is-overridden]="isOverridden('fontFamily')">
+        <label for="pref-font-family">
+          {{ 'PREFERENCES.FONT_FAMILY' | translate }}
+          @if (isOverridden('fontFamily')) {
+            <span class="override-flag">{{ 'PREFERENCES.OVERRIDDEN' | translate }}</span>
+          }
+        </label>
         <select id="pref-font-family" formControlName="fontFamily">
           <option value="SYSTEM">{{ 'PREFERENCES.FONT_FAMILY_SYSTEM' | translate }}</option>
           <option value="SANS_SERIF">{{ 'PREFERENCES.FONT_FAMILY_SANS_SERIF' | translate }}</option>
@@ -66,8 +91,13 @@
         </select>
       </div>
 
-      <div class="field">
-        <label for="pref-font-scale">{{ 'PREFERENCES.FONT_SCALE' | translate }}</label>
+      <div class="field" [class.is-overridden]="isOverridden('fontScale')">
+        <label for="pref-font-scale">
+          {{ 'PREFERENCES.FONT_SCALE' | translate }}
+          @if (isOverridden('fontScale')) {
+            <span class="override-flag">{{ 'PREFERENCES.OVERRIDDEN' | translate }}</span>
+          }
+        </label>
         <input id="pref-font-scale" type="number" formControlName="fontScale" min="0.8" max="2" step="0.1"
           [attr.aria-invalid]="invalid('fontScale') ? 'true' : null"
           [attr.aria-describedby]="invalid('fontScale') ? 'pref-font-scale-error' : 'pref-font-scale-hint'">
@@ -77,8 +107,13 @@
         }
       </div>
 
-      <div class="field">
-        <label for="pref-line-height">{{ 'PREFERENCES.LINE_HEIGHT' | translate }}</label>
+      <div class="field" [class.is-overridden]="isOverridden('lineHeight')">
+        <label for="pref-line-height">
+          {{ 'PREFERENCES.LINE_HEIGHT' | translate }}
+          @if (isOverridden('lineHeight')) {
+            <span class="override-flag">{{ 'PREFERENCES.OVERRIDDEN' | translate }}</span>
+          }
+        </label>
         <input id="pref-line-height" type="number" formControlName="lineHeight" min="1" max="3" step="0.1"
           [attr.aria-invalid]="invalid('lineHeight') ? 'true' : null"
           [attr.aria-describedby]="invalid('lineHeight') ? 'pref-line-height-error' : 'pref-line-height-hint'">

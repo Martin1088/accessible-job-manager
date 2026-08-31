@@ -27,6 +27,23 @@
   --color-skip-link-text: #fff;
   --color-text-muted: #475569;
 
+  /*
+   * DIN 5008 "correspondence" palette - the login page's stationery look,
+   * reused by the advisor screens and the user screens (see
+   * `styles/_correspondence.scss`, which only carries the font stacks now).
+   * Global so a component that adopts the look costs nothing per file.
+   */
+  --paper: #edf1f5;
+  --card: #ffffff;
+  --ink: #1a2233;
+  --ink-soft: #57667a;
+  --rule: #d3dbe4;
+  --accent: #b5432f;
+  --accent-deep: #7a2c1f;
+  --ok-bg: #e7f0e9;
+  --ok-border: #b9d3bf;
+  --ok-ink: #2c5338;
+
   --font-scale: 1;
   --line-height: 1.5;
 }
@@ -51,6 +68,17 @@ html[data-contrast='high'] {
   --color-skip-link-bg: #000;
   --color-skip-link-text: #fff;
   --color-text-muted: #000;
+
+  --paper: #ffffff;
+  --card: #ffffff;
+  --ink: #000000;
+  --ink-soft: #000000;
+  --rule: #000000;
+  --accent: #6e2a1e;
+  --accent-deep: #6e2a1e;
+  --ok-bg: #ffffff;
+  --ok-border: #1b5e20;
+  --ok-ink: #1b5e20;
 }
 
 html[data-contrast='high'] a,
@@ -78,6 +106,17 @@ html[data-contrast='dark'] {
   --color-skip-link-bg: #f2f2f2;
   --color-skip-link-text: #000;
   --color-text-muted: #a3aec0;
+
+  --paper: #10151f;
+  --card: #171e2b;
+  --ink: #e8edf4;
+  --ink-soft: #9baac2;
+  --rule: #2b3547;
+  --accent: #e2694f;
+  --accent-deep: #f0876f;
+  --ok-bg: #17251c;
+  --ok-border: #2f4a38;
+  --ok-ink: #9dd3ac;
 }
 
 /* Root font-size scaling so every rem-based measurement in this file scales with it,
