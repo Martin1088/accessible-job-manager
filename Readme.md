@@ -9,7 +9,7 @@
 [![Build](https://github.com/Martin1088/accessible-job-manager/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Martin1088/accessible-job-manager/actions/workflows/build.yml)
 [![Demo](https://github.com/Martin1088/accessible-job-manager/actions/workflows/demo-pages.yml/badge.svg)](https://github.com/Martin1088/accessible-job-manager/actions/workflows/demo-pages.yml)
 
-**Live demo:** <https://martin1088.github.io/accessible-job-manager/#/> — the full frontend running on GitHub Pages with in-memory demo data and no backend; use the demo bar to switch role and language.
+**[Live demo](https://martin1088.github.io/accessible-job-manager/#/)**
 
 **An accessible job application manager for blind and visually impaired users.** Screen reader
 operation is not a feature added on top here — it is the premise the architecture is
