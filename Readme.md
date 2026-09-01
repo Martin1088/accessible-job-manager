@@ -11,10 +11,6 @@
 
 **[Live demo](https://martin1088.github.io/accessible-job-manager/#/)**
 
-- Full frontend, GitHub Pages, no backend
-- In-memory demo data, nothing is stored
-- Demo bar: switch role (Applicant / Advisor / Reviewer) and language (DE / EN)
-
 **An accessible job application manager for blind and visually impaired users.** Screen reader
 operation is not a feature added on top here — it is the premise the architecture is
 built on.
