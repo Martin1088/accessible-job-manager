@@ -2,6 +2,7 @@ package de.samply.manager.services;
 
 import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.exception.ApiException;
+import de.samply.manager.jobimport.PostingPdfTextExtractor;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -35,16 +36,22 @@ public class JobPostingParserService {
 
     private static final int MAX_HTML_BYTES = 3_000_000;
     private static final int MAX_TEXT_CHARS = 8_000;
+    /** Below this, pasted text is a headline rather than a posting. */
+    private static final int MIN_TEXT_CHARS = 120;
     private static final int MAX_REDIRECTS = 5;
     private static final int MAX_LINKS = 60;
 
     private final JobPostingLlmClient llmClient;
     private final HttpClient httpClient;
     private final MessageSource messageSource;
+    private final PostingPdfTextExtractor pdfTextExtractor;
 
-    public JobPostingParserService(JobPostingLlmClient llmClient, MessageSource messageSource) {
+    public JobPostingParserService(JobPostingLlmClient llmClient,
+                                   MessageSource messageSource,
+                                   PostingPdfTextExtractor pdfTextExtractor) {
         this.llmClient = llmClient;
         this.messageSource = messageSource;
+        this.pdfTextExtractor = pdfTextExtractor;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -58,6 +65,50 @@ public class JobPostingParserService {
         URI uri = validate(rawUrl);
         String text = visibleText(fetchHtml(uri));
         return llmClient.extract(text);
+    }
+
+    /**
+     * The same extraction as {@link #overview}, on text the user pasted rather
+     * than text fetched from a URL.
+     *
+     * <p>This is the answer to a host we cannot read: aggregators answer 403 to
+     * every request from a server, and a posting behind a login cannot be
+     * fetched at all. Both are the same problem from here - no text - and a
+     * person looking at the page always has the text. Only the fetch is skipped;
+     * everything downstream is the path {@code overview} already takes, so the
+     * two cannot drift apart.
+     *
+     * <p>There is no text-equivalent of the full-chain extraction: that one
+     * follows links out of the page, which needs the page.
+     */
+    public JobPostingExtraction overviewFromText(String postingText) {
+        if (postingText == null || postingText.isBlank()) {
+            throw new ApiException.BadRequest(message("error.postingText.empty"));
+        }
+        String text = postingText.strip();
+        // A handful of words is a title, not a posting. Extracting from it would
+        // return a row of nulls that reads as a parser failure rather than as
+        // too little input, so it is refused with a reason instead.
+        if (text.length() < MIN_TEXT_CHARS) {
+            throw new ApiException.BadRequest(message("error.postingText.tooShort", MIN_TEXT_CHARS));
+        }
+        return llmClient.extract(truncateText(text));
+    }
+
+    /**
+     * The same extraction again, over a posting the user printed to PDF.
+     *
+     * <p>The boards that refuse a server are also the ones a person cannot copy
+     * text out of - Indeed suppresses selection, and a phone has no select-all -
+     * so {@link #overviewFromText} alone does not actually reach them. Print to
+     * PDF is the export every browser offers, and it is the same file the user
+     * wants archived against the posting anyway.
+     *
+     * <p>Joins {@code overviewFromText} rather than calling the model directly,
+     * so the length rules and the truncation stay in one place.
+     */
+    public JobPostingExtraction overviewFromPdf(byte[] pdf) {
+        return overviewFromText(pdfTextExtractor.extract(pdf));
     }
 
     /**

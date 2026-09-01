@@ -74,6 +74,16 @@ public abstract class ApiException extends RuntimeException {
         public BadRequest(String message, Integer upstreamStatus) {
             super(HttpStatus.BAD_REQUEST, message, upstreamStatus, null);
         }
+
+        /**
+         * Mirrors {@link BadGateway#BadGateway(String, Throwable)}: a rejection
+         * whose user-facing sentence is the same for several underlying causes
+         * keeps the cause, so a log still distinguishes them. A truncated upload
+         * and a file that is not a PDF at all both read as "could not be read".
+         */
+        public BadRequest(String message, Throwable cause) {
+            super(HttpStatus.BAD_REQUEST, message, null, cause);
+        }
     }
 
     public static final class UnsupportedMediaType extends ApiException {

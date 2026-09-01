@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -109,6 +110,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleNoHandler(Exception ex) {
         return body(HttpStatus.NOT_FOUND,
                 messageSource.getMessage("error.request.noHandler", null, Locale.ROOT));
+    }
+
+    /**
+     * An upload past {@code spring.servlet.multipart.max-file-size}. Thrown by
+     * the multipart parser before any controller runs, so the size checks in
+     * {@link de.samply.manager.jobimport.PostingPdfTextExtractor} never see it -
+     * without this it reaches the catch-all below and is reported to the user as
+     * a server fault, and logged as one, when it is their file that is too big.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadTooLarge(MaxUploadSizeExceededException ex) {
+        return body(HttpStatus.PAYLOAD_TOO_LARGE,
+                messageSource.getMessage("error.upload.tooLarge", null, Locale.ROOT));
     }
 
     @ExceptionHandler(Exception.class)

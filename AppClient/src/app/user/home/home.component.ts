@@ -1,12 +1,15 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ElementRef, HostListener, ViewChild, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService, UserMe } from '../../core/auth.service';
 import { Company, Gender } from '../../model/company';
+import { JobPostingImportStore } from '../../services/job-posting-import.store';
+import { normalizeJobUrl } from './job-url';
 
 interface JobPostingExtraction {
   title: string | null;
@@ -62,6 +65,27 @@ export class HomeComponent implements OnInit, OnDestroy {
   profileError = false;
 
   jobUrl = '';
+
+  /** Set when a paste was rewritten, so the field can say so rather than silently changing. */
+  urlCleaned = false;
+
+  /**
+   * Set when a paste held no link at all - the moment the user needs to be told
+   * the text path exists, since they have the posting text on the clipboard
+   * right then.
+   */
+  pastedTextWithoutUrl = false;
+
+  postingText = '';
+  searchingText = false;
+  textSearchError = false;
+  textSearchErrorMessage = '';
+
+  postingPdfName = '';
+  searchingPdf = false;
+  pdfSearchError = false;
+  pdfSearchErrorMessage = '';
+
   searchingJobPosting = false;
   jobSearchError = false;
   jobPosting: JobPostingExtraction | null = null;
@@ -89,7 +113,144 @@ export class HomeComponent implements OnInit, OnDestroy {
     name: 'fullChain', title: 'fullChain', location: 'fullChain',
   };
 
+  private readonly announcer = inject(LiveAnnouncer);
+  private readonly translate = inject(TranslateService);
+  private readonly importStore = inject(JobPostingImportStore);
+
+  /**
+   * Extraction from a PDF the user printed from the posting page.
+   *
+   * On success the file is held for the company form, which files it as the
+   * position's snapshot once the position exists. That replaces the URL path's
+   * Gotenberg re-fetch, which cannot work here for the same reason the
+   * extraction could not: a board that refuses this server refuses it whether
+   * the request comes from the parser or from Chromium.
+   */
+  onPostingPdfSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    // Cleared so picking the same file twice still raises `change` - a retry
+    // after a failed extraction is otherwise silently ignored.
+    input.value = '';
+    if (!file) return;
+
+    this.searchingPdf = true;
+    this.pdfSearchError = false;
+    this.pdfSearchErrorMessage = '';
+    this.postingPdfName = file.name;
+    this.jobPosting = null;
+    this.jobSearchError = false;
+    this.jobSearchErrorMessage = '';
+    this.textSearchError = false;
+    this.resetFullChainForTextPath();
+
+    const form = new FormData();
+    form.append('file', file);
+
+    this.http.post<JobPostingExtraction>('/api/posting/overview-pdf', form).subscribe({
+      next: (result) => {
+        this.jobPosting = result;
+        this.importStore.hold(file);
+        this.searchingPdf = false;
+        this.announcer.announce(this.translate.instant('HOME.PDF_EXTRACTED_ANNOUNCE'), 'polite');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.pdfSearchError = true;
+        this.pdfSearchErrorMessage = err.error?.message ?? '';
+        this.importStore.clear();
+        this.searchingPdf = false;
+      },
+    });
+  }
+
+  /**
+   * Neither text nor PDF can fill the full-chain column: that extraction
+   * follows links out of the fetched page, and there is no page here.
+   */
+  private resetFullChainForTextPath(): void {
+    this.fullChainResult = null;
+    this.fullChainError = false;
+    this.fullChainErrorMessage = '';
+    this.selectedSource = { name: 'overview', title: 'overview', location: 'overview' };
+  }
+
   constructor(private auth: AuthService, private router: Router, private http: HttpClient) {}
+
+  /**
+   * Rewrites a pasted share-sheet blob down to the link inside it.
+   *
+   * A phone share button produces a title line and the same URL twice; the
+   * whole thing reaches the backend as one string and fails URL parsing on the
+   * first space, which surfaces as "Malformed URL" and blames the user for a
+   * link that was fine.
+   *
+   * The default paste is allowed to stand whenever there is nothing to change,
+   * so undo history survives every ordinary paste. When the text holds no link
+   * at all, it is left alone too - that is posting text, and the flag steers
+   * the user to the path that takes it.
+   */
+  onJobUrlPaste(event: ClipboardEvent): void {
+    const pasted = event.clipboardData?.getData('text') ?? '';
+    if (!pasted.trim()) return;
+
+    this.urlCleaned = false;
+    this.pastedTextWithoutUrl = false;
+
+    const normalized = normalizeJobUrl(pasted);
+    if (!normalized) {
+      this.pastedTextWithoutUrl = true;
+      return;
+    }
+    if (normalized === pasted.trim()) return;
+
+    event.preventDefault();
+    this.jobUrl = normalized;
+    this.urlCleaned = true;
+    // The field's value changed without the user typing it, which is silent to
+    // a screen reader - the announcement is what makes the rewrite noticeable.
+    this.announcer.announce(this.translate.instant('HOME.URL_CLEANED_ANNOUNCE'), 'polite');
+  }
+
+  /** Any edit of the field retires the notices about the last paste. */
+  onJobUrlInput(): void {
+    this.urlCleaned = false;
+    this.pastedTextWithoutUrl = false;
+  }
+
+  /**
+   * Extraction from text the user pasted, for a posting the server cannot
+   * fetch. Only the overview column can be filled: the full-chain extraction
+   * follows links out of the page, so it has nothing to work from here.
+   */
+  searchFromText(): void {
+    const text = this.postingText.trim();
+    if (!text) return;
+
+    this.searchingText = true;
+    this.textSearchError = false;
+    this.textSearchErrorMessage = '';
+    this.jobPosting = null;
+    this.jobSearchError = false;
+    this.jobSearchErrorMessage = '';
+    this.pdfSearchError = false;
+    // The text path files no snapshot, so any PDF held from an earlier attempt
+    // must not be filed against the company this extraction goes on to create.
+    this.importStore.clear();
+    this.postingPdfName = '';
+    this.resetFullChainForTextPath();
+
+    this.http.post<JobPostingExtraction>('/api/posting/overview-text', { text }).subscribe({
+      next: (result) => {
+        this.jobPosting = result;
+        this.searchingText = false;
+      },
+      error: (err: HttpErrorResponse) => {
+        this.textSearchError = true;
+        this.textSearchErrorMessage = err.error?.message ?? '';
+        this.searchingText = false;
+      },
+    });
+  }
 
   ngOnDestroy(): void {
     this.releasePreviewObjectUrl();
@@ -138,6 +299,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.selectedSource = { name: 'fullChain', title: 'fullChain', location: 'fullChain' };
     this.snapshotValidateError = false;
     this.snapshotValidateErrorMessage = '';
+    // A URL search means the snapshot will be rendered from that URL, so a PDF
+    // held from an earlier attempt must not also be filed against the company.
+    this.importStore.clear();
+    this.postingPdfName = '';
+    this.pdfSearchError = false;
 
     this.searchingJobPosting = true;
     this.jobSearchError = false;
@@ -269,8 +435,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         contactLastName: fcPosition?.contactLastName ?? undefined,
         email: fcPosition?.email ?? undefined,
         // If neither extraction found a company website, fall back to the job
-        // posting URL the user searched for rather than leaving it blank.
-        website: fcPosition?.website ?? this.jobUrl.trim() ?? undefined,
+        // posting URL the user searched for rather than leaving it blank. `||`,
+        // not `??`: on the paste-the-text path there is no URL at all, and `??`
+        // would put an empty string in the field instead of leaving it unset.
+        website: (fcPosition?.website || this.jobUrl.trim()) || undefined,
         notes: fcPosition?.notes ?? undefined,
       }],
     };

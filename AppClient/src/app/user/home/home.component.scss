@@ -114,7 +114,8 @@ section {
     padding: 0.05rem 0.3rem;
   }
 
-  input {
+  input,
+  textarea {
     padding: 0.55rem 0.7rem;
     border: 1px solid var(--rule);
     border-radius: 2px;
@@ -122,6 +123,14 @@ section {
     color: var(--ink);
     font-family: inherit;
     font-size: 1rem;
+  }
+
+  textarea {
+    font-family: corr.$corr-serif;
+    line-height: 1.5;
+    // Vertical only: a textarea widened past its column would push the sheet
+    // into horizontal scroll.
+    resize: vertical;
   }
 }
 
@@ -164,6 +173,78 @@ section {
   line-height: 1.5;
   background: var(--color-alert-bg);
   color: var(--color-alert-text);
+}
+
+// Not everything routed through `.notice` is a failure. This one says the app
+// did something useful with what was pasted, so it takes the confirming
+// palette rather than the alert one.
+.notice--info {
+  border-color: var(--ok-border);
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+}
+
+// --- Hints -------------------------------------------------------
+
+.hint {
+  margin: 0 0 0.75rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+// Sits directly under the URL field to explain a value the user did not type.
+.hint--cleaned {
+  margin: 0;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--accent);
+}
+
+// --- Paste-the-text fallback -------------------------------------
+
+.text-fallback {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+
+  summary {
+    font-family: corr.$corr-mono;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+    // The marker is the only thing that says this opens; a 44px target keeps
+    // it thumb-sized on a phone without a wrapper element.
+    padding: 0.5rem 0;
+    min-block-size: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  > *:not(summary) { margin-top: 0.75rem; }
+
+  // Two ways in, each headed. The PDF one leads because it is the one that
+  // works where the text cannot even be selected.
+  .fallback-heading {
+    margin-top: 1.25rem;
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .fallback-heading:first-of-type { margin-top: 1rem; }
+}
+
+// Names the file an extraction was read from, under the upload button.
+.hint--file {
+  margin: 0;
+  font-style: italic;
 }
 
 // --- Extraction results --------------------------------------
@@ -328,6 +409,8 @@ h3 {
 // --- Focus: one ring for every control on the sheet ----
 
 .field input:focus-visible,
+.field textarea:focus-visible,
+.text-fallback summary:focus-visible,
 .btn-primary:focus-visible,
 .btn-secondary:focus-visible,
 .quick-nav a:focus-visible {

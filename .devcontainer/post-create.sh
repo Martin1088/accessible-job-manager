@@ -31,6 +31,12 @@ claude plugin marketplace add anthropics/claude-plugins-official || true
 # installed plugins produce no diff.
 claude plugin install typescript-lsp@claude-plugins-official --scope project
 
+# frontend-design is a skill-only plugin (no MCP server), so it adds nothing to
+# per-turn context - safe to activate for everyone. Registering the marketplace
+# above only clones the catalog; the skill does not load until the plugin is
+# actually installed.
+claude plugin install frontend-design@claude-plugins-official --scope project
+
 # chrome-devtools is deliberately NOT installed here: an MCP plugin keeps its
 # tool definitions in context every turn, used or not. Install it for the
 # session that needs it (`/plugin install chrome-devtools@claude-plugins-official`)

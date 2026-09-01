@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { Observable, finalize } from 'rxjs';
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { JobPostingImportStore } from '../../services/job-posting-import.store';
 import { containsName, isSameName, nameKeys } from './company-name-match';
 
 /** One already-saved company offered to the user, with its sites named. */
@@ -188,6 +189,7 @@ export class CompanyFormComponent implements OnInit {
     private router: Router,
     private translate: TranslateService,
     private http: HttpClient,
+    private importStore: JobPostingImportStore,
   ) {}
 
   ngOnInit(): void {
@@ -382,8 +384,12 @@ export class CompanyFormComponent implements OnInit {
       this.companyService.create(this.company).subscribe({
         next: (created) => {
           const positionId = created.positions?.[0]?.id;
-          if (this.sourceJobUrl && positionId) {
-            this.createSnapshot(positionId, this.sourceJobUrl);
+          // An uploaded PDF is reason enough on its own: the import screen's PDF
+          // path has no source URL at all, so gating only on `sourceJobUrl`
+          // would silently drop the snapshot in exactly the case it is the only
+          // copy that can be filed.
+          if (positionId && (this.sourceJobUrl || this.importStore.hasPending)) {
+            this.createSnapshot(positionId, this.sourceJobUrl ?? '');
           }
           this.router.navigate(['/companies']);
         },
@@ -401,7 +407,20 @@ export class CompanyFormComponent implements OnInit {
   // Best-effort: the company is already saved and the user has moved on by
   // the time this resolves, so failures here aren't surfaced — they'd just
   // mean no snapshot shows up under "View job posting" in the company list.
+  //
+  // A PDF the user uploaded on the import screen wins over rendering the URL:
+  // it only exists when the posting came in that way, which is precisely when
+  // the render would fail too — Gotenberg's Chromium fetches the URL from this
+  // server, so a board that answers 403 to the parser answers 403 to it as well.
   private createSnapshot(companyPositionId: number, url: string): void {
+    const uploaded = this.importStore.take();
+    if (uploaded) {
+      const form = new FormData();
+      form.append('file', uploaded);
+      const params = new HttpParams().set('companyPositionId', companyPositionId);
+      this.http.post('/api/posting/snapshot/upload', form, { params }).subscribe({ error: () => {} });
+      return;
+    }
     const params = new HttpParams().set('url', url).set('companyPositionId', companyPositionId);
     this.http.post('/api/posting/snapshot', null, { params }).subscribe({ error: () => {} });
   }

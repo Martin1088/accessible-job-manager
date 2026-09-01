@@ -10,8 +10,13 @@
         <div class="field job-import__field">
           <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+S' : 's' }}</kbd></label>
           <input id="job-url" name="job-url" type="url" #jobUrlInput [(ngModel)]="jobUrl"
+            (paste)="onJobUrlPaste($event)" (input)="onJobUrlInput()"
             [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"
+            [attr.aria-describedby]="urlCleaned ? 'job-url-cleaned' : null"
             [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+S' : 's'"/>
+          @if (urlCleaned) {
+            <p id="job-url-cleaned" class="hint hint--cleaned">{{ 'HOME.URL_CLEANED' | translate }}</p>
+          }
         </div>
         <div class="job-import-actions">
           <button type="button" class="btn-primary" [disabled]="!jobUrl.trim() || searchingJobPosting || searchingFullChain" (click)="searchJobPosting()">
@@ -25,6 +30,73 @@
         @if (snapshotValidateError) {
           <p role="alert" class="notice notice--error">{{ snapshotValidateErrorMessage || ('HOME.SNAPSHOT_VALIDATE_ERROR' | translate) }}</p>
         }
+
+        <!--
+          The way in for a posting this server cannot fetch: aggregators answer
+          403 to every request from a server, and a posting behind a login
+          cannot be reached at all. Both look the same from here - no text - and
+          the person reading the page always has the text.
+
+          A native <details> rather than a custom disclosure: it is keyboard
+          operable and announced as expanded/collapsed with no JS and no focus
+          management of our own. Forced open when a paste turned out to hold no
+          link, since that is exactly when this path is the answer.
+        -->
+        <details class="text-fallback"
+          [open]="pastedTextWithoutUrl || searchingText || textSearchError || searchingPdf || pdfSearchError">
+          <summary>{{ 'HOME.FALLBACK_SUMMARY' | translate }}</summary>
+
+          @if (pastedTextWithoutUrl) {
+            <p role="status" class="notice notice--info">{{ 'HOME.PASTED_TEXT_HINT' | translate }}</p>
+          }
+
+          <p class="hint">{{ 'HOME.FALLBACK_HELP' | translate }}</p>
+
+          <!--
+            The PDF comes first because it is the one that always works. On the
+            boards that block this server the text cannot be selected either -
+            Indeed suppresses selection, and a phone has no select-all - so
+            printing to PDF is the only export a person actually has. It is also
+            the file they want kept against the posting, so this upload doubles
+            as the snapshot the URL path renders through Gotenberg.
+          -->
+          <h3 class="fallback-heading">{{ 'HOME.PDF_FALLBACK_HEADING' | translate }}</h3>
+          <p id="posting-pdf-help" class="hint">{{ 'HOME.PDF_FALLBACK_HELP' | translate }}</p>
+
+          <button type="button" class="btn-secondary" aria-describedby="posting-pdf-help"
+            [disabled]="searchingPdf" (click)="postingPdfInput.click()">
+            <span aria-hidden="true">↑</span>
+            {{ (searchingPdf ? 'HOME.PDF_FALLBACK_READING' : 'HOME.PDF_FALLBACK_ACTION') | translate }}
+          </button>
+          <input #postingPdfInput type="file" accept=".pdf,application/pdf"
+            style="display:none" tabindex="-1" aria-hidden="true"
+            (change)="onPostingPdfSelected($event)">
+
+          @if (postingPdfName && !pdfSearchError) {
+            <p class="hint hint--file">{{ 'HOME.PDF_FALLBACK_SELECTED' | translate: { name: postingPdfName } }}</p>
+          }
+          @if (pdfSearchError) {
+            <p role="alert" class="notice notice--error">{{ pdfSearchErrorMessage || ('HOME.PDF_FALLBACK_ERROR' | translate) }}</p>
+          }
+
+          <h3 class="fallback-heading">{{ 'HOME.TEXT_FALLBACK_HEADING' | translate }}</h3>
+          <p id="posting-text-help" class="hint">{{ 'HOME.TEXT_FALLBACK_HELP' | translate }}</p>
+
+          <div class="field">
+            <label for="posting-text">{{ 'HOME.TEXT_FALLBACK_LABEL' | translate }}</label>
+            <textarea id="posting-text" name="posting-text" rows="8"
+              [(ngModel)]="postingText" aria-describedby="posting-text-help"></textarea>
+          </div>
+
+          <button type="button" class="btn-secondary"
+            [disabled]="!postingText.trim() || searchingText" (click)="searchFromText()">
+            {{ (searchingText ? 'HOME.SEARCHING' : 'HOME.TEXT_FALLBACK_ACTION') | translate }}
+          </button>
+
+          @if (textSearchError) {
+            <p role="alert" class="notice notice--error">{{ textSearchErrorMessage || ('HOME.TEXT_FALLBACK_ERROR' | translate) }}</p>
+          }
+        </details>
 
         <div class="job-result-columns">
           <div>
