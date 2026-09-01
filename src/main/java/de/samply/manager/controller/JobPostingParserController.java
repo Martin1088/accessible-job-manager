@@ -2,6 +2,7 @@ package de.samply.manager.controller;
 
 import de.samply.manager.dto.DocumentDto;
 import de.samply.manager.dto.JobPostingExtraction;
+import de.samply.manager.dto.PostingTextRequest;
 import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.jobimport.extractor.ExtractionDebugReport;
 import de.samply.manager.jobimport.extractor.JobPosting;
@@ -17,7 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +36,49 @@ public class JobPostingParserController {
     @PostMapping("/overview")
     public JobPostingExtraction parse(@RequestParam("url") String url) {
         return jobPostingParserService.overview(url);
+    }
+
+    /**
+     * The overview extraction over text the caller pasted, for a posting this
+     * server cannot fetch - an aggregator that blocks automated access, or a
+     * page behind a login. No full-chain equivalent exists: that extraction
+     * follows the page's own links.
+     */
+    @PostMapping("/overview-text")
+    public JobPostingExtraction parseText(@RequestBody PostingTextRequest request) {
+        return jobPostingParserService.overviewFromText(request.text());
+    }
+
+    /**
+     * The overview extraction over a posting the caller printed to PDF.
+     *
+     * <p>The boards that block this server are also the ones a person cannot
+     * select text on, so pasting text does not actually reach them; printing to
+     * PDF does. Nothing is stored here - the position it would be filed against
+     * does not exist yet at import time - so the same file is sent again to
+     * {@code /snapshot/upload} once the company has been created.
+     */
+    @PostMapping("/overview-pdf")
+    public JobPostingExtraction parsePdf(@RequestParam("file") MultipartFile file) throws IOException {
+        return jobPostingParserService.overviewFromPdf(file.getBytes());
+    }
+
+    /**
+     * Files a PDF the caller supplied as the position's posting snapshot,
+     * where {@code POST /snapshot} renders one from the URL instead. Same
+     * document either way; only the source of the bytes differs.
+     */
+    @PostMapping("/snapshot/upload")
+    @ResponseStatus(HttpStatus.CREATED)
+    public DocumentDto uploadSnapshot(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("companyPositionId") Long companyPositionId,
+            @RequestParam(value = "label", defaultValue = "Job posting snapshot") String label,
+            @RequestParam(value = "language", defaultValue = "GERMAN") Language language,
+            @AuthenticationPrincipal OidcUser user) throws IOException {
+
+        return DocumentDto.from(jobPostingSnapshotService.saveUploaded(
+                file.getBytes(), file.getOriginalFilename(), companyPositionId, label, language, user.getSubject()));
     }
 
     /**

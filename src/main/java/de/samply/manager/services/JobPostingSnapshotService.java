@@ -133,9 +133,29 @@ public class JobPostingSnapshotService {
 
     public Document save(String rawUrl, Long companyPositionId, String label, Language language, String userId) {
         CompanyPosition position = findOwnedPosition(companyPositionId, userId);
+        return store(snapshotToPdf(rawUrl), "job-posting-snapshot.pdf", position, label, language, userId);
+    }
 
-        byte[] pdf = snapshotToPdf(rawUrl);
+    /**
+     * Stores a PDF of the posting that the caller supplied, instead of one this
+     * server rendered.
+     *
+     * <p>Needed because the render path cannot reach every posting: Gotenberg's
+     * Chromium fetches the URL from this server, so a board that answers 403 to
+     * a server blocks the snapshot for exactly the same reason it blocks the
+     * extraction. A posting the user printed from their own browser is the copy
+     * that exists in those cases - and it is a truer record besides, being the
+     * page as the applicant actually saw it.
+     */
+    public Document saveUploaded(byte[] pdf, String filename, Long companyPositionId,
+                                 String label, Language language, String userId) {
+        CompanyPosition position = findOwnedPosition(companyPositionId, userId);
+        return store(pdf, filename, position, label, language, userId);
+    }
 
+    /** The half of a snapshot that is the same however the PDF was obtained. */
+    private Document store(byte[] pdf, String filename, CompanyPosition position,
+                           String label, Language language, String userId) {
         String key = userId + "/" + DocumentType.JOB_POSTING_SNAPSHOT.name().toLowerCase()
                 + "/" + UUID.randomUUID() + "." + DocumentType.JOB_POSTING_SNAPSHOT.getExtension();
         storageService.upload(key, new ByteArrayInputStream(pdf), pdf.length,
@@ -146,7 +166,7 @@ public class JobPostingSnapshotService {
                 .type(DocumentType.JOB_POSTING_SNAPSHOT)
                 .language(language)
                 .label(label)
-                .filename("job-posting-snapshot.pdf")
+                .filename(filename)
                 .mimeType(DocumentType.JOB_POSTING_SNAPSHOT.getAllowedMime())
                 .storageKey(key)
                 .companyPosition(position)
