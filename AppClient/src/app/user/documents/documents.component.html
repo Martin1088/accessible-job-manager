@@ -11,12 +11,12 @@
   </div>
 
   @if (errorMessage) {
-    <p role="alert" class="error">{{ errorMessage }}</p>
+    <p role="alert" class="notice notice--error">{{ errorMessage }}</p>
   }
 
   @if (showUploadForm) {
     <section class="upload-form" aria-labelledby="upload-heading">
-      <h2 id="upload-heading">{{ (editingId ? 'DOCUMENTS.EDIT_TEMPLATE_HEADING' : 'DOCUMENTS.NEW_TEMPLATE_HEADING') | translate }}</h2>
+      <h2 id="upload-heading" class="section-tab">{{ (editingId ? 'DOCUMENTS.EDIT_TEMPLATE_HEADING' : 'DOCUMENTS.NEW_TEMPLATE_HEADING') | translate }}</h2>
       @if (!editingId) {
         <p class="upload-filename">{{ 'DOCUMENTS.FILE_LABEL' | translate }} <strong>{{ pendingFile?.name }}</strong></p>
       }
@@ -102,7 +102,7 @@
   </div>
 
   <section aria-labelledby="templates-heading">
-    <h2 id="templates-heading">{{ 'DOCUMENTS.TEMPLATES_HEADING' | translate }}</h2>
+    <h2 id="templates-heading" class="section-tab">{{ 'DOCUMENTS.TEMPLATES_HEADING' | translate }}</h2>
     <app-data-table
       caption="DOCUMENTS.TABLE_CAPTION"
       [columns]="columns"
@@ -114,7 +114,7 @@
 
   <section aria-labelledby="documents-heading">
     <div class="page-header">
-      <h2 id="documents-heading">{{ 'DOCUMENTS.DOCUMENTS_HEADING' | translate }}</h2>
+      <h2 id="documents-heading" class="section-tab">{{ 'DOCUMENTS.DOCUMENTS_HEADING' | translate }}</h2>
       <button type="button" class="btn-upload" (click)="pdfInput.click()" [disabled]="uploading">
         <span aria-hidden="true">↑</span> {{ (uploading ? 'DOCUMENTS.UPLOADING' : 'DOCUMENTS.UPLOAD_PDF') | translate }}
       </button>

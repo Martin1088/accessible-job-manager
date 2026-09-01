@@ -56,9 +56,15 @@ tested it in German. Adding a key to only `en.json` reproduces that bug.
   branch in the template with `@switch` on the raw value and translate each
   case, rather than resolving the final string in TypeScript — see
   `login.component.html`'s handling of the `error` query param.
-- A person's name or the product name (`Job Manager`, `Martin Jurk`) is not
-  a translation key — it doesn't change per locale. Check an existing key
-  first (e.g. `HOME.TITLE`) before assuming everything needs one.
+- A person's name or the product name (`Job Application Manager`,
+  `Martin Jurk`) is not a translation key — it doesn't change per locale, and
+  the value is byte-identical in all three files. It still *lives* in
+  `LOGIN.TITLE` / `HOME.TITLE`, so read those rather than hardcoding the
+  string: one edit renames the product everywhere. German compounds it with
+  Durchkopplung (`Job-Application-Manager-Dashboard`), Dutch hyphenates only
+  the appended noun (`Job Application Manager-dashboard`) — that is spelling,
+  not translation. Check an existing key first before assuming everything
+  needs one.
 - Reuse this app's own established vocabulary for a concept instead of
   inventing new wording — role names in particular already have translated
   labels (`PROFILE.ROLE_USER/ROLE_ADVISOR/ROLE_REVIEWER`); a new feature

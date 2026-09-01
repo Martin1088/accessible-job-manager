@@ -13,9 +13,16 @@ export const DEMO_MODE = new InjectionToken<boolean>('DEMO_MODE', {
   factory: () => false,
 });
 
-/** What the demo bar is allowed to do. Implemented in the demo build only. */
+/** What the demo bar and the login page are allowed to do. Implemented in the demo build only. */
 export interface DemoControls {
-  readonly role: Signal<DemoRole>;
+  /** `null` until the visitor has entered through the login letter. */
+  readonly role: Signal<DemoRole | null>;
+  /**
+   * The seeded person behind each role, by name only. The login letter greets
+   * visitors with real names ("Enter as Sabine Vogt") without importing the
+   * seed tree - the data crosses over here, inside the demo-only factory.
+   */
+  readonly people: Readonly<Record<DemoRole, { readonly name: string }>>;
   /** Switches the active person and lands on that role's home route. */
   switchTo(role: DemoRole): void;
   /** Back to the seed data. */

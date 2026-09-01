@@ -1,157 +1,287 @@
+@use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
+
+// Same DIN 5008 stationery as the login page, the advisor screens and the rest
+// of the user screens. See `styles/_correspondence.scss`.
+//
+// This page is the handbook enclosed with the letter, so it is the one screen
+// set as a bound document: a numbered register at the front, numbered sections
+// behind it. The numbering is not decoration - the register counts what this
+// account actually contains, because the advisor and reviewer sections are
+// rendered only for the roles the caller holds, and both counters walk the same
+// conditionally-rendered DOM order. An advisor sees a §5 that a plain user has
+// no number for at all.
+:host { display: block; }
+
+// Prose measure, not the global 860px `main` - this is the only screen that is
+// mostly reading. `padding-bottom` leaves room under the last section so a
+// fragment jump doesn't land flush against the viewport floor.
 main {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 1rem 4rem;
+  max-width: 760px;
+  padding-bottom: 4rem;
+}
+
+// --- Shared voices ----------------------------------------------------
+
+// The monospace label voice.
+.role-banner__label,
+.role-chip,
+.role-banner__jump,
+.guide-toc__heading,
+.guide-sections h3,
+.shortcut-note,
+kbd {
+  font-family: corr.$corr-mono;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+// The serif body voice.
+h1,
+.guide-intro,
+.guide-toc a,
+.guide-sections :is(h2, p, li),
+.shortcut-list dd {
+  font-family: corr.$corr-serif;
+  color: var(--ink);
+}
+
+// --- Masthead --------------------------------------------------------
+
+h1 {
+  margin: 0 0 0.75rem;
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.25;
 }
 
 .guide-intro {
-  font-size: 1.05rem;
-  color: #374151;
-  max-width: 62ch;
   margin: 0 0 1.5rem;
+  max-width: 62ch;
+  font-size: 1.02rem;
+  line-height: 1.55;
 }
 
-/* Signature element: this page reflects the roles actually on the signed-in
-   account, and offers a direct jump to the dashboard section(s) that apply. */
+// --- Role banner ---------------------------------------------------
+// The franking strip: who this copy of the handbook was issued to. Square
+// stamps in ink, not rounded chips - a pill reads as a tag, a stamp reads as
+// something applied to a document.
+
 .role-banner {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem;
-  background: #eef4ff;
-  border: 1px solid #cfe0ff;
-  border-radius: 8px;
-  padding: 0.9rem 1.1rem;
   margin-bottom: 1.75rem;
+  padding: 0.8rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
 }
 
 .role-banner__label {
-  font-weight: 600;
-  color: #1a1a2e;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
 }
 
 .role-chip {
-  background: #005fcc;
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
   padding: 0.25rem 0.6rem;
-  border-radius: 999px;
+  background: var(--ink);
+  color: var(--card);
+  border-radius: 2px;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
 }
 
 .role-banner__jump {
   margin-left: auto;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #005fcc;
+  font-size: 0.7rem;
+  color: var(--ink);
   text-decoration: none;
+  border-bottom: 1px solid var(--rule);
 
-  &:hover { text-decoration: underline; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; border-radius: 2px; }
+  &:hover {
+    color: var(--accent-deep);
+    border-bottom-color: var(--accent);
+  }
 }
+
+// --- Register (table of contents) ----------------------------------
 
 .guide-toc {
   margin-bottom: 2.5rem;
+  padding: 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
 
   &__heading {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-    margin: 0 0 0.6rem;
+    margin: 0 0 0.8rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
   }
 
   ul {
+    counter-reset: guide-entry;
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 0.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
   }
 
-  a {
-    display: block;
-    padding: 0.65rem 0.9rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    color: #1a1a2e;
-    font-size: 0.88rem;
-    font-weight: 500;
-    text-decoration: none;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    transition: border-color 0.15s, box-shadow 0.15s;
+  li { counter-increment: guide-entry; }
 
-    &:hover { border-color: #005fcc; box-shadow: 0 2px 8px rgba(0, 95, 204, 0.12); }
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-left-width: 3px;
+    border-radius: 2px;
+    font-size: 0.95rem;
+    text-decoration: none;
+
+    // The entry number, in the label voice so it reads as apparatus rather
+    // than as part of the section title.
+    &::before {
+      content: counter(guide-entry) '.';
+      flex: none;
+      font-family: corr.$corr-mono;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    &:hover {
+      background: var(--card);
+      border-left-color: var(--accent);
+    }
   }
 }
 
+// --- Sections ------------------------------------------------------
+// Each one a sheet, headed by the same number the register gave it.
+
+.guide-sections {
+  counter-reset: guide-section;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 .guide-sections section {
-  margin-bottom: 2.5rem;
+  counter-increment: guide-section;
+  padding: 1.5rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  // Clears the fragment jump so a heading doesn't sit flush against the
+  // viewport edge when a register entry is followed.
   scroll-margin-top: 1rem;
 
   h2 {
-    font-size: 1.3rem;
-    color: #1a1a2e;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 0.4rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
     margin: 0 0 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+    font-weight: 400;
+    font-size: 1.3rem;
+
+    &::before {
+      content: counter(guide-section) '.';
+      flex: none;
+      font-family: corr.$corr-mono;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
   }
 
   h3 {
-    font-size: 1rem;
-    color: #1a1a2e;
-    margin: 1.25rem 0 0.5rem;
+    margin: 1.5rem 0 0.6rem;
+    font-size: 0.72rem;
   }
 
   p {
-    color: #374151;
-    max-width: 68ch;
     margin: 0 0 0.75rem;
+    max-width: 66ch;
+    font-size: 0.97rem;
+    line-height: 1.6;
   }
 
   ul {
     margin: 0 0 0.75rem 1.25rem;
-    color: #374151;
 
-    li { margin-bottom: 0.35rem; }
+    li {
+      margin-bottom: 0.35rem;
+      font-size: 0.97rem;
+      line-height: 1.55;
+    }
   }
 }
+
+// --- Keyboard shortcuts --------------------------------------------
 
 .shortcut-list {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.5rem 1rem;
-  align-items: center;
-  margin: 0.75rem 0;
+  gap: 0.5rem 1.25rem;
+  align-items: baseline;
+  margin: 0.75rem 0 1rem;
 
-  .shortcut-row {
-    display: contents;
+  .shortcut-row { display: contents; }
+
+  dt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0;
   }
 
-  dt { margin: 0; }
-  dd { margin: 0; color: #374151; }
+  dd {
+    margin: 0;
+    font-size: 0.95rem;
+  }
 }
 
 kbd {
   display: inline-block;
-  font-size: 0.75rem;
-  font-family: inherit;
-  color: #1a1a2e;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 0.15rem 0.5rem;
+  padding: 0.15rem 0.45rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--ink);
   line-height: 1.4;
 }
 
 .shortcut-note {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+// --- Focus: one ring for every control on the sheet ----------------
+
+a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@include bp.mobile {
+  .guide-toc,
+  .guide-sections section { padding: 1.1rem; }
+
+  // The jump link stops being a right-aligned trailer once the banner wraps.
+  .role-banner__jump { margin-left: 0; }
 }

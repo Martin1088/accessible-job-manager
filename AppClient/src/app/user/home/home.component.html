@@ -1,19 +1,20 @@
 <main id="main-content" tabindex="-1">
   <h1>{{ 'HOME.TITLE' | translate }}</h1>
 
-  <!-- Job posting import -->
+  <!-- Job posting import - the primary entry point, given a headline sheet. -->
   @if (profile) {
-    <section aria-labelledby="job-import-heading">
-      <h2 id="job-import-heading">{{ 'HOME.JOB_IMPORT_HEADING' | translate }}</h2>
+    <section class="job-import" aria-labelledby="job-import-heading">
+      <h2 id="job-import-heading" class="section-tab">{{ 'HOME.JOB_IMPORT_HEADING' | translate }}</h2>
+      <p class="job-import__lead">{{ 'HOME.JOB_IMPORT_LEAD' | translate }}</p>
       <div class="job-import-card">
-        <div class="field">
+        <div class="field job-import__field">
           <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+S' : 's' }}</kbd></label>
           <input id="job-url" name="job-url" type="url" #jobUrlInput [(ngModel)]="jobUrl"
             [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"
             [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+S' : 's'"/>
         </div>
         <div class="job-import-actions">
-          <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || searchingJobPosting || searchingFullChain" (click)="searchJobPosting()">
+          <button type="button" class="btn-primary" [disabled]="!jobUrl.trim() || searchingJobPosting || searchingFullChain" (click)="searchJobPosting()">
             {{ ((searchingJobPosting || searchingFullChain) ? 'HOME.SEARCHING' : 'HOME.SEARCH') | translate }}
           </button>
           <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || validatingSnapshot" (click)="previewSnapshot()">
@@ -22,14 +23,14 @@
         </div>
 
         @if (snapshotValidateError) {
-          <p role="alert">{{ snapshotValidateErrorMessage || ('HOME.SNAPSHOT_VALIDATE_ERROR' | translate) }}</p>
+          <p role="alert" class="notice notice--error">{{ snapshotValidateErrorMessage || ('HOME.SNAPSHOT_VALIDATE_ERROR' | translate) }}</p>
         }
 
         <div class="job-result-columns">
           <div>
             <h3>{{ 'HOME.JOB_RESULT_OVERVIEW_HEADING' | translate }}</h3>
             @if (jobSearchError) {
-              <p role="alert">{{ jobSearchErrorMessage || ('HOME.JOB_SEARCH_ERROR' | translate) }}</p>
+              <p role="alert" class="notice notice--error">{{ jobSearchErrorMessage || ('HOME.JOB_SEARCH_ERROR' | translate) }}</p>
             }
             @if (jobPosting) {
               <dl class="job-result">
@@ -48,7 +49,7 @@
           <div>
             <h3>{{ 'HOME.JOB_RESULT_FULL_CHAIN_HEADING' | translate }}</h3>
             @if (fullChainError) {
-              <p role="alert">{{ fullChainErrorMessage || ('HOME.FULL_CHAIN_ERROR' | translate) }}</p>
+              <p role="alert" class="notice notice--error">{{ fullChainErrorMessage || ('HOME.FULL_CHAIN_ERROR' | translate) }}</p>
             }
             @if (fullChainResult) {
               <dl class="job-result">
@@ -130,12 +131,12 @@
   }
 
   @if (profileError) {
-    <p role="alert">{{ 'HOME.PROFILE_ERROR' | translate }}</p>
+    <p role="alert" class="notice notice--error">{{ 'HOME.PROFILE_ERROR' | translate }}</p>
   }
 
   <!-- Quick navigation -->
   <section aria-labelledby="nav-heading">
-    <h2 id="nav-heading">{{ 'HOME.NAV_HEADING' | translate }}</h2>
+    <h2 id="nav-heading" class="section-tab">{{ 'HOME.NAV_HEADING' | translate }}</h2>
     <ul class="quick-nav" role="list">
       <li>
         <a routerLink="/companies">

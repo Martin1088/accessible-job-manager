@@ -24,6 +24,13 @@ export class DemoAsset {
  */
 export const OUT_OF_SCOPE = Symbol('out of scope in the demo');
 
+/**
+ * Nobody has entered the demo yet. Surfaces as a 401, which is exactly what the
+ * real backend answers an unauthenticated API request with - so the auth guard
+ * redirects to `/login` and the demo starts on the login letter.
+ */
+export const UNAUTHENTICATED = Symbol('no role picked yet');
+
 export interface DemoRequest {
   readonly method: string;
   /** Path only - the query string is parsed into `query`. */
@@ -63,17 +70,20 @@ export function resolve(method: string, path: string): { handle: Handler; params
 const SAMPLE_PDF = new DemoAsset('demo/anschreiben-muster.pdf');
 
 // ---------------------------------------------------------------------------
-// Identity. There is no login in the demo - the role switcher sets `db.role`
-// and every guard and every nav block in the shell follows from this response.
+// Identity. There is no real sign-in in the demo - the login letter and the
+// role switcher set `db.role`, and every guard and every nav block in the
+// shell follows from this response.
 // ---------------------------------------------------------------------------
 
 route('GET', '/api/me', (_req, db) => {
+  const role = db.role();
+  if (role === null) return UNAUTHENTICATED;
   const profile = db.profile();
   return {
     sub: profile.userId,
     name: profile.name,
     email: profile.email,
-    roles: PEOPLE[db.role()].roles,
+    roles: PEOPLE[role].roles,
   };
 });
 

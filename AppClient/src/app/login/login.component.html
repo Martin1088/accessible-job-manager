@@ -1,88 +1,98 @@
 <main id="main-content" tabindex="-1">
-  <div class="login-layout">
+  <div class="login-page">
 
-    <div class="brand">
-      <!-- Decorative: the h1 text below it already gives the accessible name. -->
-      <img class="brand__logo" src="/juke.png" alt="" width="480" height="480" />
-      <h1 class="brand__title">{{ 'LOGIN.TITLE' | translate }}</h1>
-      <p class="brand__tagline">{{ 'LOGIN.TAGLINE' | translate }}</p>
+    <div class="masthead">
+      <img class="masthead__logo" src="juke.png" alt="" width="480" height="480" />
+      <h1 class="masthead__title">{{ 'LOGIN.TITLE' | translate }}</h1>
     </div>
 
-    <div class="letter">
-      <!--
-        DIN 5008 fold marks - real business letters carry two small unlabeled
-        tick marks on the page edge so the sheet lines up in a C6/5 window
-        envelope when folded. Positions match FIRST_FOLD_MARK_MM (87mm) and
-        SECOND_FOLD_MARK_MM (192mm) of a 297mm page in StyleSettings.java -
-        the same geometry this app's own cover-letter generator prints.
-        Decorative only.
-      -->
-      <span class="fold-mark fold-mark--upper" aria-hidden="true"></span>
-      <span class="fold-mark fold-mark--lower" aria-hidden="true"></span>
+    @if (error) {
+      <p role="alert" class="error">
+        @switch (error) {
+          @case ('wrong_role') { {{ 'LOGIN.ERROR_WRONG_ROLE' | translate }} }
+          @case ('access_denied') { {{ 'LOGIN.ERROR_ACCESS_DENIED' | translate }} }
+          @default { {{ 'LOGIN.ERROR_GENERIC' | translate: { code: error } }} }
+        }
+      </p>
+    }
 
-      <!-- The 24.1mm writing-area margin from StyleSettings.din5008FormB(). -->
-      <span class="margin-guide" aria-hidden="true">
-        <span class="margin-guide__label">24.1mm</span>
-      </span>
-
-      @if (error) {
-        <p role="alert" class="error">
-          @switch (error) {
-            @case ('wrong_role') { {{ 'LOGIN.ERROR_WRONG_ROLE' | translate }} }
-            @case ('access_denied') { {{ 'LOGIN.ERROR_ACCESS_DENIED' | translate }} }
-            @default { {{ 'LOGIN.ERROR_GENERIC' | translate: { code: error } }} }
-          }
-        </p>
-      }
-
+    <section class="sign-in" aria-labelledby="sign-in-heading">
       <h2 id="sign-in-heading" class="section-label">{{ 'LOGIN.SIGN_IN_HEADING' | translate }}</h2>
 
-      <nav aria-labelledby="sign-in-heading">
-        <ul role="list" class="login-options login-options--primary">
-          <li>
-            <button type="button" (click)="loginAsUser()" class="btn-primary">
-              {{ 'LOGIN.CONTINUE_AS_USER' | translate }}
-            </button>
-          </li>
-        </ul>
+      @if (demoMode) {
+        <p class="sign-in__lead">{{ 'LOGIN.DEMO_BODY' | translate }}</p>
+        <button type="button" class="btn-primary persona-btn" (click)="enterDemo('USER')">
+          <span class="persona-btn__name">{{ personas[0].name }}</span>
+          <span class="persona-btn__role">{{ 'DEMO.ROLE_USER' | translate }}</span>
+        </button>
+      } @else {
+        <button type="button" class="btn-primary" (click)="loginAsUser()">
+          {{ 'LOGIN.CONTINUE_AS_USER' | translate }}
+        </button>
+      }
+    </section>
 
-        <div role="group" aria-labelledby="other-roles-heading" class="other-roles">
-          <p id="other-roles-heading" class="section-label">{{ 'LOGIN.OTHER_ROLES' | translate }}</p>
-          <ul role="list" class="login-options login-options--secondary">
-            <li>
-              <button type="button" (click)="loginAsAdvisor()" class="btn-secondary">
-                {{ 'LOGIN.CONTINUE_AS_ADVISOR' | translate }}
-              </button>
-            </li>
-            <li>
-              <button type="button" (click)="loginAsReviewer()" class="btn-secondary">
-                {{ 'LOGIN.CONTINUE_AS_REVIEWER' | translate }}
-              </button>
-            </li>
-          </ul>
-        </div>
-      </nav>
-    </div>
+    <section class="intro" aria-labelledby="intro-heading">
+      <h2 id="intro-heading" class="section-label">{{ 'LOGIN.INTRO_HEADING' | translate }}</h2>
+      <p class="intro__lede">{{ 'LOGIN.INTRO_LEDE' | translate }}</p>
 
-    <div class="enclosure">
-      <p class="enclosure__label">{{ 'LOGIN.ENCLOSURE_LABEL' | translate }}</p>
-      <h2>{{ 'LOGIN.WHATS_INSIDE' | translate }}</h2>
-      <img class="enclosure__screenshot"
-        src="/home-preview.png"
-        [attr.alt]="'LOGIN.SCREENSHOT_ALT' | translate"
-        width="1919" height="878" />
-      <p class="enclosure__caption">{{ 'LOGIN.CAPTION' | translate }}</p>
-      <p class="enclosure__credit">
-        {{ 'LOGIN.BUILT_BY' | translate }}
-        <a href="https://martin1088.github.io/martin1088/" target="_blank" rel="noopener">
-          Martin Jurk<span class="sr-only"> ({{ 'LOGIN.OPENS_NEW_TAB' | translate }})</span>
-        </a>
-        —
-        <a href="https://github.com/Martin1088/accessible-job-manager" target="_blank" rel="noopener">
-          {{ 'LOGIN.SOURCE_ON_GITHUB' | translate }}<span class="sr-only"> ({{ 'LOGIN.OPENS_NEW_TAB' | translate }})</span>
-        </a>
-      </p>
-    </div>
+      <article class="topic">
+        <h3>{{ 'LOGIN.INTRO_OVERVIEW_HEADING' | translate }}</h3>
+        <p>{{ 'LOGIN.INTRO_OVERVIEW_BODY' | translate }}</p>
+        <img class="topic__shot" src="preview-dashboard.png"
+          [attr.alt]="'LOGIN.INTRO_OVERVIEW_ALT' | translate" width="1656" height="828" />
+      </article>
+
+      <article class="topic">
+        <h3>{{ 'LOGIN.INTRO_COMPANIES_HEADING' | translate }}</h3>
+        <p>{{ 'LOGIN.INTRO_COMPANIES_BODY' | translate }}</p>
+        <img class="topic__shot" src="preview-companies.png"
+          [attr.alt]="'LOGIN.INTRO_COMPANIES_ALT' | translate" width="1720" height="1280" />
+      </article>
+
+      <article class="topic">
+        <h3>{{ 'LOGIN.INTRO_DOCUMENTS_HEADING' | translate }}</h3>
+        <p>{{ 'LOGIN.INTRO_DOCUMENTS_BODY' | translate }}</p>
+        <img class="topic__shot" src="preview-documents.png"
+          [attr.alt]="'LOGIN.INTRO_DOCUMENTS_ALT' | translate" width="1720" height="1280" />
+      </article>
+    </section>
+
+    <section class="other-roles" aria-labelledby="other-roles-heading">
+      <h2 id="other-roles-heading" class="section-label">{{ 'LOGIN.OTHER_ROLES' | translate }}</h2>
+      <p class="other-roles__lead">{{ 'LOGIN.OTHER_ROLES_LEAD' | translate }}</p>
+
+      <div class="other-roles__options">
+        @if (demoMode) {
+          <button type="button" class="btn-secondary persona-btn" (click)="enterDemo('ADVISOR')">
+            <span class="persona-btn__name">{{ personas[1].name }}</span>
+            <span class="persona-btn__role">{{ 'DEMO.ROLE_ADVISOR' | translate }}</span>
+          </button>
+          <button type="button" class="btn-secondary persona-btn" (click)="enterDemo('REVIEWER')">
+            <span class="persona-btn__name">{{ personas[2].name }}</span>
+            <span class="persona-btn__role">{{ 'DEMO.ROLE_REVIEWER' | translate }}</span>
+          </button>
+        } @else {
+          <button type="button" class="btn-secondary" (click)="loginAsAdvisor()">
+            {{ 'LOGIN.CONTINUE_AS_ADVISOR' | translate }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="loginAsReviewer()">
+            {{ 'LOGIN.CONTINUE_AS_REVIEWER' | translate }}
+          </button>
+        }
+      </div>
+    </section>
+
+    <p class="credit">
+      {{ 'LOGIN.BUILT_BY' | translate }}
+      <a href="https://martin1088.github.io/martin1088/" target="_blank" rel="noopener">
+        Martin Jurk<span class="sr-only"> ({{ 'LOGIN.OPENS_NEW_TAB' | translate }})</span>
+      </a>
+      —
+      <a href="https://github.com/Martin1088/accessible-job-manager" target="_blank" rel="noopener">
+        {{ 'LOGIN.SOURCE_ON_GITHUB' | translate }}<span class="sr-only"> ({{ 'LOGIN.OPENS_NEW_TAB' | translate }})</span>
+      </a>
+    </p>
 
   </div>
 </main>

@@ -2,10 +2,10 @@
   <h1>{{ 'COMPANIES.TITLE' | translate }}</h1>
 
   @if (errorMessage) {
-    <div role="alert">{{ errorMessage }}</div>
+    <div role="alert" class="notice notice--error">{{ errorMessage }}</div>
   }
 
-  <button (click)="create()">{{ 'COMPANIES.ADD' | translate }}</button>
+  <button class="btn-primary" (click)="create()">{{ 'COMPANIES.ADD' | translate }}</button>
 
   <div class="filter-bar" role="search" [attr.aria-label]="'COMPANIES.FILTER_ARIA' | translate">
     <fieldset class="filter-fieldset">
@@ -65,7 +65,7 @@
         <h2 id="job-posting-view-heading" #jobPostingViewHeading tabindex="-1">
           {{ 'COMPANIES.JOB_POSTING_VIEW_HEADING' | translate: { position: viewingRow.positionTitle, company: viewingRow.name } }}
         </h2>
-        <button type="button" (click)="closeJobPostingView()">
+        <button type="button" class="btn-secondary" (click)="closeJobPostingView()">
           {{ 'COMPANIES.JOB_POSTING_VIEW_CLOSE' | translate }}
         </button>
       </div>
@@ -116,13 +116,13 @@
       } @else {
         @switch (snapshotState) {
           @case ('loading') {
-            <p role="status">{{ 'COMPANIES.JOB_POSTING_LOADING' | translate }}</p>
+            <p role="status" class="notice notice--info">{{ 'COMPANIES.JOB_POSTING_LOADING' | translate }}</p>
           }
           @case ('none') {
-            <p role="status">{{ 'COMPANIES.NO_JOB_POSTING_FOUND' | translate }}</p>
+            <p role="status" class="notice notice--info">{{ 'COMPANIES.NO_JOB_POSTING_FOUND' | translate }}</p>
           }
           @case ('error') {
-            <p role="alert">{{ 'COMPANIES.ERROR_LOAD_JOB_POSTING' | translate }}</p>
+            <p role="alert" class="notice notice--error">{{ 'COMPANIES.ERROR_LOAD_JOB_POSTING' | translate }}</p>
           }
           @case ('ready') {
             <p class="original-view-link">

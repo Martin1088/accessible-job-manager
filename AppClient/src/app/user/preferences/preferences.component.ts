@@ -24,6 +24,20 @@ const DEFAULT_FONT_SCALE = 1;
 const DEFAULT_LINE_HEIGHT = 1.5;
 
 /**
+ * What each control reads when nothing is overriding it. `reset()` writes exactly
+ * this set, and `isOverridden()` compares against it, so "the reset button clears
+ * every flag on the page" stays true by construction rather than by coincidence.
+ */
+const DEFAULTS: Record<string, string | number> = {
+  contrastMode: 'SYSTEM',
+  reduceMotion: 'SYSTEM',
+  hideImages: 'SYSTEM',
+  fontFamily: 'SYSTEM',
+  fontScale: DEFAULT_FONT_SCALE,
+  lineHeight: DEFAULT_LINE_HEIGHT,
+};
+
+/**
  * Accessibility/display preferences, split out from the profile page so it has its
  * own place in the account menu rather than sharing a screen with the sender form.
  */
@@ -131,6 +145,17 @@ export class PreferencesComponent implements OnInit {
   invalid(path: string): boolean {
     const control = this.form.get(path);
     return !!control && control.invalid && control.touched;
+  }
+
+  /**
+   * True when this setting is carrying an override rather than inheriting the
+   * default. Reads the live form value, not the saved one, so the flags describe
+   * what the page would save - the point of the marker is to answer "what have I
+   * changed here?" before committing to it.
+   */
+  isOverridden(path: string): boolean {
+    const control = this.form.get(path);
+    return !!control && control.value !== DEFAULTS[path];
   }
 
   private announce(key: string): void {

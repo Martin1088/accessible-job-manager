@@ -1,7 +1,7 @@
 <form [formGroup]="letter" (ngSubmit)="save()" novalidate>
 
   @if (loadError) {
-    <p role="alert" class="error">{{ 'COVER_LETTER_FORM.LOAD_ERROR' | translate }}</p>
+    <p role="alert" class="notice notice--error">{{ 'COVER_LETTER_FORM.LOAD_ERROR' | translate }}</p>
   }
 
   <div class="field">
@@ -206,11 +206,11 @@
   </p>
 
   @if (saveError) {
-    <p role="alert" class="error">{{ 'COVER_LETTER_FORM.SAVE_ERROR' | translate }}</p>
+    <p role="alert" class="notice notice--error">{{ 'COVER_LETTER_FORM.SAVE_ERROR' | translate }}</p>
   }
 
   @if (renderError) {
-    <p role="alert" class="error">{{ 'COVER_LETTER_FORM.RENDER_ERROR' | translate }}</p>
+    <p role="alert" class="notice notice--error">{{ 'COVER_LETTER_FORM.RENDER_ERROR' | translate }}</p>
   }
 </form>
 

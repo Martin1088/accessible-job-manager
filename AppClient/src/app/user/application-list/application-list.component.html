@@ -2,12 +2,12 @@
   <h1>{{ 'APPLICATIONS.TITLE' | translate }}</h1>
 
   @if (errorMessage) {
-    <p role="alert" class="error">{{ errorMessage }}</p>
+    <p role="alert" class="notice notice--error">{{ errorMessage }}</p>
   }
 
   @if (showForm) {
     <section class="create-form" aria-labelledby="create-heading">
-      <h2 id="create-heading">{{ (editingId ? 'APPLICATIONS.EDIT_HEADING' : 'APPLICATIONS.CREATE_HEADING') | translate }}</h2>
+      <h2 id="create-heading" class="section-tab">{{ (editingId ? 'APPLICATIONS.EDIT_HEADING' : 'APPLICATIONS.CREATE_HEADING') | translate }}</h2>
       <dl class="position-info">
         <dt>{{ 'APPLICATIONS.COMPANY' | translate }}</dt><dd>{{ newForm.companyName }}</dd>
         <dt>{{ 'APPLICATIONS.POSITION' | translate }}</dt><dd>{{ newForm.positionTitle }}</dd>
@@ -41,7 +41,7 @@
 
   @if (preview) {
     <section class="letter-preview" #previewPanel tabindex="-1" aria-labelledby="preview-heading">
-      <h2 id="preview-heading">{{ 'APPLICATIONS.PREVIEW_HEADING' | translate: { company: preview.company } }}</h2>
+      <h2 id="preview-heading" class="section-tab">{{ 'APPLICATIONS.PREVIEW_HEADING' | translate: { company: preview.company } }}</h2>
       <p class="preview-template">{{ 'APPLICATIONS.PREVIEW_TEMPLATE' | translate: { template: preview.template } }}</p>
       <pre class="preview-text">{{ preview.text }}</pre>
       <button type="button" class="btn-secondary" (click)="closePreview()">{{ 'COMMON.CLOSE' | translate }}</button>

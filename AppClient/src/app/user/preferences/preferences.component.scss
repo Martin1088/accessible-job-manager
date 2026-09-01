@@ -1,82 +1,219 @@
+@use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
+
+// Same DIN 5008 stationery as the login page, the advisor screens and the rest
+// of the user screens. See `styles/_correspondence.scss`.
+//
+// The organising fact of this screen is that every setting on it inherits from
+// the operating system until it is given a value of its own. So the sheet is
+// ruled as a settings register, one row per setting, and the rows that are
+// carrying an override are flagged in the margin - the terracotta edge and the
+// word in the label are the same statement made twice, once for people reading
+// the shape of the page and once for people reading its text.
+:host { display: block; }
+
+// Global `main` (styles.scss) supplies max-width / margin / padding.
 main {
-  max-width: 720px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-
-fieldset {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem 1.25rem 1.25rem;
-  margin: 1.5rem 0;
-  background: #fff;
-
-  legend {
-    font-size: 0.95rem;
-    font-weight: 600;
-    padding: 0 0.4rem;
-  }
-}
-
-.field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  margin-bottom: 1rem;
-
-  label { font-size: 0.875rem; font-weight: 500; }
-
-  input, select {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
-  }
+  gap: 1.25rem;
 }
 
+// --- Shared voices ----------------------------------------------------
+
+// The monospace label voice.
+legend,
+label,
+.override-flag {
+  font-family: corr.$corr-mono;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+// Help text takes the serif prose voice, not the label voice. This is the screen
+// people come to *because* small dense text is hard for them to read - setting
+// its own guidance in tracked 0.72rem monospace would be the page contradicting
+// its purpose. Mono names controls; serif carries sentences.
 .hint {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
+  font-family: corr.$corr-serif;
+  color: var(--ink-soft);
+}
+
+// --- Masthead --------------------------------------------------------
+
+h1 {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+// Page-level hint sits under the masthead, outside the sheet.
+main > .hint {
   margin: 0;
   max-width: 62ch;
 }
 
-.error {
-  color: #b3261e;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin: 0;
+.hint {
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
-/* The two explicit save/reset controls - no autosave, so their state (dirty vs.
-   pristine) is the only thing that enables/disables them. */
+// --- The sheet -------------------------------------------------------
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0.5rem clamp(1.1rem, 0.7rem + 2vw, 1.5rem) 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+legend {
+  padding: 0 0.4rem;
+  font-size: 0.7rem;
+}
+
+// --- Setting rows ----------------------------------------------------
+// Hairline-ruled rather than boxed: six settings in a row read as a register,
+// and six bordered cards would read as six unrelated things.
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 0 0.9rem 0.9rem;
+  // The margin the override flag occupies. Transparent by default so a flagged
+  // row and an inherited row keep the same text origin - only the colour of the
+  // edge changes, never the layout.
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--rule);
+
+  &:last-of-type { border-bottom: none; }
+
+  label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  // The hint belongs to the control above it, so it tucks under rather than
+  // sitting at the row's own rhythm.
+  .hint { margin: 0.1rem 0 0; }
+}
+
+.is-overridden {
+  border-left-color: var(--accent);
+}
+
+.override-flag {
+  padding: 0.1rem 0.4rem;
+  background: var(--paper);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--accent-deep);
+}
+
+input,
+select {
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+// A control sized to what it holds. These take a value like `1.0`; at the
+// select's width they read as if a sentence were expected.
+input[type='number'] { max-width: 7rem; }
+
+.error {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-size: 0.88rem;
+  color: var(--color-alert-text);
+}
+
+// --- Save & reset ----------------------------------------------------
+// Two explicit controls - there is no autosave, so the save button's enabled
+// state (dirty vs. pristine) is the page's only unsaved-changes indicator.
+// Square, not circular: nothing else in this design language is round.
+
 .icon-actions {
   display: flex;
   gap: 0.5rem;
-  margin: 1.5rem 0 1rem;
+  margin: 0;
 }
 
 .icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  inline-size: 44px;
+  block-size: 44px;
   padding: 0;
-  border-radius: 50%;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #374151;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
   cursor: pointer;
 
-  &:hover:not(:disabled) { background: #f1f5f9; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+
+  // Explicit muted tokens rather than `opacity` - the save button sits disabled
+  // for as long as the form is pristine, which is most of the time, and a faded
+  // glyph on paper drops below AA. See user/home for the measurement.
+  &:disabled {
+    background: var(--paper);
+    border-color: var(--rule);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
 }
 
-.icon-btn-save {
-  border-color: #005fcc;
-  color: #005fcc;
+// Filled while it is actually actionable. Guarded with `:not(:disabled)` rather
+// than left to source order, so it can never collide with the disabled rule
+// above - the two selectors are mutually exclusive by construction.
+.icon-btn-save:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
+}
+
+// --- Focus: one ring for every control ------------------------------
+
+:is(input, select, button):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@include bp.mobile {
+  input,
+  select { max-width: none; }
 }

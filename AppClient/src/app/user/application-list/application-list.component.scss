@@ -1,93 +1,163 @@
 @use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
 
+// Same DIN 5008 stationery as the login page, advisor screens and the other
+// user screens: blue-grey paper, navy ink, one terracotta accent, serif +
+// monospace. See `styles/_correspondence.scss`. This table is bespoke (not
+// `app-data-table`), so it is retextured inline rather than via the mixin.
+// The palette tokens are global (styles.scss).
+
+:host { display: block; }
+
+%visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only { @extend %visually-hidden; }
+
+// Wide table: this page keeps its own width rather than the 860px global.
 main {
   max-width: 1600px;
   margin: 2rem auto;
   padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.error {
-  background: #fde8e8;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-  border-radius: 6px;
-  padding: 0.6rem 1rem;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
+h1 {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-weight: 400;
+  font-size: 1.7rem;
+  color: var(--ink);
 }
 
-.create-form {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-
-  h2 { margin: 0 0 1rem; font-size: 1.1rem; }
+.notice {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-alert-border);
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  background: var(--color-alert-bg);
+  color: var(--color-alert-text);
 }
 
-/*
- * The letter read front to back. It takes focus when it opens, so the outline is
- * the reader's landing mark rather than noise - never remove it.
- */
+// --- Sheets: create form, letter preview ---------------------------
+
+.create-form,
 .letter-preview {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--card);
+}
 
-  h2 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+// The letter takes focus when it opens; the ring is the reader's landing
+// mark, never noise - do not remove it.
+.letter-preview:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
 
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+.section-tab {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
 
-  .preview-template {
-    margin: 0 0 1rem;
-    font-size: 0.85rem;
-    color: #4b5563;
-  }
+.preview-template {
+  margin: 0 0 1rem;
+  font-family: corr.$corr-mono;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
 
-  // The letter is linearized text: its blank lines are the paragraph breaks, so
-  // it wraps rather than scrolling sideways, and keeps its own line breaks.
-  .preview-text {
-    margin: 0 0 1rem;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    font-family: inherit;
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
+// Linearized letter text: blank lines are the paragraph breaks, so it wraps
+// rather than scrolling and keeps its own line breaks.
+.preview-text {
+  margin: 0 0 1rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: corr.$corr-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink);
 }
 
 .position-info {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.25rem 1rem;
+  gap: 0.3rem 1.25rem;
   margin: 0 0 1.25rem;
-  font-size: 0.9rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.95rem;
 
-  dt { font-weight: 600; color: var(--color-text-muted); }
-  dd { margin: 0; }
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-bottom: 1rem;
-
-  label { font-size: 0.875rem; font-weight: 500; }
-
-  select, input, textarea {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  dt {
+    font-family: corr.$corr-mono;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
   }
 
-  textarea { resize: vertical; }
+  dd { margin: 0; color: var(--ink); }
+}
+
+// --- Fields, filters and every in-row select ----------------------
+
+.field,
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+}
+
+.field { margin-bottom: 1rem; }
+.field textarea { resize: vertical; }
+
+// No `app-data-table` on this page, so styling the bare controls is safe -
+// it covers the form fields, the filters and the in-row selects at once.
+input,
+select,
+textarea {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-family: inherit;
 }
 
 .form-actions {
@@ -97,34 +167,10 @@ main {
   margin-top: 1.25rem;
 }
 
-.btn-primary {
-  padding: 0.5rem 1.2rem;
-  background: #005fcc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  &:hover { background: #004aaa; }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
-}
-
 .filter-bar {
   display: flex;
   align-items: flex-end;
   gap: 1rem;
-  margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
 
@@ -134,53 +180,62 @@ main {
   gap: 1rem;
   flex-wrap: wrap;
   min-inline-size: 0;
-  border: 0;
   margin: 0;
   padding: 0;
+  border: 0;
 }
 
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.filter-group input[type="search"] { min-width: 12rem; }
 
-  label {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+// --- Buttons ----------------------------------------------------
+// Two kinds only: the ink-filled form submit, and one paper style for
+// everything else (cancel / close / clear, and every in-row control button).
+
+.btn-primary,
+.btn-secondary,
+.btn-download,
+.status-cell button,
+.actions-cell button {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
   }
 
-  select, input[type="search"] {
-    padding: 0.4rem 0.65rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    background: #fff;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-  }
-
-  input[type="search"] { min-width: 12rem; }
-}
-
-@include bp.mobile {
-  .filter-fieldset {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .filter-group {
-    width: 100%;
-
-    select, input[type="search"] {
-      width: 100%;
-      min-width: 0;
-    }
+  // Explicit muted tokens, not opacity - many sit disabled until a template
+  // is picked or a status changed. See user/home for the why.
+  &:disabled {
+    color: var(--ink-soft);
+    cursor: not-allowed;
   }
 }
+
+.btn-primary {
+  padding: 0.6rem 1.3rem;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
+}
+
+// --- The bespoke table ----------------------------------------
 
 .table-wrapper {
   overflow-x: auto;
@@ -189,6 +244,8 @@ main {
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
+    border: 1px solid var(--rule);
+    background: var(--card);
     font-size: 0.9rem;
 
     col.col-company  { width: 9%; }
@@ -199,77 +256,80 @@ main {
     col.col-cover    { width: 26%; }
     col.col-actions  { width: 14%; }
 
-    caption {
-      text-align: left;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      font-size: 1rem;
+    caption,
+    th {
+      font-family: corr.$corr-mono;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
     }
 
-    th, td {
+    caption {
+      margin-bottom: 0.5rem;
+      text-align: left;
+    }
+
+    th,
+    td {
       padding: 0.6rem 0.75rem;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--rule);
       text-align: left;
       vertical-align: middle;
       overflow: hidden;
       word-break: break-word;
     }
 
-    th {
-      background: #f8fafc;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--color-text-muted);
+    td { color: var(--ink); }
+    th { background: var(--paper); }
 
-      button {
-        background: none;
-        border: none;
-        font: inherit;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--color-text-muted);
-        cursor: pointer;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        min-inline-size: 44px;
-        min-block-size: 44px;
-        &:focus-visible { outline: 2px solid #005fcc; border-radius: 2px; }
+    th button {
+      display: inline-flex;
+      min-inline-size: 44px;
+      min-block-size: 44px;
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+
+      &:focus-visible {
+        outline: 2px solid var(--color-focus);
+        border-radius: 2px;
       }
     }
 
-    tbody tr:hover { background: #f8fafc; }
+    tbody tr:hover { background: var(--paper); }
   }
 }
 
 // Mobile card layout: the DOM stays one <table> so VoiceOver still reports
-// table structure and per-cell header association - only the visual
-// presentation changes. Never use visibility:hidden/opacity:0 on thead here,
-// it would keep the header row reachable while looking hidden.
+// structure and per-cell header association. Never visibility:hidden /
+// opacity:0 on thead - it would stay reachable while looking hidden.
 @include bp.mobile {
   .table-wrapper {
     overflow-x: visible;
 
     table {
       table-layout: auto;
+      border: 0;
 
       col { width: auto !important; }
-
       caption { margin-bottom: 0.75rem; }
-
       thead { display: none; }
 
       tbody tr {
         display: block;
         margin-block-end: 1rem;
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        background: var(--card);
       }
 
-      th, td {
+      th,
+      td {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -279,8 +339,13 @@ main {
 
         &::before {
           content: attr(data-label);
-          font-weight: 600;
           flex-shrink: 0;
+          font-family: corr.$corr-mono;
+          font-size: 0.66rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--ink-soft);
         }
       }
 
@@ -289,21 +354,33 @@ main {
         flex-wrap: wrap;
         align-items: flex-start;
 
-        &::before {
-          flex-basis: 100%;
-        }
+        &::before { flex-basis: 100%; }
       }
 
       td[colspan] {
         display: block;
-
         &::before { content: none; }
       }
 
       tr:last-child td:last-child { border-bottom: none; }
     }
   }
+
+  .filter-fieldset {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filter-group {
+    width: 100%;
+
+    input,
+    select { width: 100%; min-width: 0; }
+  }
 }
+
+// --- In-row control clusters --------------------------------
 
 .cover-letter-cell {
   display: flex;
@@ -312,23 +389,7 @@ main {
   align-items: center;
   min-width: 280px;
 
-  select {
-    flex: 1 1 100%;
-    padding: 0.4rem 0.6rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-family: inherit;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-  }
-
-  // Says why a greyed-out action is greyed out. #4b5563 on the row background is
-  // ~7:1, so the explanation is not itself hard to read.
-  .template-note {
-    flex: 1 1 100%;
-    font-size: 0.75rem;
-    color: #4b5563;
-  }
+  select { flex: 1 1 100%; }
 }
 
 .status-cell {
@@ -336,74 +397,35 @@ main {
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
+}
 
-  select {
-    padding: 0.35rem 0.5rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-family: inherit;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-  }
-
-  button {
-    padding: 0.35rem 0.75rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-family: inherit;
-    background: #005fcc;
-    color: #fff;
-    &:hover:not(:disabled) { background: #004aaa; }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-  }
+.template-note {
+  flex: 1 1 100%;
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
 }
 
 .actions-cell {
   white-space: nowrap;
 
   button {
-    padding: 0.35rem 0.75rem;
     margin-right: 0.4rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-family: inherit;
-    background: #e5e5e5;
-    color: #1a1a1a;
     &:last-child { margin-right: 0; }
-    &:hover { background: #d8d8d8; }
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
   }
 }
 
-.btn-download {
-  white-space: nowrap;
-  padding: 0.4rem 0.85rem;
-  background: #005fcc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  cursor: pointer;
-  &:hover:not(:disabled) { background: #004aaa; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-}
+// --- Focus: one ring for every control ---------------------
 
-.btn-secondary {
-  padding: 0.5rem 1.2rem;
-  background: #fff;
-  color: #374151;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  cursor: pointer;
-  &:hover { background: #f1f5f9; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-download:focus-visible,
+.status-cell button:focus-visible,
+.actions-cell button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }

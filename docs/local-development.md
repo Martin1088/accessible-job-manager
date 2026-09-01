@@ -285,6 +285,81 @@ practice:
 To turn the feature off again, unset the two variables and restart — no other
 configuration depends on them.
 
+## 10. The static demo build
+
+The demo is the whole frontend running with no backend at all: every `/api/*`
+request is answered from in-memory seed data. It needs no Postgres, no
+Authentik, no Garage, no Gotenberg — just Node. This is what publishes to
+GitHub Pages ([live demo](https://martin1088.github.io/accessible-job-manager/#/)),
+and it is the fastest way to click through the UI while working on it.
+
+### How it works
+
+The `demo` build configuration in `angular.json` swaps `app.config.ts` for
+`src/app/app.config.demo.ts` (`fileReplacements`). That config differs from the
+regular one by three lines: it binds `HttpBackend` — the single token every
+`HttpClient` call funnels into — to `DemoBackend`, provides `DEMO_MODE`, and
+provides the demo bar controls. `DemoBackend` (`src/app/demo/demo-backend.ts`)
+serves `/api/*` from `DemoDb` and passes everything else (the `i18n/` files, the
+sample PDF) through to the real XHR backend as static assets, which is what
+keeps the language switch working. It also switches to hash routing
+(`withHashLocation()`), because GitHub Pages has no rewrite rule to send unknown
+paths back to `index.html`.
+
+### Run the demo (dev server)
+
+```bash
+cd AppClient
+npm install
+npx ng serve --configuration demo
+```
+
+Serves on `http://localhost:4200`. The demo bar at the top switches role
+(USER / ADVISOR / REVIEWER) and language, and resets the seed data.
+
+### Build the static bundle
+
+```bash
+cd AppClient
+npm run build:demo    # ng build --configuration demo --base-href=/accessible-job-manager/
+```
+
+Output lands in `AppClient/dist/demo/browser`. The `--base-href` matches the
+GitHub Pages path, so a local preview has to be served under that same path for
+its asset URLs to resolve:
+
+```bash
+mkdir -p serve && ln -sfn "$PWD/dist/demo/browser" serve/accessible-job-manager
+npx http-server serve -p 8099
+# open http://localhost:8099/accessible-job-manager/
+```
+
+### Verify it makes no backend calls
+
+"No request to `/api/` in the network tab" is the one property the demo build
+exists for, and the one most easily lost by a later change — a new component
+calling an endpoint `DemoBackend` doesn't know, and the demo starts talking to a
+server that isn't there. `check:demo` loads the built bundle in a real browser
+(Puppeteer), clicks through every route, switches all three roles and all three
+languages, and fails if any `/api/` request was made or any console error was
+thrown:
+
+```bash
+# with the built bundle being served at http://127.0.0.1:8099/accessible-job-manager/
+npm run check:demo
+```
+
+Set `CHROME_BIN` if Puppeteer can't find a browser (same as the Karma tests in
+[section 7](#7-run-the-frontend-tests)).
+
+### Deployment
+
+`.github/workflows/demo-pages.yml` runs the build, `lint:a11y` and `check:demo`,
+then publishes to GitHub Pages. It runs on a `v*` tag or by hand
+(`workflow_dispatch`) — not on every push — because the demo link is something
+people are given deliberately. It produces no Docker image and never writes into
+`src/main/resources/static/`.
+
 ---
 
 ## Remote Development with DevPod
