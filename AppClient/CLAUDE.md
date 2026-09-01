@@ -163,8 +163,15 @@ One card shape across `app-data-table`, `application-list` and
 - Cards are separated by the hairline `--rule` border and the gap between
   them; no cell is promoted to a card heading.
 
+**The applications table is the reference.** `app-data-table` matches it on
+a wide screen too, not only in cards: the `<caption>` is a plain mono line
+*above* the sheet rather than a band inside it, the column heads sit on a
+`--paper` band over a 1px `--rule`, the body runs at `0.9rem` with
+`0.6rem 0.75rem` cells, and the sorted column is told by the glyph,
+`aria-sort` and the spoken announcement — no colour of its own.
+
 **Table colour is tokens only.** `app-data-table` carries the DIN 5008
-stationery (`--paper`/`--card`/`--ink`/`--ink-soft`/`--rule`/`--accent`) in
+stationery (`--paper`/`--card`/`--ink`/`--ink-soft`/`--rule`) in
 its own stylesheet — pages no longer retexture it through a `::ng-deep`
 mixin, and `styles/_correspondence.scss` no longer ships one. The
 hard-coded `#fff`/`#f7f7f7` that stylesheet used to carry is exactly the bug

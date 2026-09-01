@@ -1,12 +1,13 @@
 @use '../../../styles/breakpoints' as bp;
 @use '../../../styles/correspondence' as corr;
 
-// The DIN 5008 correspondence stationery is this component's own look, not
-// something each page paints on from outside: paper header band, navy ink,
-// hairline rules, one terracotta accent. Every colour is a token from
-// `styles.scss`, so the table follows `html[data-contrast='dark'|'high']`
-// without a per-page override. A hard-coded `#fff` here was what left the
-// mobile cards white with near-white text in dark mode.
+// The applications table is the reference for every table in the app, and its
+// rules live here: a caption set as a plain mono line above the sheet, a paper
+// header band over hairline-ruled rows, ink values, and the paper/rule button.
+// Every colour is a token from `styles.scss`, so the table follows
+// `html[data-contrast='dark'|'high']` without a per-page override - a
+// hard-coded `#fff` here was what left the mobile cards white with near-white
+// text in dark mode.
 
 :host {
   display: block;
@@ -17,49 +18,45 @@ table {
   border-collapse: collapse;
   background: var(--card);
   border: 1px solid var(--rule);
-  border-radius: 2px;
-  overflow: hidden;
+  font-size: 0.9rem;
 }
 
+// The caption is a line of its own above the sheet, not a band inside it.
 caption {
+  margin-block-end: 0.5rem;
   text-align: left;
-  padding: 0.7rem 1rem;
-  background: var(--paper);
-  border-bottom: 1px solid var(--rule);
   font-family: corr.$corr-mono;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
 }
 
-// Column heads sit on the card, not on a second grey band - the rule under
-// them is what separates head from body, the way a typeset table does it.
-// The typography sits on the `th` itself, so the actions column - whose head
-// is bare text with no button or span to hook onto - reads as a column head
-// like every other one.
+// The head typography sits on the `th` itself, so the actions column - bare
+// text with no button or span to hook onto - reads as a column head too.
 th {
-  padding: 0.7rem 1rem;
-  background: transparent;
-  border-block-end: 2px solid var(--rule);
-  vertical-align: bottom;
+  padding: 0.6rem 0.75rem;
+  background: var(--paper);
+  border-block-end: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: middle;
   font-family: corr.$corr-mono;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
 
-  // A sortable head is a full-bleed button that brings its own padding.
+  // A sortable head is a full-bleed button that brings its own padding. Which
+  // column carries the order is told by the glyph, `aria-sort` and the spoken
+  // announcement - no colour of its own.
   &:has(button) {
     padding: 0;
   }
 
   button {
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
+    font: inherit;
     letter-spacing: inherit;
     text-transform: inherit;
     color: inherit;
@@ -67,7 +64,7 @@ th {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.7rem 1rem;
+    padding: 0.6rem 0.75rem;
     min-block-size: 44px;
     background: none;
     border: none;
@@ -75,8 +72,7 @@ th {
     text-align: left;
 
     &:hover {
-      background: var(--paper);
-      color: var(--accent-deep);
+      background: var(--rule);
     }
 
     &:focus-visible {
@@ -89,23 +85,12 @@ th {
       color: inherit;
     }
   }
-
-}
-
-// The sorted column carries the accent, so which column the order comes from
-// is visible and not only announced.
-th[aria-sort='ascending'],
-th[aria-sort='descending'] {
-  border-block-end-color: var(--accent);
-
-  button {
-    color: var(--accent-deep);
-  }
 }
 
 td {
-  padding: 0.7rem 1rem;
+  padding: 0.6rem 0.75rem;
   border-block-end: 1px solid var(--rule);
+  text-align: left;
   vertical-align: middle;
   color: var(--ink);
 }
@@ -164,9 +149,8 @@ td button {
 // only the visual presentation changes. Never use visibility:hidden/opacity:0
 // on thead here, it would keep the header row reachable while looking hidden.
 //
-// Each row reads as a card: the first cell is its heading on the paper band,
-// every other cell puts its label above its value rather than pushing the two
-// to opposite edges, which is what left wide empty gutters on a phone.
+// Each row becomes a card, label left and value right; the caption stays the
+// plain line above them that it is on a wide screen.
 @include bp.mobile {
   table {
     border: 0;
@@ -175,8 +159,6 @@ td button {
   }
 
   caption {
-    border: 1px solid var(--rule);
-    border-radius: 2px;
     margin-block-end: 0.75rem;
   }
 
@@ -200,7 +182,7 @@ td button {
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    padding: 0.6rem 0.85rem;
+    padding: 0.6rem 0.75rem;
     text-align: end;
     // A cell value can be a long unbroken token (email, filename); without
     // this it overflows the card instead of wrapping onto its own line.
