@@ -259,8 +259,8 @@ fieldset .field,
   text-transform: none;
 }
 
-// Retextures the shared `app-data-table` to this stationery.
-@include corr.corr-data-table;
+// The shared `app-data-table` ships this stationery itself - nothing to
+// retexture here.
 
 // --- Focus: one ring for every control ------------------------------
 

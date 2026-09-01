@@ -4,7 +4,8 @@
 // Same DIN 5008 stationery as the login page, advisor screens and user home:
 // blue-grey paper, navy ink, one terracotta accent, serif + monospace. The
 // palette tokens are global (styles.scss). See `styles/_correspondence.scss`.
-@include corr.corr-data-table;
+// `app-data-table` carries that stationery itself, so this page adds nothing
+// for its table.
 
 :host { display: block; }
 
