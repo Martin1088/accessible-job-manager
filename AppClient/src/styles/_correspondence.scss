@@ -9,107 +9,18 @@
 // the same `html[data-contrast='dark'|'high']` attribute `AccessibilityService`
 // writes - so `--paper` / `--ink` / `--rule` / `--accent` / `--accent-deep` /
 // `--ink-soft` / `--ok-*` are just there, globally, at zero per-component cost.
-// This partial keeps only the two font stacks and the `corr-data-table` mixin.
+// This partial keeps only the two font stacks. The shared `app-data-table`
+// carries the stationery in its own stylesheet, so no page retextures it
+// through `::ng-deep` any more.
 //
-// Scope of the look: the advisor screens and the user screens (`user/home`,
-// `company-list`, `documents`, `company-form`, `application-list`). Not the
-// shell (navy header) or the reviewer screen yet.
+// Scope of the look: the advisor screens, the user screens (`user/home`,
+// `company-list`, `documents`, `company-form`, `application-list`, `profile`)
+// and every `app-data-table`. Not the shell (navy header) or the reviewer
+// screen, whose table follows the `--color-*` tokens instead.
 //
 // Focus rings deliberately stay on the app-wide `--color-focus` (blue, black in
 // high contrast), not the terracotta accent - that token is tuned for contrast
 // in every mode. Terracotta marks structure (an edge, a link hover), never focus.
 
-@use 'breakpoints' as bp;
-
 $corr-serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
 $corr-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liberation Mono', monospace;
-
-// Retextures the shared `app-data-table` to the correspondence stationery -
-// the default component ships its own hard-coded drop-shadowed card palette,
-// shared with every role. `::ng-deep` scoped under the caller's `:host` reaches
-// only that page's tables, leaving the component and the other roles alone.
-// Call once at the top level of a component stylesheet that also renders
-// `<app-data-table>`.
-@mixin corr-data-table {
-  :host ::ng-deep app-data-table {
-    table {
-      background: var(--card);
-      border: 1px solid var(--rule);
-      border-radius: 2px;
-      box-shadow: none;
-    }
-
-    caption {
-      background: var(--paper);
-      border-bottom: 1px solid var(--rule);
-      font-family: $corr-mono;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-    }
-
-    th {
-      background: var(--paper);
-      border-bottom: 1px solid var(--rule);
-    }
-
-    th button,
-    th > span {
-      font-family: $corr-mono;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-    }
-
-    th button:hover {
-      background: var(--rule);
-    }
-
-    th button span {
-      color: var(--ink-soft);
-    }
-
-    th button:focus-visible,
-    td button:focus-visible {
-      outline: 3px solid var(--color-focus);
-    }
-
-    td {
-      border-bottom: 1px solid var(--rule);
-      color: var(--ink);
-    }
-
-    tr:hover td {
-      background: var(--paper);
-    }
-
-    td button {
-      background: var(--paper);
-      border: 1px solid var(--rule);
-      border-radius: 2px;
-      color: var(--ink);
-    }
-
-    td button:hover {
-      background: var(--rule);
-    }
-  }
-
-  @include bp.mobile {
-    :host ::ng-deep app-data-table {
-      tbody tr {
-        background: var(--card);
-        border-color: var(--rule);
-        box-shadow: none;
-      }
-
-      td {
-        border-color: var(--rule);
-      }
-    }
-  }
-}

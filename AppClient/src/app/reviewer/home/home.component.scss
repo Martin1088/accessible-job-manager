@@ -7,7 +7,7 @@ main {
 }
 
 h1 { margin: 0 0 1.5rem; }
-h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
+h2 { font-size: 1.1rem; margin: 0 0 1rem; color: var(--color-text); }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px;
@@ -16,8 +16,8 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
 }
 
 .error {
-  background: #fde8e8; color: #b91c1c;
-  border: 1px solid #fca5a5; border-radius: 6px;
+  background: var(--color-alert-bg); color: var(--color-alert-text);
+  border: 1px solid var(--color-alert-border); border-radius: 6px;
   padding: 0.6rem 1rem; margin-bottom: 1rem; font-size: 0.875rem;
 }
 
@@ -30,8 +30,8 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
 }
 
 .user-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 1.25rem 1.5rem;
 }
@@ -56,7 +56,7 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
 .user-info {
   display: flex; flex-direction: column; gap: 0.1rem;
   min-inline-size: 0;
-  strong { font-size: 1rem; color: #1e293b; }
+  strong { font-size: 1rem; color: var(--color-text); }
   // An email address has no spaces to break on, so it needs its own wrap
   // rule to avoid pushing the card wider than the viewport on a phone.
   span   { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
@@ -69,17 +69,21 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
 
   th, td {
     padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-border);
     text-align: left;
   }
 
   th {
-    background: #f8fafc;
+    background: var(--color-table-header-bg);
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--color-text-muted);
   }
+
+  td { color: var(--color-text); }
+
+  tbody tr:hover td { background: var(--color-table-hover-bg); }
 }
 
 .btn-download {
@@ -93,7 +97,7 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
   cursor: pointer;
   &:hover:not(:disabled) { background: #004aaa; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  &:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 }
 
 // Mobile card layout: the DOM stays one <table> so VoiceOver still reports
@@ -107,24 +111,40 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: #1e293b; }
     tbody tr {
       display: block;
       margin-block-end: 0.75rem;
-      border: 1px solid #f1f5f9;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
       border-radius: 6px;
+      overflow: hidden;
     }
 
-    th, td {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
+    // Label above value, not pushed to the opposite edge: a filename and a
+    // date read as one block per card instead of across a wide gutter.
+    td {
+      display: block;
       overflow-wrap: anywhere;
+      color: var(--color-text);
 
       &::before {
         content: attr(data-label);
-        font-weight: 600;
-        flex-shrink: 0;
+        display: block;
+        margin-block-end: 0.1rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-text-muted);
       }
     }
 
-    tr:last-child td:last-child { border-bottom: none; }
+    // The first cell is the card's heading; its label stays as an overline so
+    // a reader that announces ::before keeps the same pairing as every other
+    // cell.
+    tbody td:first-child {
+      background: var(--color-table-header-bg);
+      padding-block: 0.65rem;
+      font-size: 1rem;
+    }
+
+    tbody tr td:last-child { border-bottom: none; }
   }
 }

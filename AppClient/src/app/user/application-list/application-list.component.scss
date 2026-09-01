@@ -324,22 +324,26 @@ textarea {
         display: block;
         margin-block-end: 1rem;
         border: 1px solid var(--rule);
+        // The accent edge marks where one card starts, the same mark the
+        // shared `app-data-table` cards carry.
+        border-inline-start: 3px solid var(--accent);
         border-radius: 2px;
         background: var(--card);
+        overflow: hidden;
       }
 
-      th,
+      // Label above value, the same card shape the shared `app-data-table`
+      // uses: a status or a cover-letter control keeps the card's full width
+      // instead of being squeezed against the opposite edge.
       td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
+        display: block;
         white-space: normal;
         overflow-wrap: anywhere;
 
         &::before {
           content: attr(data-label);
-          flex-shrink: 0;
+          display: block;
+          margin-block-end: 0.1rem;
           font-family: corr.$corr-mono;
           font-size: 0.66rem;
           font-weight: 700;
@@ -349,20 +353,39 @@ textarea {
         }
       }
 
+      // The company cell is the card's heading; its label stays as an
+      // overline so a reader that announces ::before keeps the pairing.
+      tbody td:first-child {
+        background: var(--paper);
+        padding-block: 0.7rem;
+        font-family: corr.$corr-serif;
+        font-size: 1.05rem;
+      }
+
       td:has(> div),
-      td:has(> button) {
+      td:has(> button),
+      td:has(> select) {
+        display: flex;
         flex-wrap: wrap;
         align-items: flex-start;
+        gap: 0.5rem;
 
-        &::before { flex-basis: 100%; }
+        &::before {
+          flex-basis: 100%;
+          margin-block-end: 0;
+        }
       }
 
       td[colspan] {
         display: block;
+        background: transparent;
+        font-family: inherit;
+        font-size: inherit;
+
         &::before { content: none; }
       }
 
-      tr:last-child td:last-child { border-bottom: none; }
+      tbody tr td:last-child { border-bottom: none; }
     }
   }
 
@@ -390,6 +413,12 @@ textarea {
   min-width: 280px;
 
   select { flex: 1 1 100%; }
+
+  // On a phone the card is the width budget, not the cluster - 280px would
+  // push the whole card past the viewport.
+  @include bp.mobile {
+    min-width: 0;
+  }
 }
 
 .status-cell {

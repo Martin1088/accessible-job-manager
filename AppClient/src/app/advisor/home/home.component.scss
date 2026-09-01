@@ -226,5 +226,5 @@ section.composer {
   }
 }
 
-// The two data tables on this page, retextured to the stationery.
-@include corr.corr-data-table;
+// The two data tables on this page carry the stationery themselves - see
+// `app-data-table`'s own stylesheet.
