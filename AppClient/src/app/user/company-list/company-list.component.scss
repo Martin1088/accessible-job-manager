@@ -1,24 +1,59 @@
 @use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
 
+// Same DIN 5008 stationery as the login page, advisor screens and user home:
+// blue-grey paper, navy ink, one terracotta accent, serif + monospace. The
+// palette tokens are global (styles.scss). See `styles/_correspondence.scss`.
+@include corr.corr-data-table;
+
+:host { display: block; }
+
+// Global `main` (styles.scss) supplies max-width / margin / padding; the wide
+// table scrolls inside its own container.
 main {
-  max-width: 960px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
+// The two serif headings on the page: the title and the job-posting-view name.
+h1,
+.job-posting-view-header h2 {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-weight: 400;
+  font-size: 1.7rem;
+  color: var(--ink);
 }
+
+.job-posting-view-header h2 { font-size: 1.25rem; }
+
+// --- Notices --------------------------------------------------------
+
+.notice {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.notice--info { background: var(--paper); }
+
+.notice--error {
+  background: var(--color-alert-bg);
+  border-color: var(--color-alert-border);
+  color: var(--color-alert-text);
+}
+
+// --- Filters -------------------------------------------------------
 
 .filter-bar {
   display: flex;
   align-items: flex-end;
   gap: 1rem;
-  margin: 1.25rem 0;
   flex-wrap: wrap;
 }
 
@@ -28,35 +63,165 @@ main {
   gap: 1rem;
   flex-wrap: wrap;
   min-inline-size: 0;
-  border: 0;
   margin: 0;
   padding: 0;
+  border: 0;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 
   label {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: var(--ink-soft);
   }
 
-  select, input[type="search"] {
-    padding: 0.4rem 0.65rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
+  select,
+  input {
+    min-width: 12rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.95rem;
     font-family: inherit;
-    background: #fff;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  }
+}
+
+// --- Buttons -----------------------------------------------------
+
+.btn-primary,
+.btn-secondary,
+.btn-clear,
+.view-toggle button {
+  min-block-size: 44px;
+  padding: 0.6rem 1.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-secondary,
+.btn-clear,
+.view-toggle button {
+  background: var(--paper);
+  color: var(--ink);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+}
+
+// A filled note-sheet button: the one primary action, and the pressed segment
+// of the structure / original toggle (the attribute selector outranks the
+// paper rule above, hover included).
+.btn-primary,
+.view-toggle button[aria-pressed="true"] {
+  align-self: flex-start;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+}
+
+// --- Job posting view (a sheet pulled from the file) ------------
+
+.job-posting-view {
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--card);
+}
+
+.job-posting-view-header,
+.view-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.job-posting-view-header {
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.structure-view {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1.5rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.95rem;
+
+  dt {
+    font-family: corr.$corr-mono;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-top: 0.15rem;
   }
 
-  input[type="search"] { min-width: 12rem; }
+  dd { margin: 0; color: var(--ink); }
+}
+
+.structure-view a,
+.original-view-link a {
+  color: var(--ink);
+
+  &:hover { color: var(--accent-deep); }
+}
+
+.original-view-link {
+  margin: 0 0 0.75rem;
+  font-family: corr.$corr-mono;
+  font-size: 0.8rem;
+}
+
+.snapshot-frame {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid var(--rule);
+}
+
+// --- Focus: one ring for every control ------------------------
+
+.filter-group :is(select, input):focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-clear:focus-visible,
+.view-toggle button:focus-visible,
+.job-posting-view h2:focus-visible,
+.structure-view a:focus-visible,
+.original-view-link a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @include bp.mobile {
@@ -69,104 +234,10 @@ main {
   .filter-group {
     width: 100%;
 
-    select, input[type="search"] {
+    select,
+    input {
       width: 100%;
       min-width: 0;
     }
   }
-}
-
-.btn-clear {
-  padding: 0.4rem 1rem;
-  background: #fff;
-  color: #374151;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-  &:hover { background: #f1f5f9; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-}
-
-.job-posting-view {
-  margin-top: 1.5rem;
-  padding: 1.25rem 1.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #fff;
-
-  h2:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
-}
-
-.job-posting-view-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-
-  h2 { margin: 0; font-size: 1.1rem; }
-
-  button {
-    background: #fff;
-    color: #374151;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 0.35rem 0.85rem;
-    font-size: 0.85rem;
-    cursor: pointer;
-    &:hover { background: #f1f5f9; }
-    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
-  }
-}
-
-.view-toggle {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-
-  button {
-    padding: 0.4rem 1rem;
-    border-radius: 6px;
-    border: 1px solid #cbd5e1;
-    background: #fff;
-    color: #374151;
-    font-size: 0.875rem;
-    font-family: inherit;
-    cursor: pointer;
-    &:hover { background: #f1f5f9; }
-    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
-    &[aria-pressed="true"] {
-      background: #005fcc;
-      color: #fff;
-      border-color: #005fcc;
-    }
-  }
-}
-
-.structure-view {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5rem 1.5rem;
-  font-size: 0.95rem;
-
-  dt { font-weight: 600; color: var(--color-text-muted); }
-  dd { margin: 0; }
-}
-
-.original-view-link {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
-
-  a { color: #005fcc; font-weight: 500; }
-}
-
-.snapshot-frame {
-  width: 100%;
-  height: 70vh;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
 }

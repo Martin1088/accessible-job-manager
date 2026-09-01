@@ -38,6 +38,24 @@
     </app-data-table>
   </section>
 
+  <!-- Assignment requests -->
+  <section aria-labelledby="requests-heading">
+    <h2 id="requests-heading" class="section-tab">{{ 'ADVISOR.REQUESTS_HEADING' | translate }}</h2>
+    <p class="section-note">{{ 'ADVISOR.REQUESTS_HELP' | translate }}</p>
+
+    @if (requestError) {
+      <p role="alert" class="notice notice--error">{{ requestError }}</p>
+    }
+
+    <app-data-table
+      caption="ADVISOR.REQUESTS_CAPTION"
+      [columns]="requestColumns"
+      [rows]="requestRows"
+      [actions]="requestActions"
+      emptyMessage="ADVISOR.REQUESTS_EMPTY">
+    </app-data-table>
+  </section>
+
   <!-- Create Suggestion -->
   <section aria-labelledby="suggest-heading" class="composer">
     <h2 id="suggest-heading" class="section-tab">{{ 'ADVISOR.SUGGEST_HEADING' | translate }}</h2>

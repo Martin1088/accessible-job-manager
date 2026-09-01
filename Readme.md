@@ -1,7 +1,17 @@
-![Accessible Job Manager Logo](docs/assets/Juke.png)
-# Accessible Job Manager
+![Job Application Manager Logo](docs/assets/Juke.png)
+# Job Application Manager
 
-**A job application manager for blind and visually impaired users.** Screen reader
+[![Lizenz: MIT](https://img.shields.io/github/license/Martin1088/accessible-job-manager)](./LICENSE)
+[![Spring Boot 3.5](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Java 26](https://img.shields.io/badge/Java-26-007396?logo=openjdk&logoColor=white)](https://openjdk.org)
+[![Angular 22](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)](https://angular.dev)
+[![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Build](https://github.com/Martin1088/accessible-job-manager/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Martin1088/accessible-job-manager/actions/workflows/build.yml)
+[![Demo](https://github.com/Martin1088/accessible-job-manager/actions/workflows/demo-pages.yml/badge.svg)](https://github.com/Martin1088/accessible-job-manager/actions/workflows/demo-pages.yml)
+
+**[Live demo](https://martin1088.github.io/accessible-job-manager/#/)**
+
+**An accessible job application manager for blind and visually impaired users.** Screen reader
 operation is not a feature added on top here — it is the premise the architecture is
 built on.
 
@@ -49,7 +59,6 @@ vocational rehabilitation can run their own instance and connect it to existing
 systems.
 
 ---
-![Accessible Job Manager Home Screenshot](docs/assets/Home.png)
 
 ## Tech Stack
 

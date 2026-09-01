@@ -63,26 +63,32 @@
         }
       </div>
 
-      <div class="field">
-        <label for="profile-postal-code">{{ 'PROFILE.POSTAL_CODE' | translate }}</label>
-        <input id="profile-postal-code" type="text" formControlName="postalCode" required aria-required="true"
-          autocomplete="postal-code" inputmode="numeric"
-          [attr.aria-invalid]="invalid('postalCode') ? 'true' : null"
-          [attr.aria-describedby]="describedBy('postalCode', 'profile-postal-code-error')">
-        @if (invalid('postalCode')) {
-          <p id="profile-postal-code-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
-        }
-      </div>
+      <!-- Postcode and city sit on one line because that is the shape they take on
+           the envelope these fields are printed onto. Purely visual: they remain two
+           separate labelled fields in the accessibility tree and in tab order, and
+           they stack again below the mobile breakpoint. -->
+      <div class="address-line">
+        <div class="field">
+          <label for="profile-postal-code">{{ 'PROFILE.POSTAL_CODE' | translate }}</label>
+          <input id="profile-postal-code" type="text" formControlName="postalCode" required aria-required="true"
+            autocomplete="postal-code" inputmode="numeric"
+            [attr.aria-invalid]="invalid('postalCode') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('postalCode', 'profile-postal-code-error')">
+          @if (invalid('postalCode')) {
+            <p id="profile-postal-code-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
+          }
+        </div>
 
-      <div class="field">
-        <label for="profile-city">{{ 'PROFILE.CITY' | translate }}</label>
-        <input id="profile-city" type="text" formControlName="city" required aria-required="true"
-          autocomplete="address-level2"
-          [attr.aria-invalid]="invalid('city') ? 'true' : null"
-          [attr.aria-describedby]="describedBy('city', 'profile-city-error')">
-        @if (invalid('city')) {
-          <p id="profile-city-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
-        }
+        <div class="field">
+          <label for="profile-city">{{ 'PROFILE.CITY' | translate }}</label>
+          <input id="profile-city" type="text" formControlName="city" required aria-required="true"
+            autocomplete="address-level2"
+            [attr.aria-invalid]="invalid('city') ? 'true' : null"
+            [attr.aria-describedby]="describedBy('city', 'profile-city-error')">
+          @if (invalid('city')) {
+            <p id="profile-city-error" role="alert" class="error">{{ 'PROFILE.REQUIRED' | translate }}</p>
+          }
+        </div>
       </div>
 
       <div class="field">

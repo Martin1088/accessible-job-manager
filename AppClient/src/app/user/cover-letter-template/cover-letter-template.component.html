@@ -23,13 +23,13 @@
 
   @if (provider === 'HTML') {
     <section aria-labelledby="html-heading">
-      <h2 id="html-heading">{{ 'COVER_LETTER_TEMPLATE.HTML_HEADING' | translate }}</h2>
+      <h2 id="html-heading" class="section-tab">{{ 'COVER_LETTER_TEMPLATE.HTML_HEADING' | translate }}</h2>
       <app-cover-letter-form/>
     </section>
   } @else {
     <section aria-labelledby="template-heading">
-      <h2 id="template-heading">{{ 'COVER_LETTER_TEMPLATE.HEADING' | translate }}</h2>
-      <p>{{ 'COVER_LETTER_TEMPLATE.INTRO' | translate }}</p>
+      <h2 id="template-heading" class="section-tab">{{ 'COVER_LETTER_TEMPLATE.HEADING' | translate }}</h2>
+      <p class="intro">{{ 'COVER_LETTER_TEMPLATE.INTRO' | translate }}</p>
       <form class="template-card" (ngSubmit)="downloadTemplate()">
         <p id="sender-source-help" class="hint">
           {{ 'COVER_LETTER_TEMPLATE.SENDER_FROM_PROFILE' | translate }}
@@ -45,7 +45,7 @@
           </select>
         </div>
         @if (templateError) {
-          <p role="alert" class="error">{{ 'COVER_LETTER_TEMPLATE.ERROR' | translate }}</p>
+          <p role="alert" class="notice notice--error">{{ 'COVER_LETTER_TEMPLATE.ERROR' | translate }}</p>
         }
         <button type="submit" class="btn-primary" [disabled]="downloadingTemplate">
           {{ (downloadingTemplate ? 'COVER_LETTER_TEMPLATE.DOWNLOADING' : 'COVER_LETTER_TEMPLATE.DOWNLOAD') | translate }}

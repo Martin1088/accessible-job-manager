@@ -7,13 +7,10 @@
 $serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
 $mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liberation Mono', monospace;
 
-// The three-column brand/card/enclosure row needs real width to avoid
-// cramming - below this it stays a single stacked column, same as the
-// existing $bp-mobile stack, just over a wider range. A deliberate second
-// breakpoint (see AppClient/CLAUDE.md's "without a concrete need" carve-out):
-// a three-up hero layout is exactly that concrete need.
-$bp-wide: 68rem;
-
+// The login page renders before AccessibilityService has necessarily painted,
+// so it keeps its own pre-service palette (same values as the app's global
+// correspondence tokens) driven by prefers-color-scheme rather than the app's
+// data-contrast attribute.
 :host {
   --paper: #EDF1F5;
   --card: #ffffff;
@@ -24,6 +21,13 @@ $bp-wide: 68rem;
   --accent-deep: #7A2C1F;
   --error-bg: #FBEEEC;
   --error-border: #E7B7AC;
+
+  // Paint the paper ground on the host too, not only on `main`, so the
+  // masthead text (which sits on the bare ground, no card) always resolves to
+  // a contrasting background for the contrast checker.
+  display: block;
+  background: var(--paper);
+  color: var(--ink);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -41,61 +45,37 @@ $bp-wide: 68rem;
 }
 
 main {
-  // Overrides the site-wide main{max-width:860px;margin:2rem auto} from
-  // styles.scss - without this the paper background only paints that
-  // centered strip instead of going full-bleed behind the letter.
+  // Overrides the site-wide main{max-width:860px;margin:2rem auto} so the paper
+  // ground goes full-bleed behind the whole page.
   max-width: none;
   margin: 0;
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: var(--paper);
-  padding: 2.5rem 1.25rem;
+  padding: 2.5rem 1.25rem 4rem;
 }
 
-.login-layout {
+.login-page {
+  max-width: 640px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2.5rem;
-  width: 100%;
-  max-width: 420px;
-
-  @media (min-width: $bp-wide) {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: center;
-    max-width: 1120px;
-    gap: 3.5rem;
-  }
+  gap: 2rem;
 }
 
-// --- Brand column -----------------------------------------------------
+// --- Masthead -------------------------------------------------------
 
-.brand {
-  max-width: 320px;
+.masthead {
   text-align: center;
-
-  @media (min-width: $bp-wide) {
-    // Reads directly into the letter to its right.
-    flex: 0 0 260px;
-    text-align: right;
-    padding-top: 1.5rem;
-  }
 }
 
-.brand__logo {
-  width: 7rem;
-  height: 7rem;
+.masthead__logo {
+  // Grows with the viewport but never past the column, and never so large on a
+  // phone that it pushes the sign-in below the fold.
+  width: clamp(8rem, 30vw, 12rem);
+  height: clamp(8rem, 30vw, 12rem);
   border-radius: 50%;
   border: 1px solid var(--rule);
-  margin-bottom: 1rem;
-
-  @media (min-width: $bp-wide) {
-    width: 10rem;
-    height: 10rem;
-  }
+  margin-bottom: 1.1rem;
 
   @media (prefers-reduced-motion: no-preference) {
     animation: logo-settle 0.6s 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -107,17 +87,25 @@ main {
   to   { opacity: 1; transform: scale(1); }
 }
 
-.brand__title {
+.masthead__title {
   margin: 0 0 0.4rem;
   font-family: $mono;
-  font-size: 1.3rem;
+  font-size: clamp(1.55rem, 5.5vw, 2.2rem);
+  line-height: 1.15;
   font-weight: 700;
   font-variant-caps: all-small-caps;
   letter-spacing: 0.04em;
   color: var(--ink);
+
+  // The shell moves focus here on every route change to announce the new page.
+  // It is `tabindex="-1"` - never reachable by Tab - so the route-change ring
+  // is noise on the one page a visitor can land on cold.
+  &:focus {
+    outline: none;
+  }
 }
 
-.brand__tagline {
+.masthead__tagline {
   margin: 0;
   font-family: $serif;
   font-size: 1rem;
@@ -125,122 +113,121 @@ main {
   color: var(--ink-soft);
 }
 
-// --- Letter / sign-in card ---------------------------------------------
-
-.letter {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  flex: 0 0 auto;
-  background: var(--card);
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  padding: 2.75rem 2.25rem 2.5rem;
-  box-shadow: 0 1px 2px rgba(26, 34, 51, 0.05), 0 18px 40px -20px rgba(26, 34, 51, 0.4);
-
-  @media (prefers-reduced-motion: no-preference) {
-    animation: letter-settle 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-}
-
-@keyframes letter-settle {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.fold-mark {
-  position: absolute;
-  left: -1px;
-  width: 8px;
-  height: 1px;
-  background: var(--ink-soft);
-  pointer-events: none;
-
-  // 87mm and 192mm of a 297mm page - FIRST_FOLD_MARK_MM / SECOND_FOLD_MARK_MM
-  // in StyleSettings.java.
-  &--upper { top: 29.3%; }
-  &--lower { top: 64.6%; }
-}
-
-.margin-guide {
-  position: absolute;
-  top: 2.5rem;
-  bottom: 2.5rem;
-  // 24.1mm of the 2.25rem card padding, decorative only - not to scale.
-  left: 1.65rem;
-  width: 1px;
-  background: var(--rule);
-  pointer-events: none;
-  display: none;
-
-  @media (min-width: 30rem) {
-    display: block;
-  }
-}
-
-.margin-guide__label {
-  position: absolute;
-  bottom: -0.25rem;
-  left: 0.4rem;
-  transform: rotate(-90deg);
-  transform-origin: left bottom;
-  font-family: $mono;
-  font-size: 0.6rem;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-  white-space: nowrap;
-}
+// --- Error alert ---------------------------------------------------
 
 .error {
-  font-family: $serif;
-  background: var(--error-bg);
-  border: 1px solid var(--error-border);
-  color: var(--accent-deep);
-  border-radius: 3px;
-  padding: 0.65rem 0.9rem;
-  font-size: 0.9rem;
-  margin: 0 0 1.25rem;
-  text-align: left;
-}
-
-.section-label {
-  margin: 0 0 0.6rem;
-  font-family: $mono;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--ink-soft);
-  text-align: left;
-}
-
-.login-options {
-  list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--error-border);
+  border-radius: 2px;
+  background: var(--error-bg);
+  color: var(--accent-deep);
+  font-family: $serif;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+// --- Sections (each a sheet on the desk) --------------------------
+
+section {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+}
+
+// The one action-carrying sheet gets the terracotta.
+.sign-in {
+  border-top: 3px solid var(--accent);
+}
+
+// A tab clipped to the top of the sheet, matching the rest of the app.
+.section-label {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: $mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.sign-in__lead,
+.other-roles__lead {
+  margin: 0 0 1rem;
+  font-family: $serif;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.intro__lede {
+  margin: 0 0 1.5rem;
+  font-family: $serif;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+// --- Introduction topics ----------------------------------------
+
+.topic + .topic {
+  margin-top: 1.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+.topic h3 {
+  margin: 0 0 0.4rem;
+  font-family: $serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.topic p {
+  margin: 0;
+  font-family: $serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.topic__shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.85rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(26, 34, 51, 0.05), 0 12px 28px -16px rgba(26, 34, 51, 0.35);
+}
+
+// --- Other roles -----------------------------------------------
+
+.other-roles__options {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
 }
 
-.login-options--primary {
-  margin-bottom: 1.75rem;
-}
-
-.other-roles {
-  text-align: left;
-}
+// --- Buttons -------------------------------------------------
 
 button {
   width: 100%;
   min-block-size: 44px;
   padding: 0.8rem 1rem;
-  border-radius: 3px;
+  border-radius: 2px;
   font-family: $mono;
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, filter 0.15s;
 
   &:focus-visible {
     outline: 3px solid var(--accent);
@@ -249,17 +236,17 @@ button {
 }
 
 .btn-primary {
+  border: 1px solid var(--ink);
   background: var(--ink);
   color: var(--card);
-  border: 1px solid var(--ink);
 
   &:hover { filter: brightness(0.92); }
 }
 
 .btn-secondary {
+  border: 1px solid var(--rule);
   background: transparent;
   color: var(--ink);
-  border: 1px solid var(--rule);
 
   &:hover {
     border-color: var(--accent);
@@ -267,72 +254,37 @@ button {
   }
 }
 
-// --- Enclosure column ---------------------------------------------------
-// A cover letter lists its enclosures (CV, references) at the bottom; the
-// portal preview is framed the same way rather than as a bolted-on marketing
-// panel.
-
-.enclosure {
-  max-width: 380px;
+// Demo persona buttons carry the seeded name and the role label.
+.persona-btn {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
   text-align: left;
-
-  @media (min-width: $bp-wide) {
-    flex: 0 0 380px;
-    padding-top: 1.5rem;
-  }
 }
 
-.enclosure__label {
-  margin: 0 0 0.5rem;
-  font-family: $mono;
-  font-size: 0.7rem;
+.persona-btn__name {
   font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--ink-soft);
 }
 
-.enclosure h2 {
-  margin: 0 0 0.75rem;
-  font-family: $mono;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--ink);
+.persona-btn__role {
+  font-weight: 400;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.enclosure__screenshot {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 4px;
-  border: 1px solid var(--rule);
-  box-shadow: 0 1px 2px rgba(26, 34, 51, 0.05), 0 12px 28px -16px rgba(26, 34, 51, 0.35);
-  margin-bottom: 1rem;
+// --- Credit foot ---------------------------------------------
 
-  // A photo clipped to a letter sits very slightly askew - only where
-  // there's room to read it as a considered touch rather than a mistake.
-  @media (min-width: $bp-wide) {
-    transform: rotate(-1.1deg);
-  }
-}
-
-.enclosure__caption {
+.credit {
   margin: 0;
-  font-family: $serif;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--ink-soft);
-}
-
-// A letter's body ends with whitespace before the signature - the credit
-// line gets the same quiet separation rather than running straight on.
-.enclosure__credit {
-  margin: 1.25rem 0 0;
   padding-top: 1rem;
   border-top: 1px solid var(--rule);
   font-family: $mono;
   font-size: 0.78rem;
+  line-height: 1.6;
   color: var(--ink-soft);
+  text-align: center;
 
   a {
     color: var(--ink);

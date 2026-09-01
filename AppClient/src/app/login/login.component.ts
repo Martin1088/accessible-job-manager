@@ -1,7 +1,9 @@
 
 import { ActivatedRoute } from '@angular/router';
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+
+import { DEMO_CONTROLS, DEMO_MODE, DemoRole } from '../demo/demo-mode';
 
 @Component({
   standalone: true,
@@ -17,10 +19,30 @@ export class LoginComponent implements OnInit {
   // the text stays reactive to a language switch like everywhere else.
   error: string | null = null;
 
+  /**
+   * The login page is the front door in every build. In the `demo` build the
+   * three role buttons hand over to the demo controls instead of the OAuth
+   * endpoints (which do not exist on GitHub Pages), and they carry the name of
+   * the seeded person you would sit down as. In every other build both tokens
+   * are inert and the buttons redirect to `/api/login/as/{role}`.
+   */
+  readonly demoMode = inject(DEMO_MODE);
+  private readonly demoControls = inject(DEMO_CONTROLS);
+
+  /** The three seeded people, in the order [primary, other, other]. */
+  readonly personas = (['USER', 'ADVISOR', 'REVIEWER'] as const).map(role => ({
+    role,
+    name: this.demoControls?.people[role].name ?? '',
+  }));
+
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.error = this.route.snapshot.queryParamMap.get('error');
+  }
+
+  enterDemo(role: DemoRole): void {
+    this.demoControls?.switchTo(role);
   }
 
   loginAsUser(): void {

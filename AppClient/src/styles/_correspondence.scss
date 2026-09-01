@@ -3,74 +3,113 @@
 // The login page (`login/login.component.scss`) established this look: a
 // blue-grey "paper" ground, navy ink, one terracotta accent, and a serif +
 // monospace pairing standing in for a typeset business letter - which is what
-// this app produces. This partial carries the palette and font stacks inward
-// so the advisor screens read as the same stationery, without each component
-// re-declaring the values.
+// this app produces.
 //
-// Scope: imported only by the advisor screens for now. It does not restyle the
-// shell (navy header) or the other roles - extend it there in one move if that
-// ever becomes the goal.
+// The **palette** now lives in `styles.scss` alongside `--color-*`, keyed off
+// the same `html[data-contrast='dark'|'high']` attribute `AccessibilityService`
+// writes - so `--paper` / `--ink` / `--rule` / `--accent` / `--accent-deep` /
+// `--ink-soft` / `--ok-*` are just there, globally, at zero per-component cost.
+// This partial keeps only the two font stacks and the `corr-data-table` mixin.
 //
-// The light and dark values are the login page's own. Colour *mode* here
-// follows the app rather than the browser: `AccessibilityService` writes
-// `data-contrast` onto <html> ('system' | 'dark' | 'high'), already folding in
-// the OS `prefers-color-scheme` / `prefers-contrast` defaults - so the palettes
-// hang off that attribute the way `styles.scss` overrides its `--color-*`
-// tokens, and a raw media query would double up with the service. The
-// high-contrast palette is this partial's own: pure black on white, terracotta
-// darkened until it clears 7:1.
+// Scope of the look: the advisor screens and the user screens (`user/home`,
+// `company-list`, `documents`, `company-form`, `application-list`). Not the
+// shell (navy header) or the reviewer screen yet.
 //
 // Focus rings deliberately stay on the app-wide `--color-focus` (blue, black in
-// high contrast) rather than the terracotta accent: that token is tuned for
-// contrast in every mode, and the login page only diverges from it because it
-// renders before the service runs. Terracotta here marks structure (the
-// outgoing-suggestion edge, a link hover), never focus.
+// high contrast), not the terracotta accent - that token is tuned for contrast
+// in every mode. Terracotta marks structure (an edge, a link hover), never focus.
+
+@use 'breakpoints' as bp;
 
 $corr-serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
 $corr-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liberation Mono', monospace;
 
-// Emits the token rulesets. Call once at the top level of a component
-// stylesheet (not nested) - it defines `:host` and `:host-context(...)`.
-@mixin corr-tokens {
-  :host {
-    --paper: #edf1f5;
-    --card: #ffffff;
-    --ink: #1a2233;
-    --ink-soft: #57667a;
-    --rule: #d3dbe4;
-    --accent: #b5432f;
-    --accent-deep: #7a2c1f;
+// Retextures the shared `app-data-table` to the correspondence stationery -
+// the default component ships its own hard-coded drop-shadowed card palette,
+// shared with every role. `::ng-deep` scoped under the caller's `:host` reaches
+// only that page's tables, leaving the component and the other roles alone.
+// Call once at the top level of a component stylesheet that also renders
+// `<app-data-table>`.
+@mixin corr-data-table {
+  :host ::ng-deep app-data-table {
+    table {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      box-shadow: none;
+    }
 
-    --ok-bg: #e7f0e9;
-    --ok-border: #b9d3bf;
-    --ok-ink: #2c5338;
+    caption {
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
+      font-family: $corr-mono;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    th {
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    th button,
+    th > span {
+      font-family: $corr-mono;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    th button:hover {
+      background: var(--rule);
+    }
+
+    th button span {
+      color: var(--ink-soft);
+    }
+
+    th button:focus-visible,
+    td button:focus-visible {
+      outline: 3px solid var(--color-focus);
+    }
+
+    td {
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink);
+    }
+
+    tr:hover td {
+      background: var(--paper);
+    }
+
+    td button {
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      color: var(--ink);
+    }
+
+    td button:hover {
+      background: var(--rule);
+    }
   }
 
-  :host-context(html[data-contrast='dark']) {
-    --paper: #10151f;
-    --card: #171e2b;
-    --ink: #e8edf4;
-    --ink-soft: #9baac2;
-    --rule: #2b3547;
-    --accent: #e2694f;
-    --accent-deep: #f0876f;
+  @include bp.mobile {
+    :host ::ng-deep app-data-table {
+      tbody tr {
+        background: var(--card);
+        border-color: var(--rule);
+        box-shadow: none;
+      }
 
-    --ok-bg: #17251c;
-    --ok-border: #2f4a38;
-    --ok-ink: #9dd3ac;
-  }
-
-  :host-context(html[data-contrast='high']) {
-    --paper: #ffffff;
-    --card: #ffffff;
-    --ink: #000000;
-    --ink-soft: #000000;
-    --rule: #000000;
-    --accent: #6e2a1e;
-    --accent-deep: #6e2a1e;
-
-    --ok-bg: #ffffff;
-    --ok-border: #1b5e20;
-    --ok-ink: #1b5e20;
+      td {
+        border-color: var(--rule);
+      }
+    }
   }
 }

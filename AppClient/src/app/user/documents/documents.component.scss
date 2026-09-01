@@ -1,17 +1,37 @@
 @use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
 
-.sr-only {
+// Same DIN 5008 stationery as the login page, advisor screens, user home and
+// company list: blue-grey paper, navy ink, one terracotta accent, serif +
+// monospace. The palette tokens are global (styles.scss).
+// See `styles/_correspondence.scss`.
+@include corr.corr-data-table;
+
+:host { display: block; }
+
+%visually-hidden {
   position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
+// Both tables here sit in a <section> whose visible <h2> already names them
+// (one caption is word-for-word the heading), so the retextured caption bar
+// would just be a second identical pill. Keep the <caption> in the DOM for
+// assistive tech, drop it visually.
+:host ::ng-deep app-data-table caption { @extend %visually-hidden; }
+
+// Global `main` (styles.scss) supplies max-width / margin / padding.
 main {
-  max-width: 860px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .page-header {
@@ -20,108 +40,110 @@ main {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 
-  h1 { margin: 0; }
-}
-
-.btn-upload {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1.1rem;
-  background: #005fcc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-
-  &:hover { background: #004aaa; }
-
-  &:focus-visible {
-    outline: 3px solid #005fcc;
-    outline-offset: 2px;
+  h1 {
+    margin: 0;
+    font-family: corr.$corr-serif;
+    font-weight: 400;
+    font-size: 1.7rem;
+    color: var(--ink);
   }
+
+  .section-tab { margin: 0; }
 }
 
-.upload-form {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
-  max-width: 480px;
+// --- Section shell (each one a sheet on the desk) -----------------
 
-  h2 { margin: 0 0 0.75rem; font-size: 1rem; }
+section {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+}
+
+.upload-form { max-width: 480px; }
+
+.section-tab {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
 .upload-filename {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
   margin: 0 0 1rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
 }
 
-.field {
+// Serif, like every other help text in the app - mono names controls, serif
+// carries sentences.
+.hint {
+  margin: 0 0 1rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+// --- Notices ----------------------------------------------------
+
+.notice {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-alert-border);
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  background: var(--color-alert-bg);
+  color: var(--color-alert-text);
+}
+
+// --- Form fields & filters ------------------------------------
+
+.field,
+.filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  margin-bottom: 1rem;
+  gap: 0.35rem;
 
-  label { font-size: 0.875rem; font-weight: 500; }
+  label {
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
 
-  input, select {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
+  input,
+  select {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.95rem;
     font-family: inherit;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
   }
 }
 
-.upload-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.btn-primary {
-  padding: 0.5rem 1.2rem;
-  background: #005fcc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  &:hover:not(:disabled) { background: #004aaa; }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-}
-
-.btn-cancel {
-  padding: 0.5rem 1.2rem;
-  background: #fff;
-  color: #374151;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  cursor: pointer;
-  &:hover:not(:disabled) { background: #f1f5f9; }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-}
+.field { margin-bottom: 1rem; }
 
 .filter-bar {
   display: flex;
   align-items: flex-end;
   gap: 1rem;
-  margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
 
@@ -131,36 +153,84 @@ main {
   gap: 1rem;
   flex-wrap: wrap;
   min-inline-size: 0;
-  border: 0;
   margin: 0;
   padding: 0;
+  border: 0;
 }
 
-.filter-group {
+.filter-group input[type="search"] { min-width: 12rem; }
+
+// --- Buttons -------------------------------------------------
+
+.btn-upload,
+.btn-primary,
+.btn-cancel {
+  min-block-size: 44px;
+  padding: 0.6rem 1.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  // Explicit muted tokens, not opacity - keeps the label at ~5:1 while the
+  // upload buttons sit disabled during an upload. See user/home for the why.
+  &:disabled {
+    background: var(--paper);
+    border-color: var(--rule);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+}
+
+.btn-upload {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  label {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  select, input[type="search"] {
-    padding: 0.4rem 0.65rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    background: #fff;
-    &:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
-  }
-
-  input[type="search"] { min-width: 12rem; }
+  align-items: center;
+  gap: 0.4rem;
 }
+
+.btn-upload:not(:disabled),
+.btn-primary:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
+}
+
+.btn-cancel:not(:disabled) {
+  background: var(--paper);
+  color: var(--ink);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+}
+
+.upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+// --- Focus: one ring for every control ----------------------
+
+:is(.field, .filter-group) :is(input, select):focus-visible,
+.btn-upload:focus-visible,
+.btn-primary:focus-visible,
+.btn-cancel:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.sr-only { @extend %visually-hidden; }
 
 @include bp.mobile {
   .filter-fieldset {
@@ -172,19 +242,10 @@ main {
   .filter-group {
     width: 100%;
 
-    select, input[type="search"] {
+    input,
+    select {
       width: 100%;
       min-width: 0;
     }
   }
-}
-
-.error {
-  background: #fde8e8;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-  border-radius: 6px;
-  padding: 0.6rem 1rem;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
 }

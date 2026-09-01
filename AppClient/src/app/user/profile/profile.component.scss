@@ -1,130 +1,275 @@
+@use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
+
+// Same DIN 5008 stationery as the login page, the advisor screens and the rest
+// of the user screens. See `styles/_correspondence.scss`.
+//
+// This screen is the sender field itself - the name, street, postcode and city
+// typed here are what `CoverLetterAssembler` prints into the Absenderfeld of
+// every letter the app produces. So the sender sheet is set as the letterhead
+// it feeds: it carries the page's one terracotta edge, and postcode and city
+// share a line the way they do on an envelope. The two sheets below it (the
+// reviewer network, the export) are ordinary sheets - they are about the
+// account, not about the letter.
+:host { display: block; }
+
+// Global `main` (styles.scss) supplies max-width / margin / padding.
 main {
-  max-width: 720px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
+// --- Shared voices ----------------------------------------------------
+
+// The monospace label voice.
+.profile-info dt,
+legend,
+label,
+.btn-primary,
+.btn-secondary,
+.network [role='status'] {
+  font-family: corr.$corr-mono;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+// The serif body voice. Help text belongs here rather than in the label voice:
+// these hints are full sentences, and a sentence set in tracked 0.72rem
+// monospace is apparatus pretending to be prose. Mono stays for things that
+// name a control; serif carries anything meant to be read.
+h1,
+h2,
+.profile-info dd,
+.error-summary li,
+.hint {
+  font-family: corr.$corr-serif;
+  color: var(--ink);
+}
+
+// --- Masthead --------------------------------------------------------
+
+h1 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.25;
+}
+
+// The roles this account holds - stated as a docket line above the form, not
+// boxed into a sheet of its own.
 .profile-info {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.6rem 1.5rem;
-  margin: 1.5rem 0 0;
-  font-size: 0.95rem;
+  gap: 0.4rem 1.25rem;
+  margin: 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
 
-  dt { font-weight: 600; color: var(--color-text-muted); }
-  dd { margin: 0; }
-}
+  dt {
+    font-size: 0.68rem;
+    letter-spacing: 0.07em;
+    padding-top: 0.15rem;
+  }
 
-fieldset {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem 1.25rem 1.25rem;
-  margin: 1.5rem 0;
-  background: #fff;
-
-  legend {
+  dd {
+    margin: 0;
     font-size: 0.95rem;
-    font-weight: 600;
-    padding: 0 0.4rem;
   }
 }
+
+// --- Sheets ----------------------------------------------------------
+
+fieldset,
+.network,
+.export {
+  margin: 0;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+// The letterhead. The single terracotta edge on this page marks the one block
+// whose values leave the application on paper.
+fieldset {
+  border-top: 3px solid var(--accent);
+}
+
+legend {
+  padding: 0 0.4rem;
+  font-size: 0.7rem;
+}
+
+h2 {
+  margin: 0 0 0.4rem;
+  font-weight: 400;
+  font-size: 1.15rem;
+}
+
+// --- Fields ----------------------------------------------------------
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
   margin-bottom: 1rem;
-
-  label { font-size: 0.875rem; font-weight: 500; }
-
-  input, select {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
-  }
 }
 
+label { font-size: 0.7rem; }
+
 .hint {
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-  margin: 0;
+  margin: 0 0 1rem;
   max-width: 62ch;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+// An address block is a narrow thing. Held to a letterhead measure rather than
+// stretched across the full 860px sheet, so the sender fields look like the
+// block they are printed as instead of a wall of inputs.
+fieldset .field,
+.address-line { max-width: 34rem; }
+
+// The envelope line. `auto` on the postcode sizes it to its own content rather
+// than to half the row, which is what makes the pair read as one address line
+// instead of two equal columns.
+.address-line {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: 0 1rem;
 }
 
 .error {
-  color: #b3261e;
-  font-size: 0.85rem;
-  font-weight: 500;
   margin: 0;
+  font-family: corr.$corr-serif;
+  font-size: 0.88rem;
+  color: var(--color-alert-text);
 }
 
-/* Focus lands here after a failed submit, so it must show a focus ring. */
+// --- Error summary ---------------------------------------------------
+// Focus lands here after a failed submit, so it must show a focus ring.
+
 .error-summary {
-  border: 2px solid #b3261e;
-  border-radius: 8px;
   padding: 0.9rem 1.1rem;
-  margin-bottom: 1.5rem;
-  background: #fff5f5;
+  background: var(--color-alert-bg);
+  border: 1px solid var(--color-alert-border);
+  border-left-width: 3px;
+  border-radius: 2px;
 
-  h2 { margin: 0 0 0.5rem; font-size: 1rem; color: #b3261e; }
-  ul { margin: 0; padding-left: 1.2rem; }
-  li { margin-bottom: 0.25rem; }
-  a { color: #b3261e; font-weight: 500; }
+  h2 {
+    margin: 0 0 0.5rem;
+    font-family: corr.$corr-mono;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-alert-text);
+  }
 
-  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+  ul {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+
+  li {
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+  }
+
+  a { color: var(--color-alert-text); }
+
+  &:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
 }
+
+// --- Buttons ---------------------------------------------------------
 
 .form-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin: 1.5rem 0 1rem;
+  gap: 0.75rem;
+  margin: 0;
 }
 
-.export,
-.network {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 1.25rem;
-  margin-top: 2rem;
+.btn-primary,
+.btn-secondary {
+  min-block-size: 44px;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
 
-  h2 { margin: 0 0 0.4rem; font-size: 1.05rem; }
-}
-
-.network {
-  .hint { margin-bottom: 1rem; }
-
-  [role="status"] { color: var(--color-text-muted); font-size: 0.9rem; }
+  // Explicit muted tokens rather than `opacity` - see user/home for the
+  // contrast measurement behind this.
+  &:disabled {
+    background: var(--paper);
+    border-color: var(--rule);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
 }
 
 .btn-primary {
-  padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  background: #005fcc;
-  color: #fff;
-  border: none;
-  &:hover:not(:disabled) { background: #004aaa; }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
 }
 
 .btn-secondary {
-  padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  background: #fff;
-  color: #005fcc;
-  border: 1px solid #005fcc;
-  &:hover:not(:disabled) { background: #eef4fd; }
-  &:disabled { opacity: 0.6; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid var(--color-focus, #005fcc); outline-offset: 2px; }
+  background: var(--paper);
+  color: var(--ink);
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+}
+
+// --- Network & export sheets ----------------------------------------
+
+.network [role='status'] {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+// Retextures the shared `app-data-table` to this stationery.
+@include corr.corr-data-table;
+
+// --- Focus: one ring for every control ------------------------------
+
+:is(input, select, button, a):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@include bp.mobile {
+  // An address line is only an address line when it fits on one.
+  .address-line { grid-template-columns: 1fr; }
 }

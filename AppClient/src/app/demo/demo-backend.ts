@@ -2,7 +2,7 @@ import { HttpBackend, HttpErrorResponse, HttpEvent, HttpRequest, HttpResponse, H
 import { Injectable, inject } from '@angular/core';
 import { Observable, delay, of, throwError } from 'rxjs';
 
-import { DemoAsset, DemoRequest, OUT_OF_SCOPE, resolve } from './demo-api';
+import { DemoAsset, DemoRequest, OUT_OF_SCOPE, UNAUTHENTICATED, resolve } from './demo-api';
 import { DemoDb } from './demo-db';
 
 /** Long enough that loading states and `aria-busy` are actually shown once. */
@@ -58,6 +58,11 @@ export class DemoBackend implements HttpBackend {
       return this.fail(request, 501, 'Diese Funktion ist in der Demo nicht enthalten.');
     }
 
+    // Before a role is picked on the login letter, the demo is "signed out".
+    if (result === UNAUTHENTICATED) {
+      return this.fail(request, 401, 'Demo: noch keine Rolle gewählt.');
+    }
+
     // A handler returning `undefined` looked something up and did not find it;
     // `null` is a deliberate empty body, as DELETE returns.
     if (result === undefined) {
@@ -82,5 +87,9 @@ export class DemoBackend implements HttpBackend {
 }
 
 function statusText(status: number): string {
-  return status === 404 ? 'Not Found' : 'Not Implemented';
+  switch (status) {
+    case 401: return 'Unauthorized';
+    case 404: return 'Not Found';
+    default: return 'Not Implemented';
+  }
 }

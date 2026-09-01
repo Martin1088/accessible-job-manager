@@ -1,7 +1,4 @@
-@use '../../../styles/breakpoints' as bp;
 @use '../../../styles/correspondence' as corr;
-
-@include corr.corr-tokens;
 
 :host {
   display: block;
@@ -70,7 +67,8 @@ section {
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: 2px;
-  padding: 1.5rem;
+  // Tightens to ~1.1rem on a phone without a media query.
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
 }
 
 // The suggestion this advisor is about to send out - marked on its edge the
@@ -93,6 +91,14 @@ section.composer {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+// A line of standing instruction under a section tab, in the letter's own voice.
+.section-note {
+  margin: 0 0 1rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
   color: var(--ink-soft);
 }
 
@@ -220,98 +226,5 @@ section.composer {
   }
 }
 
-// --- Data tables --------------------------------------------------------
-//
-// `app-data-table` ships its own encapsulated, hard-coded palette, shared with
-// the user and reviewer screens. Piercing with ::ng-deep, scoped under this
-// :host, retextures only the two tables on this page - the correspondence
-// stationery instead of the default drop-shadowed card - without touching the
-// shared component or the other roles.
-
-:host ::ng-deep app-data-table {
-  table {
-    background: var(--card);
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    box-shadow: none;
-  }
-
-  caption {
-    background: var(--paper);
-    border-bottom: 1px solid var(--rule);
-    font-family: corr.$corr-mono;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-
-  th {
-    background: var(--paper);
-    border-bottom: 1px solid var(--rule);
-  }
-
-  th button,
-  th > span {
-    font-family: corr.$corr-mono;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-
-  th button:hover {
-    background: var(--rule);
-  }
-
-  th button span {
-    color: var(--ink-soft);
-  }
-
-  th button:focus-visible,
-  td button:focus-visible {
-    outline: 3px solid var(--color-focus);
-  }
-
-  td {
-    border-bottom: 1px solid var(--rule);
-    color: var(--ink);
-  }
-
-  tr:hover td {
-    background: var(--paper);
-  }
-
-  td button {
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    color: var(--ink);
-  }
-
-  td button:hover {
-    background: var(--rule);
-  }
-}
-
-@include bp.mobile {
-  main {
-    gap: 1.25rem;
-  }
-
-  section {
-    padding: 1.1rem;
-  }
-
-  :host ::ng-deep app-data-table tbody tr {
-    background: var(--card);
-    border-color: var(--rule);
-    box-shadow: none;
-  }
-
-  :host ::ng-deep app-data-table td {
-    border-color: var(--rule);
-  }
-}
+// The two data tables on this page, retextured to the stationery.
+@include corr.corr-data-table;

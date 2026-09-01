@@ -1,12 +1,68 @@
-form-wrapper {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.75rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+@use '../../../styles/correspondence' as corr;
+
+// Same DIN 5008 stationery as the login page, advisor screens, user home,
+// company list and documents: blue-grey paper, navy ink, one terracotta
+// accent, serif + monospace. See `styles/_correspondence.scss`.
+:host { display: block; }
+
+// Global `main` (styles.scss) supplies max-width / margin / padding.
+main {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
+
+h1 {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-weight: 400;
+  font-size: 1.7rem;
+  color: var(--ink);
+}
+
+// --- Section shell (each one a sheet on the desk) ------------------
+
+section {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-tab {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0.3rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+// --- Notices ----------------------------------------------------
+
+.notice {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--color-alert-border);
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  background: var(--color-alert-bg);
+  color: var(--color-alert-text);
+}
+
+// --- Field groups ---------------------------------------------
+// The template wraps every field in a bare <div>; that is the field group.
 
 div {
   display: flex;
@@ -14,128 +70,193 @@ div {
   gap: 0.35rem;
 }
 
+// The bare <div> that holds the three sheets and the action row.
+.form-body {
+  gap: 1.25rem;
+}
+
 label {
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: #333;
+  font-family: corr.$corr-mono;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
-// Helper text under a field. #666 on the form's white background is ~5.7:1,
-// so it still clears WCAG AA at this size.
+// Help text takes the serif prose voice, matching `profile` and `preferences`.
+// Both strings here are whole sentences ("Paste the posting, then ask for
+// suggestions per section below. Existing entries are kept."), and a sentence
+// set in tracked 0.72rem monospace is apparatus pretending to be prose.
+//
+// `.json-hint` below deliberately stays mono: "Expected format:" is a label
+// introducing a code sample, not something you read. Mono names things, serif
+// carries sentences - that is the line, not the class name.
 .hint {
-  font-size: 0.78rem;
-  color: #666;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
 }
 
-input, textarea {
+input,
+textarea,
+select {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.15s;
+}
 
-  &:focus-visible {
-    outline: 3px solid #005fcc;
-    outline-offset: 2px;
+textarea { resize: vertical; }
+
+// --- Repeated groups (a location, a position) -----------------
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+legend {
+  padding: 0 0.4rem;
+  font-family: corr.$corr-mono;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+// --- Buttons -------------------------------------------------
+// Bare <button> covers the suggest / add / remove actions; .actions and
+// .import-toggle refine their own.
+
+button {
+  align-self: flex-start;
+  min-block-size: 44px;
+  padding: 0.6rem 1.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: corr.$corr-mono;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+
+  // Explicit muted tokens, not opacity - a suggest button sits disabled while
+  // its request runs. See user/home for the why.
+  &:disabled {
+    color: var(--ink-soft);
+    cursor: not-allowed;
   }
 }
 
-textarea {
-  resize: vertical;
-}
-
 .import-toggle {
-  display: flex;
+  flex-direction: row;
   gap: 0;
-  margin-bottom: 1rem;
 
   button {
     flex: 1;
-    padding: 0.45rem 1rem;
-    border: 1px solid #ccc;
-    background: #f5f5f5;
-    color: #555;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    align-self: auto;
 
-    &:first-child { border-radius: 4px 0 0 4px; }
-    &:last-child  { border-radius: 0 4px 4px 0; border-left: none; }
+    &:last-child { border-left: none; }
 
     &.active {
-      background: #005fcc;
-      color: #fff;
-      border-color: #005fcc;
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--card);
     }
   }
 }
 
 .json-import {
-  display: flex;
-  flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  border: 1px dashed #005fcc;
-  border-radius: 6px;
-  background: #f0f6ff;
-  margin-bottom: 1rem;
-
-  label { font-weight: 500; }
+  border: 1px dashed var(--accent);
+  border-radius: 2px;
+  background: var(--paper);
 
   input[type="file"] {
     width: auto;
-    border: none;
     padding: 0;
-    box-shadow: none;
+    border: none;
     background: transparent;
   }
 
   .json-hint {
-    font-size: 0.78rem;
-    color: #666;
+    font-family: corr.$corr-mono;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
     word-break: break-all;
   }
 
   .json-error {
-    color: #c0392b;
-    font-size: 0.85rem;
+    // Plain red text - clear the global `[role="alert"]` box (styles.scss).
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: corr.$corr-serif;
+    font-size: 0.9rem;
+    color: var(--accent-deep);
   }
 }
 
-/*
- * Feedback for one suggestion trigger, rendered next to the button that was
- * pressed. Deliberately not a live region: the two regions in the suggestions
- * section carry the announcement, so a screen reader hears the message once.
- * #444 and #c0392b on the form's white background are ~9.7:1 and ~5:1.
- */
+.actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+
+  button:first-child {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--card);
+
+    &:hover:not(:disabled) {
+      background: var(--accent-deep);
+      border-color: var(--accent-deep);
+    }
+  }
+}
+
+// --- Suggestion feedback & duplicate hints -------------------
+
 .suggestion-feedback {
-  font-size: 0.85rem;
-  color: #444;
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
 
-  &.is-error {
-    color: #c0392b;
-  }
+  &.is-error { color: var(--accent-deep); }
 }
 
-/*
- * The companies the user already has under the typed name. An exact match is
- * the one worth stopping at, so it carries the warning colouring; the partial
- * matches stay quiet, because typing towards a new name passes through them.
- * #8a5a00 and #444 on the form's white background are ~4.9:1 and ~9.7:1.
- */
 .existing-companies {
-  font-size: 0.85rem;
-  color: #444;
+  font-family: corr.$corr-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
 
-  &:empty {
-    display: none;
-  }
+  &:empty { display: none; }
 
   .is-duplicate {
-    color: #8a5a00;
-    font-weight: 500;
+    color: var(--accent-deep);
+    font-weight: 700;
   }
 
   ul {
@@ -143,21 +264,18 @@ textarea {
     padding-left: 1.2rem;
   }
 
-  // The site a listed company sits at - what tells two branches apart.
-  .at-city {
-    color: #666;
+  .at-city::before { content: " — "; }
 
-    &::before {
-      content: " — ";
-    }
-  }
-
-  a {
-    color: #005fcc;
-  }
+  a { color: var(--ink); }
 }
 
-/* Announced by a screen reader, never shown - the visible copy sits with its button. */
+// --- Focus: one ring for every control ----------------------
+
+:is(input, textarea, select, button, a):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -167,25 +285,5 @@ textarea {
   border: 0;
   overflow: hidden;
   clip: rect(0 0 0 0);
-  clip-path: inset(50%);
   white-space: nowrap;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-
-  button:first-child {
-    background: #005fcc;
-    color: #fff;
-    &:hover { background: #004aaa; }
-  }
-
-  button:last-child {
-    background: #e5e5e5;
-    color: #333;
-    &:hover { background: #d0d0d0; }
-  }
 }
