@@ -9,13 +9,55 @@
  * know, and the demo starts talking to a server that is not there. Checking it
  * by hand before each release is exactly the kind of check that gets skipped.
  *
- *   npm run build:demo && npm run check:demo
+ * This script only drives the browser. The built bundle has to be served
+ * already, and under the /accessible-job-manager/ path, because that is the
+ * --base-href `npm run build:demo` sets - served at the root, every asset URL
+ * resolves one level too high and 404s. From AppClient/:
+ *
+ *   npm run build:demo
+ *   mkdir -p serve && ln -sfn "$PWD/dist/demo/browser" serve/accessible-job-manager
+ *   (cd serve && python3 -m http.server 8099 --bind 127.0.0.1) &
+ *   npm run check:demo
+ *   kill %1 && rm -rf serve
  */
 import puppeteer from 'puppeteer';
 
 const PORT = process.env.DEMO_PORT ?? '8099';
 const BASE = `http://127.0.0.1:${PORT}/accessible-job-manager/`;
 const CHROME = process.env.CHROME_BIN ?? undefined;
+
+/**
+ * Reaching a dead port surfaces as a raw puppeteer ERR_CONNECTION_REFUSED stack
+ * trace that says nothing about the missing serve step - which is the single
+ * easiest way to run this script wrong. Check first and say what to do.
+ */
+async function assertServed() {
+  let reason;
+  try {
+    const res = await fetch(BASE, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) return;
+    reason = `${BASE} antwortet mit HTTP ${res.status}`;
+  } catch {
+    reason = `unter ${BASE} lauscht nichts`;
+  }
+
+  console.error(`FEHLGESCHLAGEN: ${reason}.
+
+Dieses Skript steuert nur den Browser - das gebaute Bundle muss bereits unter
+dem Pfad /accessible-job-manager/ ausgeliefert werden (die --base-href aus
+\`npm run build:demo\`). Aus AppClient/:
+
+  npm run build:demo
+  mkdir -p serve && ln -sfn "$PWD/dist/demo/browser" serve/accessible-job-manager
+  (cd serve && python3 -m http.server ${PORT} --bind 127.0.0.1) &
+  npm run check:demo
+  kill %1 && rm -rf serve
+
+Anderer Port: DEMO_PORT=<port> npm run check:demo`);
+  process.exit(1);
+}
+
+await assertServed();
 
 const browser = await puppeteer.launch({
   ...(CHROME ? { executablePath: CHROME } : {}),
@@ -36,15 +78,15 @@ async function visit(hash, label) {
   console.log(`  ${label.padEnd(28)} h1: ${h1}`);
 }
 
-// The demo starts signed out: every route redirects to the login letter until
-// a persona is picked there. Enter as the applicant first, the way a visitor
+// The demo starts signed out: every route redirects to the login page until a
+// persona is picked there. Enter as the applicant first, the way a visitor
 // does - which also proves the front door itself works.
-console.log('--- Eintritt über den Demo-Brief ---');
+console.log('--- Eintritt über die Login-Seite ---');
 await page.goto(BASE, { waitUntil: 'networkidle0' });
 await new Promise(r => setTimeout(r, 700));
-const subject = await page.$eval('.letter__subject', el => el.textContent.trim()).catch(() => '(kein Betreff)');
-console.log(`  Betreff: ${subject}`);
-await page.click('.persona__button.btn-primary');
+const title = await page.$eval('.masthead__title', el => el.textContent.trim()).catch(() => '(kein Titel)');
+console.log(`  Titel: ${title}`);
+await page.click('.sign-in .persona-btn');
 await new Promise(r => setTimeout(r, 800));
 
 console.log('\n--- Routen durchklicken ---');

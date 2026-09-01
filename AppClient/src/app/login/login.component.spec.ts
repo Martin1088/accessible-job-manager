@@ -27,12 +27,28 @@ describe('LoginComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('renders the sign-in options, not the demo letter', () => {
+  it('renders the OAuth sign-in, not the demo persona buttons', () => {
     const fixture = TestBed.createComponent(LoginComponent);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('.login-options--primary')).toBeTruthy();
-    expect(el.querySelector('.persona-list')).toBeNull();
+    expect(el.querySelector('.sign-in .btn-primary')).toBeTruthy();
+    expect(el.querySelector('.persona-btn')).toBeNull();
+    // "Other roles" carries the two remaining sign-in buttons.
+    expect(el.querySelectorAll('.other-roles .btn-secondary').length).toBe(2);
+  });
+
+  it('shows the three introduction topics, each with a screenshot', () => {
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const topics = el.querySelectorAll('.intro .topic');
+    expect(topics.length).toBe(3);
+    topics.forEach(topic => {
+      expect(topic.querySelector('h3')).toBeTruthy();
+      const img = topic.querySelector<HTMLImageElement>('img.topic__shot');
+      expect(img).toBeTruthy();
+      expect(img!.getAttribute('alt')?.length).toBeGreaterThan(0);
+    });
   });
 
   it('has no axe-detectable accessibility violations', async () => {
@@ -71,23 +87,26 @@ describe('LoginComponent (demo build)', () => {
     }).compileComponents();
   });
 
-  it('renders the letter with one button per seeded person', () => {
+  it('offers the applicant persona first, then the other two roles', () => {
     const fixture = TestBed.createComponent(LoginComponent);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
-    const buttons = el.querySelectorAll<HTMLButtonElement>('.persona__button');
-    expect(buttons.length).toBe(3);
-    expect(buttons[0].textContent).toContain('Sabine Vogt');
-    expect(el.querySelector('.login-options--primary')).toBeNull();
+    const primary = el.querySelector<HTMLButtonElement>('.sign-in .persona-btn');
+    expect(primary).toBeTruthy();
+    expect(primary!.textContent).toContain('Sabine Vogt');
+    const others = el.querySelectorAll<HTMLButtonElement>('.other-roles .persona-btn');
+    expect(others.length).toBe(2);
+    expect(others[0].textContent).toContain('Jonas Reinhardt');
+    expect(others[1].textContent).toContain('Amira Sayed');
   });
 
   it('hands the picked role to the demo controls', () => {
     const fixture = TestBed.createComponent(LoginComponent);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
-    const buttons = el.querySelectorAll<HTMLButtonElement>('.persona__button');
-    buttons[1].click();
-    expect(switched).toEqual(['ADVISOR']);
+    el.querySelector<HTMLButtonElement>('.sign-in .persona-btn')!.click();
+    el.querySelectorAll<HTMLButtonElement>('.other-roles .persona-btn')[1].click();
+    expect(switched).toEqual(['USER', 'REVIEWER']);
   });
 
   it('has no axe-detectable accessibility violations', async () => {
