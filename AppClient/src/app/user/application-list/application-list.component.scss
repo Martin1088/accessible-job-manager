@@ -324,26 +324,26 @@ textarea {
         display: block;
         margin-block-end: 1rem;
         border: 1px solid var(--rule);
-        // The accent edge marks where one card starts, the same mark the
-        // shared `app-data-table` cards carry.
-        border-inline-start: 3px solid var(--accent);
         border-radius: 2px;
         background: var(--card);
-        overflow: hidden;
       }
 
-      // Label above value, the same card shape the shared `app-data-table`
-      // uses: a status or a cover-letter control keeps the card's full width
-      // instead of being squeezed against the opposite edge.
+      // Label left, value right - the card pattern every table in the app
+      // shares; `app-data-table` carries the same rules.
+      th,
       td {
-        display: block;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
         white-space: normal;
+        text-align: end;
         overflow-wrap: anywhere;
 
         &::before {
           content: attr(data-label);
-          display: block;
-          margin-block-end: 0.1rem;
+          flex-shrink: 0;
+          text-align: start;
           font-family: corr.$corr-mono;
           font-size: 0.66rem;
           font-weight: 700;
@@ -353,34 +353,21 @@ textarea {
         }
       }
 
-      // The company cell is the card's heading; its label stays as an
-      // overline so a reader that announces ::before keeps the pairing.
-      tbody td:first-child {
-        background: var(--paper);
-        padding-block: 0.7rem;
-        font-family: corr.$corr-serif;
-        font-size: 1.05rem;
-      }
-
+      // A cell of controls is not a value to line up on the right edge: its
+      // label takes the full row and the controls sit under it.
       td:has(> div),
       td:has(> button),
       td:has(> select) {
-        display: flex;
         flex-wrap: wrap;
         align-items: flex-start;
-        gap: 0.5rem;
+        text-align: start;
 
-        &::before {
-          flex-basis: 100%;
-          margin-block-end: 0;
-        }
+        &::before { flex-basis: 100%; }
       }
 
       td[colspan] {
         display: block;
-        background: transparent;
-        font-family: inherit;
-        font-size: inherit;
+        text-align: start;
 
         &::before { content: none; }
       }

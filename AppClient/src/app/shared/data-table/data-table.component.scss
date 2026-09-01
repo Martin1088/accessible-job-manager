@@ -186,52 +186,47 @@ td button {
 
   tbody tr {
     display: block;
-    margin-block-end: 0.85rem;
+    margin-block-end: 1rem;
     background: var(--card);
     border: 1px solid var(--rule);
-    border-inline-start: 3px solid var(--accent);
     border-radius: 2px;
-    overflow: hidden;
   }
 
+  // Label left, value right - the pattern the applications table established
+  // and the one the tables share. The label is the same mono overline the
+  // column heads use, so a card reads as the table it came from.
   td {
-    display: block;
-    padding: 0.55rem 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 0.85rem;
+    text-align: end;
     // A cell value can be a long unbroken token (email, filename); without
     // this it overflows the card instead of wrapping onto its own line.
     overflow-wrap: anywhere;
 
     &::before {
       content: attr(data-label);
-      display: block;
-      margin-block-end: 0.1rem;
+      flex-shrink: 0;
+      text-align: start;
       font-family: corr.$corr-mono;
-      font-size: 0.64rem;
+      font-size: 0.66rem;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--ink-soft);
     }
   }
 
-  // The card heading. The label stays as an overline rather than being
-  // dropped: a reader that announces ::before content keeps the same
-  // label/value pairing here as in every other cell.
-  tbody td:first-child {
-    background: var(--paper);
-    padding-block: 0.7rem;
-    font-family: corr.$corr-serif;
-    font-size: 1.05rem;
-  }
-
-  // The label of an action cell takes the full row, so the buttons wrap
-  // below it rather than beside it.
+  // A cell of controls is not a value to line up on the right edge: its label
+  // takes the full row and the buttons sit under it, spread across the card.
   td:has(button) {
-    padding-block: 0.7rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
 
     &::before {
       flex-basis: 100%;
-      margin-block-end: 0;
     }
   }
 
@@ -239,20 +234,13 @@ td button {
     border-block-end: none;
   }
 
-  // The empty-state row is not a card heading, and its colspan cell has no
-  // label of its own.
+  // The empty-state cell spans the row and has no label of its own.
   tbody td[colspan] {
-    background: transparent;
-    font-family: inherit;
-    font-size: inherit;
-    padding: 0.85rem;
+    display: block;
+    text-align: start;
 
     &::before {
       content: none;
     }
-  }
-
-  tbody tr:has(td[colspan]) {
-    border-inline-start-width: 1px;
   }
 }

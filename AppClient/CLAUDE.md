@@ -140,32 +140,28 @@ VoiceOver, so the announcement is what confirms the action, while
 `TABLE.SORT_ANNOUNCE_*` keys in `public/i18n/*.json`.
 
 **Mobile card layout is CSS-only** — `thead { display: none; }` plus
-`tr { display: block; }` / `td { display: block; …; &::before { content:
-attr(data-label); display: block; } }` under `@include bp.mobile`. The DOM
-stays a single `<table>`, so VoiceOver still reports table structure and
-header association per cell; there is no separate mobile template, no
-`BreakpointObserver`, no JS. Never use `visibility: hidden` or `opacity: 0`
-on `thead` here — the header row would stay in the layout and remain
-reachable while looking hidden.
+`tr { display: block; }` / `td { display: flex; …; &::before { content:
+attr(data-label); } }` under `@include bp.mobile`. The DOM stays a single
+`<table>`, so VoiceOver still reports table structure and header association
+per cell; there is no separate mobile template, no `BreakpointObserver`, no
+JS. Never use `visibility: hidden` or `opacity: 0` on `thead` here — the
+header row would stay in the layout and remain reachable while looking
+hidden.
 
-The card shape, shared by `app-data-table`, `application-list` and
+One card shape across `app-data-table`, `application-list` and
 `reviewer/home`:
 
-- **Label above value**, not label-left/value-right. The older
-  `justify-content: space-between` pairing left a wide empty gutter between
-  a short label and a short value on a phone, and pushed long values
-  (emails, filenames) onto a cramped second line.
-- **The first cell is the card's heading** — larger, on the paper band. Its
-  `data-label` stays as a small overline rather than being dropped, so a
-  reader that announces `::before` content gets the same label/value pairing
-  there as in every other cell.
-- **An actions cell** (`td:has(button)`) switches back to a wrapping flex
-  row under a full-width label, so several buttons sit side by side instead
-  of stacking one per line.
-- **A terracotta `border-inline-start`** marks where one card starts. The
-  hairline `--rule` is ~1.4:1 against the card, which is fine for a
-  decorative separator but too faint to be the only thing dividing two
-  cards; the accent edge measures above 5:1 in every theme.
+- **Label left, value right** (`justify-content: space-between`, the value
+  `text-align: end`). The label is the same mono overline the column heads
+  use, so a card reads as the table it came from.
+- **A cell of controls** (`td:has(button)`, and the select-bearing cells in
+  `application-list`) is not a value to line up on the right edge: it wraps,
+  its `::before` label takes `flex-basis: 100%`, and the buttons sit under
+  it spread across the card.
+- **The empty-state `td[colspan]`** drops back to `display: block`,
+  start-aligned, with no `::before` label.
+- Cards are separated by the hairline `--rule` border and the gap between
+  them; no cell is promoted to a card heading.
 
 **Table colour is tokens only.** `app-data-table` carries the DIN 5008
 stationery (`--paper`/`--card`/`--ink`/`--ink-soft`/`--rule`/`--accent`) in
