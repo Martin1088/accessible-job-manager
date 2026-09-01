@@ -35,6 +35,11 @@ dependencies {
     implementation 'io.micrometer:micrometer-core'
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
     implementation 'org.apache.commons:commons-csv:1.14.1'
+    // Reads the text out of a job posting the user printed to PDF, for boards
+    // that answer 403 to a server. Was test-only (Din5008PdfGeometryTest,
+    // CoverLetterPdfUaTest read generated PDFs back); PostingPdfTextExtractor
+    // now needs it at runtime.
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
 
     api libs.org.springframework.boot.spring.boot.starter.web
     api libs.org.projectlombok.lombok
@@ -46,7 +51,6 @@ dependencies {
     runtimeOnly libs.org.springframework.boot.spring.boot.devtools
     testImplementation libs.org.springframework.boot.spring.boot.starter.test
     testRuntimeOnly 'com.h2database:h2'
-    testImplementation 'org.apache.pdfbox:pdfbox:3.0.3'
     testImplementation 'org.verapdf:validation-model:1.28.1'
     testImplementation libs.org.springframework.security.spring.security.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

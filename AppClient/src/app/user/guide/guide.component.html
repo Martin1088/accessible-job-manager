@@ -15,30 +15,8 @@
       @if (auth.isReviewer$ | async) {
         <span class="role-chip">{{ 'GUIDE.ROLE_REVIEWER' | translate }}</span>
       }
-      @if (auth.isAdvisor$ | async) {
-        <a class="role-banner__jump" href="#advisor-guide">{{ 'GUIDE.JUMP_ADVISOR' | translate }}</a>
-      }
-      @if (auth.isReviewer$ | async) {
-        <a class="role-banner__jump" href="#reviewer-guide">{{ 'GUIDE.JUMP_REVIEWER' | translate }}</a>
-      }
     </div>
   }
-
-  <nav class="guide-toc" [attr.aria-label]="'GUIDE.TOC_LABEL' | translate">
-    <p class="guide-toc__heading">{{ 'GUIDE.TOC_LABEL' | translate }}</p>
-    <ul role="list">
-      <li><a href="#getting-started">{{ 'GUIDE.TOC_OVERVIEW' | translate }}</a></li>
-      <li><a href="#companies-applications">{{ 'GUIDE.TOC_COMPANIES' | translate }}</a></li>
-      <li><a href="#cover-letters">{{ 'GUIDE.TOC_DOCUMENTS' | translate }}</a></li>
-      <li><a href="#shortcuts-accessibility">{{ 'GUIDE.TOC_SHORTCUTS' | translate }}</a></li>
-      @if (auth.isAdvisor$ | async) {
-        <li><a href="#advisor-guide">{{ 'GUIDE.TOC_ADVISOR' | translate }}</a></li>
-      }
-      @if (auth.isReviewer$ | async) {
-        <li><a href="#reviewer-guide">{{ 'GUIDE.TOC_REVIEWER' | translate }}</a></li>
-      }
-    </ul>
-  </nav>
 
   <div class="guide-sections">
     <section id="getting-started" aria-labelledby="getting-started-heading">
@@ -59,6 +37,55 @@
       <p>{{ 'GUIDE.DOCUMENTS_BODY_2' | translate }}</p>
     </section>
 
+    <!--
+      The three user-only sheets. They sit in the same order the register lists
+      them and behind the same `isUser$` condition, so the register number and
+      the section number stay in step for every combination of roles.
+    -->
+    @if (auth.isUser$ | async) {
+      <section id="writing-a-letter" aria-labelledby="writing-a-letter-heading">
+        <h2 id="writing-a-letter-heading">{{ 'GUIDE.WRITING_HEADING' | translate }}</h2>
+        <p>{{ 'GUIDE.WRITING_BODY_1' | translate }}</p>
+        <p>{{ 'GUIDE.WRITING_BODY_2' | translate }}</p>
+        <p>{{ 'GUIDE.WRITING_BODY_3' | translate }}</p>
+      </section>
+
+      <section id="your-profile" aria-labelledby="your-profile-heading">
+        <h2 id="your-profile-heading">{{ 'GUIDE.PROFILE_HEADING' | translate }}</h2>
+        <p>{{ 'GUIDE.PROFILE_BODY_1' | translate }}</p>
+        <p>{{ 'GUIDE.PROFILE_BODY_2' | translate }}</p>
+        <p>{{ 'GUIDE.PROFILE_BODY_3' | translate }}</p>
+      </section>
+    }
+
+    <section id="display-preferences" aria-labelledby="display-preferences-heading">
+      <h2 id="display-preferences-heading">{{ 'GUIDE.PREFERENCES_HEADING' | translate }}</h2>
+      <p>{{ 'GUIDE.PREFERENCES_BODY_1' | translate }}</p>
+      <dl class="setting-list">
+        <div class="setting-row">
+          <dt>{{ 'PREFERENCES.CONTRAST' | translate }}</dt>
+          <dd>{{ 'GUIDE.PREF_CONTRAST' | translate }}</dd>
+        </div>
+        <div class="setting-row">
+          <dt>{{ 'PREFERENCES.REDUCE_MOTION' | translate }}</dt>
+          <dd>{{ 'GUIDE.PREF_REDUCE_MOTION' | translate }}</dd>
+        </div>
+        <div class="setting-row">
+          <dt>{{ 'PREFERENCES.HIDE_IMAGES' | translate }}</dt>
+          <dd>{{ 'GUIDE.PREF_HIDE_IMAGES' | translate }}</dd>
+        </div>
+        <div class="setting-row">
+          <dt>{{ 'PREFERENCES.FONT_FAMILY' | translate }}</dt>
+          <dd>{{ 'GUIDE.PREF_FONT_FAMILY' | translate }}</dd>
+        </div>
+        <div class="setting-row">
+          <dt>{{ 'PREFERENCES.FONT_SCALE' | translate }} / {{ 'PREFERENCES.LINE_HEIGHT' | translate }}</dt>
+          <dd>{{ 'GUIDE.PREF_TEXT_SIZE' | translate }}</dd>
+        </div>
+      </dl>
+      <p>{{ 'GUIDE.PREFERENCES_BODY_2' | translate }}</p>
+    </section>
+
     <section id="shortcuts-accessibility" aria-labelledby="shortcuts-accessibility-heading">
       <h2 id="shortcuts-accessibility-heading">{{ 'GUIDE.SHORTCUTS_HEADING' | translate }}</h2>
 
@@ -68,7 +95,7 @@
         <dl class="shortcut-list">
           <div class="shortcut-row">
             <dt><kbd aria-hidden="true">o</kbd></dt>
-            <dd>{{ 'NAV.DASHBOARD' | translate }}</dd>
+            <dd>{{ 'NAV.JOB_IMPORTER' | translate }}</dd>
           </div>
           <div class="shortcut-row">
             <dt><kbd aria-hidden="true">a</kbd></dt>

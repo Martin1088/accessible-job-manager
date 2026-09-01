@@ -19,8 +19,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm start                      # dev server on :4200, proxies /api /login /oauth2 → :8060 (logout is POST /api/logout)
-npx ng test --watch=false --browsers=ChromeHeadless
-npx ng test --watch=false --browsers=ChromeHeadless --include="**/company-form/*.spec.ts"
+npx ng test --watch=false
+npx ng test --watch=false --include="**/company-form/*.spec.ts"
 
 npm run lint                   # everything; advisory warnings, exit 0
 npm run lint:a11y              # template accessibility rules only, errors only - the CI gate
@@ -30,6 +30,15 @@ The `--include` pattern has to end in `*.spec.ts`. A directory glob such as
 `**/company-form/**` also matches that component's `.html` and `.scss`, which the test
 builder then tries to bundle as entry points and fails with "No loader is configured
 for .scss files".
+
+Do not add `--browsers=ChromeHeadless`. `karma.conf.js` already picks the launcher:
+as root — which is what the devcontainer runs as — it uses `ChromeHeadlessNoSandbox`,
+because Chromium refuses to start as root without `--no-sandbox`. Everywhere else
+(GitHub's runners, a desktop) it picks the stock, sandboxed `ChromeHeadless`. Naming the
+browser explicitly overrides that choice and fails in the devcontainer with
+`Running as root without --no-sandbox is not supported`. (`build.yml` does pass the
+flag; on a non-root runner it selects the launcher `karma.conf.js` would have chosen
+anyway, so it is redundant there rather than wrong.)
 
 Karma needs a Chrome/Chromium binary. The devcontainer installs Chromium and sets
 `CHROME_BIN` for you (see `.devcontainer/devcontainer.json`), and it is found

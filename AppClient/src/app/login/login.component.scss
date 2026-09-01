@@ -22,9 +22,18 @@ $mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liber
   --error-bg: #FBEEEC;
   --error-border: #E7B7AC;
 
-  // Paint the paper ground on the host too, not only on `main`, so the
-  // masthead text (which sits on the bare ground, no card) always resolves to
-  // a contrasting background for the contrast checker.
+  // The frame around the letterhead sheet. Not a new colour: this is the blue
+  // the shell already owns - the header's bottom rule and the skip link - so
+  // the front door is edged in the same blue the app opens onto.
+  //
+  // Safe as a persistent border only because focus on this page is terracotta
+  // (see `button:focus-visible` below). On a screen whose focus ring is the
+  // app-wide blue `--color-focus`, a standing blue frame would read as focus.
+  --frame: #005FCC;
+
+  // Paint the paper ground on the host too, not only on `main`, so the text
+  // that sits on the bare ground rather than on a sheet - the credit foot -
+  // always resolves to a contrasting background for the contrast checker.
   display: block;
   background: var(--paper);
   color: var(--ink);
@@ -41,6 +50,9 @@ $mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liber
     --accent-deep: #F0876F;
     --error-bg: #3A2420;
     --error-border: #5C332A;
+    // #005FCC is near-invisible on the dark card; this is the global dark
+    // palette's blue, lifted to stay legible against `--card`.
+    --frame: #6AB0FF;
   }
 }
 
@@ -66,6 +78,7 @@ main {
 
 .masthead {
   text-align: center;
+  // The blue frame is NOT set here - see the note under the sheet rule below.
 }
 
 .masthead__logo {
@@ -88,7 +101,10 @@ main {
 }
 
 .masthead__title {
-  margin: 0 0 0.4rem;
+  // No trailing margin: the title is the last thing on the letterhead sheet, so
+  // a bottom margin here would show up as uneven card padding. The gap to a
+  // tagline, when there is one, is the tagline's to own.
+  margin: 0;
   font-family: $mono;
   font-size: clamp(1.55rem, 5.5vw, 2.2rem);
   line-height: 1.15;
@@ -106,7 +122,7 @@ main {
 }
 
 .masthead__tagline {
-  margin: 0;
+  margin: 0.4rem 0 0;
   font-family: $serif;
   font-size: 1rem;
   line-height: 1.5;
@@ -127,13 +143,33 @@ main {
   text-align: left;
 }
 
-// --- Sections (each a sheet on the desk) --------------------------
+// --- Sheets on the desk -------------------------------------------
+// The masthead is a <div>, not a <section> - it carries no heading of its own
+// beyond the h1 - so it is named here rather than picked up by the element
+// selector. It is the letterhead sheet: same stock as the rest, no accent edge,
+// because the terracotta below marks the one sheet that carries an action.
 
-section {
+section,
+.masthead {
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: 2px;
   padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+}
+
+// The letterhead sheet is framed in the shell's blue instead of the hairline
+// the other sheets carry.
+//
+// This has to sit *after* the rule above: `.masthead` there and `.masthead`
+// here have the same specificity (0,1,0), so source order decides, and the
+// shorthand `border` above would otherwise reset this one back to the grey
+// hairline. Putting it in the `.masthead` block further up looks tidier and
+// silently does nothing.
+.masthead {
+  // A print measure, in keeping with the rest of this app's vocabulary. CSS
+  // resolves `cm` against a fixed 96dpi reference, not the physical screen, so
+  // this is a stable ~19px - it will not vary by monitor.
+  border: 0.5cm solid var(--frame);
 }
 
 // The one action-carrying sheet gets the terracotta.

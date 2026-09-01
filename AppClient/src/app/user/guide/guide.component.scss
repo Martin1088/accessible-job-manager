@@ -5,17 +5,17 @@
 // of the user screens. See `styles/_correspondence.scss`.
 //
 // This page is the handbook enclosed with the letter, so it is the one screen
-// set as a bound document: a numbered register at the front, numbered sections
-// behind it. The numbering is not decoration - the register counts what this
-// account actually contains, because the advisor and reviewer sections are
-// rendered only for the roles the caller holds, and both counters walk the same
-// conditionally-rendered DOM order. An advisor sees a §5 that a plain user has
-// no number for at all.
+// set as a bound document: numbered sections, read in order. The numbering is
+// not decoration - it counts what this account actually contains, because the
+// advisor and reviewer sections are rendered only for the roles the caller
+// holds. An advisor sees a section 5 that a plain user has no number for at all.
+//
+// There is no register and there are no in-page links: the sheet is navigated by
+// heading, so the numbered <h2>s are the whole of its apparatus.
 :host { display: block; }
 
 // Prose measure, not the global 860px `main` - this is the only screen that is
-// mostly reading. `padding-bottom` leaves room under the last section so a
-// fragment jump doesn't land flush against the viewport floor.
+// mostly reading.
 main {
   max-width: 760px;
   padding-bottom: 4rem;
@@ -26,10 +26,9 @@ main {
 // The monospace label voice.
 .role-banner__label,
 .role-chip,
-.role-banner__jump,
-.guide-toc__heading,
 .guide-sections h3,
 .shortcut-note,
+.setting-list dt,
 kbd {
   font-family: corr.$corr-mono;
   font-weight: 700;
@@ -41,9 +40,9 @@ kbd {
 // The serif body voice.
 h1,
 .guide-intro,
-.guide-toc a,
 .guide-sections :is(h2, p, li),
-.shortcut-list dd {
+.shortcut-list dd,
+.setting-list dd {
   font-family: corr.$corr-serif;
   color: var(--ink);
 }
@@ -95,78 +94,8 @@ h1 {
   letter-spacing: 0.1em;
 }
 
-.role-banner__jump {
-  margin-left: auto;
-  font-size: 0.7rem;
-  color: var(--ink);
-  text-decoration: none;
-  border-bottom: 1px solid var(--rule);
-
-  &:hover {
-    color: var(--accent-deep);
-    border-bottom-color: var(--accent);
-  }
-}
-
-// --- Register (table of contents) ----------------------------------
-
-.guide-toc {
-  margin-bottom: 2.5rem;
-  padding: 1.25rem;
-  background: var(--card);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-
-  &__heading {
-    margin: 0 0 0.8rem;
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-  }
-
-  ul {
-    counter-reset: guide-entry;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.5rem;
-  }
-
-  li { counter-increment: guide-entry; }
-
-  a {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    padding: 0.6rem 0.8rem;
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-left-width: 3px;
-    border-radius: 2px;
-    font-size: 0.95rem;
-    text-decoration: none;
-
-    // The entry number, in the label voice so it reads as apparatus rather
-    // than as part of the section title.
-    &::before {
-      content: counter(guide-entry) '.';
-      flex: none;
-      font-family: corr.$corr-mono;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    &:hover {
-      background: var(--card);
-      border-left-color: var(--accent);
-    }
-  }
-}
-
 // --- Sections ------------------------------------------------------
-// Each one a sheet, headed by the same number the register gave it.
+// Each one a sheet, headed by its number.
 
 .guide-sections {
   counter-reset: guide-section;
@@ -181,9 +110,6 @@ h1 {
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: 2px;
-  // Clears the fragment jump so a heading doesn't sit flush against the
-  // viewport edge when a register entry is followed.
-  scroll-margin-top: 1rem;
 
   h2 {
     display: flex;
@@ -271,17 +197,44 @@ kbd {
   letter-spacing: 0.04em;
 }
 
-// --- Focus: one ring for every control on the sheet ----------------
+// --- Settings register ---------------------------------------------
+// The same two-column ledger as the shortcut list, but the left column holds a
+// setting's real label rather than a single key, so it is given a measure to
+// wrap in instead of sizing to its content.
 
-a:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 2px;
+.setting-list {
+  display: grid;
+  grid-template-columns: minmax(7rem, 12rem) 1fr;
+  gap: 0.6rem 1.25rem;
+  align-items: baseline;
+  margin: 0.75rem 0 1rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--rule);
+
+  .setting-row { display: contents; }
+
+  dt {
+    margin: 0;
+    font-size: 0.68rem;
+    line-height: 1.4;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
 }
 
 @include bp.mobile {
-  .guide-toc,
   .guide-sections section { padding: 1.1rem; }
 
-  // The jump link stops being a right-aligned trailer once the banner wraps.
-  .role-banner__jump { margin-left: 0; }
+  // Two columns of prose do not fit a phone; the label goes above its
+  // description. `display: contents` keeps the <dl> pairing intact either way.
+  .setting-list {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+
+    dd { margin-bottom: 0.6rem; }
+  }
 }

@@ -1,6 +1,7 @@
 package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
+import de.samply.manager.jobimport.PostingPdfTextExtractor;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import de.samply.manager.jobimport.llm.LlmExtractionSpec;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,11 @@ class JobPostingParserServiceTest {
         public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
             throw new AssertionError("LLM client called for a rejected URL");
         }
-    }, messages());
+    }, messages(), pdfExtractor());
+
+    private static PostingPdfTextExtractor pdfExtractor() {
+        return new PostingPdfTextExtractor(messages());
+    }
 
     private static ResourceBundleMessageSource messages() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
@@ -73,5 +78,63 @@ class JobPostingParserServiceTest {
         assertThat(service.upstreamFailure(500).getMessage())
                 .contains("returned an error")
                 .contains("500");
+    }
+
+    /**
+     * The paste-the-text path is what answers the refusal above, so its own
+     * rejections have to be as specific: too little text and no text at all are
+     * different mistakes, and neither is a parser failure.
+     *
+     * <p>These use a service with a recording LLM stub rather than the throwing
+     * one above, because here the client is expected to be reached.
+     */
+    @Test
+    void extractsFromPastedTextWithoutFetchingAnything() {
+        RecordingLlmClient llm = new RecordingLlmClient();
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor());
+        String posting = "Wir suchen eine Plattform-Architektin (m/w/d) fuer unser Team in Leipzig. "
+                + "Zu den Aufgaben gehoert der Betrieb der internen Entwicklungsplattform.";
+
+        textService.overviewFromText(posting);
+
+        assertThat(llm.seenText).isEqualTo(posting);
+    }
+
+    @Test
+    void pastedTextIsStrippedBeforeItReachesTheModel() {
+        RecordingLlmClient llm = new RecordingLlmClient();
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor());
+        String posting = "Plattform Architekt gesucht in Vollzeit, unbefristet, mit Erfahrung in "
+                + "Kubernetes und Continuous Delivery. Bewerbungen jederzeit willkommen.";
+
+        textService.overviewFromText("\n\n  " + posting + "  \n");
+
+        assertThat(llm.seenText).isEqualTo(posting);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\n\t "})
+    void rejectsBlankPastedText(String text) {
+        assertThatThrownBy(() -> service.overviewFromText(text))
+                .isInstanceOf(ApiException.BadRequest.class)
+                .hasMessageContaining("must not be empty");
+    }
+
+    @Test
+    void rejectsPastedTextThatIsOnlyAHeadline() {
+        assertThatThrownBy(() -> service.overviewFromText("(Junior) Plattform Architekt (m/w/d)"))
+                .isInstanceOf(ApiException.BadRequest.class)
+                .hasMessageContaining("at least");
+    }
+
+    /** Captures what the service handed the model, so the test can assert on it. */
+    private static final class RecordingLlmClient implements JobPostingLlmClient {
+        private String seenText;
+
+        @Override
+        public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
+            this.seenText = postingText;
+            return null;
+        }
     }
 }

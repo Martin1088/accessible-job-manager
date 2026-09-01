@@ -201,7 +201,7 @@ Run before merging any layout change:
 
 - [ ] `ng build` passes
 - [ ] `npm run lint:a11y` passes (template accessibility rules)
-- [ ] `npx ng test --watch=false --browsers=ChromeHeadless` passes — every component
+- [ ] `npx ng test --watch=false` passes — every component
       spec runs axe via `expectNoAxeViolations`, so a contrast or labelling regression
       fails here rather than at review
 - [ ] No horizontal scroll at 375px viewport width
