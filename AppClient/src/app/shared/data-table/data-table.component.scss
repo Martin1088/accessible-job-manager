@@ -1,4 +1,13 @@
 @use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
+
+// The applications table is the reference for every table in the app, and its
+// rules live here: a caption set as a plain mono line above the sheet, a paper
+// header band over hairline-ruled rows, ink values, and the paper/rule button.
+// Every colour is a token from `styles.scss`, so the table follows
+// `html[data-contrast='dark'|'high']` without a per-page override - a
+// hard-coded `#fff` here was what left the mobile cards white with near-white
+// text in dark mode.
 
 :host {
   display: block;
@@ -7,109 +16,150 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  font-size: 0.9rem;
 }
 
+// The caption is a line of its own above the sheet, not a band inside it.
 caption {
+  margin-block-end: 0.5rem;
   text-align: left;
-  font-weight: 600;
-  padding: 0.85rem 1rem;
-  background: #f0f0f0;
-  border-bottom: 2px solid #ddd;
+  font-family: corr.$corr-mono;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
+// The head typography sits on the `th` itself, so the actions column - bare
+// text with no button or span to hook onto - reads as a column head too.
 th {
-  background: #f7f7f7;
-  font-weight: 600;
-  padding: 0;
+  padding: 0.6rem 0.75rem;
+  background: var(--paper);
+  border-block-end: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: middle;
+  font-family: corr.$corr-mono;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+
+  // A sortable head is a full-bleed button that brings its own padding. Which
+  // column carries the order is told by the glyph, `aria-sort` and the spoken
+  // announcement - no colour of its own.
+  &:has(button) {
+    padding: 0;
+  }
 
   button {
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
     width: 100%;
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 0.75rem;
     min-block-size: 44px;
     background: none;
     border: none;
-    font-weight: 600;
-    font-size: inherit;
-    font-family: inherit;
-    color: inherit;
     cursor: pointer;
     text-align: left;
 
     &:hover {
-      background: #ebebeb;
+      background: var(--rule);
     }
 
     &:focus-visible {
-      outline: 3px solid #005fcc;
+      outline: 3px solid var(--color-focus);
       outline-offset: -3px;
     }
 
     span {
       font-size: 0.8rem;
-      color: #666;
+      color: inherit;
     }
-  }
-
-  > span {
-    display: block;
-    padding: 0.75rem 1rem;
   }
 }
 
 td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e5e5;
+  padding: 0.6rem 0.75rem;
+  border-block-end: 1px solid var(--rule);
+  text-align: left;
   vertical-align: middle;
+  color: var(--ink);
 }
 
 tr:last-child td {
-  border-bottom: none;
+  border-block-end: none;
 }
 
-tr:hover td {
-  background: #fafafa;
+tbody tr:hover td {
+  background: var(--paper);
+}
+
+// One button style across the app's tables: paper ground, hairline edge,
+// terracotta on hover. Never opacity for a disabled state - muted tokens.
+// Several buttons in one cell lay out as a wrapping row - a gap rather than a
+// trailing margin, so the last one needs no exception.
+td:has(button) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 td button {
-  margin-right: 0.5rem;
-  padding: 0.3rem 0.75rem;
+  padding: 0.45rem 0.9rem;
   min-inline-size: 44px;
   min-block-size: 44px;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
-  font-size: 0.875rem;
-  background: #e5e5e5;
-  color: #1a1a1a;
 
-  &:last-child { margin-right: 0; }
-  &:hover { background: #d0d0d0; }
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+
+  &:disabled {
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+
   &:focus-visible {
-    outline: 3px solid #005fcc;
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
 }
 
-// Mobile card layout: the DOM stays one <table>, so VoiceOver still reports
-// table structure and per-cell header association - only the visual
-// presentation changes. Never use visibility:hidden/opacity:0 on thead here,
-// it would keep the header row reachable while looking hidden.
+// Mobile card layout: the DOM stays one <table>, so the row is still a row -
+// only the visual presentation changes. Never use visibility:hidden/opacity:0
+// on thead here, it would keep the header row reachable while looking hidden.
+//
+// Each row becomes a card, label left and value right; the caption stays the
+// plain line above them that it is on a wide screen.
 @include bp.mobile {
   table {
-    box-shadow: none;
+    border: 0;
     border-radius: 0;
     background: transparent;
   }
 
   caption {
-    border-radius: 4px 4px 0 0;
+    margin-block-end: 0.75rem;
   }
 
   thead {
@@ -119,45 +169,57 @@ td button {
   tbody tr {
     display: block;
     margin-block-end: 1rem;
-    background: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
   }
 
+  // Label left, value right - the pattern the applications table established
+  // and the one the tables share. The label is the same mono overline the
+  // column heads use, so a card reads as the table it came from.
   td {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    border-bottom: 1px solid #e5e5e5;
+    padding: 0.6rem 0.75rem;
+    text-align: end;
     // A cell value can be a long unbroken token (email, filename); without
     // this it overflows the card instead of wrapping onto its own line.
     overflow-wrap: anywhere;
 
     &::before {
       content: attr(data-label);
-      font-weight: 600;
       flex-shrink: 0;
-    }
-
-    // Action cells hold several buttons rather than one value; wrap them
-    // below a full-width label instead of squeezing them next to it.
-    &:has(button) {
-      flex-wrap: wrap;
-
-      &::before {
-        flex-basis: 100%;
-      }
+      text-align: start;
+      font-family: corr.$corr-mono;
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
     }
   }
 
-  tr:last-child td:last-child {
-    border-bottom: none;
+  // A cell of controls is not a value to line up on the right edge: its label
+  // takes the full row and the buttons sit under it, spread across the card.
+  td:has(button) {
+    flex-wrap: wrap;
+    align-items: flex-start;
+
+    &::before {
+      flex-basis: 100%;
+    }
   }
 
-  td[colspan] {
+  tbody tr td:last-child {
+    border-block-end: none;
+  }
+
+  // The empty-state cell spans the row and has no label of its own.
+  tbody td[colspan] {
     display: block;
+    text-align: start;
 
     &::before {
       content: none;

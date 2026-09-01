@@ -142,14 +142,44 @@ VoiceOver, so the announcement is what confirms the action, while
 **Mobile card layout is CSS-only** — `thead { display: none; }` plus
 `tr { display: block; }` / `td { display: flex; …; &::before { content:
 attr(data-label); } }` under `@include bp.mobile`. The DOM stays a single
-`<table>`, so VoiceOver still reports table structure and header
-association per cell; there is no separate mobile template, no
-`BreakpointObserver`, no JS. Never use `visibility: hidden` or `opacity: 0`
-on `thead` here — the header row would stay in the layout and remain
-reachable while looking hidden. A `<td>` that holds several buttons (an
-actions cell) should let its label take the full row width and wrap the
-buttons below it, rather than fighting `justify-content: space-between` —
-see the `td:has(button)` rule in `data-table.component.scss`.
+`<table>`, so VoiceOver still reports table structure and header association
+per cell; there is no separate mobile template, no `BreakpointObserver`, no
+JS. Never use `visibility: hidden` or `opacity: 0` on `thead` here — the
+header row would stay in the layout and remain reachable while looking
+hidden.
+
+One card shape across `app-data-table`, `application-list` and
+`reviewer/home`:
+
+- **Label left, value right** (`justify-content: space-between`, the value
+  `text-align: end`). The label is the same mono overline the column heads
+  use, so a card reads as the table it came from.
+- **A cell of controls** (`td:has(button)`, and the select-bearing cells in
+  `application-list`) is not a value to line up on the right edge: it wraps,
+  its `::before` label takes `flex-basis: 100%`, and the buttons sit under
+  it spread across the card.
+- **The empty-state `td[colspan]`** drops back to `display: block`,
+  start-aligned, with no `::before` label.
+- Cards are separated by the hairline `--rule` border and the gap between
+  them; no cell is promoted to a card heading.
+
+**The applications table is the reference.** `app-data-table` matches it on
+a wide screen too, not only in cards: the `<caption>` is a plain mono line
+*above* the sheet rather than a band inside it, the column heads sit on a
+`--paper` band over a 1px `--rule`, the body runs at `0.9rem` with
+`0.6rem 0.75rem` cells, and the sorted column is told by the glyph,
+`aria-sort` and the spoken announcement — no colour of its own.
+
+**Table colour is tokens only.** `app-data-table` carries the DIN 5008
+stationery (`--paper`/`--card`/`--ink`/`--ink-soft`/`--rule`) in
+its own stylesheet — pages no longer retexture it through a `::ng-deep`
+mixin, and `styles/_correspondence.scss` no longer ships one. The
+hard-coded `#fff`/`#f7f7f7` that stylesheet used to carry is exactly the bug
+the colour rule above describes: in dark mode the cards stayed white while
+the text followed `--color-text`, so a phone showed near-white values on
+white. `reviewer/home` is outside the stationery's scope and follows the
+`--color-*` family instead, but the same rule applies — no literal hex on a
+table surface.
 
 ### Sticky elements
 

@@ -328,6 +328,8 @@ textarea {
         background: var(--card);
       }
 
+      // Label left, value right - the card pattern every table in the app
+      // shares; `app-data-table` carries the same rules.
       th,
       td {
         display: flex;
@@ -335,11 +337,13 @@ textarea {
         align-items: center;
         gap: 1rem;
         white-space: normal;
+        text-align: end;
         overflow-wrap: anywhere;
 
         &::before {
           content: attr(data-label);
           flex-shrink: 0;
+          text-align: start;
           font-family: corr.$corr-mono;
           font-size: 0.66rem;
           font-weight: 700;
@@ -349,20 +353,26 @@ textarea {
         }
       }
 
+      // A cell of controls is not a value to line up on the right edge: its
+      // label takes the full row and the controls sit under it.
       td:has(> div),
-      td:has(> button) {
+      td:has(> button),
+      td:has(> select) {
         flex-wrap: wrap;
         align-items: flex-start;
+        text-align: start;
 
         &::before { flex-basis: 100%; }
       }
 
       td[colspan] {
         display: block;
+        text-align: start;
+
         &::before { content: none; }
       }
 
-      tr:last-child td:last-child { border-bottom: none; }
+      tbody tr td:last-child { border-bottom: none; }
     }
   }
 
@@ -390,6 +400,12 @@ textarea {
   min-width: 280px;
 
   select { flex: 1 1 100%; }
+
+  // On a phone the card is the width budget, not the cluster - 280px would
+  // push the whole card past the viewport.
+  @include bp.mobile {
+    min-width: 0;
+  }
 }
 
 .status-cell {
