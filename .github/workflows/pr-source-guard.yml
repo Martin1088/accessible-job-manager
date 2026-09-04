@@ -1,0 +1,21 @@
+name: PR source guard
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-source:
+    name: PR into main comes from develop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify head branch
+        run: |
+          head="${{ github.head_ref }}"
+          case "$head" in
+            develop|release/*|hotfix/*)
+              echo "OK: '$head' darf nach main." ;;
+            *)
+              echo "::error::PRs nach main sind nur aus develop, release/* oder hotfix/* erlaubt (hier: '$head')."
+              exit 1 ;;
+          esac
