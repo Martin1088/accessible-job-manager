@@ -26,8 +26,46 @@ spring:
             jwk-set-uri: http://localhost:9000/jwks
             user-name-attribute: sub
 
-s3:
-  endpoint: http://localhost:3900
-  bucket: test-bucket
-  access-key: test
-  secret-key: test
+# Everything below this line is not test-slice configuration but the minimum the
+# *whole* context needs to refresh, which is what `./gradlew bootTestRun` does.
+# Spring Boot picks a single classpath:/application.yml, so this file replaces
+# src/main/resources/application.yml rather than merging with it: a key that only
+# lives there is unresolvable here, and a missing @Value placeholder fails startup.
+# Same ${ENV:default} placeholders as the main file, so `docker compose up -d` in
+# dev/ is enough to run against the real local services.
+
+gotenberg:
+  url: ${GOTENBERG_URL:http://localhost:3000}
+
+job-posting:
+  parser:
+    provider: ${JOB_POSTING_LLM_PROVIDER:ollama}
+    ollama-url: ${OLLAMA_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:qwen2.5:3b}
+    azure:
+      endpoint: ${AZURE_OPENAI_ENDPOINT:}
+      deployment: ${AZURE_OPENAI_DEPLOYMENT:}
+      api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
+      api-key: ${AZURE_OPENAI_API_KEY:}
+
+storage:
+  provider: ${STORAGE_PROVIDER:s3}
+  s3:
+    endpoint: ${S3_ENDPOINT:http://localhost:3900}
+    region: ${REGION:garage}
+    bucket: ${S3_BUCKET:test-bucket}
+    access-key: ${ACCESS_KEY:test}
+    secret-key: ${SECRET_KEY:test}
+
+# Deliberately no Adzuna credentials: the job search reports itself unconfigured
+# and answers 503 instead of calling out to the real API from a test run.
+job-manager:
+  security:
+    claim: ${OIDC_ROLES_CLAIM:groups}
+    role-groups:
+      USER: ${GROUP_USER:User}
+      ADVISOR: ${GROUP_ADVISOR:Advisor}
+      REVIEWER: ${GROUP_REVIEWER:Reviewer}
+
+server:
+  port: ${SERVER_PORT:8060}

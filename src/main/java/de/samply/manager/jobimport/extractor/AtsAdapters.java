@@ -225,3 +225,128 @@ class OracleHcmAdapter implements AtsAdapter {
         try { return mapper.readTree(s); } catch (Exception e) { return null; }
     }
 }
+
+// =====================================================================
+// Comeet (now Spark Hire Recruit):
+//   www.comeet.com/jobs/{slug}/{COMPANY_UID}/{position-slug}/{POSITION_UID}
+// The page is a client-rendered shell - its only "text" is the unrendered
+// template ("{{position.name}}" ...) - so JSON-LD/microdata/LLM all come
+// back empty. The job data is fetched by the page's own JavaScript from
+// the public Careers API, which needs the company UID and a public token.
+// Neither is in the URL, but both sit in the widget's bootstrap config in
+// the served HTML, so this adapter reads them from ctx.document().
+// Public: https://www.comeet.co/careers-api/2.0/company/{UID}/positions
+//           ?token={TOKEN}&details=true   -> array of positions
+// =====================================================================
+@Component
+@Order(4)
+class ComeetAdapter implements AtsAdapter {
+
+    /** company_uid and token as the widget bootstrap writes them, adjacent. */
+    private static final Pattern CONFIG = Pattern.compile(
+            "\"company_uid\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"token\"\\s*:\\s*\"([^\"]+)\"");
+    /** Comeet UIDs look like 8A.002 / 1C.176; the position UID is the last one in the path. */
+    private static final Pattern POSITION_UID = Pattern.compile("/([0-9A-Za-z]{2}\\.[0-9A-Za-z]{3})(?=[/?#]|$)");
+
+    private final RestClient http;
+    private final ObjectMapper mapper;
+
+    ComeetAdapter(RestClient.Builder builder, ObjectMapper mapper) {
+        this.http = builder.build();
+        this.mapper = mapper;
+    }
+
+    @Override
+    public boolean supports(String url) {
+        return url.contains("comeet.com/jobs/") || url.contains("comeet.co/jobs/");
+    }
+
+    @Override
+    public Optional<ExtractionResult> fetch(ExtractionContext ctx) {
+        String positionUid = lastGroup(POSITION_UID, ctx.sourceUrl());
+        if (positionUid == null || ctx.document() == null) {
+            return Optional.empty();
+        }
+        Matcher config = CONFIG.matcher(ctx.document().html());
+        if (!config.find()) {
+            return Optional.empty();
+        }
+        String companyUid = config.group(1);
+        String token = config.group(2);
+
+        String body = http.get()
+                .uri("https://www.comeet.co/careers-api/2.0/company/{uid}/positions?token={t}&details=true",
+                        companyUid, token)
+                .header("Accept", "application/json")
+                .retrieve()
+                .body(String.class);
+
+        JsonNode positions = readTree(body);
+        if (positions == null || !positions.isArray()) {
+            return Optional.empty();
+        }
+        JsonNode job = null;
+        for (JsonNode p : positions) {
+            if (positionUid.equalsIgnoreCase(p.path("uid").asText())) {
+                job = p;
+                break;
+            }
+        }
+        if (job == null) {
+            return Optional.empty();
+        }
+
+        JsonNode location = job.path("location");
+        String city = firstNonBlank(location.path("city").asText(null), location.path("name").asText(null));
+        String street = street(location.path("street_name").asText(null), location.path("street_number").asText(null));
+
+        return Optional.of(ExtractionResult.builder(ConfidenceTier.ADAPTER)
+                .title(job.path("name").asText(null))
+                .companyName(job.path("company_name").asText(null))
+                .employmentType(job.path("employment_type").asText(null))
+                .contactEmail(job.path("email").asText(null)) // "{slug}.{uid}@comeetapply.com" - a working apply-by-email address
+                .sourceJobId(job.path("uid").asText(null))
+                .rawDescription(joinDetails(job.path("details")))
+                .addLocation(city, street)
+                .build());
+    }
+
+    /** Comeet's `details` is a list of {name, value} HTML sections; concatenate their bodies. */
+    private String joinDetails(JsonNode details) {
+        if (!details.isArray()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (JsonNode section : details) {
+            String value = section.path("value").asText("");
+            if (!value.isBlank()) {
+                if (!sb.isEmpty()) sb.append('\n');
+                sb.append(value);
+            }
+        }
+        return sb.isEmpty() ? null : sb.toString();
+    }
+
+    private String street(String name, String number) {
+        String joined = ((name == null ? "" : name) + " " + (number == null ? "" : number)).trim();
+        return joined.isBlank() ? null : joined;
+    }
+
+    private String firstNonBlank(String a, String b) {
+        return (a != null && !a.isBlank()) ? a : b;
+    }
+
+    private String lastGroup(Pattern p, String s) {
+        if (s == null) return null;
+        Matcher m = p.matcher(s);
+        String last = null;
+        while (m.find()) {
+            last = m.group(1);
+        }
+        return last;
+    }
+
+    private JsonNode readTree(String s) {
+        try { return mapper.readTree(s); } catch (Exception e) { return null; }
+    }
+}

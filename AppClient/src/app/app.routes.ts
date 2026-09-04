@@ -95,6 +95,12 @@ export const routes: Routes = [
     canActivate: [advisorGuard]
   },
   {
+    path: 'advisor/job-import',
+    loadComponent: () => import('./advisor/job-import/job-import.component')
+      .then(m => m.JobImportComponent),
+    canActivate: [advisorGuard]
+  },
+  {
     path: 'advisor/job-search',
     loadComponent: () => import('./advisor/job-search/job-search.component')
       .then(m => m.JobSearchComponent),

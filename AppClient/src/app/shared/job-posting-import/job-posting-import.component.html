@@ -1,0 +1,191 @@
+<div class="field job-import__field">
+  <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+I' : 'i' }}</kbd></label>
+  <input id="job-url" name="job-url" type="url" #jobUrlInput [(ngModel)]="jobUrl"
+    (paste)="onJobUrlPaste($event)" (input)="onJobUrlInput()"
+    [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"
+    [attr.aria-describedby]="urlCleaned ? 'job-url-cleaned' : null"
+    [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+I' : 'i'"/>
+  @if (urlCleaned) {
+    <p id="job-url-cleaned" class="hint hint--cleaned">{{ 'HOME.URL_CLEANED' | translate }}</p>
+  }
+</div>
+<div class="job-import-actions">
+  <button type="button" class="btn-primary" [disabled]="!jobUrl.trim() || searchingJobPosting || searchingFullChain" (click)="searchJobPosting()">
+    {{ ((searchingJobPosting || searchingFullChain) ? 'HOME.SEARCHING' : 'HOME.SEARCH') | translate }}
+  </button>
+  <button type="button" class="btn-secondary" [disabled]="!jobUrl.trim() || validatingSnapshot" (click)="previewSnapshot()">
+    {{ (validatingSnapshot ? 'HOME.SNAPSHOT_VALIDATING' : 'HOME.SNAPSHOT_PREVIEW') | translate }}
+  </button>
+</div>
+
+@if (snapshotValidateFailure) {
+  <p role="alert" class="notice notice--error"><app-error-text [failure]="snapshotValidateFailure" fallbackKey="HOME.SNAPSHOT_VALIDATE_ERROR" /></p>
+}
+
+<!--
+  The way in for a posting this server cannot fetch: aggregators answer
+  403 to every request from a server, and a posting behind a login
+  cannot be reached at all. Both look the same from here - no text - and
+  the person reading the page always has the text.
+
+  A native <details> rather than a custom disclosure: it is keyboard
+  operable and announced as expanded/collapsed with no JS and no focus
+  management of our own. Forced open when a paste turned out to hold no
+  link, since that is exactly when this path is the answer.
+-->
+<details class="text-fallback"
+  [open]="pastedTextWithoutUrl || searchingText || textSearchFailure || searchingPdf || pdfSearchFailure">
+  <summary>{{ 'HOME.FALLBACK_SUMMARY' | translate }}</summary>
+
+  @if (pastedTextWithoutUrl) {
+    <p role="status" class="notice notice--info">{{ 'HOME.PASTED_TEXT_HINT' | translate }}</p>
+  }
+
+  <p class="hint">{{ 'HOME.FALLBACK_HELP' | translate }}</p>
+
+  <!--
+    The PDF comes first because it is the one that always works. On the
+    boards that block this server the text cannot be selected either -
+    Indeed suppresses selection, and a phone has no select-all - so
+    printing to PDF is the only export a person actually has. It is also
+    the file they want kept against the posting, so this upload doubles
+    as the snapshot the URL path renders through Gotenberg.
+  -->
+  <h3 class="fallback-heading">{{ 'HOME.PDF_FALLBACK_HEADING' | translate }}</h3>
+  <p id="posting-pdf-help" class="hint">{{ 'HOME.PDF_FALLBACK_HELP' | translate }}</p>
+
+  <button type="button" class="btn-secondary" aria-describedby="posting-pdf-help"
+    [disabled]="searchingPdf" (click)="postingPdfInput.click()">
+    <span aria-hidden="true">↑</span>
+    {{ (searchingPdf ? 'HOME.PDF_FALLBACK_READING' : 'HOME.PDF_FALLBACK_ACTION') | translate }}
+  </button>
+  <input #postingPdfInput type="file" accept=".pdf,application/pdf"
+    style="display:none" tabindex="-1" aria-hidden="true"
+    (change)="onPostingPdfSelected($event)">
+
+  @if (postingPdfName && !pdfSearchFailure) {
+    <p class="hint hint--file">{{ 'HOME.PDF_FALLBACK_SELECTED' | translate: { name: postingPdfName } }}</p>
+  }
+  @if (pdfSearchFailure) {
+    <p role="alert" class="notice notice--error"><app-error-text [failure]="pdfSearchFailure" fallbackKey="HOME.PDF_FALLBACK_ERROR" /></p>
+  }
+
+  <h3 class="fallback-heading">{{ 'HOME.TEXT_FALLBACK_HEADING' | translate }}</h3>
+  <p id="posting-text-help" class="hint">{{ 'HOME.TEXT_FALLBACK_HELP' | translate }}</p>
+
+  <div class="field">
+    <label for="posting-text">{{ 'HOME.TEXT_FALLBACK_LABEL' | translate }}</label>
+    <textarea id="posting-text" name="posting-text" rows="8"
+      [(ngModel)]="postingText" aria-describedby="posting-text-help"></textarea>
+  </div>
+
+  <button type="button" class="btn-secondary"
+    [disabled]="!postingText.trim() || searchingText" (click)="searchFromText()">
+    {{ (searchingText ? 'HOME.SEARCHING' : 'HOME.TEXT_FALLBACK_ACTION') | translate }}
+  </button>
+
+  @if (textSearchFailure) {
+    <p role="alert" class="notice notice--error"><app-error-text [failure]="textSearchFailure" fallbackKey="HOME.TEXT_FALLBACK_ERROR" /></p>
+  }
+</details>
+
+<div class="job-result-columns">
+  <div>
+    <h3>{{ 'HOME.JOB_RESULT_OVERVIEW_HEADING' | translate }}</h3>
+    @if (jobSearchFailure) {
+      <p role="alert" class="notice notice--error"><app-error-text [failure]="jobSearchFailure" fallbackKey="HOME.JOB_SEARCH_ERROR" /></p>
+    }
+    @if (jobPosting) {
+      <dl class="job-result">
+        <dt>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</dt>
+        <dd>{{ jobPosting.title ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</dt>
+        <dd>{{ jobPosting.company ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</dt>
+        <dd>{{ jobPosting.location ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.JOB_RESULT_EMPLOYMENT_TYPE' | translate }}</dt>
+        <dd>{{ jobPosting.employmentType ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+      </dl>
+    }
+  </div>
+
+  <div>
+    <h3>{{ 'HOME.JOB_RESULT_FULL_CHAIN_HEADING' | translate }}</h3>
+    @if (fullChainFailure) {
+      <p role="alert" class="notice notice--error"><app-error-text [failure]="fullChainFailure" fallbackKey="HOME.FULL_CHAIN_ERROR" /></p>
+    }
+    @if (fullChainResult) {
+      <dl class="job-result">
+        <dt>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</dt>
+        <dd>{{ fullChainResult.company?.positions?.[0]?.title ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</dt>
+        <dd>{{ fullChainResult.company?.name ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</dt>
+        <dd>{{ fullChainResult.company?.locations?.[0]?.city ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.JOB_RESULT_EMPLOYMENT_TYPE' | translate }}</dt>
+        <dd>{{ fullChainResult.employmentType ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.FULL_CHAIN_CONTACT_EMAIL' | translate }}</dt>
+        <dd>{{ fullChainResult.company?.positions?.[0]?.email ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.FULL_CHAIN_WEBSITE' | translate }}</dt>
+        <dd>{{ fullChainResult.company?.positions?.[0]?.website ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+        <dt>{{ 'HOME.FULL_CHAIN_DEADLINE' | translate }}</dt>
+        <dd>{{ fullChainResult.deadline ?? ('HOME.JOB_RESULT_EMPTY' | translate) }}</dd>
+      </dl>
+    }
+  </div>
+</div>
+
+@if (hasAnyResult) {
+  <div class="merge-panel">
+    <h3 id="merge-heading">{{ 'HOME.MERGE_HEADING' | translate }}</h3>
+    @if (nameConflict || titleConflict || locationConflict) {
+      <p>{{ 'HOME.MERGE_CONFLICT_INTRO' | translate }}</p>
+
+      @if (nameConflict) {
+        <fieldset>
+          <legend>{{ 'HOME.JOB_RESULT_COMPANY' | translate }}</legend>
+          <label>
+            <input type="radio" name="name-source" value="fullChain" [(ngModel)]="selectedSource.name"/>
+            {{ fullChainResult?.company?.name }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_FULL_CHAIN' | translate }})</span>
+          </label>
+          <label>
+            <input type="radio" name="name-source" value="overview" [(ngModel)]="selectedSource.name"/>
+            {{ jobPosting?.company }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_OVERVIEW' | translate }})</span>
+          </label>
+        </fieldset>
+      }
+
+      @if (titleConflict) {
+        <fieldset>
+          <legend>{{ 'HOME.JOB_RESULT_TITLE' | translate }}</legend>
+          <label>
+            <input type="radio" name="title-source" value="fullChain" [(ngModel)]="selectedSource.title"/>
+            {{ fullChainResult?.company?.positions?.[0]?.title }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_FULL_CHAIN' | translate }})</span>
+          </label>
+          <label>
+            <input type="radio" name="title-source" value="overview" [(ngModel)]="selectedSource.title"/>
+            {{ jobPosting?.title }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_OVERVIEW' | translate }})</span>
+          </label>
+        </fieldset>
+      }
+
+      @if (locationConflict) {
+        <fieldset>
+          <legend>{{ 'HOME.JOB_RESULT_LOCATION' | translate }}</legend>
+          <label>
+            <input type="radio" name="location-source" value="fullChain" [(ngModel)]="selectedSource.location"/>
+            {{ fullChainResult?.company?.locations?.[0]?.city }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_FULL_CHAIN' | translate }})</span>
+          </label>
+          <label>
+            <input type="radio" name="location-source" value="overview" [(ngModel)]="selectedSource.location"/>
+            {{ jobPosting?.location }} <span class="merge-source">({{ 'HOME.MERGE_SOURCE_OVERVIEW' | translate }})</span>
+          </label>
+        </fieldset>
+      }
+    }
+
+    <button type="button" class="btn-primary" [disabled]="submitting" (click)="submit()">
+      {{ submitLabelKey | translate }}
+    </button>
+  </div>
+}
