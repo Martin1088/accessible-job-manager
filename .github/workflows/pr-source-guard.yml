@@ -8,14 +8,16 @@ jobs:
   check-source:
     name: PR into main comes from develop
     runs-on: ubuntu-latest
+
     steps:
       - name: Verify head branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          head="${{ github.head_ref }}"
-          case "$head" in
+          case "$HEAD_REF" in
             develop|release/*|hotfix/*)
-              echo "OK: '$head' darf nach main." ;;
+              echo "OK: '$HEAD_REF' may target main." ;;
             *)
-              echo "::error::PRs nach main sind nur aus develop, release/* oder hotfix/* erlaubt (hier: '$head')."
+              echo "::error::Pull requests into main are only allowed from develop, release/* or hotfix/* (got '$HEAD_REF')."
               exit 1 ;;
           esac
