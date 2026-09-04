@@ -8,12 +8,12 @@
       <p class="job-import__lead">{{ 'HOME.JOB_IMPORT_LEAD' | translate }}</p>
       <div class="job-import-card">
         <div class="field job-import__field">
-          <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+S' : 's' }}</kbd></label>
+          <label for="job-url">{{ 'HOME.JOB_URL_LABEL' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+I' : 'i' }}</kbd></label>
           <input id="job-url" name="job-url" type="url" #jobUrlInput [(ngModel)]="jobUrl"
             (paste)="onJobUrlPaste($event)" (input)="onJobUrlInput()"
             [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate"
             [attr.aria-describedby]="urlCleaned ? 'job-url-cleaned' : null"
-            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+S' : 's'"/>
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+I' : 'i'"/>
           @if (urlCleaned) {
             <p id="job-url-cleaned" class="hint hint--cleaned">{{ 'HOME.URL_CLEANED' | translate }}</p>
           }
@@ -27,8 +27,8 @@
           </button>
         </div>
 
-        @if (snapshotValidateError) {
-          <p role="alert" class="notice notice--error">{{ snapshotValidateErrorMessage || ('HOME.SNAPSHOT_VALIDATE_ERROR' | translate) }}</p>
+        @if (snapshotValidateFailure) {
+          <p role="alert" class="notice notice--error"><app-error-text [failure]="snapshotValidateFailure" fallbackKey="HOME.SNAPSHOT_VALIDATE_ERROR" /></p>
         }
 
         <!--
@@ -43,7 +43,7 @@
           link, since that is exactly when this path is the answer.
         -->
         <details class="text-fallback"
-          [open]="pastedTextWithoutUrl || searchingText || textSearchError || searchingPdf || pdfSearchError">
+          [open]="pastedTextWithoutUrl || searchingText || textSearchFailure || searchingPdf || pdfSearchFailure">
           <summary>{{ 'HOME.FALLBACK_SUMMARY' | translate }}</summary>
 
           @if (pastedTextWithoutUrl) {
@@ -72,11 +72,11 @@
             style="display:none" tabindex="-1" aria-hidden="true"
             (change)="onPostingPdfSelected($event)">
 
-          @if (postingPdfName && !pdfSearchError) {
+          @if (postingPdfName && !pdfSearchFailure) {
             <p class="hint hint--file">{{ 'HOME.PDF_FALLBACK_SELECTED' | translate: { name: postingPdfName } }}</p>
           }
-          @if (pdfSearchError) {
-            <p role="alert" class="notice notice--error">{{ pdfSearchErrorMessage || ('HOME.PDF_FALLBACK_ERROR' | translate) }}</p>
+          @if (pdfSearchFailure) {
+            <p role="alert" class="notice notice--error"><app-error-text [failure]="pdfSearchFailure" fallbackKey="HOME.PDF_FALLBACK_ERROR" /></p>
           }
 
           <h3 class="fallback-heading">{{ 'HOME.TEXT_FALLBACK_HEADING' | translate }}</h3>
@@ -93,16 +93,16 @@
             {{ (searchingText ? 'HOME.SEARCHING' : 'HOME.TEXT_FALLBACK_ACTION') | translate }}
           </button>
 
-          @if (textSearchError) {
-            <p role="alert" class="notice notice--error">{{ textSearchErrorMessage || ('HOME.TEXT_FALLBACK_ERROR' | translate) }}</p>
+          @if (textSearchFailure) {
+            <p role="alert" class="notice notice--error"><app-error-text [failure]="textSearchFailure" fallbackKey="HOME.TEXT_FALLBACK_ERROR" /></p>
           }
         </details>
 
         <div class="job-result-columns">
           <div>
             <h3>{{ 'HOME.JOB_RESULT_OVERVIEW_HEADING' | translate }}</h3>
-            @if (jobSearchError) {
-              <p role="alert" class="notice notice--error">{{ jobSearchErrorMessage || ('HOME.JOB_SEARCH_ERROR' | translate) }}</p>
+            @if (jobSearchFailure) {
+              <p role="alert" class="notice notice--error"><app-error-text [failure]="jobSearchFailure" fallbackKey="HOME.JOB_SEARCH_ERROR" /></p>
             }
             @if (jobPosting) {
               <dl class="job-result">
@@ -120,8 +120,8 @@
 
           <div>
             <h3>{{ 'HOME.JOB_RESULT_FULL_CHAIN_HEADING' | translate }}</h3>
-            @if (fullChainError) {
-              <p role="alert" class="notice notice--error">{{ fullChainErrorMessage || ('HOME.FULL_CHAIN_ERROR' | translate) }}</p>
+            @if (fullChainFailure) {
+              <p role="alert" class="notice notice--error"><app-error-text [failure]="fullChainFailure" fallbackKey="HOME.FULL_CHAIN_ERROR" /></p>
             }
             @if (fullChainResult) {
               <dl class="job-result">

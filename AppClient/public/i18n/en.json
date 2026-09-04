@@ -274,6 +274,11 @@
     "MONTH_11": "November",
     "MONTH_12": "December"
   },
+  "ERROR": {
+    "OFFLINE": "The server could not be reached. It may be restarting, or your connection dropped - the address you entered is not the problem.",
+    "SESSION_EXPIRED": "Your session has expired. Please reload the page and sign in again.",
+    "STATUS": "(HTTP {{status}})"
+  },
   "TABLE": {
     "ACTIONS": "Actions",
     "SORT_BY": "Sort by {{column}}",

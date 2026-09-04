@@ -274,6 +274,11 @@
     "MONTH_11": "November",
     "MONTH_12": "Dezember"
   },
+  "ERROR": {
+    "OFFLINE": "Der Server war nicht erreichbar. Möglicherweise startet er gerade neu oder Ihre Verbindung wurde unterbrochen - die eingegebene Adresse ist nicht die Ursache.",
+    "SESSION_EXPIRED": "Ihre Sitzung ist abgelaufen. Bitte laden Sie die Seite neu und melden Sie sich erneut an.",
+    "STATUS": "(HTTP {{status}})"
+  },
   "TABLE": {
     "ACTIONS": "Aktionen",
     "SORT_BY": "Sortieren nach {{column}}",

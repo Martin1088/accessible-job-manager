@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /** Prompt text and output guards shared by every JobPostingLlmClient implementation. */
 final class JobPostingLlmPrompt {
@@ -23,11 +24,23 @@ final class JobPostingLlmPrompt {
     static final int MAX_FIELD_LENGTH = 200;
 
     /**
+     * A client-rendered page (Comeet, some Workday tenants) can serve its
+     * template literally - {@code {{position.name}}}, {@code ${job.title}} - as
+     * the only "text" on the page, and a small model asked to extract from that
+     * copies the placeholder straight into the field. No real posting field
+     * value contains a mustache- or JSP-style placeholder, so one means "not
+     * found" rather than a value.
+     */
+    private static final Pattern UNRENDERED_PLACEHOLDER =
+            Pattern.compile("\\{\\{.+?}}|\\$\\{.+?}");
+
+    /**
      * Applies the cap to every string the model returned, so a spec gets the
      * guard by existing rather than by each provider remembering to call it
      * field by field. Blank values collapse to null: "" and "not stated" mean
      * the same thing to every caller here, and null is the one the form knows
-     * how to leave alone.
+     * how to leave alone. An unrendered template placeholder collapses to null
+     * for the same reason.
      */
     static JsonNode truncateFields(JsonNode node, int maxLength) {
         if (!(node instanceof ObjectNode object)) {
@@ -41,7 +54,7 @@ final class JobPostingLlmPrompt {
                 continue;
             }
             String truncated = truncate(value.asText(), maxLength);
-            if (truncated == null) {
+            if (truncated == null || UNRENDERED_PLACEHOLDER.matcher(truncated).find()) {
                 object.putNull(name);
             } else {
                 object.put(name, truncated);

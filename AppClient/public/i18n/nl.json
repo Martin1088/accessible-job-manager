@@ -274,6 +274,11 @@
     "MONTH_11": "November",
     "MONTH_12": "December"
   },
+  "ERROR": {
+    "OFFLINE": "De server was niet bereikbaar. Mogelijk wordt hij opnieuw opgestart of is uw verbinding verbroken - het ingevoerde adres is niet de oorzaak.",
+    "SESSION_EXPIRED": "Uw sessie is verlopen. Laad de pagina opnieuw en meld u opnieuw aan.",
+    "STATUS": "(HTTP {{status}})"
+  },
   "TABLE": {
     "ACTIONS": "Acties",
     "SORT_BY": "Sorteren op {{column}}",

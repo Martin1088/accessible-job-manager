@@ -7,8 +7,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService, UserMe } from '../../core/auth.service';
+import { HttpFailure, describeHttpFailure } from '../../core/http-error';
 import { Company, Gender } from '../../model/company';
 import { JobPostingImportStore } from '../../services/job-posting-import.store';
+import { ErrorTextComponent } from '../../shared/error-text/error-text.component';
 import { normalizeJobUrl } from './job-url';
 
 interface JobPostingExtraction {
@@ -49,7 +51,7 @@ interface JobPostingFullChain {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, FormsModule, TranslatePipe],
+  imports: [RouterLink, FormsModule, TranslatePipe, ErrorTextComponent],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss'
@@ -78,32 +80,29 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   postingText = '';
   searchingText = false;
-  textSearchError = false;
-  textSearchErrorMessage = '';
 
   postingPdfName = '';
   searchingPdf = false;
-  pdfSearchError = false;
-  pdfSearchErrorMessage = '';
 
   searchingJobPosting = false;
-  jobSearchError = false;
   jobPosting: JobPostingExtraction | null = null;
 
   searchingFullChain = false;
-  fullChainError = false;
   fullChainResult: JobPostingFullChain | null = null;
 
   validatingSnapshot = false;
-  snapshotValidateError = false;
 
-  // The server's own reason, when it gave one. A site that refuses automated
-  // access and a URL with a typo both fail here, and only the server can tell
-  // them apart - the generic text below would send the user off to re-check a
-  // URL that is perfectly correct.
-  jobSearchErrorMessage = '';
-  fullChainErrorMessage = '';
-  snapshotValidateErrorMessage = '';
+  // How each request failed, or null while it has not. The server's own reason
+  // is only one of the possibilities: a site that refuses automated access, a
+  // URL with a typo, an expired session and a backend that is not running all
+  // arrive here, and only the classification tells them apart - a single
+  // per-endpoint sentence would send the user off to re-check a URL that is
+  // perfectly correct. See `describeHttpFailure`.
+  textSearchFailure: HttpFailure | null = null;
+  pdfSearchFailure: HttpFailure | null = null;
+  jobSearchFailure: HttpFailure | null = null;
+  fullChainFailure: HttpFailure | null = null;
+  snapshotValidateFailure: HttpFailure | null = null;
   private previewObjectUrl?: string;
 
   // Which extraction source wins for a given field when the two disagree.
@@ -135,13 +134,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!file) return;
 
     this.searchingPdf = true;
-    this.pdfSearchError = false;
-    this.pdfSearchErrorMessage = '';
+    this.pdfSearchFailure = null;
     this.postingPdfName = file.name;
     this.jobPosting = null;
-    this.jobSearchError = false;
-    this.jobSearchErrorMessage = '';
-    this.textSearchError = false;
+    this.jobSearchFailure = null;
+    this.textSearchFailure = null;
     this.resetFullChainForTextPath();
 
     const form = new FormData();
@@ -155,8 +152,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.announcer.announce(this.translate.instant('HOME.PDF_EXTRACTED_ANNOUNCE'), 'polite');
       },
       error: (err: HttpErrorResponse) => {
-        this.pdfSearchError = true;
-        this.pdfSearchErrorMessage = err.error?.message ?? '';
+        this.pdfSearchFailure = describeHttpFailure(err);
         this.importStore.clear();
         this.searchingPdf = false;
       },
@@ -169,8 +165,7 @@ export class HomeComponent implements OnInit, OnDestroy {
    */
   private resetFullChainForTextPath(): void {
     this.fullChainResult = null;
-    this.fullChainError = false;
-    this.fullChainErrorMessage = '';
+    this.fullChainFailure = null;
     this.selectedSource = { name: 'overview', title: 'overview', location: 'overview' };
   }
 
@@ -227,12 +222,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!text) return;
 
     this.searchingText = true;
-    this.textSearchError = false;
-    this.textSearchErrorMessage = '';
+    this.textSearchFailure = null;
     this.jobPosting = null;
-    this.jobSearchError = false;
-    this.jobSearchErrorMessage = '';
-    this.pdfSearchError = false;
+    this.jobSearchFailure = null;
+    this.pdfSearchFailure = null;
     // The text path files no snapshot, so any PDF held from an earlier attempt
     // must not be filed against the company this extraction goes on to create.
     this.importStore.clear();
@@ -245,8 +238,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.searchingText = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.textSearchError = true;
-        this.textSearchErrorMessage = err.error?.message ?? '';
+        this.textSearchFailure = describeHttpFailure(err);
         this.searchingText = false;
       },
     });
@@ -270,7 +262,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     }
 
-    if (e.key.toLowerCase() === 's') {
+    if (e.key.toLowerCase() === 'i') {
       e.preventDefault();
       this.jobUrlInput.nativeElement.focus();
     }
@@ -297,17 +289,15 @@ export class HomeComponent implements OnInit, OnDestroy {
     // full-chain parse can differ from the quick overview parse and the user may
     // want to compare the two before merging one into the "new company" form.
     this.selectedSource = { name: 'fullChain', title: 'fullChain', location: 'fullChain' };
-    this.snapshotValidateError = false;
-    this.snapshotValidateErrorMessage = '';
+    this.snapshotValidateFailure = null;
     // A URL search means the snapshot will be rendered from that URL, so a PDF
     // held from an earlier attempt must not also be filed against the company.
     this.importStore.clear();
     this.postingPdfName = '';
-    this.pdfSearchError = false;
+    this.pdfSearchFailure = null;
 
     this.searchingJobPosting = true;
-    this.jobSearchError = false;
-    this.jobSearchErrorMessage = '';
+    this.jobSearchFailure = null;
     this.jobPosting = null;
     this.http.post<JobPostingExtraction>('/api/posting/overview', null, { params }).subscribe({
       next: (result) => {
@@ -315,15 +305,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.searchingJobPosting = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.jobSearchError = true;
-        this.jobSearchErrorMessage = err.error?.message ?? '';
+        this.jobSearchFailure = describeHttpFailure(err);
         this.searchingJobPosting = false;
       },
     });
 
     this.searchingFullChain = true;
-    this.fullChainError = false;
-    this.fullChainErrorMessage = '';
+    this.fullChainFailure = null;
     this.fullChainResult = null;
     this.http.post<JobPostingFullChain>('/api/posting/full-chain', null, { params }).subscribe({
       next: (result) => {
@@ -331,8 +319,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.searchingFullChain = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.fullChainError = true;
-        this.fullChainErrorMessage = err.error?.message ?? '';
+        this.fullChainFailure = describeHttpFailure(err);
         this.searchingFullChain = false;
       },
     });
@@ -349,8 +336,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.releasePreviewObjectUrl();
     this.validatingSnapshot = true;
-    this.snapshotValidateError = false;
-    this.snapshotValidateErrorMessage = '';
+    this.snapshotValidateFailure = null;
     this.http.post('/api/posting/snapshot-validate', null, { params, responseType: 'blob' }).subscribe({
       next: (blob) => {
         this.previewObjectUrl = URL.createObjectURL(blob);
@@ -358,11 +344,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.validatingSnapshot = false;
       },
       error: (err: HttpErrorResponse) => {
-        this.snapshotValidateError = true;
         this.validatingSnapshot = false;
         // This request asks for a blob, so its error body arrives as a Blob
-        // rather than parsed JSON - the server's reason has to be read out of it.
-        this.readBlobMessage(err.error).then(message => this.snapshotValidateErrorMessage = message);
+        // rather than parsed JSON - the server's reason has to be read out of
+        // it before the failure can be classified.
+        this.readBlobMessage(err.error).then(message => {
+          this.snapshotValidateFailure = describeHttpFailure(err, message);
+        });
       },
     });
   }

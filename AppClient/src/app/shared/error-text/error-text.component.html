@@ -1,0 +1,8 @@
+@if (failure; as f) {
+  @switch (f.kind) {
+    @case ('offline') { {{ 'ERROR.OFFLINE' | translate }} }
+    @case ('unauthenticated') { {{ 'ERROR.SESSION_EXPIRED' | translate }} }
+    @case ('reported') { {{ f.message }} }
+    @default { {{ fallbackKey | translate }} {{ 'ERROR.STATUS' | translate: { status: f.status } }} }
+  }
+}
