@@ -38,7 +38,8 @@
     "COVER_LETTER_TEMPLATE": "Anschreiben-Vorlage",
     "DASHBOARD": "Übersicht",
     "JOB_IMPORTER": "Stellenimport",
-    "JOB_SEARCH": "Jobsuche"
+    "JOB_SEARCH": "Jobsuche",
+    "JOB_IMPORT": "Anzeige importieren"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Kontomenü",
@@ -190,6 +191,30 @@
     "REQ_DECLINED": "Anfrage von {{name}} abgelehnt.",
     "ERROR_LOAD_REQUESTS": "Betreuungsanfragen konnten nicht geladen werden.",
     "ERROR_REQUEST_ACTION": "Das hat nicht funktioniert. Bitte versuchen Sie es erneut."
+  },
+  "ADVISOR_IMPORT": {
+    "TITLE": "Anzeige importieren",
+    "LEAD": "Eine passende Anzeige für eine Ihrer Personen gefunden? Holen Sie sie hier herein und senden Sie sie in einem Schritt. Sie wird in Ihrer eigenen Unternehmensliste gespeichert und lässt sich später erneut vorschlagen.",
+    "IMPORT_HEADING": "Die Anzeige",
+    "USE_POSTING": "Diese Anzeige übernehmen",
+    "SUGGEST_HEADING": "An eine Person senden",
+    "SUMMARY_POSITION": "Position",
+    "SUMMARY_COMPANY": "Unternehmen",
+    "SUMMARY_LOCATION": "Ort",
+    "SUMMARY_EMPTY": "Nicht gefunden",
+    "FIELD_USER": "Person",
+    "SELECT_USER_PLACEHOLDER": "Person auswählen",
+    "NO_USERS": "Ihnen ist noch niemand zugeordnet. Nehmen Sie zuerst eine Anfrage auf Ihrer Übersicht an.",
+    "FIELD_MESSAGE": "Nachricht",
+    "MESSAGE_PLACEHOLDER": "Warum diese Anzeige passt",
+    "SAVE_AND_SUGGEST": "Speichern und senden",
+    "SENDING": "Wird gesendet…",
+    "SENT": "{{position}} wurde gespeichert und an {{name}} gesendet.",
+    "SENT_LINK": "Alle Vorschläge ansehen",
+    "EXTRACTED_ANNOUNCE": "Anzeige gelesen. Wählen Sie aus, an wen sie gehen soll.",
+    "SENT_ANNOUNCE": "Anzeige an {{name}} gesendet.",
+    "USERS_ERROR": "Ihre Personen konnten nicht geladen werden.",
+    "SAVE_ERROR": "Die Anzeige konnte nicht gespeichert und gesendet werden."
   },
   "JOB_SEARCH": {
     "TITLE": "Jobsuche",

@@ -102,7 +102,17 @@ route('PATCH', '/api/profile/preferences', (req, db) => db.patchPreferences(req.
 route('GET', '/api/companies', (_req, db) => db.companies());
 
 route('POST', '/api/companies', (req, db) => {
-  const created: Company = { ...(req.body as Company), id: db.nextNumericId(db.companies()) };
+  const body = req.body as Company;
+  // Positions get ids too, not just the company: the advisor's import page
+  // reads `positions[0].id` back out of this response to file the snapshot and
+  // the suggestion against, so a position without one would dead-end there.
+  const nextPositionId = Math.max(
+    0, ...db.companies().flatMap(c => c.positions ?? []).map(p => p.id ?? 0)) + 1;
+  const created: Company = {
+    ...body,
+    id: db.nextNumericId(db.companies()),
+    positions: (body.positions ?? []).map((p, i) => ({ ...p, id: p.id ?? nextPositionId + i })),
+  };
   db.companies.update(all => [...all, created]);
   return created;
 });

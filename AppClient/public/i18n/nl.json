@@ -38,7 +38,8 @@
     "COVER_LETTER_TEMPLATE": "Sollicitatiebriefsjabloon",
     "DASHBOARD": "Dashboard",
     "JOB_IMPORTER": "Vacature-import",
-    "JOB_SEARCH": "Vacaturezoeker"
+    "JOB_SEARCH": "Vacaturezoeker",
+    "JOB_IMPORT": "Vacature importeren"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Accountmenu",
@@ -190,6 +191,30 @@
     "REQ_DECLINED": "Aanvraag van {{name}} geweigerd.",
     "ERROR_LOAD_REQUESTS": "Aanvragen voor begeleiding konden niet worden geladen.",
     "ERROR_REQUEST_ACTION": "Dat is niet gelukt. Probeer het opnieuw."
+  },
+  "ADVISOR_IMPORT": {
+    "TITLE": "Vacature importeren",
+    "LEAD": "Een passende vacature gevonden voor een van uw gebruikers? Haal hem hier binnen en stuur hem in één stap door. Hij wordt opgeslagen in uw eigen bedrijvenlijst, zodat u hem later opnieuw kunt voorstellen.",
+    "IMPORT_HEADING": "De vacature",
+    "USE_POSTING": "Deze vacature gebruiken",
+    "SUGGEST_HEADING": "Naar een gebruiker sturen",
+    "SUMMARY_POSITION": "Functie",
+    "SUMMARY_COMPANY": "Bedrijf",
+    "SUMMARY_LOCATION": "Plaats",
+    "SUMMARY_EMPTY": "Niet gevonden",
+    "FIELD_USER": "Gebruiker",
+    "SELECT_USER_PLACEHOLDER": "Kies een gebruiker",
+    "NO_USERS": "Er zijn nog geen gebruikers aan u toegewezen. Accepteer eerst een verzoek op uw overzicht.",
+    "FIELD_MESSAGE": "Bericht",
+    "MESSAGE_PLACEHOLDER": "Waarom deze vacature past",
+    "SAVE_AND_SUGGEST": "Opslaan en versturen",
+    "SENDING": "Bezig met versturen…",
+    "SENT": "{{position}} is opgeslagen en naar {{name}} gestuurd.",
+    "SENT_LINK": "Alle voorstellen bekijken",
+    "EXTRACTED_ANNOUNCE": "Vacature gelezen. Kies naar wie hij gaat.",
+    "SENT_ANNOUNCE": "Vacature naar {{name}} gestuurd.",
+    "USERS_ERROR": "Uw gebruikers konden niet worden geladen.",
+    "SAVE_ERROR": "De vacature kon niet worden opgeslagen en verstuurd."
   },
   "JOB_SEARCH": {
     "TITLE": "Vacaturezoeker",

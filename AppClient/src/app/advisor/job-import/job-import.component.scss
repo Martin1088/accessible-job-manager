@@ -1,5 +1,9 @@
 @use '../../../styles/correspondence' as corr;
 
+// The same DIN 5008 stationery as `advisor/home`: the page is a desk, each
+// section a sheet. The importer sheet stays plain and the composer keeps the
+// terracotta edge, so the accent still marks one thing - the slip about to go
+// out - rather than both halves of the page.
 :host {
   display: block;
 }
@@ -26,39 +30,13 @@ h1 {
   color: var(--ink);
 }
 
-// --- Reference line --------------------------------------------------------
-
-.reference-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.75rem;
+.lead {
   margin: 0;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.reference-line__entry {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-
-  dt {
-    font-family: corr.$corr-mono;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-
-  dd {
-    margin: 0;
-    font-family: corr.$corr-mono;
-    font-size: 0.9rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-  }
+  max-width: 62ch;
+  font-family: corr.$corr-serif;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
 }
 
 // --- Section shell (each one a sheet on the desk) --------------------------
@@ -76,6 +54,9 @@ section {
 section.composer {
   border-left-width: 3px;
   border-left-color: var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 // A tab clipped to the top of the sheet.
@@ -94,18 +75,45 @@ section.composer {
   color: var(--ink-soft);
 }
 
-// A line of standing instruction under a section tab, in the letter's own voice.
-.section-note {
-  margin: 0 0 1rem;
-  font-family: corr.$corr-serif;
-  font-size: 0.92rem;
-  color: var(--ink-soft);
+.composer .section-tab { margin-bottom: 0; }
+
+// --- What is about to be sent ---------------------------------------------
+
+// The extracted posting, restated above the recipient field: the advisor is
+// about to file this under their own name, so the last thing they see before
+// choosing a user is what they are actually sending.
+.posting-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+
+  dt {
+    font-family: corr.$corr-mono;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-top: 0.15rem;
+  }
+
+  dd {
+    margin: 0;
+    font-family: corr.$corr-serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
 }
 
 // --- Notices --------------------------------------------------------------
 
 .notice {
-  margin: 0 0 1rem;
+  margin: 0;
   padding: 0.7rem 0.9rem;
   border: 1px solid transparent;
   border-radius: 2px;
@@ -118,6 +126,16 @@ section.composer {
   background: var(--ok-bg);
   border-color: var(--ok-border);
   color: var(--ok-ink);
+
+  a {
+    color: inherit;
+    margin-left: 0.4rem;
+
+    &:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+  }
 }
 
 .notice--error {
@@ -126,38 +144,7 @@ section.composer {
   color: var(--color-alert-text);
 }
 
-// --- The slip (suggestion form) -----------------------------------------
-
-.slip {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.slip__from {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2rem 0.7rem;
-  margin: 0;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.slip__from-label {
-  font-family: corr.$corr-mono;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-
-.slip__from-value {
-  font-family: corr.$corr-serif;
-  font-size: 1.05rem;
-  color: var(--ink);
-}
+// --- Recipient form -------------------------------------------------------
 
 .form-group {
   display: flex;
@@ -195,6 +182,14 @@ section.composer {
   }
 }
 
+.hint {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
 .btn-send {
   align-self: flex-start;
   min-block-size: 44px;
@@ -215,12 +210,10 @@ section.composer {
     border-color: var(--accent-deep);
   }
 
-  // Explicit muted tokens rather than `opacity` - this button sits disabled
-  // for as long as it takes to pick a user and a position, so its label is on
-  // screen disabled more often than not. `opacity` fades the fill and the
-  // label together, which measured 2.21:1 in the default theme (2.61 high,
-  // 2.48 dark) - all three well under AA. `--ink-soft` on `--paper` measures
-  // 5.16 / 21.0 / 7.76, and the flat fill plus `not-allowed` still read inert.
+  // Muted-but-legible tokens rather than `opacity`, which is what the user
+  // home page's buttons had to be corrected to: fading white-on-navy to 55%
+  // dropped the label to ~3.5:1, while `--ink-soft` on `--paper` clears AA in
+  // all three contrast modes.
   &:disabled {
     background: var(--paper);
     border-color: var(--rule);
@@ -233,6 +226,3 @@ section.composer {
     outline-offset: 2px;
   }
 }
-
-// The two data tables on this page carry the stationery themselves - see
-// `app-data-table`'s own stylesheet.
