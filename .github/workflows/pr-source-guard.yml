@@ -1,0 +1,23 @@
+name: PR source guard
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-source:
+    name: PR into main comes from develop
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify head branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            develop|release/*|hotfix/*)
+              echo "OK: '$HEAD_REF' may target main." ;;
+            *)
+              echo "::error::Pull requests into main are only allowed from develop, release/* or hotfix/* (got '$HEAD_REF')."
+              exit 1 ;;
+          esac
