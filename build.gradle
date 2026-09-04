@@ -43,7 +43,7 @@ dependencies {
 
     api libs.org.springframework.boot.spring.boot.starter.web
     api libs.org.projectlombok.lombok
-    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
     api libs.org.springframework.boot.spring.boot.starter.security
     api libs.org.springframework.boot.spring.boot.starter.oauth2.client
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -54,7 +54,7 @@ dependencies {
     testImplementation 'org.verapdf:validation-model:1.28.1'
     testImplementation libs.org.springframework.security.spring.security.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
     mockitoAgent(platform('org.springframework.boot:spring-boot-dependencies:3.5.16'))
     mockitoAgent('org.mockito:mockito-core') { transitive = false }
 }
