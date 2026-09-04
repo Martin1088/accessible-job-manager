@@ -27,7 +27,7 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
     annotationProcessor platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
-    implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.3'
+    implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:17.0.3'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.jsoup:jsoup:1.18.1'
     implementation 'software.amazon.awssdk:s3:2.25.0'
