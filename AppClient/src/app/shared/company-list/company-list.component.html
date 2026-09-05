@@ -136,4 +136,50 @@
       }
     </section>
   }
+
+  @if (suggestingRow) {
+    <section class="job-posting-view" aria-labelledby="suggest-view-heading">
+      <div class="job-posting-view-header">
+        <h2 id="suggest-view-heading" #suggestViewHeading tabindex="-1">
+          {{ 'COMPANIES.SUGGEST_VIEW_HEADING' | translate: { position: suggestingRow.positionTitle, company: suggestingRow.name } }}
+        </h2>
+        <button type="button" class="btn-secondary" (click)="closeSuggest()">
+          {{ 'COMPANIES.JOB_POSTING_VIEW_CLOSE' | translate }}
+        </button>
+      </div>
+
+      @if (suggestSuccess) {
+        <p role="status" class="notice notice--ok">{{ 'ADVISOR.SUGGESTION_SUCCESS' | translate }}</p>
+      }
+      @if (suggestError) {
+        <p role="alert" class="notice notice--error">{{ suggestError }}</p>
+      }
+      @if (usersError) {
+        <p role="alert" class="notice notice--error">{{ usersError }}</p>
+      }
+
+      <form (ngSubmit)="submitSuggestion()" novalidate>
+        <div class="filter-group">
+          <label for="suggest-target-user">{{ 'ADVISOR.FIELD_USER' | translate }}</label>
+          <select id="suggest-target-user" name="suggestTargetUserId" [(ngModel)]="suggestTargetUserId"
+                  required aria-required="true">
+            <option value="" disabled>{{ 'ADVISOR.SELECT_USER_PLACEHOLDER' | translate }}</option>
+            @for (u of assignedUsers; track u.userId) {
+              <option [value]="u.userId">{{ u.name }} ({{ u.email }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="suggest-message">{{ 'ADVISOR.FIELD_MESSAGE' | translate }}</label>
+          <textarea id="suggest-message" name="suggestMessage" rows="4" [(ngModel)]="suggestMessage"
+            [attr.placeholder]="'ADVISOR.MESSAGE_PLACEHOLDER' | translate"></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="suggestSubmitting">
+          {{ (suggestSubmitting ? 'ADVISOR.SENDING' : 'ADVISOR.SEND_SUGGESTION') | translate }}
+        </button>
+      </form>
+    </section>
+  }
 </main>

@@ -58,7 +58,7 @@ export const routes: Routes = [
   },
   {
     path: 'companies',
-    loadComponent: () => import('./user/company-list/company-list.component')
+    loadComponent: () => import('./shared/company-list/company-list.component')
       .then(m => m.CompanyListComponent),
     canActivate: [authGuard, userGuard]
   },
@@ -77,14 +77,20 @@ export const routes: Routes = [
     canActivate: [authGuard, userGuard]
   },
   {
+    path: 'support',
+    loadComponent: () => import('./user/support/support.component')
+      .then(m => m.SupportComponent),
+    canActivate: [authGuard, userGuard]
+  },
+  {
     path: 'companies/new',
-    loadComponent: () => import('./user/company-form/company-form.component')
+    loadComponent: () => import('./shared/company-form/company-form.component')
       .then(m => m.CompanyFormComponent),
     canActivate: [authGuard, userGuard]
   },
   {
     path: 'companies/edit/:id',
-    loadComponent: () => import('./user/company-form/company-form.component')
+    loadComponent: () => import('./shared/company-form/company-form.component')
       .then(m => m.CompanyFormComponent),
     canActivate: [authGuard, userGuard]
   },
@@ -105,6 +111,34 @@ export const routes: Routes = [
     loadComponent: () => import('./advisor/job-search/job-search.component')
       .then(m => m.JobSearchComponent),
     canActivate: [advisorGuard]
+  },
+  // The advisor's own company/position catalogue - the same components the
+  // user's /companies tree uses, retargeted via companyBasePath (read by
+  // CompanyListComponent/CompanyFormComponent) so "save", "cancel" and the
+  // row actions stay inside the advisor's routes instead of bouncing to the
+  // userGuard-only /companies ones. A position added here shows up in the
+  // "suggest to a user" picker on /advisor (AdvisorHomeComponent.loadPositions),
+  // since both read the caller's own /api/companies.
+  {
+    path: 'advisor/companies',
+    loadComponent: () => import('./shared/company-list/company-list.component')
+      .then(m => m.CompanyListComponent),
+    canActivate: [advisorGuard],
+    data: { companyBasePath: '/advisor/companies' }
+  },
+  {
+    path: 'advisor/companies/new',
+    loadComponent: () => import('./shared/company-form/company-form.component')
+      .then(m => m.CompanyFormComponent),
+    canActivate: [advisorGuard],
+    data: { companyBasePath: '/advisor/companies' }
+  },
+  {
+    path: 'advisor/companies/edit/:id',
+    loadComponent: () => import('./shared/company-form/company-form.component')
+      .then(m => m.CompanyFormComponent),
+    canActivate: [advisorGuard],
+    data: { companyBasePath: '/advisor/companies' }
   },
   {
     path: 'reviewer',

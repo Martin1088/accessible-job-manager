@@ -310,7 +310,7 @@ describe('CompanyFormComponent', () => {
     expect(hint.getAttribute('role')).toBe('status');
     expect(hint.textContent).toContain('You already have a company named "Acme GmbH".');
     expect(hint.querySelector('a').textContent.trim()).toBe('Open the existing one');
-    expect(routerSpy.createUrlTree).toHaveBeenCalledWith(['/companies/edit', 7], jasmine.anything());
+    expect(routerSpy.createUrlTree).toHaveBeenCalledWith(['/companies', 'edit', 7], jasmine.anything());
   });
 
   it('lists similar companies while the name is still being typed', () => {

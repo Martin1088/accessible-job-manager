@@ -10,6 +10,7 @@ public class SuggestionDto {
     private Long id;
     private String targetUserId;
     private String targetUserName;
+    private String advisorName;
     private String companyName;
     private String positionTitle;
     private Long companyPositionId;

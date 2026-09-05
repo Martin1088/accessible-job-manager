@@ -1,9 +1,7 @@
 @use '../../../styles/correspondence' as corr;
 
-// The same DIN 5008 stationery as `advisor/home`: the page is a desk, each
-// section a sheet. The importer sheet stays plain and the composer keeps the
-// terracotta edge, so the accent still marks one thing - the slip about to go
-// out - rather than both halves of the page.
+// Same DIN 5008 stationery as `advisor/home`: the page is a desk, the
+// importer a sheet on it.
 :host {
   display: block;
 }
@@ -39,24 +37,12 @@ h1 {
   color: var(--ink-soft);
 }
 
-// --- Section shell (each one a sheet on the desk) --------------------------
-
 section {
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: 2px;
   // Tightens to ~1.1rem on a phone without a media query.
   padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
-}
-
-// The suggestion this advisor is about to send out - marked on its edge the
-// way a routing slip is flagged, and the one place the terracotta shows.
-section.composer {
-  border-left-width: 3px;
-  border-left-color: var(--accent);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 // A tab clipped to the top of the sheet.
@@ -73,156 +59,4 @@ section.composer {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
-}
-
-.composer .section-tab { margin-bottom: 0; }
-
-// --- What is about to be sent ---------------------------------------------
-
-// The extracted posting, restated above the recipient field: the advisor is
-// about to file this under their own name, so the last thing they see before
-// choosing a user is what they are actually sending.
-.posting-summary {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5rem 1.25rem;
-  margin: 0;
-  padding: 0.9rem 1rem;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-
-  dt {
-    font-family: corr.$corr-mono;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-    padding-top: 0.15rem;
-  }
-
-  dd {
-    margin: 0;
-    font-family: corr.$corr-serif;
-    font-size: 0.95rem;
-    color: var(--ink);
-  }
-}
-
-// --- Notices --------------------------------------------------------------
-
-.notice {
-  margin: 0;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  font-family: corr.$corr-serif;
-  font-size: 0.92rem;
-  line-height: 1.5;
-}
-
-.notice--ok {
-  background: var(--ok-bg);
-  border-color: var(--ok-border);
-  color: var(--ok-ink);
-
-  a {
-    color: inherit;
-    margin-left: 0.4rem;
-
-    &:focus-visible {
-      outline: 3px solid var(--color-focus);
-      outline-offset: 2px;
-    }
-  }
-}
-
-.notice--error {
-  background: var(--color-alert-bg);
-  border-color: var(--color-alert-border);
-  color: var(--color-alert-text);
-}
-
-// --- Recipient form -------------------------------------------------------
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  label {
-    font-family: corr.$corr-mono;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-
-  select,
-  textarea {
-    padding: 0.55rem 0.7rem;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    background: var(--paper);
-    color: var(--ink);
-    font-size: 1rem;
-    font-family: inherit;
-
-    &:focus-visible {
-      outline: 3px solid var(--color-focus);
-      outline-offset: 2px;
-    }
-  }
-
-  textarea {
-    resize: vertical;
-    min-block-size: 5.5rem;
-  }
-}
-
-.hint {
-  margin: 0;
-  font-family: corr.$corr-serif;
-  font-size: 0.86rem;
-  line-height: 1.5;
-  color: var(--ink-soft);
-}
-
-.btn-send {
-  align-self: flex-start;
-  min-block-size: 44px;
-  padding: 0.7rem 1.6rem;
-  border: 1px solid var(--ink);
-  border-radius: 2px;
-  background: var(--ink);
-  color: var(--card);
-  font-family: corr.$corr-mono;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: var(--accent-deep);
-    border-color: var(--accent-deep);
-  }
-
-  // Muted-but-legible tokens rather than `opacity`, which is what the user
-  // home page's buttons had to be corrected to: fading white-on-navy to 55%
-  // dropped the label to ~3.5:1, while `--ink-soft` on `--paper` clears AA in
-  // all three contrast modes.
-  &:disabled {
-    background: var(--paper);
-    border-color: var(--rule);
-    color: var(--ink-soft);
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 3px solid var(--color-focus);
-    outline-offset: 2px;
-  }
 }
