@@ -16,6 +16,9 @@ reliable than it is.
 
 ### Added
 
+- Release process: `CHANGELOG.md`, `./release.sh`, and a workflow that builds
+  and publishes the container image to `ghcr.io` when a `v*` tag is pushed.
+
 ### Changed
 
 - The build version comes from `git describe` instead of a hardcoded
