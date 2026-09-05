@@ -125,6 +125,34 @@ public class JobPostingSnapshotService {
         return messageSource.getMessage(key, args, Locale.ROOT);
     }
 
+    /**
+     * Copies every snapshot already filed against {@code sourcePosition} onto
+     * {@code targetPosition} - used when a user accepts an advisor's
+     * suggestion, so the archived posting stays reachable from their own
+     * company entry ("View job posting" in the company list) the way it was
+     * from the advisor's. Each copy is a new S3 object under the accepting
+     * user's own storage prefix and a new {@link Document} row they own, not
+     * a shared reference to the advisor's copy.
+     *
+     * <p>Best-effort like every other snapshot write reached from outside this
+     * service: a snapshot that fails to copy must not undo the suggestion
+     * being accepted, so a read failure here is swallowed rather than thrown.
+     */
+    public void copyForNewPosition(CompanyPosition sourcePosition, CompanyPosition targetPosition, String targetUserId) {
+        List<Document> sourceDocs = documentRepository.findByCompanyPositionIdAndTypeOrderByCreatedAtDesc(
+                sourcePosition.getId(), DocumentType.JOB_POSTING_SNAPSHOT);
+
+        for (Document source : sourceDocs) {
+            try (InputStream in = storageService.download(source.getStorageKey())) {
+                store(in.readAllBytes(), source.getFilename(), targetPosition,
+                        source.getLabel(), source.getLanguage(), targetUserId);
+            } catch (IOException ignored) {
+                // The company/position import this rides along with still succeeds;
+                // the user simply finds no "View job posting" snapshot for it.
+            }
+        }
+    }
+
     public List<Document> listForPosition(Long companyPositionId, String userId) {
         findOwnedPosition(companyPositionId, userId);
         return documentRepository.findByCompanyPositionIdAndTypeOrderByCreatedAtDesc(

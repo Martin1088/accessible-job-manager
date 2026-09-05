@@ -36,6 +36,7 @@
     "DOCUMENTS": "Documenten",
     "COMPANIES": "Bedrijven",
     "COVER_LETTER_TEMPLATE": "Sollicitatiebriefsjabloon",
+    "SUPPORT": "Support",
     "DASHBOARD": "Dashboard",
     "JOB_IMPORTER": "Vacature-import",
     "JOB_SEARCH": "Vacaturezoeker",
@@ -194,27 +195,9 @@
   },
   "ADVISOR_IMPORT": {
     "TITLE": "Vacature importeren",
-    "LEAD": "Een passende vacature gevonden voor een van uw gebruikers? Haal hem hier binnen en stuur hem in één stap door. Hij wordt opgeslagen in uw eigen bedrijvenlijst, zodat u hem later opnieuw kunt voorstellen.",
+    "LEAD": "Een passende vacature gevonden voor een van uw gebruikers? Haal hem hier binnen om te controleren en op te slaan. Hij wordt toegevoegd aan uw eigen bedrijvenlijst, van waaruit u hem later kunt voorstellen.",
     "IMPORT_HEADING": "De vacature",
-    "USE_POSTING": "Deze vacature gebruiken",
-    "SUGGEST_HEADING": "Naar een gebruiker sturen",
-    "SUMMARY_POSITION": "Functie",
-    "SUMMARY_COMPANY": "Bedrijf",
-    "SUMMARY_LOCATION": "Plaats",
-    "SUMMARY_EMPTY": "Niet gevonden",
-    "FIELD_USER": "Gebruiker",
-    "SELECT_USER_PLACEHOLDER": "Kies een gebruiker",
-    "NO_USERS": "Er zijn nog geen gebruikers aan u toegewezen. Accepteer eerst een verzoek op uw overzicht.",
-    "FIELD_MESSAGE": "Bericht",
-    "MESSAGE_PLACEHOLDER": "Waarom deze vacature past",
-    "SAVE_AND_SUGGEST": "Opslaan en versturen",
-    "SENDING": "Bezig met versturen…",
-    "SENT": "{{position}} is opgeslagen en naar {{name}} gestuurd.",
-    "SENT_LINK": "Alle voorstellen bekijken",
-    "EXTRACTED_ANNOUNCE": "Vacature gelezen. Kies naar wie hij gaat.",
-    "SENT_ANNOUNCE": "Vacature naar {{name}} gestuurd.",
-    "USERS_ERROR": "Uw gebruikers konden niet worden geladen.",
-    "SAVE_ERROR": "De vacature kon niet worden opgeslagen en verstuurd."
+    "USE_POSTING": "Deze vacature gebruiken"
   },
   "JOB_SEARCH": {
     "TITLE": "Vacaturezoeker",
@@ -480,7 +463,11 @@
     "LANGUAGE_GERMAN": "Duits",
     "LANGUAGE_ENGLISH": "Engels",
     "LANGUAGE_DUTCH": "Nederlands",
-    "APPLY_METHOD_HINT": "Zelf instellen of via \"Hoe solliciteren?\" uit de vacature laten lezen."
+    "APPLY_METHOD_HINT": "Zelf instellen of via \"Hoe solliciteren?\" uit de vacature laten lezen.",
+    "ACTION_SUGGEST": "Aan een gebruiker voorstellen",
+    "ACTION_SUGGEST_ARIA": "{{position}} bij {{company}} aan een gebruiker voorstellen",
+    "SUGGEST_VIEW_HEADING": "Voorstellen: {{position}} bij {{company}}",
+    "SUGGEST_SELECT_USER_REQUIRED": "Kies een gebruiker."
   },
   "HOME": {
     "TITLE": "Job Application Manager",
@@ -743,6 +730,23 @@
     "ACTION_DOWNLOAD": "Downloaden",
     "ACTION_DOWNLOAD_ARIA": "{{label}} downloaden",
     "ERROR_DOWNLOAD": "Het document kon niet worden gedownload."
+  },
+  "SUPPORT": {
+    "TITLE": "Support",
+    "SUGGESTIONS_HEADING": "Voorgestelde vacatures",
+    "SUGGESTIONS_HELP": "Vacatures die uw adviseur voor u heeft voorgesteld. Door te accepteren neemt u het bedrijf en de functie over in uw eigen lijst; door af te wijzen laat u uw adviseur weten dat deze niet voor u is.",
+    "SUGGESTIONS_CAPTION": "Aan u voorgestelde vacatures",
+    "SUGGESTIONS_EMPTY": "Er zijn u nog geen vacatures voorgesteld.",
+    "SUGGESTIONS_LOADING": "Voorgestelde vacatures worden geladen…",
+    "ERROR_LOAD_SUGGESTIONS": "De voorgestelde vacatures konden niet worden geladen.",
+    "COL_ADVISOR": "Van",
+    "COL_MESSAGE": "Bericht",
+    "ACTION_ACCEPT": "Accepteren",
+    "ACTION_ACCEPT_ARIA": "Het voorstel voor {{position}} bij {{company}} accepteren",
+    "ACTION_DECLINE": "Afwijzen",
+    "ACTION_DECLINE_ARIA": "Het voorstel voor {{position}} bij {{company}} afwijzen",
+    "SUGGESTION_ACCEPTED": "{{position}} bij {{company}} is toegevoegd aan uw bedrijven.",
+    "SUGGESTION_DECLINED": "U heeft het voorstel voor {{position}} bij {{company}} afgewezen."
   },
   "FOOTER": {
     "LEGAL_LABEL": "Juridisch",

@@ -50,6 +50,14 @@ export class CompanyFormComponent implements OnInit {
   isEditMode = false;
   companyId?: number;
   errorMessage = '';
+
+  /**
+   * Where "save" and "cancel" return to, and where the duplicate/similar
+   * company links below point. Defaults to the user's own /companies tree;
+   * the advisor route supplies 'advisor/companies' via route data so the
+   * same form builds the advisor's own catalogue instead - see app.routes.ts.
+   */
+  readonly basePath: string;
   importMode = false;
   jsonError = '';
 
@@ -190,7 +198,9 @@ export class CompanyFormComponent implements OnInit {
     private translate: TranslateService,
     private http: HttpClient,
     private importStore: JobPostingImportStore,
-  ) {}
+  ) {
+    this.basePath = this.route.snapshot.data?.['companyBasePath'] ?? '/companies';
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -373,7 +383,7 @@ export class CompanyFormComponent implements OnInit {
   save(): void {
     if (this.isEditMode && this.companyId) {
       this.companyService.update(this.companyId, this.company).subscribe({
-        next: () => this.router.navigate(['/companies']),
+        next: () => this.router.navigate([this.basePath]),
         error: (err: HttpErrorResponse) => {
           this.errorMessage = err.status === 409
             ? (err.error ?? this.translate.instant('COMPANIES.ERROR_UPDATE_CONFLICT'))
@@ -391,7 +401,7 @@ export class CompanyFormComponent implements OnInit {
           if (positionId && (this.sourceJobUrl || this.importStore.hasPending)) {
             this.createSnapshot(positionId, this.sourceJobUrl ?? '');
           }
-          this.router.navigate(['/companies']);
+          this.router.navigate([this.basePath]);
         },
         error: (err: HttpErrorResponse) => {
           this.errorMessage = err.error?.message ?? this.translate.instant('COMPANIES.ERROR_CREATE');
@@ -401,7 +411,7 @@ export class CompanyFormComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/companies']);
+    this.router.navigate([this.basePath]);
   }
 
   // Best-effort: the company is already saved and the user has moved on by
