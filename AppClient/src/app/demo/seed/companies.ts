@@ -147,6 +147,37 @@ export const COMPANIES: Company[] = [
         applyLanguage: 'GERMAN', email: 'produkt@aurum.example',
         applicationMethod: 'EMAIL', createdAt: '2026-08-18T11:00:00',
       },
+      {
+        // Waiting in the review queue, so the same employer shows both states:
+        // this one is absent from the company list until it is accepted.
+        id: 64, title: 'Referentin Regulatorik',
+        contactGender: 'FEMALE', contactLastName: 'Arslan',
+        applyLanguage: 'GERMAN', email: 'produkt@aurum.example',
+        applicationMethod: 'EMAIL', triageState: 'NEW', createdAt: '2026-08-28T09:15:00',
+      },
+    ],
+  },
+  {
+    // Nothing but queue entries: what an import run leaves behind before
+    // anybody has looked at it.
+    id: 7,
+    name: 'Perlmutt Analytics B.V.',
+    locations: [
+      { id: 8, street: 'Maasboulevard 8', postcode: '3011 TC', city: 'Rotterdam', country: 'Niederlande' },
+    ],
+    positions: [
+      {
+        id: 71, title: 'Accessibility Engineer',
+        contactGender: 'MALE', contactLastName: 'de Vries',
+        applyLanguage: 'DUTCH', website: 'https://perlmutt.example/vacatures/a11y',
+        applicationMethod: 'WEB_FORM', triageState: 'NEW', createdAt: '2026-08-29T07:40:00',
+      },
+      {
+        id: 72, title: 'Data Engineer Rapportage',
+        contactGender: 'FEMALE', contactLastName: 'Jansen',
+        applyLanguage: 'DUTCH', email: 'werk@perlmutt.example',
+        applicationMethod: 'EMAIL', triageState: 'NEW', createdAt: '2026-08-29T07:45:00',
+      },
     ],
   },
 ];

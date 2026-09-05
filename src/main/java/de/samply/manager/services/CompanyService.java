@@ -9,6 +9,7 @@ import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.CompanyRepository;
+import de.samply.manager.types.TriageState;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,6 +140,7 @@ public class CompanyService {
         dto.setWebsite(p.getWebsite());
         dto.setNotes(p.getNotes());
         dto.setApplicationMethod(p.getApplicationMethod());
+        dto.setTriageState(p.getTriageState());
         dto.setCreatedAt(p.getCreatedAt());
         return dto;
     }
@@ -181,9 +183,22 @@ public class CompanyService {
         p.setApplicationMethod(dto.getApplicationMethod());
     }
 
+    /**
+     * Only new positions get their triage state from the request, and only here
+     * - {@link #applyPositionFields} deliberately leaves the field alone, so an
+     * ordinary edit of a company cannot move a position out of the queue or
+     * back into it. That belongs to the accept/dismiss endpoints.
+     *
+     * <p>Absent means NEW, which is the entity's own default: a position that
+     * turned up has to be looked at. A caller that files into its own catalogue
+     * rather than into a queue - the advisor's pages - says so with ACCEPTED.
+     */
     private CompanyPosition toPositionEntity(CompanyPositionDto dto, Company company) {
         CompanyPosition p = new CompanyPosition();
         applyPositionFields(dto, p);
+        if (dto.getTriageState() != null) {
+            p.setTriageState(dto.getTriageState());
+        }
         p.setCompany(company);
         return p;
     }
