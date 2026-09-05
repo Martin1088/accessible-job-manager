@@ -61,7 +61,45 @@ dependencies {
 
 
 group = 'de.samply'
-version = '0.0.1-SNAPSHOT'
+
+/*
+ * The version is the release tag, so that `git describe`, the jar name and the
+ * published image tag cannot drift apart - that identity is the point of the
+ * whole release path, not a nicety.
+ *
+ * Two escape hatches, in this order:
+ *
+ *  - `-Pversion=0.2.0` wins outright. The image build needs it: `.dockerignore`
+ *    excludes `.git` on purpose (`COPY . .` would otherwise bake the repository
+ *    into a layer), so inside the builder there is nothing to describe from.
+ *  - Without git, outside a repository, or with git refusing the directory
+ *    (the "dubious ownership" case in a container), the fallback keeps the
+ *    build running. A version string must never be the reason a build fails.
+ *
+ * Before the first tag `--always` yields the short commit hash, which is a
+ * truthful answer: this build is not a release.
+ */
+def fallbackVersion = '0.0.0-SNAPSHOT'
+
+def describedVersion = {
+    try {
+        def git = providers.exec {
+            commandLine 'git', 'describe', '--tags', '--always', '--dirty'
+            // Not a failure of the build - just no version to read here.
+            ignoreExitValue = true
+        }
+        if (git.result.get().exitValue != 0) {
+            return null
+        }
+        def described = git.standardOutput.asText.get().trim()
+        return described.isEmpty() ? null : described.replaceFirst(/^v/, '')
+    } catch (Exception ignored) {
+        // git is not installed at all.
+        return null
+    }
+}
+
+version = providers.gradleProperty('version').getOrNull() ?: describedVersion() ?: fallbackVersion
 description = 'Management Portal'
 java {
     toolchain {
