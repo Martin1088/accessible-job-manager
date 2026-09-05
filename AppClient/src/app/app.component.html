@@ -35,6 +35,14 @@
           </a>
         </li>
         <li>
+          <a routerLink="/queue" routerLinkActive="active"
+            #rlaQueue="routerLinkActive"
+            [attr.aria-current]="rlaQueue.isActive ? 'page' : null"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+Q' : 'q'">
+            {{ 'NAV.QUEUE' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+Q' : 'q' }}</kbd>
+          </a>
+        </li>
+        <li>
           <a routerLink="/companies" routerLinkActive="active"
             #rlaCompanies="routerLinkActive"
             [attr.aria-current]="rlaCompanies.isActive ? 'page' : null"

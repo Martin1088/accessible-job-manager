@@ -147,6 +147,39 @@ export const COMPANIES: Company[] = [
         applyLanguage: 'GERMAN', email: 'produkt@aurum.example',
         applicationMethod: 'EMAIL', createdAt: '2026-08-18T11:00:00',
       },
+      {
+        // Waiting in the review queue, so the same employer shows both states:
+        // this one is absent from the company list until it is accepted.
+        id: 64, title: 'Referentin Regulatorik',
+        contactGender: 'FEMALE', contactLastName: 'Arslan',
+        applyLanguage: 'GERMAN', email: 'produkt@aurum.example',
+        applicationMethod: 'EMAIL', triageState: 'NEW', createdAt: '2026-08-28T09:15:00',
+      },
+    ],
+  },
+  {
+    // An employer that exists only in the queue: what an import run leaves
+    // behind before anybody has looked at it. Deliberately not one of the
+    // employers above - a name appearing twice in the company list would read
+    // as a duplicate rather than as a second position.
+    id: 7,
+    name: 'Halbmond Robotik GmbH',
+    locations: [
+      { id: 8, street: 'Werkstraße 5', postcode: '90402', city: 'Nürnberg', country: 'Deutschland' },
+    ],
+    positions: [
+      {
+        id: 71, title: 'Testingenieurin Automatisierung',
+        contactGender: 'MALE', contactLastName: 'Sattler',
+        applyLanguage: 'GERMAN', website: 'https://halbmond-robotik.example/stellen/test',
+        applicationMethod: 'WEB_FORM', triageState: 'NEW', createdAt: '2026-08-29T07:40:00',
+      },
+      {
+        id: 72, title: 'Technische Dokumentation Robotik',
+        contactGender: 'FEMALE', contactLastName: 'Weiß',
+        applyLanguage: 'GERMAN', email: 'stellen@halbmond-robotik.example',
+        applicationMethod: 'EMAIL', triageState: 'NEW', createdAt: '2026-08-29T07:45:00',
+      },
     ],
   },
 ];

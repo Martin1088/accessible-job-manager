@@ -34,6 +34,7 @@
     "REVIEWER_LABEL": "Reviewer navigation",
     "APPLICATIONS": "Applications",
     "DOCUMENTS": "Documents",
+    "QUEUE": "Review queue",
     "COMPANIES": "Companies",
     "COVER_LETTER_TEMPLATE": "Cover Letter Template",
     "SUPPORT": "Support",
@@ -468,6 +469,24 @@
     "ACTION_SUGGEST_ARIA": "Suggest {{position}} at {{company}} to a user",
     "SUGGEST_VIEW_HEADING": "Suggest {{position}} at {{company}}",
     "SUGGEST_SELECT_USER_REQUIRED": "Please select a user."
+  },
+  "QUEUE": {
+    "TITLE": "Review queue",
+    "LEAD": "Positions that turned up but have not been taken over yet. Accepted ones appear in your company list; dismissed ones stay hidden.",
+    "CAPTION": "Positions awaiting review",
+    "COLUMN_POSITION": "Position",
+    "COLUMN_COMPANY": "Company",
+    "COLUMN_CITY": "Location",
+    "COLUMN_FOUND": "Found on",
+    "ACTION_ACCEPT": "Accept",
+    "ACTION_ACCEPT_ARIA": "Accept: {{position}} at {{company}}",
+    "ACTION_DISMISS": "Dismiss",
+    "ACTION_DISMISS_ARIA": "Dismiss: {{position}} at {{company}}",
+    "ANNOUNCE_ACCEPTED": "Accepted. {{remaining}} positions remaining.",
+    "ANNOUNCE_DISMISSED": "Dismissed. {{remaining}} positions remaining.",
+    "EMPTY": "Nothing to review. Newly imported positions appear here.",
+    "ERROR_LOAD": "The review queue could not be loaded.",
+    "ERROR_ACTION": "The position could not be updated. It stays in the list."
   },
   "HOME": {
     "TITLE": "Job Application Manager",

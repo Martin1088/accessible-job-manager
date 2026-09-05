@@ -49,6 +49,13 @@ export class CompanyFormComponent implements OnInit {
   };
   isEditMode = false;
   companyId?: number;
+
+  /**
+   * The advisor's catalogue, not a user's. Positions filed here skip the review
+   * queue: the queue is the applicant's way of separating what turned up from
+   * what they mean to pursue, and an advisor has no such list to work through.
+   */
+  private isAdvisorContext = false;
   errorMessage = '';
 
   /**
@@ -200,6 +207,7 @@ export class CompanyFormComponent implements OnInit {
     private importStore: JobPostingImportStore,
   ) {
     this.basePath = this.route.snapshot.data?.['companyBasePath'] ?? '/companies';
+    this.isAdvisorContext = this.basePath !== '/companies';
   }
 
   ngOnInit(): void {
@@ -380,6 +388,19 @@ export class CompanyFormComponent implements OnInit {
     this.company.positions.splice(index, 1);
   }
 
+  /**
+   * What gets posted on create. Only the advisor's side sets a triage state -
+   * everywhere else the server's default applies, which puts a newly found
+   * position into the review queue rather than straight into the catalogue.
+   */
+  private forCreate(): Company {
+    if (!this.isAdvisorContext) return this.company;
+    return {
+      ...this.company,
+      positions: this.company.positions.map(p => ({ ...p, triageState: 'ACCEPTED' as const })),
+    };
+  }
+
   save(): void {
     if (this.isEditMode && this.companyId) {
       this.companyService.update(this.companyId, this.company).subscribe({
@@ -391,7 +412,7 @@ export class CompanyFormComponent implements OnInit {
         }
       });
     } else {
-      this.companyService.create(this.company).subscribe({
+      this.companyService.create(this.forCreate()).subscribe({
         next: (created) => {
           const positionId = created.positions?.[0]?.id;
           // An uploaded PDF is reason enough on its own: the import screen's PDF

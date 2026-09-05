@@ -57,6 +57,12 @@ export const routes: Routes = [
     canActivate: [authGuard, userGuard]
   },
   {
+    path: 'queue',
+    loadComponent: () => import('./user/queue/queue.component')
+      .then(m => m.QueueComponent),
+    canActivate: [authGuard, userGuard]
+  },
+  {
     path: 'companies',
     loadComponent: () => import('./shared/company-list/company-list.component')
       .then(m => m.CompanyListComponent),

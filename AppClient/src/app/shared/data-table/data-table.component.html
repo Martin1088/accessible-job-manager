@@ -41,7 +41,7 @@
       }
 
       @for (row of sortedRows; track row.id ?? $index) {
-        <tr>
+        <tr [attr.data-row-id]="row.id">
           @for (col of columns; track col) {
             <td [attr.data-label]="col.label | translate">{{ row[col.field] }}</td>
           }
@@ -51,6 +51,7 @@
                 <button
                   type="button"
                   (click)="action.handler(row)"
+                  [attr.data-action]="action.name"
                   [attr.aria-label]="action.ariaLabel(row)">
                   {{ action.label | translate }}
                 </button>
