@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
 import { Company, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,12 @@ import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-
 
 interface JobPostingSnapshot {
   id: string;
+}
+
+interface AdvisorUser {
+  userId: string;
+  name: string;
+  email: string;
 }
 
 type SnapshotState = 'loading' | 'ready' | 'none' | 'error';
@@ -37,6 +43,7 @@ function monthOf(iso: string | null | undefined): number | null {
 })
 export class CompanyListComponent implements OnInit {
   @ViewChild('jobPostingViewHeading') jobPostingViewHeading?: ElementRef<HTMLElement>;
+  @ViewChild('suggestViewHeading') suggestViewHeading?: ElementRef<HTMLElement>;
 
   companies: Company[] = [];
   allRows: any[] = [];
@@ -48,6 +55,17 @@ export class CompanyListComponent implements OnInit {
   snapshotUrl: string | null = null;
   snapshotSrc: SafeResourceUrl | null = null;
   private lastFocusedElement: HTMLElement | null = null;
+
+  // --- Suggest to a user (advisor catalogue only) -----------------------
+  suggestingRow: any = null;
+  assignedUsers: AdvisorUser[] = [];
+  usersError = '';
+  suggestTargetUserId = '';
+  suggestMessage = '';
+  suggestSubmitting = false;
+  suggestError = '';
+  suggestSuccess = false;
+  private lastFocusedSuggestElement: HTMLElement | null = null;
 
   filterYear: number | '' = '';
   filterMonth: number | '' = '';
@@ -71,30 +89,18 @@ export class CompanyListComponent implements OnInit {
     { label: 'COMPANIES.COL_ADDED',    field: 'positionDate',  sortable: true },
   ];
 
-  actions: TableAction[] = [
-    {
-      label: 'COMPANIES.ACTION_APPLY',
-      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_APPLY_ARIA', { position: row.positionTitle, company: row.name }),
-      handler: (row) => this.router.navigate(['/applications'], {
-        queryParams: { positionId: row.positionId, companyName: row.name, positionTitle: row.positionTitle }
-      }),
-    },
-    {
-      label: 'COMPANIES.ACTION_VIEW_JOB_POSTING',
-      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_VIEW_JOB_POSTING_ARIA', { position: row.positionTitle, company: row.name }),
-      handler: (row) => this.viewJobPosting(row),
-    },
-    {
-      label: 'COMPANIES.ACTION_EDIT',
-      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_EDIT_ARIA', { company: row.name }),
-      handler: (row) => this.router.navigate(['/companies/edit', row.companyId]),
-    },
-    {
-      label: 'COMPANIES.ACTION_DELETE',
-      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_DELETE_ARIA', { company: row.name }),
-      handler: (row) => this.deleteCompany(row.companyId, row.name),
-    },
-  ];
+  /**
+   * Where "add" and "edit" navigate to. Defaults to the user's own /companies
+   * tree; the advisor route supplies 'advisor/companies' via route data so
+   * the same component manages the advisor's own catalogue instead - see
+   * app.routes.ts.
+   */
+  private readonly basePath: string;
+
+  /** Whether this is the advisor's own catalogue rather than a user's. */
+  readonly isAdvisorContext: boolean;
+
+  actions: TableAction[];
 
   constructor(
     private companyService: CompanyService,
@@ -102,7 +108,52 @@ export class CompanyListComponent implements OnInit {
     private translate: TranslateService,
     private http: HttpClient,
     private sanitizer: DomSanitizer,
-  ) {}
+    route: ActivatedRoute,
+  ) {
+    this.basePath = route.snapshot.data?.['companyBasePath'] ?? '/companies';
+    this.isAdvisorContext = this.basePath !== '/companies';
+
+    // "Apply for this position" only makes sense against the applicant's own
+    // list - /applications is a userGuard route an advisor cannot reach, so
+    // the action is left out of their catalogue entirely rather than
+    // pointing somewhere it would be forbidden. "Suggest to a user" is the
+    // advisor's counterpart to it: only meaningful once a position sits in
+    // their own catalogue, and it is what turns a saved position into
+    // something one of their users actually sees.
+    const applyAction: TableAction[] = !this.isAdvisorContext ? [{
+      label: 'COMPANIES.ACTION_APPLY',
+      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_APPLY_ARIA', { position: row.positionTitle, company: row.name }),
+      handler: (row) => this.router.navigate(['/applications'], {
+        queryParams: { positionId: row.positionId, companyName: row.name, positionTitle: row.positionTitle }
+      }),
+    }] : [];
+
+    const suggestAction: TableAction[] = this.isAdvisorContext ? [{
+      label: 'COMPANIES.ACTION_SUGGEST',
+      ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_SUGGEST_ARIA', { position: row.positionTitle, company: row.name }),
+      handler: (row) => this.openSuggest(row),
+    }] : [];
+
+    this.actions = [
+      ...applyAction,
+      {
+        label: 'COMPANIES.ACTION_VIEW_JOB_POSTING',
+        ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_VIEW_JOB_POSTING_ARIA', { position: row.positionTitle, company: row.name }),
+        handler: (row) => this.viewJobPosting(row),
+      },
+      ...suggestAction,
+      {
+        label: 'COMPANIES.ACTION_EDIT',
+        ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_EDIT_ARIA', { company: row.name }),
+        handler: (row) => this.router.navigate([this.basePath, 'edit', row.companyId]),
+      },
+      {
+        label: 'COMPANIES.ACTION_DELETE',
+        ariaLabel: (row) => this.translate.instant('COMPANIES.ACTION_DELETE_ARIA', { company: row.name }),
+        handler: (row) => this.deleteCompany(row.companyId, row.name),
+      },
+    ];
+  }
 
   ngOnInit(): void {
     this.companyService.getAll().subscribe({
@@ -112,6 +163,13 @@ export class CompanyListComponent implements OnInit {
       },
       error: () => this.errorMessage = this.translate.instant('COMPANIES.ERROR_LOAD')
     });
+
+    if (this.isAdvisorContext) {
+      this.http.get<AdvisorUser[]>('/api/advisor/my-users').subscribe({
+        next: (users) => this.assignedUsers = users,
+        error: () => this.usersError = this.translate.instant('ADVISOR.ERROR_LOAD_USERS'),
+      });
+    }
   }
 
   get availableYears(): number[] {
@@ -167,7 +225,7 @@ export class CompanyListComponent implements OnInit {
   }
 
   create(): void {
-    this.router.navigate(['/companies/new']);
+    this.router.navigate([this.basePath, 'new']);
   }
 
   private deleteCompany(id: number, name: string): void {
@@ -218,6 +276,56 @@ export class CompanyListComponent implements OnInit {
   closeJobPostingView(): void {
     this.viewingRow = null;
     this.lastFocusedElement?.focus();
+  }
+
+  // Advisor-only: send one position from this catalogue to one of their
+  // users as a suggestion. companyPositionId comes straight from the row -
+  // the same id the "View job posting" and "Edit" actions already use - so
+  // there is nothing to look up, only who it's for and an optional note.
+  openSuggest(row: any): void {
+    this.lastFocusedSuggestElement = document.activeElement as HTMLElement | null;
+    this.suggestingRow = row;
+    this.suggestTargetUserId = '';
+    this.suggestMessage = '';
+    this.suggestError = '';
+    this.suggestSuccess = false;
+
+    setTimeout(() => this.suggestViewHeading?.nativeElement.focus());
+  }
+
+  closeSuggest(): void {
+    this.suggestingRow = null;
+    this.lastFocusedSuggestElement?.focus();
+  }
+
+  submitSuggestion(): void {
+    if (!this.suggestingRow) return;
+
+    if (!this.suggestTargetUserId) {
+      this.suggestError = this.translate.instant('COMPANIES.SUGGEST_SELECT_USER_REQUIRED');
+      return;
+    }
+
+    this.suggestError = '';
+    this.suggestSuccess = false;
+    this.suggestSubmitting = true;
+
+    this.http.post('/api/advisor/suggestions', {
+      targetUserId: this.suggestTargetUserId,
+      companyPositionId: this.suggestingRow.positionId,
+      message: this.suggestMessage,
+    }).subscribe({
+      next: () => {
+        this.suggestSuccess = true;
+        this.suggestTargetUserId = '';
+        this.suggestMessage = '';
+        this.suggestSubmitting = false;
+      },
+      error: () => {
+        this.suggestError = this.translate.instant('ADVISOR.ERROR_CREATE_SUGGESTION');
+        this.suggestSubmitting = false;
+      },
+    });
   }
 
   get viewingCompany(): Company | undefined {

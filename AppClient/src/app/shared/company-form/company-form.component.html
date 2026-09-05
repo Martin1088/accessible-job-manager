@@ -74,14 +74,14 @@
               } @else {
                 {{ 'COMPANIES.DUPLICATE_HINT' | translate: { name: existing.company.name } }}
               }
-              <a [routerLink]="['/companies/edit', existing.company.id]">{{ 'COMPANIES.DUPLICATE_OPEN' | translate }}</a>
+              <a [routerLink]="[basePath, 'edit', existing.company.id]">{{ 'COMPANIES.DUPLICATE_OPEN' | translate }}</a>
             </p>
           } @else if (sameNameElsewhere().length) {
             <p id="elsewhere-companies-label">{{ 'COMPANIES.SAME_NAME_ELSEWHERE' | translate }}</p>
             <ul aria-labelledby="elsewhere-companies-label">
               @for (existing of sameNameElsewhere(); track existing.company.id) {
                 <li>
-                  <a [routerLink]="['/companies/edit', existing.company.id]">{{ existing.company.name }}</a>
+                  <a [routerLink]="[basePath, 'edit', existing.company.id]">{{ existing.company.name }}</a>
                   @if (existing.cities) { <span class="at-city">{{ existing.cities }}</span> }
                 </li>
               }
@@ -91,7 +91,7 @@
             <ul aria-labelledby="similar-companies-label">
               @for (existing of similarCompanies(); track existing.company.id) {
                 <li>
-                  <a [routerLink]="['/companies/edit', existing.company.id]">{{ existing.company.name }}</a>
+                  <a [routerLink]="[basePath, 'edit', existing.company.id]">{{ existing.company.name }}</a>
                   @if (existing.cities) { <span class="at-city">{{ existing.cities }}</span> }
                 </li>
               }

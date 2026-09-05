@@ -1,0 +1,71 @@
+@use '../../../styles/correspondence' as corr;
+
+// Same DIN 5008 stationery as the rest of the user screens. This page has
+// no letterhead of its own - the profile form keeps that - so both sheets
+// here are ordinary ones, with no terracotta edge.
+:host { display: block; }
+
+// Global `main` (styles.scss) supplies max-width / margin / padding.
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+h1,
+h2,
+.hint {
+  font-family: corr.$corr-serif;
+  color: var(--ink);
+}
+
+h1 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.25;
+}
+
+.network,
+.suggestions {
+  margin: 0;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+h2 {
+  margin: 0 0 0.4rem;
+  font-weight: 400;
+  font-size: 1.15rem;
+}
+
+.hint {
+  margin: 0 0 1rem;
+  max-width: 62ch;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.network [role='status'],
+.suggestions [role='status'] {
+  margin: 0;
+  font-family: corr.$corr-mono;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.error {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-size: 0.88rem;
+  color: var(--color-alert-text);
+}
+
+// The shared `app-data-table` ships its own stationery - nothing to
+// retexture here.

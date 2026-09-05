@@ -50,6 +50,14 @@
             {{ 'NAV.COVER_LETTER_TEMPLATE' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+T' : 't' }}</kbd>
           </a>
         </li>
+        <li>
+          <a routerLink="/support" routerLinkActive="active"
+            #rlaSupport="routerLinkActive"
+            [attr.aria-current]="rlaSupport.isActive ? 'page' : null"
+            [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+U' : 'u Alt+Shift+U'">
+            {{ 'NAV.SUPPORT' | translate }} <kbd aria-hidden="true">{{ isWindows ? 'Alt+Shift+U' : 'u' }}</kbd>
+          </a>
+        </li>
       </ul>
     </nav>
   }
@@ -73,6 +81,11 @@
           <a routerLink="/advisor/job-search" routerLinkActive="active"
             #rlaJobSearch="routerLinkActive"
           [attr.aria-current]="rlaJobSearch.isActive ? 'page' : null">{{ 'NAV.JOB_SEARCH' | translate }}</a>
+        </li>
+        <li>
+          <a routerLink="/advisor/companies" routerLinkActive="active"
+            #rlaAdvisorCompanies="routerLinkActive"
+          [attr.aria-current]="rlaAdvisorCompanies.isActive ? 'page' : null">{{ 'NAV.COMPANIES' | translate }}</a>
         </li>
       </ul>
     </nav>

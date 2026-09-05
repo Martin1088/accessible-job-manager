@@ -4,69 +4,10 @@
     <p class="lead">{{ 'ADVISOR_IMPORT.LEAD' | translate }}</p>
   </div>
 
-  @if (savedPositionTitle) {
-    <p role="status" class="notice notice--ok">
-      {{ 'ADVISOR_IMPORT.SENT' | translate: { position: savedPositionTitle, name: savedUserName } }}
-      <a routerLink="/advisor">{{ 'ADVISOR_IMPORT.SENT_LINK' | translate }}</a>
-    </p>
-  }
-
-  <!-- Step 1: get the posting in. Same importer the user's home page uses. -->
   <section aria-labelledby="import-heading">
     <h2 id="import-heading" class="section-tab">{{ 'ADVISOR_IMPORT.IMPORT_HEADING' | translate }}</h2>
     <app-job-posting-import
       submitLabelKey="ADVISOR_IMPORT.USE_POSTING"
-      [submitting]="saving"
       (imported)="onImported($event)" />
   </section>
-
-  <!--
-    Step 2 only exists once there is something to send. Showing an empty
-    recipient form above an empty importer would suggest the two are
-    independent, when the second cannot be filled before the first.
-  -->
-  @if (pending) {
-    <section aria-labelledby="suggest-heading" class="composer">
-      <h2 id="suggest-heading" class="section-tab">{{ 'ADVISOR_IMPORT.SUGGEST_HEADING' | translate }}</h2>
-
-      <dl class="posting-summary">
-        <dt>{{ 'ADVISOR_IMPORT.SUMMARY_POSITION' | translate }}</dt>
-        <dd>{{ pending.company.positions[0].title || ('ADVISOR_IMPORT.SUMMARY_EMPTY' | translate) }}</dd>
-        <dt>{{ 'ADVISOR_IMPORT.SUMMARY_COMPANY' | translate }}</dt>
-        <dd>{{ pending.company.name || ('ADVISOR_IMPORT.SUMMARY_EMPTY' | translate) }}</dd>
-        <dt>{{ 'ADVISOR_IMPORT.SUMMARY_LOCATION' | translate }}</dt>
-        <dd>{{ pending.company.locations[0].city || ('ADVISOR_IMPORT.SUMMARY_EMPTY' | translate) }}</dd>
-      </dl>
-
-      @if (usersFailure) {
-        <p role="alert" class="notice notice--error"><app-error-text [failure]="usersFailure" fallbackKey="ADVISOR_IMPORT.USERS_ERROR" /></p>
-      }
-      @if (saveFailure) {
-        <p role="alert" class="notice notice--error"><app-error-text [failure]="saveFailure" fallbackKey="ADVISOR_IMPORT.SAVE_ERROR" /></p>
-      }
-
-      <div class="form-group">
-        <label for="target-user">{{ 'ADVISOR_IMPORT.FIELD_USER' | translate }}</label>
-        <select id="target-user" name="targetUserId" [(ngModel)]="targetUserId" required aria-required="true">
-          <option value="" disabled>{{ 'ADVISOR_IMPORT.SELECT_USER_PLACEHOLDER' | translate }}</option>
-          @for (u of assignedUsers; track u.userId) {
-            <option [value]="u.userId">{{ u.name }} ({{ u.email }})</option>
-          }
-        </select>
-        @if (!assignedUsers.length && !usersFailure) {
-          <p class="hint">{{ 'ADVISOR_IMPORT.NO_USERS' | translate }}</p>
-        }
-      </div>
-
-      <div class="form-group">
-        <label for="suggest-message">{{ 'ADVISOR_IMPORT.FIELD_MESSAGE' | translate }}</label>
-        <textarea id="suggest-message" name="message" rows="4" [(ngModel)]="message"
-          [attr.placeholder]="'ADVISOR_IMPORT.MESSAGE_PLACEHOLDER' | translate"></textarea>
-      </div>
-
-      <button type="button" class="btn-send" [disabled]="!canSend" (click)="saveAndSuggest()">
-        {{ (saving ? 'ADVISOR_IMPORT.SENDING' : 'ADVISOR_IMPORT.SAVE_AND_SUGGEST') | translate }}
-      </button>
-    </section>
-  }
 </main>

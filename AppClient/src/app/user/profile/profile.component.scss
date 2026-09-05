@@ -8,9 +8,8 @@
 // typed here are what `CoverLetterAssembler` prints into the Absenderfeld of
 // every letter the app produces. So the sender sheet is set as the letterhead
 // it feeds: it carries the page's one terracotta edge, and postcode and city
-// share a line the way they do on an envelope. The two sheets below it (the
-// reviewer network, the export) are ordinary sheets - they are about the
-// account, not about the letter.
+// share a line the way they do on an envelope. The export sheet below it is
+// an ordinary sheet - it is about the account, not about the letter.
 :host { display: block; }
 
 // Global `main` (styles.scss) supplies max-width / margin / padding.
@@ -27,8 +26,7 @@ main {
 legend,
 label,
 .btn-primary,
-.btn-secondary,
-.network [role='status'] {
+.btn-secondary {
   font-family: corr.$corr-mono;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -83,7 +81,6 @@ h1 {
 // --- Sheets ----------------------------------------------------------
 
 fieldset,
-.network,
 .export {
   margin: 0;
   padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
@@ -249,18 +246,6 @@ fieldset .field,
     color: var(--accent-deep);
   }
 }
-
-// --- Network & export sheets ----------------------------------------
-
-.network [role='status'] {
-  margin: 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-
-// The shared `app-data-table` ships this stationery itself - nothing to
-// retexture here.
 
 // --- Focus: one ring for every control ------------------------------
 

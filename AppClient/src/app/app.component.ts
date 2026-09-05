@@ -35,6 +35,7 @@ export class AppComponent implements OnInit {
     'd': '/documents',
     'c': '/companies',
     't': '/cover-letter-template',
+    'u': '/support',
     'h': '/guide',
     'p': '/profile',
     'e': '/preferences',
@@ -64,6 +65,14 @@ export class AppComponent implements OnInit {
     if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 't') {
       e.preventDefault();
       this.router.navigate(['/cover-letter-template']);
+      return;
+    }
+
+    // Support likewise answers to Alt+Shift+U everywhere, alongside the bare
+    // 'u' below - 's' was already taken by the home page's posting search.
+    if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'u') {
+      e.preventDefault();
+      this.router.navigate(['/support']);
       return;
     }
 

@@ -89,7 +89,10 @@ public class AzureJobPostingLlmClient implements JobPostingLlmClient {
 
         try {
             JsonNode root = objectMapper.readTree(response);
-            String content = root.path("choices").get(0).path("message").path("content").asText();
+            // path(), not get(): an empty/errored choices array (a content-filtered
+            // response, a quota error with a 200 envelope) must fail as "unparsable",
+            // not throw a NullPointerException that skips past this catch block.
+            String content = root.path("choices").path(0).path("message").path("content").asText();
             JsonNode fields = truncateFields(objectMapper.readTree(content), spec.maxFieldLength());
             return objectMapper.treeToValue(fields, spec.type());
         } catch (IOException e) {

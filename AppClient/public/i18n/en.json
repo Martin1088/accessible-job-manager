@@ -36,6 +36,7 @@
     "DOCUMENTS": "Documents",
     "COMPANIES": "Companies",
     "COVER_LETTER_TEMPLATE": "Cover Letter Template",
+    "SUPPORT": "Support",
     "DASHBOARD": "Dashboard",
     "JOB_IMPORTER": "Job Importer",
     "JOB_SEARCH": "Job Search",
@@ -194,27 +195,9 @@
   },
   "ADVISOR_IMPORT": {
     "TITLE": "Import a posting",
-    "LEAD": "Found a posting for one of your users? Bring it in here and send it to them in one step. It is saved to your own list of companies, so you can suggest it again later.",
+    "LEAD": "Found a posting for one of your users? Bring it in here to review and save. It's added to your own list of companies, where you can suggest it to a user afterwards.",
     "IMPORT_HEADING": "The posting",
-    "USE_POSTING": "Use this posting",
-    "SUGGEST_HEADING": "Send to a user",
-    "SUMMARY_POSITION": "Position",
-    "SUMMARY_COMPANY": "Company",
-    "SUMMARY_LOCATION": "Location",
-    "SUMMARY_EMPTY": "Not found",
-    "FIELD_USER": "User",
-    "SELECT_USER_PLACEHOLDER": "Choose a user",
-    "NO_USERS": "No users are assigned to you yet. Accept a request on your dashboard first.",
-    "FIELD_MESSAGE": "Message",
-    "MESSAGE_PLACEHOLDER": "Why this posting suits them",
-    "SAVE_AND_SUGGEST": "Save and send",
-    "SENDING": "Sending…",
-    "SENT": "{{position}} was saved and sent to {{name}}.",
-    "SENT_LINK": "See all suggestions",
-    "EXTRACTED_ANNOUNCE": "Posting read. Choose who to send it to.",
-    "SENT_ANNOUNCE": "Posting sent to {{name}}.",
-    "USERS_ERROR": "Your users could not be loaded.",
-    "SAVE_ERROR": "The posting could not be saved and sent."
+    "USE_POSTING": "Use this posting"
   },
   "JOB_SEARCH": {
     "TITLE": "Job Search",
@@ -480,7 +463,11 @@
     "LANGUAGE_GERMAN": "German",
     "LANGUAGE_ENGLISH": "English",
     "LANGUAGE_DUTCH": "Dutch",
-    "APPLY_METHOD_HINT": "Set it yourself, or let \"How to apply?\" read it from the posting."
+    "APPLY_METHOD_HINT": "Set it yourself, or let \"How to apply?\" read it from the posting.",
+    "ACTION_SUGGEST": "Suggest to a user",
+    "ACTION_SUGGEST_ARIA": "Suggest {{position}} at {{company}} to a user",
+    "SUGGEST_VIEW_HEADING": "Suggest {{position}} at {{company}}",
+    "SUGGEST_SELECT_USER_REQUIRED": "Please select a user."
   },
   "HOME": {
     "TITLE": "Job Application Manager",
@@ -743,6 +730,23 @@
     "ACTION_DOWNLOAD": "Download",
     "ACTION_DOWNLOAD_ARIA": "Download {{label}}",
     "ERROR_DOWNLOAD": "The document could not be downloaded."
+  },
+  "SUPPORT": {
+    "TITLE": "Support",
+    "SUGGESTIONS_HEADING": "Suggested postings",
+    "SUGGESTIONS_HELP": "Job postings your advisor has suggested for you. Accepting adds the company and position to your own list; declining lets your advisor know it is not for you.",
+    "SUGGESTIONS_CAPTION": "Postings suggested to you",
+    "SUGGESTIONS_EMPTY": "No postings have been suggested to you yet.",
+    "SUGGESTIONS_LOADING": "Loading suggested postings…",
+    "ERROR_LOAD_SUGGESTIONS": "Suggested postings could not be loaded.",
+    "COL_ADVISOR": "From",
+    "COL_MESSAGE": "Message",
+    "ACTION_ACCEPT": "Accept",
+    "ACTION_ACCEPT_ARIA": "Accept the suggestion for {{position}} at {{company}}",
+    "ACTION_DECLINE": "Decline",
+    "ACTION_DECLINE_ARIA": "Decline the suggestion for {{position}} at {{company}}",
+    "SUGGESTION_ACCEPTED": "Added {{position}} at {{company}} to your companies.",
+    "SUGGESTION_DECLINED": "You declined the suggestion for {{position}} at {{company}}."
   },
   "FOOTER": {
     "LEGAL_LABEL": "Legal",

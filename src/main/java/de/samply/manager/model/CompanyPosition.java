@@ -28,6 +28,7 @@ public class CompanyPosition {
     private Gender contactGender;
     private String contactTitle;
     private String contactLastName;
+    private LocalDateTime deadline;
 
     @Enumerated(EnumType.STRING)
     private Language applyLanguage;

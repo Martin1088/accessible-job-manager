@@ -1,0 +1,51 @@
+<main id="main-content" tabindex="-1">
+  <h1>{{ 'SUPPORT.TITLE' | translate }}</h1>
+
+  <section class="network" aria-labelledby="network-heading">
+    <h2 id="network-heading">{{ 'PROFILE.REL_HEADING' | translate }}</h2>
+    <p id="network-help" class="hint">{{ 'PROFILE.REL_HELP' | translate }}</p>
+
+    @if (networkError) {
+      <p role="alert" class="error">{{ 'PROFILE.REL_LOAD_ERROR' | translate }}</p>
+    }
+    @if (networkActionError) {
+      <p role="alert" class="error">{{ 'PROFILE.REL_ACTION_ERROR' | translate }}</p>
+    }
+
+    @if (networkLoading) {
+      <p role="status">{{ 'PROFILE.REL_LOADING' | translate }}</p>
+    } @else if (!networkError) {
+      <app-data-table
+        caption="PROFILE.REL_CAPTION"
+        [columns]="networkColumns"
+        [rows]="networkRows"
+        [actions]="networkActions"
+        emptyMessage="PROFILE.REL_EMPTY">
+      </app-data-table>
+    }
+  </section>
+
+  <section class="suggestions" aria-labelledby="suggestions-heading">
+    <h2 id="suggestions-heading">{{ 'SUPPORT.SUGGESTIONS_HEADING' | translate }}</h2>
+    <p id="suggestions-help" class="hint">{{ 'SUPPORT.SUGGESTIONS_HELP' | translate }}</p>
+
+    @if (suggestionsError) {
+      <p role="alert" class="error">{{ 'SUPPORT.ERROR_LOAD_SUGGESTIONS' | translate }}</p>
+    }
+    @if (suggestionsActionError) {
+      <p role="alert" class="error">{{ 'PROFILE.REL_ACTION_ERROR' | translate }}</p>
+    }
+
+    @if (suggestionsLoading) {
+      <p role="status">{{ 'SUPPORT.SUGGESTIONS_LOADING' | translate }}</p>
+    } @else if (!suggestionsError) {
+      <app-data-table
+        caption="SUPPORT.SUGGESTIONS_CAPTION"
+        [columns]="suggestionColumns"
+        [rows]="suggestionRows"
+        [actions]="suggestionActions"
+        emptyMessage="SUPPORT.SUGGESTIONS_EMPTY">
+      </app-data-table>
+    }
+  </section>
+</main>
