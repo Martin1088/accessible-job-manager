@@ -34,6 +34,7 @@ export class AppComponent implements OnInit {
     'a': '/applications',
     'd': '/documents',
     'c': '/companies',
+    'q': '/queue',
     't': '/cover-letter-template',
     'u': '/support',
     'h': '/guide',

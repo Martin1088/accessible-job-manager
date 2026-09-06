@@ -34,6 +34,7 @@
     "REVIEWER_LABEL": "Beoordelaarsnavigatie",
     "APPLICATIONS": "Sollicitaties",
     "DOCUMENTS": "Documenten",
+    "QUEUE": "Beoordelingslijst",
     "COMPANIES": "Bedrijven",
     "COVER_LETTER_TEMPLATE": "Sollicitatiebriefsjabloon",
     "SUPPORT": "Support",
@@ -468,6 +469,24 @@
     "ACTION_SUGGEST_ARIA": "{{position}} bij {{company}} aan een gebruiker voorstellen",
     "SUGGEST_VIEW_HEADING": "Voorstellen: {{position}} bij {{company}}",
     "SUGGEST_SELECT_USER_REQUIRED": "Kies een gebruiker."
+  },
+  "QUEUE": {
+    "TITLE": "Beoordelingslijst",
+    "LEAD": "Gevonden vacatures die nog niet zijn overgenomen. Overgenomen vacatures verschijnen in uw bedrijvenlijst, afgewezen blijven verborgen.",
+    "CAPTION": "Vacatures ter beoordeling",
+    "COLUMN_POSITION": "Vacature",
+    "COLUMN_COMPANY": "Bedrijf",
+    "COLUMN_CITY": "Plaats",
+    "COLUMN_FOUND": "Gevonden op",
+    "ACTION_ACCEPT": "Overnemen",
+    "ACTION_ACCEPT_ARIA": "Overnemen: {{position}} bij {{company}}",
+    "ACTION_DISMISS": "Afwijzen",
+    "ACTION_DISMISS_ARIA": "Afwijzen: {{position}} bij {{company}}",
+    "ANNOUNCE_ACCEPTED": "Overgenomen. Nog {{remaining}} vacatures.",
+    "ANNOUNCE_DISMISSED": "Afgewezen. Nog {{remaining}} vacatures.",
+    "EMPTY": "Niets te beoordelen. Nieuw geïmporteerde vacatures verschijnen hier.",
+    "ERROR_LOAD": "De beoordelingslijst kon niet worden geladen.",
+    "ERROR_ACTION": "De vacature kon niet worden bijgewerkt. Hij blijft in de lijst."
   },
   "HOME": {
     "TITLE": "Job Application Manager",

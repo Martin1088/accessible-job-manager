@@ -6,6 +6,7 @@ import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
+import de.samply.manager.types.TriageState;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.CompanyRepository;
@@ -124,6 +125,10 @@ public class SuggestionService {
         position.setEmail(sourcePosition.getEmail());
         position.setWebsite(sourcePosition.getWebsite());
         position.setNotes(sourcePosition.getNotes());
+        // Accepting the suggestion was the decision; the review queue asks the
+        // same question, and asking it twice about one position is a bug, not
+        // diligence.
+        position.setTriageState(TriageState.ACCEPTED);
         position.setCompany(company);
         company.getPositions().add(position);
 

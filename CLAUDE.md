@@ -129,6 +129,23 @@ Error messages and other user-facing text belong in `src/main/resources/messages
 - **Language-dependent text** (e.g. cover letter labels, salutations): keyed the same across `messages.properties`/`messages_de.properties`/`messages_en.properties`/`messages_nl.properties`, resolved via `Language.locale()` (see `CoverLetterService.label(key, language)`).
 - **Locale-independent text** (e.g. API error messages, like `error.snapshot.*` in `JobPostingSnapshotService`): keyed only in the base `messages.properties`, resolved with `messageSource.getMessage(key, args, Locale.ROOT)` — Spring falls back to the base bundle when a locale-specific file lacks the key.
 
+## Release discipline
+
+Versions are git tags; `build.gradle` derives `version` from
+`git describe --tags --always --dirty`, so there is no version literal to bump.
+`-Pversion=` overrides it, which is how the Docker build gets a version without
+`.git` in its context.
+
+`CHANGELOG.md` follows Keep a Changelog and is maintained by hand: **a user-facing
+change adds its entry under `## [Unreleased]` in the same commit**, never
+reconstructed at release time. Commit subjects follow Conventional Commits
+(`feat:`, `fix:`, `docs:`, `chore:`) as a convention - nothing enforces it.
+
+`./release.sh <version>` cuts the release (changelog, commit, tag, merge to
+`main`, push, GitHub release); pushing the tag triggers
+`.github/workflows/release.yml`, which publishes the image. Details in
+`docs/releasing.md`.
+
 ## Testing notes
 
 ### Java 26 + Mockito
