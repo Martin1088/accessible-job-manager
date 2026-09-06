@@ -16,6 +16,13 @@ reliable than it is.
 
 ### Added
 
+- Review queue: positions that turned up - from the posting import or the paste
+  flow - wait at `/queue` instead of joining the company list directly. Accept
+  and Dismiss per row, each announcing the outcome and how many are left; focus
+  moves to the next row before the acted-on one is removed, so working through
+  the list never loses the reading position. Existing positions are unaffected:
+  the column default is `ACCEPTED`. The queue belongs to the applicant -
+  `/api/positions/**` answers 403 to an advisor or reviewer.
 - Release process: `CHANGELOG.md`, `./release.sh`, and a workflow that builds
   and publishes the container image to `ghcr.io` when a `v*` tag is pushed.
 
