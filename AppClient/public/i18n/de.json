@@ -34,6 +34,7 @@
     "REVIEWER_LABEL": "Lektor-Navigation",
     "APPLICATIONS": "Bewerbungen",
     "DOCUMENTS": "Dokumente",
+    "QUEUE": "Prüfliste",
     "COMPANIES": "Unternehmen",
     "COVER_LETTER_TEMPLATE": "Anschreiben-Vorlage",
     "SUPPORT": "Support",
@@ -468,6 +469,24 @@
     "ACTION_SUGGEST_ARIA": "{{position}} bei {{company}} einem Benutzer vorschlagen",
     "SUGGEST_VIEW_HEADING": "Vorschlagen: {{position}} bei {{company}}",
     "SUGGEST_SELECT_USER_REQUIRED": "Bitte wählen Sie einen Benutzer aus."
+  },
+  "QUEUE": {
+    "TITLE": "Prüfliste",
+    "LEAD": "Gefundene Stellen, die noch nicht übernommen wurden. Übernommene erscheinen in Ihrer Firmenliste, verworfene bleiben ausgeblendet.",
+    "CAPTION": "Stellen zur Prüfung",
+    "COLUMN_POSITION": "Stelle",
+    "COLUMN_COMPANY": "Firma",
+    "COLUMN_CITY": "Ort",
+    "COLUMN_FOUND": "Gefunden am",
+    "ACTION_ACCEPT": "Übernehmen",
+    "ACTION_ACCEPT_ARIA": "Übernehmen: {{position}} bei {{company}}",
+    "ACTION_DISMISS": "Verwerfen",
+    "ACTION_DISMISS_ARIA": "Verwerfen: {{position}} bei {{company}}",
+    "ANNOUNCE_ACCEPTED": "Übernommen. {{remaining}} Stellen verbleiben.",
+    "ANNOUNCE_DISMISSED": "Verworfen. {{remaining}} Stellen verbleiben.",
+    "EMPTY": "Keine Stellen zur Prüfung. Neu importierte Stellen erscheinen hier.",
+    "ERROR_LOAD": "Die Prüfliste konnte nicht geladen werden.",
+    "ERROR_ACTION": "Die Stelle konnte nicht bearbeitet werden. Sie bleibt in der Liste."
   },
   "HOME": {
     "TITLE": "Job Application Manager",

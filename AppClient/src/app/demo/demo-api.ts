@@ -1,5 +1,5 @@
 import { Application } from '../model/application';
-import { Company } from '../model/company';
+import { Company, TriageState } from '../model/company';
 import { Document, DocumentType } from '../model/document';
 import { HtmlLetterTemplate } from '../model/cover-letter';
 import { Relationship } from '../model/relationship';
@@ -90,6 +90,26 @@ route('GET', '/api/me', (_req, db) => {
 // Reloading the page is what resets the demo, so logout needs no special case:
 // it sends the browser back to the same document.
 route('POST', '/api/logout', () => ({ redirectUrl: window.location.pathname }));
+
+/**
+ * Writes one position's triage state and answers with what is left waiting -
+ * the same shape the real endpoints return, because the frontend announces
+ * that number rather than counting rows itself.
+ */
+function triage(db: DemoDb, positionId: number, triageState: TriageState) {
+  db.companies.update(all => all.map(company => ({
+    ...company,
+    positions: (company.positions ?? []).map(position =>
+      position.id === positionId ? { ...position, triageState } : position),
+  })));
+
+  const remaining = db.companies()
+    .flatMap(company => company.positions ?? [])
+    .filter(position => position.triageState === 'NEW')
+    .length;
+
+  return { remaining };
+}
 
 route('GET', '/api/profile', (_req, db) => db.profile());
 route('PUT', '/api/profile', (req, db) => db.patchProfile(req.body as Partial<UserProfile>));
@@ -368,6 +388,30 @@ route('POST', '/api/advisor/suggestions', (req, db) => {
 route('GET', '/api/advisor/job-search/status', () => OUT_OF_SCOPE);
 route('GET', '/api/advisor/job-search/categories', () => OUT_OF_SCOPE);
 route('GET', '/api/advisor/job-search', () => OUT_OF_SCOPE);
+
+// ---------------------------------------------------------------------------
+// Review queue
+//
+// Derived from the companies, not held as a second list: a position accepted
+// here has to appear in the company list in the same breath, and two lists
+// that have to agree eventually disagree.
+// ---------------------------------------------------------------------------
+
+route('GET', '/api/positions/queue', (_req, db) => db.companies()
+  .flatMap(company => (company.positions ?? [])
+    .filter(position => position.triageState === 'NEW')
+    .map(position => ({
+      id: position.id,
+      title: position.title,
+      companyId: company.id,
+      companyName: company.name,
+      city: company.locations?.[0]?.city ?? null,
+      createdAt: position.createdAt ?? null,
+    })))
+  .sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? '')));
+
+route('POST', '/api/positions/:id/accept', (req, db) => triage(db, Number(req.params[0]), 'ACCEPTED'));
+route('POST', '/api/positions/:id/dismiss', (req, db) => triage(db, Number(req.params[0]), 'DISMISSED'));
 
 // ---------------------------------------------------------------------------
 // Reviewer

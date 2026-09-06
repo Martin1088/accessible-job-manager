@@ -1,0 +1,27 @@
+<main id="main-content" tabindex="-1">
+  <div class="masthead">
+    <!-- Focus target for the action on the last row: the reader lands back on
+         the page's own heading rather than on document.body. -->
+    <h1 #heading tabindex="-1">{{ 'QUEUE.TITLE' | translate }}</h1>
+    <p class="lead">{{ 'QUEUE.LEAD' | translate }}</p>
+  </div>
+
+  @if (loadFailure) {
+    <p role="alert" class="notice notice--error">
+      <app-error-text [failure]="loadFailure" fallbackKey="QUEUE.ERROR_LOAD" />
+    </p>
+  }
+
+  @if (actionFailure) {
+    <p role="alert" class="notice notice--error">
+      <app-error-text [failure]="actionFailure" fallbackKey="QUEUE.ERROR_ACTION" />
+    </p>
+  }
+
+  <app-data-table
+    caption="QUEUE.CAPTION"
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    emptyMessage="QUEUE.EMPTY" />
+</main>

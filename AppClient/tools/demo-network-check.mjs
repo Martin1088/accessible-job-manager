@@ -91,6 +91,7 @@ await new Promise(r => setTimeout(r, 800));
 
 console.log('\n--- Routen durchklicken ---');
 await visit('#/', 'Dashboard (Bewerberin)');
+await visit('#/queue', 'Prüfliste');
 await visit('#/companies', 'Unternehmen');
 await visit('#/applications', 'Bewerbungen');
 await visit('#/documents', 'Dokumente');

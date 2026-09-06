@@ -345,9 +345,16 @@ export class CompanyListComponent implements OnInit {
     return [position.contactTitle, position.contactLastName].filter(v => v).join(' ');
   }
 
+  /**
+   * Positions still waiting in the review queue are left out, and so are
+   * dismissed ones: this list is the catalogue, and the whole point of the
+   * queue is that finding a position does not yet put it here. The advisor's
+   * catalogue is unaffected because their pages file positions as ACCEPTED -
+   * they have no queue to route them through.
+   */
   private toRows(companies: Company[]): any[] {
     return companies.flatMap(c =>
-      c.positions.map(p => ({
+      c.positions.filter(p => (p.triageState ?? 'ACCEPTED') === 'ACCEPTED').map(p => ({
         companyId:     c.id,
         positionId:    p.id,
         name:          c.name,

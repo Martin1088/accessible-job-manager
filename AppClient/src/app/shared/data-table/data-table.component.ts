@@ -15,6 +15,13 @@ export interface TableAction {
   handler: (row: any) => void;
   /** Omitted means the action shows on every row; used where rows are of mixed kinds. */
   visible?: (row: any) => boolean;
+  /**
+   * Rendered as `data-action`, so a caller whose action removes the row can
+   * find the same button in the next one and move focus there first. Without a
+   * handle like this the only way to address it is by counting buttons, which
+   * breaks the moment a row shows a different set of them.
+   */
+  name?: string;
 }
 
 type SortDirection = 'asc' | 'desc' | null;

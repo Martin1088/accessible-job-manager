@@ -144,6 +144,7 @@ automated accessibility gate (axe, pa11y, Lighthouse) in the build yet.
   - **Job posting import** — paste a job posting URL; the backend fetches the page and asks a local Ollama LLM to extract company, position, contact and location fields into a ready-to-review form
   - **Personalized cover letter template** — fill in your name, address and email once to download a `.docx` template pre-filled with your sender details, ready to use as a mail-merge source for future applications
 - **Applications** — table of all job applications with status labels; per-row template dropdown, one-click PDF/Word cover letter download, and a "send as email" button that opens a `mailto:` link pre-filled with subject and body extracted from the generated cover letter
+- **Review queue** — positions that turned up (import, paste flow) wait here instead of joining the catalogue directly. Two actions per row, Accept and Dismiss, each announcing the outcome and how many are left; focus moves to the next row before the acted-on one is removed, so working through the list never loses the reading position
 - **Companies** — manage companies (per-user ownership) with nested locations (street, city, postcode, country) and positions (contact details, gender, email, website)
 - **Documents** — upload cover letter templates (`.docx`) with a custom label; label is editable before upload
 - **User Guide** — role-aware walkthrough of the app's features, linked from the account menu
@@ -226,6 +227,9 @@ work — see [Bootstrapping Garage](docs/local-development.md#bootstrapping-gara
 | POST   | `/api/companies`                                  | USER     | Create company (owned by caller)             |
 | PUT    | `/api/companies/{id}`                             | USER     | Update own company                           |
 | DELETE | `/api/companies/{id}`                             | USER     | Delete own company                           |
+| GET    | `/api/positions/queue`                            | USER     | Positions waiting in the review queue        |
+| POST   | `/api/positions/{id}/accept`                      | USER     | Take a position over; answers `{remaining}`  |
+| POST   | `/api/positions/{id}/dismiss`                     | USER     | Discard a position; answers `{remaining}`    |
 | GET    | `/api/documents`                                  | USER     | List own documents (filter by `?type=`)      |
 | POST   | `/api/documents/upload`                           | USER     | Upload document with label                   |
 | POST   | `/api/documents/{id}/access`                      | USER     | Grant reviewer access to a document          |
