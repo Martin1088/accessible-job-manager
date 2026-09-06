@@ -48,9 +48,6 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
                         .requestMatchers("/impressum", "/datenschutz").permitAll()
-                        // The review queue is the applicant's own: holding ADVISOR or
-                        // REVIEWER confers nothing here, only holding USER does.
-                        .requestMatchers("/api/positions/**").hasRole("USER")
                         .requestMatchers("/api/advisor/**").hasRole("ADVISOR")
                         .requestMatchers("/api/reviewer/**").hasRole("REVIEWER")
                         .requestMatchers("/api/**").authenticated()
