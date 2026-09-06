@@ -260,6 +260,15 @@ Schema is managed by Hibernate (`ddl-auto=update`). For production, switch to Fl
 
 ---
 
+## Releases
+
+Versions are git tags. `./release.sh 0.2.0` writes the changelog entry, tags,
+merges to `main` and pushes; the tag push builds and publishes the container
+image. See [docs/releasing.md](docs/releasing.md) and
+[CHANGELOG.md](CHANGELOG.md).
+
+---
+
 ## Deployment
 
 ```bash
