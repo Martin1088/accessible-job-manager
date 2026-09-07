@@ -18,8 +18,38 @@
   </button>
 </div>
 
-@if (snapshotValidateFailure) {
-  <p role="alert" class="notice notice--error"><app-error-text [failure]="snapshotValidateFailure" fallbackKey="HOME.SNAPSHOT_VALIDATE_ERROR" /></p>
+@if (checkingSnapshot) {
+  <p role="status" class="hint">{{ 'HOME.SNAPSHOT_CHECKING' | translate }}</p>
+}
+
+<!--
+  The snapshot render failed - the URL loads for the parser, but Gotenberg
+  cannot turn it into the PDF that is kept against the posting (a consent wall,
+  a page too heavy for Chromium, Gotenberg down). That copy is otherwise made
+  silently at company-creation time and its failure is swallowed, so this is
+  the one place the person is told, and told while they still have the posting
+  open to print it. The attached file rides along in JobPostingImportStore and
+  is filed by the company form exactly as the fallback PDF is.
+-->
+@if (snapshotRenderFailure) {
+  <div class="notice snapshot-archive">
+    <p role="alert">
+      <app-error-text [failure]="snapshotRenderFailure" fallbackKey="HOME.SNAPSHOT_VALIDATE_ERROR" />
+      {{ 'HOME.SNAPSHOT_ARCHIVE_PROMPT' | translate }}
+    </p>
+    <p id="snapshot-archive-help" class="snapshot-archive__help">{{ 'HOME.SNAPSHOT_ARCHIVE_HELP' | translate }}</p>
+    <button type="button" class="btn-secondary" aria-describedby="snapshot-archive-help"
+      (click)="archivePdfInput.click()">
+      <span aria-hidden="true">↑</span>
+      {{ 'HOME.SNAPSHOT_ARCHIVE_ACTION' | translate }}
+    </button>
+    <input #archivePdfInput type="file" accept=".pdf,application/pdf"
+      style="display:none" tabindex="-1" aria-hidden="true"
+      (change)="onArchivePdfSelected($event)">
+    @if (archivePdfName) {
+      <p class="snapshot-archive__selected">{{ 'HOME.SNAPSHOT_ARCHIVE_SELECTED' | translate: { name: archivePdfName } }}</p>
+    }
+  </div>
 }
 
 <!--

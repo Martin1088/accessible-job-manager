@@ -16,6 +16,11 @@ reliable than it is.
 
 ### Added
 
+- Job posting import checks whether the PDF snapshot can be rendered right
+  after a URL import succeeds. When it cannot (a consent wall, a page too heavy
+  for Chromium, Gotenberg unreachable), the importer now says so and offers to
+  attach a printed PDF, which is filed with the company as the posting record —
+  previously that copy failed silently at company-creation time.
 - Release process: `CHANGELOG.md`, `./release.sh`, and a workflow that builds
   and publishes the container image to `ghcr.io` when a `v*` tag is pushed.
 
@@ -26,3 +31,9 @@ reliable than it is.
   build passes it in with `-Pversion=`, having no `.git` of its own.
 
 ### Fixed
+
+- Document upload now verifies the file's actual bytes (PDF `%PDF-`, DOCX
+  `PK\x03\x04`) instead of trusting the client's `Content-Type` header, and
+  reduces the supplied filename to a safe token (`[A-Za-z0-9._-]`, no path
+  segments, max 255) before storing it. The stored MIME type is the document
+  type's own, no longer a client-controlled string.

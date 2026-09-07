@@ -122,6 +122,19 @@ h3,
   color: var(--ok-ink);
 }
 
+// The "snapshot could not be rendered - attach a printed PDF" panel. Every line
+// inside stays on `.notice`'s `--color-alert-text`: `--ink-soft` on the pink
+// alert background only clears ~4.9:1 and is too close to the AA line.
+.snapshot-archive {
+  > * { margin: 0; }
+  > * + * { margin-top: 0.6rem; }
+
+  .snapshot-archive__help,
+  .snapshot-archive__selected { font-size: 0.86rem; }
+
+  .snapshot-archive__selected { font-style: italic; }
+}
+
 // --- Hints -------------------------------------------------------
 
 .hint {

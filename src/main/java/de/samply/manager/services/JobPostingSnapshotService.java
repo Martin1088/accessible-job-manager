@@ -5,6 +5,7 @@ import de.samply.manager.jobimport.diagnostics.FailureCategory;
 import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
+import de.samply.manager.model.DocumentFilename;
 import de.samply.manager.model.DocumentType;
 import de.samply.manager.types.Language;
 import de.samply.manager.repository.CompanyPositionRepository;
@@ -178,7 +179,11 @@ public class JobPostingSnapshotService {
     public Document saveUploaded(byte[] pdf, String filename, Long companyPositionId,
                                  String label, Language language, String userId) {
         CompanyPosition position = findOwnedPosition(companyPositionId, userId);
-        return store(pdf, filename, position, label, language, userId);
+        if (!DocumentType.JOB_POSTING_SNAPSHOT.matchesContent(pdf)) {
+            throw new ApiException.UnsupportedMediaType(message("error.document.contentMismatch",
+                    DocumentType.JOB_POSTING_SNAPSHOT, DocumentType.JOB_POSTING_SNAPSHOT.getAllowedMime()));
+        }
+        return store(pdf, DocumentFilename.sanitize(filename), position, label, language, userId);
     }
 
     /** The half of a snapshot that is the same however the PDF was obtained. */

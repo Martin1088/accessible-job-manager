@@ -109,6 +109,16 @@ export class JobPostingImportComponent implements OnDestroy {
   postingPdfName = '';
   searchingPdf = false;
 
+  // The PDF the user attached to archive a posting whose snapshot could not be
+  // rendered - its name, for the confirmation line. Held in `JobPostingImportStore`
+  // like the fallback PDF, and filed by `CompanyFormComponent` once the position exists.
+  archivePdfName = '';
+
+  // Set while the post-extraction snapshot probe is in flight, and once only per
+  // search - the two extraction callbacks must not both fire it.
+  checkingSnapshot = false;
+  private snapshotCheckStarted = false;
+
   searchingJobPosting = false;
   jobPosting: JobPostingExtraction | null = null;
 
@@ -127,7 +137,10 @@ export class JobPostingImportComponent implements OnDestroy {
   pdfSearchFailure: HttpFailure | null = null;
   jobSearchFailure: HttpFailure | null = null;
   fullChainFailure: HttpFailure | null = null;
-  snapshotValidateFailure: HttpFailure | null = null;
+  // How the snapshot render failed, from either the manual "Preview as PDF"
+  // button or the automatic post-extraction probe. Its presence is what shows
+  // the "attach a printed PDF for your records" panel.
+  snapshotRenderFailure: HttpFailure | null = null;
   private previewObjectUrl?: string;
 
   // Which extraction source wins for a given field when the two disagree.
@@ -162,6 +175,7 @@ export class JobPostingImportComponent implements OnDestroy {
     this.searchingPdf = true;
     this.pdfSearchFailure = null;
     this.postingPdfName = file.name;
+    this.archivePdfName = '';
     this.jobPosting = null;
     this.jobSearchFailure = null;
     this.textSearchFailure = null;
@@ -183,6 +197,28 @@ export class JobPostingImportComponent implements OnDestroy {
         this.searchingPdf = false;
       },
     });
+  }
+
+  /**
+   * A PDF the user printed from the posting page, attached purely to be archived
+   * when this server cannot render the snapshot itself.
+   *
+   * Unlike the fallback PDF path above, this runs no extraction and touches no
+   * result already on screen: the URL extraction succeeded, only the Gotenberg
+   * render did not, and the fields shown are the ones to keep. The file is held
+   * for `CompanyFormComponent` to file against the position once it exists,
+   * exactly as the fallback PDF is.
+   */
+  onArchivePdfSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    // Cleared so re-picking the same file still raises `change`.
+    input.value = '';
+    if (!file) return;
+
+    this.importStore.hold(file);
+    this.archivePdfName = file.name;
+    this.announcer.announce(this.translate.instant('HOME.SNAPSHOT_ARCHIVE_HELD_ANNOUNCE'), 'polite');
   }
 
   /**
@@ -251,6 +287,7 @@ export class JobPostingImportComponent implements OnDestroy {
     // must not be filed against the company this extraction goes on to create.
     this.importStore.clear();
     this.postingPdfName = '';
+    this.archivePdfName = '';
     this.resetFullChainForTextPath();
 
     this.http.post<JobPostingExtraction>('/api/posting/overview-text', { text }).subscribe({
@@ -298,11 +335,14 @@ export class JobPostingImportComponent implements OnDestroy {
     // full-chain parse can differ from the quick overview parse and the user may
     // want to compare the two before merging one into the "new company" form.
     this.selectedSource = { name: 'fullChain', title: 'fullChain', location: 'fullChain' };
-    this.snapshotValidateFailure = null;
+    this.snapshotRenderFailure = null;
+    this.checkingSnapshot = false;
+    this.snapshotCheckStarted = false;
     // A URL search means the snapshot will be rendered from that URL, so a PDF
     // held from an earlier attempt must not also be filed against the company.
     this.importStore.clear();
     this.postingPdfName = '';
+    this.archivePdfName = '';
     this.pdfSearchFailure = null;
 
     this.searchingJobPosting = true;
@@ -312,6 +352,7 @@ export class JobPostingImportComponent implements OnDestroy {
       next: (result) => {
         this.jobPosting = result;
         this.searchingJobPosting = false;
+        this.maybeCheckSnapshot(url);
       },
       error: (err: HttpErrorResponse) => {
         this.jobSearchFailure = describeHttpFailure(err);
@@ -326,10 +367,41 @@ export class JobPostingImportComponent implements OnDestroy {
       next: (result) => {
         this.fullChainResult = result;
         this.searchingFullChain = false;
+        this.maybeCheckSnapshot(url);
       },
       error: (err: HttpErrorResponse) => {
         this.fullChainFailure = describeHttpFailure(err);
         this.searchingFullChain = false;
+      },
+    });
+  }
+
+  /**
+   * After a URL extraction succeeds the page is reachable, so the one thing
+   * still in doubt is whether Gotenberg can turn it into the archived PDF
+   * snapshot - a consent wall, a heavy page or Gotenberg being down all render
+   * as no snapshot, silently, at company-creation time. Probing it here with
+   * the same stateless render lets the user attach a printed copy while they
+   * still have the posting open.
+   *
+   * Fired from both extraction callbacks but runs once: whichever finishes first.
+   * The returned PDF is discarded - only whether it rendered matters.
+   */
+  private maybeCheckSnapshot(url: string): void {
+    if (this.snapshotCheckStarted) return;
+    this.snapshotCheckStarted = true;
+    this.checkingSnapshot = true;
+
+    const params = new HttpParams().set('url', url);
+    this.http.post('/api/posting/snapshot-validate', null, { params, responseType: 'blob' }).subscribe({
+      next: () => {
+        this.checkingSnapshot = false;
+      },
+      error: (err: HttpErrorResponse) => {
+        this.checkingSnapshot = false;
+        this.readBlobMessage(err.error).then(message => {
+          this.snapshotRenderFailure = describeHttpFailure(err, message);
+        });
       },
     });
   }
@@ -345,7 +417,7 @@ export class JobPostingImportComponent implements OnDestroy {
 
     this.releasePreviewObjectUrl();
     this.validatingSnapshot = true;
-    this.snapshotValidateFailure = null;
+    this.snapshotRenderFailure = null;
     this.http.post('/api/posting/snapshot-validate', null, { params, responseType: 'blob' }).subscribe({
       next: (blob) => {
         this.previewObjectUrl = URL.createObjectURL(blob);
@@ -358,7 +430,7 @@ export class JobPostingImportComponent implements OnDestroy {
         // rather than parsed JSON - the server's reason has to be read out of
         // it before the failure can be classified.
         this.readBlobMessage(err.error).then(message => {
-          this.snapshotValidateFailure = describeHttpFailure(err, message);
+          this.snapshotRenderFailure = describeHttpFailure(err, message);
         });
       },
     });

@@ -3,6 +3,7 @@ package de.samply.manager.services;
 import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
+import de.samply.manager.model.DocumentFilename;
 import de.samply.manager.model.DocumentType;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.repository.ShareRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -77,14 +79,20 @@ public class DocumentService {
     public Document upload(MultipartFile file, String label, DocumentType type,
                            Language language, String userId) throws IOException {
 
-        if (!type.accepts(file.getContentType())) {
+        byte[] content = file.getBytes();
+
+        // The client Content-Type header is not evidence of anything; the bytes are.
+        if (!type.matchesContent(content)) {
             throw new ApiException.UnsupportedMediaType(
-                    message("error.document.unsupportedType", type, type.getAllowedMime()));
+                    message("error.document.contentMismatch", type, type.getAllowedMime()));
         }
 
+        String filename = DocumentFilename.sanitize(file.getOriginalFilename());
         String key = userId + "/" + type.name().toLowerCase()
                 + "/" + UUID.randomUUID() + "." + type.getExtension();
-        storageService.upload(key, file.getInputStream(), file.getSize(), file.getContentType());
+        // Store the type's own MIME rather than the client's - the content is now
+        // verified, and the download controllers parse this value into a header.
+        storageService.upload(key, new ByteArrayInputStream(content), content.length, type.getAllowedMime());
 
         LocalDateTime now = LocalDateTime.now();
         return documentRepository.save(Document.builder()
@@ -92,8 +100,8 @@ public class DocumentService {
                 .type(type)
                 .language(language)
                 .label(label)
-                .filename(file.getOriginalFilename())
-                .mimeType(file.getContentType())
+                .filename(filename)
+                .mimeType(type.getAllowedMime())
                 .storageKey(key)
                 .createdAt(now)
                 .updatedAt(now)
