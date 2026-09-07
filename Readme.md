@@ -278,6 +278,39 @@ docker compose up -d --build
 
 Builds the full app (including Angular frontend), starts it behind Traefik and serves at `http://login.localhost`. Gotenberg runs as a sidecar for PDF generation.
 
+### Gotenberg network isolation (required)
+
+Gotenberg is the only service that fetches a URL the user chose. When a job
+posting is archived, the app hands the URL to Gotenberg's Chromium, which
+**resolves and fetches the page itself, from its own container, following its
+own redirects**. The application's own SSRF validation
+(`de.samply.manager.security.OutboundUrlGuard`) runs in the app's network
+vantage point and cannot constrain any of that — a posting URL that redirects to
+`http://postgres:5432` is followed by Chromium, not by us.
+
+So the containment is network-side, and it is a deployment requirement rather
+than a nicety:
+
+- **`dev/docker-compose.yml` puts Gotenberg on its own `render` network**, shared
+  only with the app. It cannot resolve or reach `postgres`, `garage`, `traefik`,
+  `error-pages`, or the Authentik stack in `dev/authentik.yml`. Keep it that way
+  when adding services: a new service belongs on `web`, not `render`.
+- **Never give the Gotenberg container `extra_hosts: host.docker.internal:host-gateway`.**
+  The app has it (for the OIDC issuer); Gotenberg having it would hand Chromium a
+  route back to the host.
+- **In production, add egress filtering.** Gotenberg needs outbound internet
+  access to fetch postings at all, so Compose networks cannot finish the job.
+  Deny egress from the Gotenberg container to:
+  `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` (RFC 1918), `100.64.0.0/10`
+  (CGNAT), `169.254.0.0/16` (link-local, including the `169.254.169.254` cloud
+  metadata endpoint), `127.0.0.0/8`, and `fc00::/7` (IPv6 ULA). A Kubernetes
+  `NetworkPolicy` with an `ipBlock` `except:` list, a Docker user-defined bridge
+  plus `iptables -I DOCKER-USER`, or the cloud provider's own egress rules all
+  work; pick whichever the platform gives you.
+
+The Azure deployment below already meets the spirit of this — its Gotenberg
+Container App is internal-only. The Compose stack now matches it.
+
 ### Azure Deployment
 
 `dev/azure/main.bicep` provisions a demo deployment to Azure Container Apps. It creates:

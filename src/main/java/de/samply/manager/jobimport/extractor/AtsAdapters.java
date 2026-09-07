@@ -2,6 +2,7 @@ package de.samply.manager.jobimport.extractor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.samply.manager.security.OutboundUrlGuard;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -170,10 +171,12 @@ class OracleHcmAdapter implements AtsAdapter {
 
     private final RestClient http;
     private final ObjectMapper mapper;
+    private final OutboundUrlGuard urlGuard;
 
-    OracleHcmAdapter(RestClient.Builder builder, ObjectMapper mapper) {
+    OracleHcmAdapter(RestClient.Builder builder, ObjectMapper mapper, OutboundUrlGuard urlGuard) {
         this.http = builder.build();
         this.mapper = mapper;
+        this.urlGuard = urlGuard;
     }
 
     @Override
@@ -192,11 +195,19 @@ class OracleHcmAdapter implements AtsAdapter {
         String base = host.group(1);
         String jobId = job.group(1);
 
+        // Unlike its sibling adapters, this one does not pin the host: it takes
+        // whatever `supports` matched - and that is a substring test, so any URL
+        // merely containing "oraclecloud.com" lands here - and concatenates it
+        // into the request. The guard is what keeps that from reaching an
+        // internal address. AtsApiExtractor.safeFetch swallows the refusal, so a
+        // rejected host reads as "this tier found nothing", which is right.
+        URI endpoint = urlGuard.validate("https://" + base
+                + "/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails"
+                + "?expand=all&onlyData=true"
+                + "&finder=ItemsToPersonId%3BId%3D%22" + jobId + "%22");
+
         String body = http.get()
-                .uri(URI.create("https://" + base
-                        + "/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails"
-                        + "?expand=all&onlyData=true"
-                        + "&finder=ItemsToPersonId%3BId%3D%22" + jobId + "%22"))
+                .uri(endpoint)
                 .retrieve()
                 .body(String.class);
 

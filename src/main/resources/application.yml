@@ -102,6 +102,12 @@ job-manager:
   metrics:
     enabled: true
     log-status-transitions: true
+  outbound:
+    # How long OutboundUrlGuard pins the JVM's positive DNS cache. The guard
+    # approves a host's addresses and then connects by name, so a zero TTL would
+    # let the answer change in between - a positive value is the safe direction
+    # here, which is the opposite of the usual advice.
+    dns-cache-seconds: ${OUTBOUND_DNS_CACHE_SECONDS:30}
   security:
     claim: ${OIDC_ROLES_CLAIM:groups}
     role-groups:

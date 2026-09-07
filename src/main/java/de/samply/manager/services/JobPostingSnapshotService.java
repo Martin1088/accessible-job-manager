@@ -10,6 +10,7 @@ import de.samply.manager.model.DocumentType;
 import de.samply.manager.types.Language;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
+import de.samply.manager.security.OutboundUrlGuard;
 import de.samply.manager.services.storage.StorageService;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -25,10 +26,7 @@ import org.springframework.web.client.RestClientResponseException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -53,6 +51,7 @@ public class JobPostingSnapshotService {
     private final CompanyPositionRepository companyPositionRepository;
     private final MessageSource messageSource;
     private final ImportDiagnostics diagnostics;
+    private final OutboundUrlGuard urlGuard;
 
     public JobPostingSnapshotService(@Value("${gotenberg.url}") String gotenbergUrl,
                                      StorageService storageService,
@@ -60,7 +59,9 @@ public class JobPostingSnapshotService {
                                      DocumentService documentService,
                                      CompanyPositionRepository companyPositionRepository,
                                      MessageSource messageSource,
-                                     ImportDiagnostics diagnostics) {
+                                     ImportDiagnostics diagnostics,
+                                     OutboundUrlGuard urlGuard) {
+        this.urlGuard = urlGuard;
         this.gotenbergUrl = gotenbergUrl;
         this.storageService = storageService;
         this.documentRepository = documentRepository;
@@ -75,7 +76,11 @@ public class JobPostingSnapshotService {
             Pattern.compile("status code[^0-9]*(\\d{3})", Pattern.CASE_INSENSITIVE);
 
     public byte[] snapshotToPdf(String rawUrl) {
-        URI uri = validate(rawUrl);
+        // Worth being clear about what this does and does not buy: it stops the
+        // obvious internal URL, but Gotenberg fetches the page itself, from its
+        // own container, following its own redirects. The real containment is the
+        // network isolation described in Readme.md, not this call.
+        URI uri = urlGuard.validate(rawUrl);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("url", uri.toString());
@@ -238,47 +243,4 @@ public class JobPostingSnapshotService {
 
     public record SnapshotContent(Document document, byte[] content) {}
 
-    private URI validate(String rawUrl) {
-        if (rawUrl == null || rawUrl.isBlank()) {
-            throw new ApiException.BadRequest(message("error.url.empty"));
-        }
-
-        URI uri;
-        try {
-            uri = new URI(rawUrl.trim());
-        } catch (URISyntaxException e) {
-            throw new ApiException.BadRequest(message("error.url.malformed"));
-        }
-
-        if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new ApiException.BadRequest(message("error.url.scheme"));
-        }
-        if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ApiException.BadRequest(message("error.url.host"));
-        }
-
-        rejectIfDisallowedHost(uri.getHost());
-        return uri;
-    }
-
-    private void rejectIfDisallowedHost(String host) {
-        InetAddress[] addresses;
-        try {
-            addresses = InetAddress.getAllByName(host);
-        } catch (UnknownHostException e) {
-            throw new ApiException.BadRequest(message("error.url.hostUnresolved"));
-        }
-        for (InetAddress address : addresses) {
-            if (address.isLoopbackAddress() || address.isAnyLocalAddress()
-                    || address.isLinkLocalAddress() || address.isSiteLocalAddress()
-                    || address.isMulticastAddress() || isUniqueLocalIpv6(address)) {
-                throw new ApiException.BadRequest(message("error.url.disallowedHost"));
-            }
-        }
-    }
-
-    private boolean isUniqueLocalIpv6(InetAddress address) {
-        byte[] bytes = address.getAddress();
-        return bytes.length == 16 && (bytes[0] & 0xfe) == 0xfc;
-    }
 }

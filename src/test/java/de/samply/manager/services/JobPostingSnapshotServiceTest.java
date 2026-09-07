@@ -1,5 +1,6 @@
 package de.samply.manager.services;
 
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyPosition;
@@ -7,15 +8,19 @@ import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
+import de.samply.manager.security.OutboundUrlGuard;
 import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -44,8 +49,37 @@ class JobPostingSnapshotServiceTest {
 
     @BeforeEach
     void setUp() {
+        // The real guard, not a mock - snapshotToPdf's refusal to forward an
+        // internal URL to Gotenberg is only worth asserting against the actual
+        // validator. Its own range coverage lives in OutboundUrlGuardTest.
+        ResourceBundleMessageSource bundle = new ResourceBundleMessageSource();
+        bundle.setBasename("messages");
+        bundle.setDefaultEncoding("UTF-8");
+
         service = new JobPostingSnapshotService("http://gotenberg", storageService, documentRepository,
-                documentService, companyPositionRepository, messageSource, diagnostics);
+                documentService, companyPositionRepository, messageSource, diagnostics,
+                new OutboundUrlGuard(bundle, 30));
+    }
+
+    /**
+     * The guard cannot constrain Gotenberg - Chromium fetches the page itself,
+     * from its own container - but it must at least stop the obvious internal
+     * URL before it is handed over. Anything past that is the network isolation
+     * described in Readme.md.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "http://172.17.0.2:5432/",  // a sibling container on the Docker bridge, e.g. postgres
+            "http://127.0.0.1/",
+            "http://169.254.169.254/latest/meta-data/",
+            "http://10.0.0.5/",
+            "ftp://example.com/",
+    })
+    void snapshotToPdf_refusesADisallowedUrlWithoutCallingGotenberg(String url) {
+        assertThatThrownBy(() -> service.snapshotToPdf(url))
+                .isInstanceOf(ApiException.BadRequest.class);
+
+        verifyNoInteractions(storageService, documentRepository, diagnostics);
     }
 
     private CompanyPosition position(Long id) {

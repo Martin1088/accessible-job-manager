@@ -4,6 +4,7 @@ import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.PostingPdfTextExtractor;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import de.samply.manager.jobimport.llm.LlmExtractionSpec;
+import de.samply.manager.security.OutboundUrlGuard;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -22,10 +23,19 @@ class JobPostingParserServiceTest {
         public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
             throw new AssertionError("LLM client called for a rejected URL");
         }
-    }, messages(), pdfExtractor());
+    }, messages(), pdfExtractor(), urlGuard());
 
     private static PostingPdfTextExtractor pdfExtractor() {
         return new PostingPdfTextExtractor(messages());
+    }
+
+    /**
+     * The real guard, not a mock: the point of the cases below is that the
+     * service is actually wired to it, so a stub would assert nothing. The
+     * guard's own range coverage lives in {@code OutboundUrlGuardTest}.
+     */
+    private static OutboundUrlGuard urlGuard() {
+        return new OutboundUrlGuard(messages(), 30);
     }
 
     private static ResourceBundleMessageSource messages() {
@@ -91,7 +101,7 @@ class JobPostingParserServiceTest {
     @Test
     void extractsFromPastedTextWithoutFetchingAnything() {
         RecordingLlmClient llm = new RecordingLlmClient();
-        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor());
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard());
         String posting = "Wir suchen eine Plattform-Architektin (m/w/d) fuer unser Team in Leipzig. "
                 + "Zu den Aufgaben gehoert der Betrieb der internen Entwicklungsplattform.";
 
@@ -103,7 +113,7 @@ class JobPostingParserServiceTest {
     @Test
     void pastedTextIsStrippedBeforeItReachesTheModel() {
         RecordingLlmClient llm = new RecordingLlmClient();
-        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor());
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard());
         String posting = "Plattform Architekt gesucht in Vollzeit, unbefristet, mit Erfahrung in "
                 + "Kubernetes und Continuous Delivery. Bewerbungen jederzeit willkommen.";
 

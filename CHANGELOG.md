@@ -32,6 +32,18 @@ reliable than it is.
 
 ### Fixed
 
+- SSRF hardening. The URL validator that guarded job posting fetches existed in
+  two identical copies; it is now one `OutboundUrlGuard`, used by the parser, the
+  snapshot service and the Oracle HCM extractor (which previously concatenated an
+  unvalidated host out of the user's URL). It additionally rejects ranges the JDK
+  predicates miss — CGNAT `100.64.0.0/10`, `198.18.0.0/15`, `192.0.0.0/24`, and
+  IPv4 addresses arriving as IPv4-mapped IPv6 — and pins a positive DNS cache TTL
+  so the address it approved is the one actually connected to.
+- Gotenberg is on its own Docker network with no route to Postgres, Garage or
+  Traefik. Its Chromium fetches job posting URLs itself and follows its own
+  redirects, so application-side validation cannot constrain it; the production
+  egress requirement is documented under "Gotenberg network isolation" in the
+  Readme.
 - Document upload now verifies the file's actual bytes (PDF `%PDF-`, DOCX
   `PK\x03\x04`) instead of trusting the client's `Content-Type` header, and
   reduces the supplied filename to a safe token (`[A-Za-z0-9._-]`, no path

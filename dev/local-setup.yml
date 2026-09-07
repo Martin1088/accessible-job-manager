@@ -14,13 +14,18 @@ services:
     networks:
       - web
 
+  # Off `web` for the same reason as in docker-compose.yml: Gotenberg's Chromium
+  # fetches attacker-supplied job posting URLs itself, so it must not sit on the
+  # same bridge as postgres and garage. Here the application runs on the host and
+  # reaches Gotenberg through the published port, so it needs no shared network
+  # at all. See the Gotenberg isolation section in Readme.md.
   gotenberg:
     image: gotenberg/gotenberg:8
     container_name: gotenberg
     ports:
       - "3000:3000"
     networks:
-      - web
+      - render
 
   garage:
     image: dxflrs/garage:v2.1.0
@@ -66,3 +71,4 @@ volumes:
 
 networks:
   web: {}
+  render: {}

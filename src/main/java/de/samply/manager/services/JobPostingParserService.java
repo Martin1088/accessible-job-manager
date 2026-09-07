@@ -4,6 +4,7 @@ import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.PostingPdfTextExtractor;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
+import de.samply.manager.security.OutboundUrlGuard;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,10 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -45,13 +43,16 @@ public class JobPostingParserService {
     private final HttpClient httpClient;
     private final MessageSource messageSource;
     private final PostingPdfTextExtractor pdfTextExtractor;
+    private final OutboundUrlGuard urlGuard;
 
     public JobPostingParserService(JobPostingLlmClient llmClient,
                                    MessageSource messageSource,
-                                   PostingPdfTextExtractor pdfTextExtractor) {
+                                   PostingPdfTextExtractor pdfTextExtractor,
+                                   OutboundUrlGuard urlGuard) {
         this.llmClient = llmClient;
         this.messageSource = messageSource;
         this.pdfTextExtractor = pdfTextExtractor;
+        this.urlGuard = urlGuard;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -62,7 +63,7 @@ public class JobPostingParserService {
     public record FetchedPage(URI url, String html) {}
 
     public JobPostingExtraction overview(String rawUrl) {
-        URI uri = validate(rawUrl);
+        URI uri = urlGuard.validate(rawUrl);
         String text = visibleText(fetchHtml(uri));
         return llmClient.extract(text);
     }
@@ -117,12 +118,12 @@ public class JobPostingParserService {
      * that need the parsed DOM themselves (e.g. reading JSON-LD script tags).
      */
     public FetchedPage fetchPage(String rawUrl) {
-        return fetchHtml(validate(rawUrl));
+        return fetchHtml(urlGuard.validate(rawUrl));
     }
 
     /** The posting's visible text, fetched through the same validated path. */
     public String postingText(String rawUrl) {
-        return visibleText(fetchHtml(validate(rawUrl)));
+        return visibleText(fetchHtml(urlGuard.validate(rawUrl)));
     }
 
     /**
@@ -138,7 +139,7 @@ public class JobPostingParserService {
      * choice of which link is the application link stays with the model.
      */
     public String postingTextWithLinks(String rawUrl) {
-        FetchedPage page = fetchHtml(validate(rawUrl));
+        FetchedPage page = fetchHtml(urlGuard.validate(rawUrl));
         Document document = Jsoup.parse(page.html(), page.url().toString());
         String text = truncateText(document.text());
 
@@ -155,50 +156,6 @@ public class JobPostingParserService {
             return text;
         }
         return text + "\n\nLinks on the page:\n" + String.join("\n", links);
-    }
-
-    private URI validate(String rawUrl) {
-        if (rawUrl == null || rawUrl.isBlank()) {
-            throw new ApiException.BadRequest(message("error.url.empty"));
-        }
-
-        URI uri;
-        try {
-            uri = new URI(rawUrl.trim());
-        } catch (URISyntaxException e) {
-            throw new ApiException.BadRequest(message("error.url.malformed"));
-        }
-
-        if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new ApiException.BadRequest(message("error.url.scheme"));
-        }
-        if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ApiException.BadRequest(message("error.url.host"));
-        }
-
-        rejectIfDisallowedHost(uri.getHost());
-        return uri;
-    }
-
-    private void rejectIfDisallowedHost(String host) {
-        InetAddress[] addresses;
-        try {
-            addresses = InetAddress.getAllByName(host);
-        } catch (UnknownHostException e) {
-            throw new ApiException.BadRequest(message("error.url.hostUnresolved"));
-        }
-        for (InetAddress address : addresses) {
-            if (address.isLoopbackAddress() || address.isAnyLocalAddress()
-                    || address.isLinkLocalAddress() || address.isSiteLocalAddress()
-                    || address.isMulticastAddress() || isUniqueLocalIpv6(address)) {
-                throw new ApiException.BadRequest(message("error.url.disallowedHost"));
-            }
-        }
-    }
-
-    private boolean isUniqueLocalIpv6(InetAddress address) {
-        byte[] bytes = address.getAddress();
-        return bytes.length == 16 && (bytes[0] & 0xfe) == 0xfc;
     }
 
     private FetchedPage fetchHtml(URI uri) {
@@ -226,7 +183,7 @@ public class JobPostingParserService {
             if (status >= 300 && status < 400) {
                 String location = response.headers().firstValue("Location")
                         .orElseThrow(() -> new ApiException.BadGateway(message("error.posting.redirectNoLocation")));
-                target = validate(target.resolve(location).toString());
+                target = urlGuard.validate(target.resolve(location).toString());
                 continue;
             }
             if (status < 200 || status >= 300) {
