@@ -22,6 +22,14 @@ services:
   gotenberg:
     image: gotenberg/gotenberg:8
     container_name: gotenberg
+    # Same flags and the same reasoning as docker-compose.yml, which carries the
+    # full explanation. Note --chromium-deny-private-ips is what stops a posting
+    # URL redirecting to the host's own services here, where the application
+    # runs on the host and Gotenberg reaches it through the bridge.
+    command:
+      - gotenberg
+      - --chromium-deny-private-ips
+      - --api-timeout=30s
     ports:
       - "3000:3000"
     networks:

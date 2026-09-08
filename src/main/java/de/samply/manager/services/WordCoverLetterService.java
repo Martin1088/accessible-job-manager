@@ -58,11 +58,12 @@ public class WordCoverLetterService {
     private final String gotenbergUrl;
     private final CoverLetterLabels labels;
 
-    public WordCoverLetterService(@Value("${gotenberg.url}") String gotenbergUrl,
+    public WordCoverLetterService(RestClient gotenbergRestClient,
+                                  @Value("${gotenberg.url}") String gotenbergUrl,
                                   CoverLetterLabels labels) {
         this.gotenbergUrl = gotenbergUrl;
         this.labels = labels;
-        this.restClient = RestClient.create();
+        this.restClient = gotenbergRestClient;
     }
 
     public byte[] fillTemplate(InputStream templateStream,

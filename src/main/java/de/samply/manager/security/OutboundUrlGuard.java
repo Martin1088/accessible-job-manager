@@ -111,12 +111,6 @@ public class OutboundUrlGuard {
                 || address.isMulticastAddress()) {
             return true;
         }
-
-        // The JDK's own predicates above miss several ranges, and miss all of
-        // them when an IPv4 address arrives wrapped as ::ffff:a.b.c.d - an
-        // Inet6Address, for which isSiteLocalAddress() is false even for
-        // ::ffff:10.0.0.1. So the numeric table below decides, on the 4-byte
-        // form wherever there is one.
         byte[] bytes = address.getAddress();
         byte[] ipv4 = asIpv4(bytes);
         return ipv4 != null ? isReservedIpv4(ipv4) : isUniqueLocalIpv6(bytes);

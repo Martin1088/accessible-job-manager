@@ -4,6 +4,8 @@ import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.PostingPdfTextExtractor;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
+import de.samply.manager.jobimport.render.PostingRenderer;
+import de.samply.manager.jobimport.render.RenderProfile;
 import de.samply.manager.security.OutboundUrlGuard;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,11 +25,15 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 
 /**
- * Fetches a job posting from a user-supplied URL (with SSRF-safe host
- * validation and redirect handling) and hands the visible text to a
+ * Reads a job posting from a user-supplied URL and hands its visible text to a
  * JobPostingLlmClient to extract the key fields. Which LLM provider is used
  * (Ollama, Azure OpenAI, ...) is decided by job-posting.parser.provider -
  * see de.samply.manager.jobimport.llm.
+ *
+ * <p>{@link #overview} gets that text by printing the page through Chromium;
+ * everything else here still fetches HTML directly, with SSRF-safe host
+ * validation and its own redirect handling. Both paths are kept because they
+ * answer different questions - see the note on {@code overview}.
  */
 @Service
 public class JobPostingParserService {
@@ -44,15 +50,18 @@ public class JobPostingParserService {
     private final MessageSource messageSource;
     private final PostingPdfTextExtractor pdfTextExtractor;
     private final OutboundUrlGuard urlGuard;
+    private final PostingRenderer renderer;
 
     public JobPostingParserService(JobPostingLlmClient llmClient,
                                    MessageSource messageSource,
                                    PostingPdfTextExtractor pdfTextExtractor,
-                                   OutboundUrlGuard urlGuard) {
+                                   OutboundUrlGuard urlGuard,
+                                   PostingRenderer renderer) {
         this.llmClient = llmClient;
         this.messageSource = messageSource;
         this.pdfTextExtractor = pdfTextExtractor;
         this.urlGuard = urlGuard;
+        this.renderer = renderer;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -62,10 +71,49 @@ public class JobPostingParserService {
     /** Resolved URL (post-redirects) plus the raw HTML fetched from it. */
     public record FetchedPage(URI url, String html) {}
 
-    public JobPostingExtraction overview(String rawUrl) {
-        URI uri = urlGuard.validate(rawUrl);
-        String text = visibleText(fetchHtml(uri));
-        return llmClient.extract(text);
+    /**
+     * The posting's key fields, read by the model from the page as a browser
+     * renders it.
+     *
+     * <p>This used to be a plain GET whose HTML went to the model as
+     * {@code Jsoup.text()}, which meant a posting whose body is written by
+     * JavaScript arrived as an empty page - the case
+     * {@code JobPostingImportService} has always classified as
+     * {@code JS_REQUIRED} and {@code FailureCategory} annotated with "Fix:
+     * fetch through Chromium". Gotenberg was already rendering the very same
+     * URL a few seconds later for the archived snapshot and the result was
+     * thrown away, so the fix was to read what was already being produced.
+     *
+     * <p>Nothing is given up by printing rather than fetching here: this path
+     * never looked at the markup, only at the visible text, and Chromium's is
+     * strictly better. That is not true of the full-chain extraction, which
+     * lives or dies by JSON-LD and microdata that a PDF cannot carry - which is
+     * why that one still fetches HTML and this one no longer does.
+     *
+     * <p>The plain GET remains as the fallback, so a static posting still
+     * imports while Gotenberg is down.
+     */
+    public JobPostingExtraction overview(String rawUrl, String userId) {
+        byte[] rendered;
+        try {
+            rendered = renderer.render(rawUrl, userId, RenderProfile.EXTRACTION);
+        } catch (ApiException.BadGateway e) {
+            // Gotenberg unreachable - our outage, not the posting's. A page that
+            // needed a browser will fail on the GET too, but a plain one imports
+            // fine, and most postings are plain.
+            return llmClient.extract(visibleText(fetchHtml(urlGuard.validate(rawUrl))));
+        }
+
+        try {
+            return overviewFromPdf(rendered);
+        } catch (ApiException.BadRequest e) {
+            // The page rendered but carried no readable posting - a consent wall
+            // or a login screen printed instead of an ad. The length rules stay
+            // shared with the upload path, but its wording cannot: telling
+            // someone whose URL rendered blank that their file might be "a scan
+            // or a screenshot" is advice about a file they never had.
+            throw new ApiException.BadRequest(message("error.posting.renderedNoText"), e);
+        }
     }
 
     /**

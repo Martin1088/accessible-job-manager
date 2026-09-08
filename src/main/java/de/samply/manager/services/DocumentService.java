@@ -10,6 +10,7 @@ import de.samply.manager.repository.ShareRepository;
 import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DocumentService {
 
@@ -138,9 +140,36 @@ public class DocumentService {
 
     @Transactional
     public void delete(UUID documentId, String userId) {
-        Document document = findOwned(documentId, userId);
-        shareRepository.deleteAll(shareRepository.findByDocumentId(documentId));
-        storageService.delete(document.getStorageKey());
+        deleteWithContents(findOwned(documentId, userId));
+    }
+
+    /**
+     * Removes a document already established as the caller's: its access grants,
+     * its stored object, and the row.
+     *
+     * <p>Split out from {@link #delete} so deleting a company can reuse it -
+     * that path has the documents in hand from the position they hang off and
+     * has already checked ownership of the company, so going back through
+     * {@code findOwned} would only re-read rows to answer a question already
+     * answered. The share grants have to go first: {@code share.document_id} is
+     * a foreign key with no cascade, so the row cannot be deleted under them.
+     *
+     * <p>The stored object is best-effort. An object already gone, or a Garage
+     * that is briefly unreachable, must not be able to make a document - or the
+     * company hanging off it - permanently undeletable. The cost of getting this
+     * wrong in the other direction is an unreferenced blob;
+     * {@code JobPostingSnapshotService.copyForNewPosition} makes the same trade
+     * for the same reason.
+     */
+    @Transactional
+    public void deleteWithContents(Document document) {
+        shareRepository.deleteAll(shareRepository.findByDocumentId(document.getId()));
+        try {
+            storageService.delete(document.getStorageKey());
+        } catch (RuntimeException e) {
+            log.warn("Could not remove stored object {} for document {}; deleting the row anyway",
+                    document.getStorageKey(), document.getId(), e);
+        }
         documentRepository.delete(document);
     }
 }

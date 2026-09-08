@@ -2,8 +2,11 @@ package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.PostingPdfTextExtractor;
+import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import de.samply.manager.jobimport.llm.LlmExtractionSpec;
+import de.samply.manager.jobimport.render.PostingRenderer;
+import de.samply.manager.jobimport.render.RenderFixtures;
 import de.samply.manager.security.OutboundUrlGuard;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -12,6 +15,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 
 class JobPostingParserServiceTest {
 
@@ -23,10 +27,20 @@ class JobPostingParserServiceTest {
         public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
             throw new AssertionError("LLM client called for a rejected URL");
         }
-    }, messages(), pdfExtractor(), urlGuard());
+    }, messages(), pdfExtractor(), urlGuard(), refusingRenderer());
 
     private static PostingPdfTextExtractor pdfExtractor() {
         return new PostingPdfTextExtractor(messages());
+    }
+
+    /**
+     * {@code overview} now renders before it fetches, so the URL cases below
+     * are refused by the guard inside the renderer rather than by the service.
+     * This one fails the test if Gotenberg is ever reached, which is what keeps
+     * "rejected before the render" an assertion instead of an assumption.
+     */
+    private static PostingRenderer refusingRenderer() {
+        return RenderFixtures.refusingRenderer(new ImportDiagnostics());
     }
 
     /**
@@ -57,7 +71,7 @@ class JobPostingParserServiceTest {
             ""
     })
     void rejectsDisallowedOrMalformedUrls(String url) {
-        assertThatThrownBy(() -> service.overview(url))
+        assertThatThrownBy(() -> service.overview(url, "user-1"))
                 .isInstanceOf(ApiException.BadRequest.class)
                 .extracting(e -> ((ApiException) e).getStatus().value())
                 .isEqualTo(400);
@@ -101,7 +115,7 @@ class JobPostingParserServiceTest {
     @Test
     void extractsFromPastedTextWithoutFetchingAnything() {
         RecordingLlmClient llm = new RecordingLlmClient();
-        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard());
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard(), refusingRenderer());
         String posting = "Wir suchen eine Plattform-Architektin (m/w/d) fuer unser Team in Leipzig. "
                 + "Zu den Aufgaben gehoert der Betrieb der internen Entwicklungsplattform.";
 
@@ -113,7 +127,7 @@ class JobPostingParserServiceTest {
     @Test
     void pastedTextIsStrippedBeforeItReachesTheModel() {
         RecordingLlmClient llm = new RecordingLlmClient();
-        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard());
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard(), refusingRenderer());
         String posting = "Plattform Architekt gesucht in Vollzeit, unbefristet, mit Erfahrung in "
                 + "Kubernetes und Continuous Delivery. Bewerbungen jederzeit willkommen.";
 
@@ -135,6 +149,70 @@ class JobPostingParserServiceTest {
         assertThatThrownBy(() -> service.overviewFromText("(Junior) Plattform Architekt (m/w/d)"))
                 .isInstanceOf(ApiException.BadRequest.class)
                 .hasMessageContaining("at least");
+    }
+
+    /**
+     * {@code overview} renders through Chromium now, so the two ways that can go
+     * wrong have to stay distinguishable - they have opposite answers.
+     *
+     * <p>Gotenberg being unreachable is our outage and says nothing about the
+     * posting, so the plain GET is tried instead; a posting that does not need a
+     * browser still imports. A page that rendered but held no posting is not an
+     * outage, and retrying it as a GET would only produce the same nothing, so
+     * it is reported - with wording about the page rather than the wording the
+     * upload path uses about a file.
+     */
+    @Test
+    void fallsBackToThePlainFetchWhenGotenbergIsUnreachable() {
+        RecordingLlmClient llm = new RecordingLlmClient();
+        JobPostingParserService service = new JobPostingParserService(
+                llm, messages(), pdfExtractor(), urlGuard(), unreachableRenderer());
+
+        // The fetch that follows fails too - nothing is listening - but it must
+        // fail as a *fetch*, which is what proves the fallback was taken rather
+        // than the render error being rethrown.
+        assertThatThrownBy(() -> service.overview("http://example.invalid/job", "user-1"))
+                .isInstanceOf(ApiException.class)
+                .hasMessageNotContaining("snapshot service");
+    }
+
+    @Test
+    void aPageThatRenderedWithNoPostingSaysSoInsteadOfTalkingAboutAFile() {
+        JobPostingParserService service = new JobPostingParserService(
+                new RecordingLlmClient(), messages(), pdfExtractor(), urlGuard(), emptyPageRenderer());
+
+        assertThatThrownBy(() -> service.overview("https://example.com/job", "user-1"))
+                .isInstanceOf(ApiException.BadRequest.class)
+                .hasMessageContaining("no readable job posting")
+                // The upload path's advice, which would be nonsense for a URL.
+                .hasMessageNotContaining("scan");
+    }
+
+    /** A renderer standing in for a Gotenberg that cannot be reached at all. */
+    private static PostingRenderer unreachableRenderer() {
+        PostingRenderer renderer = org.mockito.Mockito.mock(PostingRenderer.class);
+        org.mockito.Mockito.when(renderer.render(any(), any(), any()))
+                .thenThrow(new ApiException.BadGateway("Job posting snapshot service unavailable"));
+        return renderer;
+    }
+
+    /** A renderer returning a valid PDF that carries no usable text. */
+    private static PostingRenderer emptyPageRenderer() {
+        PostingRenderer renderer = org.mockito.Mockito.mock(PostingRenderer.class);
+        org.mockito.Mockito.when(renderer.render(any(), any(), any())).thenReturn(blankPdf());
+        return renderer;
+    }
+
+    /** A single-page PDF with a few characters on it - well under the usable floor. */
+    private static byte[] blankPdf() {
+        try (org.apache.pdfbox.pdmodel.PDDocument document = new org.apache.pdfbox.pdmodel.PDDocument()) {
+            document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            document.save(out);
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /** Captures what the service handed the model, so the test can assert on it. */

@@ -34,8 +34,9 @@ public class JobPostingParserController {
     private final JobPostingImportService jobPostingImportService;
 
     @PostMapping("/overview")
-    public JobPostingExtraction parse(@RequestParam("url") String url) {
-        return jobPostingParserService.overview(url);
+    public JobPostingExtraction parse(@RequestParam("url") String url,
+                                      @AuthenticationPrincipal OidcUser user) {
+        return jobPostingParserService.overview(url, user.getSubject());
     }
 
     /**
@@ -111,7 +112,7 @@ public class JobPostingParserController {
     public ResponseEntity<byte[]> validateSnapshot(
             @RequestParam("url") String url,
             @AuthenticationPrincipal OidcUser user) {
-        byte[] pdf = jobPostingSnapshotService.snapshotToPdf(url);
+        byte[] pdf = jobPostingSnapshotService.snapshotToPdf(url, user.getSubject());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"job-posting-preview.pdf\"")

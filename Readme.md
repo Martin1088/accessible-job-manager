@@ -291,6 +291,17 @@ vantage point and cannot constrain any of that — a posting URL that redirects 
 So the containment is network-side, and it is a deployment requirement rather
 than a nicety:
 
+- **Gotenberg runs with `--chromium-deny-private-ips`.** This is the one control
+  that sits *inside* the process doing the fetching, so it applies to every
+  redirect hop rather than only to the address the user submitted. It rejects
+  loopback, RFC 1918, link-local and IPv6 unique-local. It does not replace
+  `OutboundUrlGuard`: the guard additionally refuses CGNAT `100.64.0.0/10`,
+  `198.18.0.0/15`, `192.0.0.0/24` and `0.0.0.0/8`, which this flag does not
+  cover. The two are complementary and both are wanted.
+  - Deliberately **not** `--chromium-deny-list`. That flag ships a non-empty
+    default (`^file:(?!//\/tmp/).*`) which is what blocks `file://` reads;
+    setting your own value without carrying that pattern over silently
+    re-enables local file access.
 - **`dev/docker-compose.yml` puts Gotenberg on its own `render` network**, shared
   only with the app. It cannot resolve or reach `postgres`, `garage`, `traefik`,
   `error-pages`, or the Authentik stack in `dev/authentik.yml`. Keep it that way
@@ -298,8 +309,11 @@ than a nicety:
 - **Never give the Gotenberg container `extra_hosts: host.docker.internal:host-gateway`.**
   The app has it (for the OIDC issuer); Gotenberg having it would hand Chromium a
   route back to the host.
-- **In production, add egress filtering.** Gotenberg needs outbound internet
-  access to fetch postings at all, so Compose networks cannot finish the job.
+- **In production, add egress filtering anyway.** Gotenberg needs outbound
+  internet access to fetch postings at all, so neither Compose networks nor the
+  deny-private-ips flag finishes the job — the flag is Chromium refusing to
+  follow a link, not the network refusing to carry it, and it does nothing about
+  a compromised container.
   Deny egress from the Gotenberg container to:
   `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` (RFC 1918), `100.64.0.0/10`
   (CGNAT), `169.254.0.0/16` (link-local, including the `169.254.169.254` cloud
@@ -309,7 +323,9 @@ than a nicety:
   work; pick whichever the platform gives you.
 
 The Azure deployment below already meets the spirit of this — its Gotenberg
-Container App is internal-only. The Compose stack now matches it.
+Container App is internal-only, and passes the same flags. The Compose stack now
+matches it. Azure still has no egress rules of its own, so on that deployment the
+flag is the only address-level control there is.
 
 ### Azure Deployment
 

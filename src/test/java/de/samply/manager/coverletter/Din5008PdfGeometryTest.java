@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.web.client.RestClient;
 
 /**
  * Measures where the printed letter actually lands on the page.
@@ -54,7 +55,7 @@ class Din5008PdfGeometryTest {
                 Language.GERMAN);
 
         String html = new HtmlCoverLetterRenderer(CoverLetterFixtures.templateEngine()).render(letter);
-        byte[] pdf = new HtmlToPdfConverter(GOTENBERG_URL, CoverLetterFixtures.messageSource()).toPdf(html);
+        byte[] pdf = new HtmlToPdfConverter(RestClient.create(), GOTENBERG_URL, CoverLetterFixtures.messageSource()).toPdf(html);
 
         firstPageLines = readLines(pdf);
     }

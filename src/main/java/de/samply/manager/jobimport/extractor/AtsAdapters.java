@@ -117,10 +117,12 @@ class PersonioAdapter implements AtsAdapter {
 
     private final RestClient http;
     private final PersonioXmlParser xml; // dedicated XML feed parser
+    private final OutboundUrlGuard urlGuard;
 
-    PersonioAdapter(RestClient.Builder builder, PersonioXmlParser xml) {
+    PersonioAdapter(RestClient.Builder builder, PersonioXmlParser xml, OutboundUrlGuard urlGuard) {
         this.http = builder.build();
         this.xml = xml;
+        this.urlGuard = urlGuard;
     }
 
     @Override
@@ -139,8 +141,19 @@ class PersonioAdapter implements AtsAdapter {
         String subdomain = sub.group(1);
         String jobId = job.group(1);
 
+        // The only adapter here that puts a value taken from the user's URL in
+        // the *host* position. Its siblings pin the host and pass their
+        // extracted values as path or query template variables, which cannot
+        // reach a different address however they are spelled; this one can, in
+        // principle, because `[^.]+` excludes dots but not `/` or `@`. URI
+        // template encoding should already neutralise those, but "should"
+        // resting on an encoder's behaviour is what the guard exists to replace.
+        // As with OracleHcmAdapter, AtsApiExtractor.safeFetch swallows the
+        // refusal, so a rejected host reads as "this tier found nothing".
+        URI feedUrl = urlGuard.validate("https://" + subdomain + ".jobs.personio.com/xml");
+
         String feed = http.get()
-                .uri("https://{s}.jobs.personio.com/xml", subdomain)
+                .uri(feedUrl)
                 .retrieve()
                 .body(String.class);
 

@@ -248,6 +248,17 @@ resource gotenberg 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'gotenberg'
           image: 'gotenberg/gotenberg:8'
+          // Chromium fetches user-supplied posting URLs itself and follows its
+          // own redirects, so the refusal has to live in the process that
+          // connects. Consumption-plan Container Apps have no fixed outbound IP
+          // and this template provisions no egress rules, which makes this the
+          // only address-level control the Azure deployment actually has - see
+          // "Gotenberg network isolation" in Readme.md.
+          args: [
+            'gotenberg'
+            '--chromium-deny-private-ips'
+            '--api-timeout=30s'
+          ]
           resources: {
             cpu: json('0.5')
             memory: '1.0Gi'

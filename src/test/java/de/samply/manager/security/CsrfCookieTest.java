@@ -1,7 +1,7 @@
 package de.samply.manager.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.samply.manager.controller.JobController;
+import de.samply.manager.controller.CompanyController;
 import de.samply.manager.dto.CompanyDto;
 import de.samply.manager.services.CompanyService;
 import jakarta.servlet.http.Cookie;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * and comes back accepted. Both halves have failed in this app before - the cookie
  * was never issued, so every write answered 403.
  */
-@WebMvcTest(JobController.class)
+@WebMvcTest(CompanyController.class)
 @Import(SecurityConfig.class)
 // This slice has the same context signature as JobControllerTest, so both would
 // normally share one cached ApplicationContext - and that context is no longer the

@@ -1,8 +1,8 @@
 package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
-import de.samply.manager.jobimport.diagnostics.FailureCategory;
-import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
+import de.samply.manager.jobimport.render.PostingRenderer;
+import de.samply.manager.jobimport.render.RenderProfile;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentFilename;
@@ -10,29 +10,18 @@ import de.samply.manager.model.DocumentType;
 import de.samply.manager.types.Language;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
-import de.samply.manager.security.OutboundUrlGuard;
 import de.samply.manager.services.storage.StorageService;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Renders a job posting URL to PDF via Gotenberg's Chromium route and stores the
@@ -43,88 +32,36 @@ import java.util.regex.Pattern;
 @Service
 public class JobPostingSnapshotService {
 
-    private final RestClient restClient;
-    private final String gotenbergUrl;
+    private final PostingRenderer renderer;
     private final StorageService storageService;
     private final DocumentRepository documentRepository;
     private final DocumentService documentService;
     private final CompanyPositionRepository companyPositionRepository;
     private final MessageSource messageSource;
-    private final ImportDiagnostics diagnostics;
-    private final OutboundUrlGuard urlGuard;
 
-    public JobPostingSnapshotService(@Value("${gotenberg.url}") String gotenbergUrl,
+    public JobPostingSnapshotService(PostingRenderer renderer,
                                      StorageService storageService,
                                      DocumentRepository documentRepository,
                                      DocumentService documentService,
                                      CompanyPositionRepository companyPositionRepository,
-                                     MessageSource messageSource,
-                                     ImportDiagnostics diagnostics,
-                                     OutboundUrlGuard urlGuard) {
-        this.urlGuard = urlGuard;
-        this.gotenbergUrl = gotenbergUrl;
+                                     MessageSource messageSource) {
+        this.renderer = renderer;
         this.storageService = storageService;
         this.documentRepository = documentRepository;
         this.documentService = documentService;
         this.companyPositionRepository = companyPositionRepository;
         this.messageSource = messageSource;
-        this.diagnostics = diagnostics;
-        this.restClient = RestClient.create();
-    }
-
-    private static final Pattern UPSTREAM_STATUS_PATTERN =
-            Pattern.compile("status code[^0-9]*(\\d{3})", Pattern.CASE_INSENSITIVE);
-
-    public byte[] snapshotToPdf(String rawUrl) {
-        // Worth being clear about what this does and does not buy: it stops the
-        // obvious internal URL, but Gotenberg fetches the page itself, from its
-        // own container, following its own redirects. The real containment is the
-        // network isolation described in Readme.md, not this call.
-        URI uri = urlGuard.validate(rawUrl);
-
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("url", uri.toString());
-
-        try {
-            byte[] pdf = restClient.post()
-                    .uri(gotenbergUrl + "/forms/chromium/convert/url")
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .body(body)
-                    .retrieve()
-                    .body(byte[].class);
-            diagnostics.record(uri.toString(), FailureCategory.OK, null);
-            return pdf;
-        } catch (RestClientResponseException e) {
-            ApiException failure = conversionFailure(e);
-            diagnostics.record(uri.toString(), FailureCategory.PDF_FETCH_FAILED, failure.getUpstreamStatus());
-            throw failure;
-        } catch (RestClientException e) {
-            // Gotenberg itself is down: our problem, not the host's, so it is
-            // recorded under a category that keeps the host off the work list.
-            diagnostics.record(uri.toString(), FailureCategory.PDF_SERVICE_UNAVAILABLE, null);
-            throw new ApiException.BadGateway(message("error.snapshot.serviceUnavailable"));
-        }
     }
 
     /**
-     * Gotenberg reports a failed page load as "...HTTP status code from the main page: {status}: ..."
-     * in its error body (e.g. a job posting that was taken down surfaces as a 404 there).
-     * Extracting that status lets us tell the user why their URL failed instead of a generic 502,
-     * and carrying it on the exception lets the diagnostics line name the status without
-     * re-parsing the localized message it ends up in.
+     * The posting at {@code rawUrl} as the PDF that gets archived.
+     *
+     * <p>The render itself, the URL guard and the failure mapping all live in
+     * {@link PostingRenderer} now, because the extraction path needs the same
+     * render and should not have to reach through a storage service to get it.
      */
-    private ApiException conversionFailure(RestClientResponseException e) {
-        Matcher matcher = UPSTREAM_STATUS_PATTERN.matcher(e.getResponseBodyAsString());
-        if (!matcher.find()) {
-            return new ApiException.BadRequest(message("error.snapshot.conversionFailed"));
-        }
-        int upstreamStatus = Integer.parseInt(matcher.group(1));
-        String description = switch (upstreamStatus) {
-            case 404 -> message("error.snapshot.notFound404");
-            case 401, 403 -> message("error.snapshot.deniedAccess", upstreamStatus);
-            default -> message("error.snapshot.upstreamError", upstreamStatus);
-        };
-        return new ApiException.BadRequest(description, upstreamStatus);
+    public byte[] snapshotToPdf(String rawUrl, String userId) {
+        return renderer.render(rawUrl, userId, RenderProfile.SNAPSHOT);
     }
 
     private String message(String key, Object... args) {
@@ -167,7 +104,7 @@ public class JobPostingSnapshotService {
 
     public Document save(String rawUrl, Long companyPositionId, String label, Language language, String userId) {
         CompanyPosition position = findOwnedPosition(companyPositionId, userId);
-        return store(snapshotToPdf(rawUrl), "job-posting-snapshot.pdf", position, label, language, userId);
+        return store(snapshotToPdf(rawUrl, userId), "job-posting-snapshot.pdf", position, label, language, userId);
     }
 
     /**

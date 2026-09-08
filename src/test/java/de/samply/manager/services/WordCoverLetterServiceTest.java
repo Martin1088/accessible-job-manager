@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.web.client.RestClient;
 
 class WordCoverLetterServiceTest {
 
@@ -29,7 +30,7 @@ class WordCoverLetterServiceTest {
     }
 
     private final WordCoverLetterService service = new WordCoverLetterService(
-            "http://localhost:1234", new CoverLetterLabels(MESSAGE_SOURCE));
+            RestClient.create(), "http://localhost:1234", new CoverLetterLabels(MESSAGE_SOURCE));
 
     private static final CoverLetterTemplate.Sender SENDER = new CoverLetterTemplate.Sender(
             "Jane Doe", "Main Street 1", "12345", "Springfield", "jane@example.com", null);

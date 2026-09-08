@@ -41,6 +41,23 @@ spring:
 
 gotenberg:
   url: ${GOTENBERG_URL:http://localhost:3000}
+  # Longer than Gotenberg's own --api-timeout (30s in the compose files) on
+  # purpose: Gotenberg answers an over-long render with an error naming the page
+  # that hung, and a client that gave up first would lose that reason. This is
+  # the backstop for a Gotenberg that stopped answering at all.
+  connect-timeout-seconds: ${GOTENBERG_CONNECT_TIMEOUT_SECONDS:5}
+  read-timeout-seconds: ${GOTENBERG_READ_TIMEOUT_SECONDS:60}
+  # How long Chromium waits after the page goes network-idle. Job boards load
+  # the ad body last often enough that zero costs more imports than the second
+  # costs renders.
+  wait-delay: ${GOTENBERG_WAIT_DELAY:1s}
+  render-cache:
+    # One import calls /overview, /full-chain, /snapshot-validate and /snapshot
+    # for a single URL. This is what keeps that two renders rather than four;
+    # the TTL only has to outlive one pass through the import form.
+    ttl-seconds: ${GOTENBERG_RENDER_CACHE_TTL_SECONDS:120}
+    max-entries: ${GOTENBERG_RENDER_CACHE_MAX_ENTRIES:32}
+    max-bytes: ${GOTENBERG_RENDER_CACHE_MAX_BYTES:134217728}
 
 job-posting:
   parser:

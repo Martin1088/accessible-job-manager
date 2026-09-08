@@ -1,26 +1,22 @@
 package de.samply.manager.services;
 
-import de.samply.manager.exception.ApiException;
-import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
+import de.samply.manager.jobimport.render.PostingRenderer;
+import de.samply.manager.jobimport.render.RenderProfile;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
-import de.samply.manager.security.OutboundUrlGuard;
 import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
-import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,48 +34,33 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class JobPostingSnapshotServiceTest {
 
+    @Mock PostingRenderer renderer;
     @Mock StorageService storageService;
     @Mock DocumentRepository documentRepository;
     @Mock DocumentService documentService;
     @Mock CompanyPositionRepository companyPositionRepository;
     @Mock MessageSource messageSource;
-    @Mock ImportDiagnostics diagnostics;
 
     private JobPostingSnapshotService service;
 
     @BeforeEach
     void setUp() {
-        // The real guard, not a mock - snapshotToPdf's refusal to forward an
-        // internal URL to Gotenberg is only worth asserting against the actual
-        // validator. Its own range coverage lives in OutboundUrlGuardTest.
-        ResourceBundleMessageSource bundle = new ResourceBundleMessageSource();
-        bundle.setBasename("messages");
-        bundle.setDefaultEncoding("UTF-8");
-
-        service = new JobPostingSnapshotService("http://gotenberg", storageService, documentRepository,
-                documentService, companyPositionRepository, messageSource, diagnostics,
-                new OutboundUrlGuard(bundle, 30));
+        service = new JobPostingSnapshotService(renderer, storageService, documentRepository,
+                documentService, companyPositionRepository, messageSource);
     }
 
     /**
-     * The guard cannot constrain Gotenberg - Chromium fetches the page itself,
-     * from its own container - but it must at least stop the obvious internal
-     * URL before it is handed over. Anything past that is the network isolation
-     * described in Readme.md.
+     * The URL guard and the render both live in {@link PostingRenderer} now, so
+     * the refusal is asserted in {@code PostingRendererTest}. What is still this
+     * service's own is that it asks for the archival profile - a snapshot filed
+     * as the posting record must not be the single-page render extraction uses.
      */
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "http://172.17.0.2:5432/",  // a sibling container on the Docker bridge, e.g. postgres
-            "http://127.0.0.1/",
-            "http://169.254.169.254/latest/meta-data/",
-            "http://10.0.0.5/",
-            "ftp://example.com/",
-    })
-    void snapshotToPdf_refusesADisallowedUrlWithoutCallingGotenberg(String url) {
-        assertThatThrownBy(() -> service.snapshotToPdf(url))
-                .isInstanceOf(ApiException.BadRequest.class);
+    @Test
+    void snapshotToPdf_asksForTheSnapshotProfile() {
+        when(renderer.render("https://example.com/job", "user-1", RenderProfile.SNAPSHOT))
+                .thenReturn(PDF_BYTES);
 
-        verifyNoInteractions(storageService, documentRepository, diagnostics);
+        assertThat(service.snapshotToPdf("https://example.com/job", "user-1")).isEqualTo(PDF_BYTES);
     }
 
     private CompanyPosition position(Long id) {

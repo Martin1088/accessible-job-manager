@@ -83,6 +83,24 @@ services:
     image: gotenberg/gotenberg:8
     container_name: gotenberg
     restart: unless-stopped
+    # --chromium-deny-private-ips is the half of the SSRF defence OutboundUrlGuard
+    # structurally cannot cover: the guard checks the address the user submitted,
+    # from the application's vantage point, and then Chromium resolves and
+    # follows redirects on its own. This rejects a private address at every hop,
+    # inside the process that actually connects. It does not replace the guard -
+    # it covers loopback, RFC1918, link-local and unique-local, while the guard
+    # additionally rejects CGNAT 100.64/10, 198.18/15, 192.0.0.0/24 and 0.0.0.0/8.
+    #
+    # Deliberately not --chromium-deny-list: that flag has a non-empty default
+    # (^file:(?!//\/tmp/).*) which is what blocks file:// reads, and setting it
+    # without carrying that pattern over would silently re-enable them.
+    #
+    # --api-timeout is Gotenberg's own default (30s), pinned because the client
+    # read timeout is set relative to it - see gotenberg.read-timeout-seconds.
+    command:
+      - gotenberg
+      - --chromium-deny-private-ips
+      - --api-timeout=30s
     ports:
       - "3000:3000"
     networks:

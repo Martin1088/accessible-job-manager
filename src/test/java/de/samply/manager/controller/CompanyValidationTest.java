@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * together, and like {@link SecurityConfig} it is a plain {@code @Configuration} that
  * a {@code @WebMvcTest} slice does not pick up on its own - hence the explicit import.
  */
-@WebMvcTest(JobController.class)
+@WebMvcTest(CompanyController.class)
 @Import({SecurityConfig.class, ValidationConfig.class, GlobalExceptionHandler.class})
 class CompanyValidationTest {
 

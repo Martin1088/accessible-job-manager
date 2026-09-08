@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.web.client.RestClient;
 
 /**
  * Validates a generated cover letter against PDF/UA-1.
@@ -57,7 +58,7 @@ class CoverLetterPdfUaTest {
                 Language.GERMAN);
 
         String html = new HtmlCoverLetterRenderer(CoverLetterFixtures.templateEngine()).render(letter);
-        pdf = new HtmlToPdfConverter(GOTENBERG_URL, CoverLetterFixtures.messageSource()).toPdf(html);
+        pdf = new HtmlToPdfConverter(RestClient.create(), GOTENBERG_URL, CoverLetterFixtures.messageSource()).toPdf(html);
     }
 
     @Test

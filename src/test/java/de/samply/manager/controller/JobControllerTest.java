@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // to Spring Boot's default OAuth2-login security chain (session-based
 // CSRF repository, no /api/** CSRF exemption, default redirect-only
 // entry point) instead of the app's actual security rules.
-@WebMvcTest(JobController.class)
+@WebMvcTest(CompanyController.class)
 @Import(SecurityConfig.class)
 class JobControllerTest {
 
