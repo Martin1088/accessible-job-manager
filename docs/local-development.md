@@ -81,6 +81,38 @@ ACCESS_KEY=<garage-access-key>
 SECRET_KEY=<garage-secret-key>
 ```
 
+### Encryption at rest (SSE-C)
+
+Off by default. With `sse-c`, Garage encrypts every stored document with a key it
+never keeps, so each read has to present it again. S3/Garage only — the `azure`
+provider has its own encryption story.
+
+```
+S3_SSE_C_MODE=sse-c
+S3_SSE_C_KEY=<openssl rand -base64 32>
+```
+
+The key must decode to exactly 32 bytes (AES-256). A missing, malformed or
+wrong-length key **fails startup** rather than failing the first upload. Note that
+the property is bound and validated even when `STORAGE_PROVIDER=azure`, so clear it
+if you are not using S3.
+
+Four things worth knowing before switching it on:
+
+- **Losing the key loses every document.** Garage keeps no copy. Back the key up
+  together with the database: the `documents` rows outlive the objects, and without
+  the key they point at storage keys nobody can read.
+- **Flipping the toggle converts nothing.** With `sse-c` on, reading an object that
+  was stored unencrypted fails, and vice versa. There is no `encrypted` flag on
+  `Document` and no way to tell the two kinds apart afterwards. The bucket holds dev
+  data only, so the procedure is: empty the bucket, delete the `documents` rows,
+  then switch.
+- **The key travels in a request header** on every upload and download. Over the
+  local `http://localhost:3900` endpoint it is on the wire in clear each time — the
+  application logs a warning at startup saying so. Any deployment must use `https`.
+- **One key, no rotation.** There is deliberately no key id; rotating means
+  re-uploading every object.
+
 ### Bootstrapping Garage
 
 A fresh Garage container has no storage layout, no bucket and no access key, so

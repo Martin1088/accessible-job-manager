@@ -16,6 +16,13 @@ reliable than it is.
 
 ### Added
 
+- Optional encryption at rest for the S3/Garage document store (SSE-C). With
+  `S3_SSE_C_MODE=sse-c` and a 32-byte `S3_SSE_C_KEY`, Garage stores every
+  document encrypted under a key it does not keep, so losing the key loses the
+  documents. Off by default, and switching it on does not convert what is
+  already in the bucket — those objects become unreadable. A missing or
+  malformed key fails startup rather than the first upload. S3/Garage only; the
+  `azure` provider is unaffected.
 - Release process: `CHANGELOG.md`, `./release.sh`, and a workflow that builds
   and publishes the container image to `ghcr.io` when a `v*` tag is pushed.
 
