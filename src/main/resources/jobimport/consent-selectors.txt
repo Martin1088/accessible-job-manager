@@ -1,0 +1,50 @@
+// CSS selectors for consent/cookie banners, removed from the page before the
+// archived snapshot is printed. One per line. Add more phrasings here, not in
+// code.
+//
+// Comments start with "//" rather than "#", because "#" begins a CSS id
+// selector and this file is mostly those.
+//
+// These run only for RenderProfile.SNAPSHOT, and only because a banner is not
+// part of the posting: bwi.de prints its consent panel across the archived
+// record twice, because its print stylesheet does not hide it. Where a site
+// does hide it - ofd-bw.fv-bwl.de does - these match nothing and change
+// nothing.
+//
+// Keep them narrow. A selector here removes content from an archive silently,
+// so a substring match like [class*=cookie] would also delete a posting for a
+// "Cookie Manager" role or an employer whose markup happens to use the word.
+// Prefer a selector naming a banner's own id, root class or dialog role over
+// one that guesses from a substring.
+
+// Consent containers by id.
+#gdpr-cookie-message
+#cookie-banner
+#cookie-consent
+#cookieConsent
+#cookie-notice
+#usercentrics-root
+#CybotCookiebotDialog
+#onetrust-consent-sdk
+#onetrust-banner-sdk
+
+// Class names used as the banner root rather than as a content word.
+.cookie-banner
+.cookie-consent
+.cookie-notice
+.consent-banner
+.consent-manager
+.cc-window
+
+// bwi.de, the case this list was written for. It uses "cookieman", whose modal
+// root is .cmOverlay; .linkOverlayNotice is a second, separate consent notice
+// on the same page, which is why its banner text appeared in the archive twice.
+// Both names were read off the served markup - guessing them from the word
+// "cookie" produced selectors that matched nothing.
+.cmOverlay
+.linkOverlayNotice
+
+// ARIA: a dialog that names itself a cookie/consent prompt. Narrower than a
+// substring class match, because the label is the element's own description.
+[aria-label*="Cookie" i][role="dialog"]
+[aria-label*="Consent" i][role="dialog"]

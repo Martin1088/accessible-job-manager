@@ -59,6 +59,7 @@ public enum RenderProfile {
             body.add("emulatedMediaType", "print");
             body.add("printBackground", "true");
             body.add("generateTaggedPdf", "true");
+            body.add("waitForExpression", ConsentBanner.removalExpression());
         }
     };
 
