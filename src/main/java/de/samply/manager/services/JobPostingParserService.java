@@ -119,6 +119,28 @@ public class JobPostingParserService {
      * imports while Gotenberg is down.
      */
     public JobPostingExtraction overview(String rawUrl, String userId) {
+        // The fetch stays outside recordingLlmFailure: an unreachable posting is
+        // also a BadGateway, and recording it as a model failure would blame our
+        // own infrastructure for the host's.
+        String text = renderedPostingText(rawUrl, userId);
+        return recordingLlmFailure(rawUrl, () -> overviewFromText(text));
+    }
+
+    /**
+     * The posting's visible text as a browser renders it, which is the input
+     * every whole-page extraction wants.
+     *
+     * <p>Shared rather than copied because the fallback is the subtle part: when
+     * Gotenberg is unreachable this drops back to the plain GET, so a static
+     * posting still works during an outage, and a caller that reimplemented the
+     * render without it would simply fail instead. Callers that need the page's
+     * <em>markup</em> cannot use this - see {@link #postingTextWithLinks}.
+     *
+     * <p>Repeated calls for one URL are cheap: {@code PostingRenderer} caches per
+     * user, URL and profile, so the field-suggestion endpoints reuse the render
+     * the import already paid for rather than printing the page again.
+     */
+    public String renderedPostingText(String rawUrl, String userId) {
         byte[] rendered;
         try {
             rendered = renderer.render(rawUrl, userId, RenderProfile.EXTRACTION);
@@ -126,18 +148,11 @@ public class JobPostingParserService {
             // Gotenberg unreachable - our outage, not the posting's. A page that
             // needed a browser will fail on the GET too, but a plain one imports
             // fine, and most postings are plain.
-            // The fetch stays outside recordingLlmFailure: an unreachable posting
-            // is also a BadGateway, and recording it as a model failure would
-            // blame our own infrastructure for the host's.
-            String fetched = visibleText(fetchHtml(urlGuard.validate(rawUrl)));
-            return recordingLlmFailure(rawUrl, () -> llmClient.extract(fetched));
+            return visibleText(fetchHtml(urlGuard.validate(rawUrl)));
         }
 
         try {
-            // Inlines overviewFromPdf so only the model call is wrapped - the
-            // text extraction throws BadRequest, which belongs to the catch below.
-            String text = pdfTextExtractor.extract(rendered);
-            return recordingLlmFailure(rawUrl, () -> overviewFromText(text));
+            return pdfTextExtractor.extract(rendered);
         } catch (ApiException.BadRequest e) {
             // The page rendered but carried no readable posting - a consent wall
             // or a login screen printed instead of an ad. The length rules stay
@@ -201,10 +216,6 @@ public class JobPostingParserService {
         return fetchHtml(urlGuard.validate(rawUrl));
     }
 
-    /** The posting's visible text, fetched through the same validated path. */
-    public String postingText(String rawUrl) {
-        return visibleText(fetchHtml(urlGuard.validate(rawUrl)));
-    }
 
     /**
      * The posting's visible text followed by the links found on the page.
