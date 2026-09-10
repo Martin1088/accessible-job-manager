@@ -35,10 +35,6 @@ dependencies {
     implementation 'io.micrometer:micrometer-core'
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
     implementation 'org.apache.commons:commons-csv:1.14.1'
-    // Reads the text out of a job posting the user printed to PDF, for boards
-    // that answer 403 to a server. Was test-only (Din5008PdfGeometryTest,
-    // CoverLetterPdfUaTest read generated PDFs back); PostingPdfTextExtractor
-    // now needs it at runtime.
     implementation 'org.apache.pdfbox:pdfbox:3.0.3'
 
     api libs.org.springframework.boot.spring.boot.starter.web
@@ -85,7 +81,6 @@ def describedVersion = {
     try {
         def git = providers.exec {
             commandLine 'git', 'describe', '--tags', '--always', '--dirty'
-            // Not a failure of the build - just no version to read here.
             ignoreExitValue = true
         }
         if (git.result.get().exitValue != 0) {
@@ -94,7 +89,6 @@ def describedVersion = {
         def described = git.standardOutput.asText.get().trim()
         return described.isEmpty() ? null : described.replaceFirst(/^v/, '')
     } catch (Exception ignored) {
-        // git is not installed at all.
         return null
     }
 }
@@ -128,6 +122,13 @@ test {
     failOnNoDiscoveredTests = false
     exclude '**/AngularTemplateApplicationTests.class'
     jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}", "-Dnet.bytebuddy.experimental=true"
+    ['posting.url', 'gotenberg.url', 'ollama.url', 'ollama.model',
+     'llm.connect-timeout-seconds', 'llm.read-timeout-seconds', 'llm.max-output-tokens'].each { key ->
+        def value = providers.systemProperty(key)
+        if (value.present) {
+            systemProperty key, value.get()
+        }
+    }
 }
 
 def frontendDir = "$projectDir/AppClient"

@@ -129,4 +129,31 @@ class PostingPdfTextExtractorTest {
                 .isInstanceOf(ApiException.BadRequest.class)
                 .hasMessageContaining("larger than 10 MB");
     }
+
+    /**
+     * The one case that needs a checked-in fixture rather than a PDF built here:
+     * a real consent overlay lying across the posting, which is not something
+     * PDFBox's own drawing API reproduces convincingly.
+     *
+     * <p>{@code postings/ofd-bw-render.pdf} is Gotenberg's EXTRACTION render of
+     * the ofd-bw.fv-bwl.de Teamleitung posting. Its banner covers the line
+     * carrying the work location, and under position-sorted extraction the two
+     * merged into "SDiteasen Sdeoitret v: eKrwaernlsdreut heC; ..." - so the
+     * posting's location silently disappeared and the import returned null for
+     * it. This is the regression guard for that.
+     */
+    @Test
+    void overlaidLinesStayIntact() throws IOException {
+        byte[] render;
+        try (var in = getClass().getClassLoader().getResourceAsStream("postings/ofd-bw-render.pdf")) {
+            render = in.readAllBytes();
+        }
+
+        String text = extractor.extract(render);
+
+        assertThat(text).contains("Standort: Karlsruhe; Vollzeit / Teilzeit");
+        // The banner is still in the text - it is not removed here, only kept
+        // out of the posting's own lines.
+        assertThat(text).contains("Cookies");
+    }
 }

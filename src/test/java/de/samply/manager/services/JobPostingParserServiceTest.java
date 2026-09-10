@@ -27,7 +27,7 @@ class JobPostingParserServiceTest {
         public <T> T extract(String postingText, LlmExtractionSpec<T> spec) {
             throw new AssertionError("LLM client called for a rejected URL");
         }
-    }, messages(), pdfExtractor(), urlGuard(), refusingRenderer());
+    }, messages(), pdfExtractor(), urlGuard(), refusingRenderer(), new ImportDiagnostics());
 
     private static PostingPdfTextExtractor pdfExtractor() {
         return new PostingPdfTextExtractor(messages());
@@ -115,7 +115,7 @@ class JobPostingParserServiceTest {
     @Test
     void extractsFromPastedTextWithoutFetchingAnything() {
         RecordingLlmClient llm = new RecordingLlmClient();
-        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard(), refusingRenderer());
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard(), refusingRenderer(), new ImportDiagnostics());
         String posting = "Wir suchen eine Plattform-Architektin (m/w/d) fuer unser Team in Leipzig. "
                 + "Zu den Aufgaben gehoert der Betrieb der internen Entwicklungsplattform.";
 
@@ -127,7 +127,7 @@ class JobPostingParserServiceTest {
     @Test
     void pastedTextIsStrippedBeforeItReachesTheModel() {
         RecordingLlmClient llm = new RecordingLlmClient();
-        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard(), refusingRenderer());
+        JobPostingParserService textService = new JobPostingParserService(llm, messages(), pdfExtractor(), urlGuard(), refusingRenderer(), new ImportDiagnostics());
         String posting = "Plattform Architekt gesucht in Vollzeit, unbefristet, mit Erfahrung in "
                 + "Kubernetes und Continuous Delivery. Bewerbungen jederzeit willkommen.";
 
@@ -166,7 +166,7 @@ class JobPostingParserServiceTest {
     void fallsBackToThePlainFetchWhenGotenbergIsUnreachable() {
         RecordingLlmClient llm = new RecordingLlmClient();
         JobPostingParserService service = new JobPostingParserService(
-                llm, messages(), pdfExtractor(), urlGuard(), unreachableRenderer());
+                llm, messages(), pdfExtractor(), urlGuard(), unreachableRenderer(), new ImportDiagnostics());
 
         // The fetch that follows fails too - nothing is listening - but it must
         // fail as a *fetch*, which is what proves the fallback was taken rather
@@ -179,7 +179,7 @@ class JobPostingParserServiceTest {
     @Test
     void aPageThatRenderedWithNoPostingSaysSoInsteadOfTalkingAboutAFile() {
         JobPostingParserService service = new JobPostingParserService(
-                new RecordingLlmClient(), messages(), pdfExtractor(), urlGuard(), emptyPageRenderer());
+                new RecordingLlmClient(), messages(), pdfExtractor(), urlGuard(), emptyPageRenderer(), new ImportDiagnostics());
 
         assertThatThrownBy(() -> service.overview("https://example.com/job", "user-1"))
                 .isInstanceOf(ApiException.BadRequest.class)

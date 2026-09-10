@@ -1,5 +1,6 @@
 package de.samply.manager.coverletter;
 
+import de.samply.manager.testing.DevServices;
 import de.samply.manager.types.Language;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -10,12 +11,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.web.client.RestClient;
@@ -34,8 +31,7 @@ import org.springframework.web.client.RestClient;
  */
 class Din5008PdfGeometryTest {
 
-    private static final String GOTENBERG_URL =
-            System.getProperty("gotenberg.url", System.getenv().getOrDefault("GOTENBERG_URL", "http://localhost:3000"));
+    private static final String GOTENBERG_URL = DevServices.gotenbergUrl();
 
     private static final double MM_PER_POINT = 25.4 / 72.0;
     /** A baseline sits below the top of its line box; 6 mm covers a 16 pt line. */
@@ -46,7 +42,7 @@ class Din5008PdfGeometryTest {
 
     @BeforeAll
     static void renderLetter() throws IOException {
-        Assumptions.assumeTrue(gotenbergReachable(), "Gotenberg not reachable at " + GOTENBERG_URL);
+        Assumptions.assumeTrue(DevServices.gotenbergReachable(), "Gotenberg not reachable at " + GOTENBERG_URL);
 
         CoverLetterModel letter = CoverLetterFixtures.assembler().assemble(
                 CoverLetterFixtures.template(List.of(
@@ -132,16 +128,5 @@ class Din5008PdfGeometryTest {
             stripper.getText(document);
         }
         return lines;
-    }
-
-    private static boolean gotenbergReachable() {
-        URI uri = URI.create(GOTENBERG_URL);
-        int port = uri.getPort() > 0 ? uri.getPort() : 80;
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(Optional.ofNullable(uri.getHost()).orElse("localhost"), port), 500);
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
     }
 }

@@ -24,6 +24,17 @@ reliable than it is.
 - Release process: `CHANGELOG.md`, `./release.sh`, and a workflow that builds
   and publishes the container image to `ghcr.io` when a `v*` tag is pushed.
 
+### Removed
+
+- `POST /api/posting/extractors/test`, which reported each extractor tier's raw
+  output for a URL, is no longer part of the deployed application. It was a
+  manual development tool that no part of the frontend called, and it reached
+  the same fetch `/full-chain` performs — so nothing that could be learned from
+  it is now out of reach for an authenticated session. The tier-by-tier view it
+  provided moved to a fixture harness in the test sources, which additionally
+  covers the case the endpoint never could: a board like Indeed that answers 403
+  to any server, whose page has to come from a browser regardless.
+
 ### Changed
 
 - Importing a posting from a URL now reads the page as a browser renders it.
@@ -54,6 +65,19 @@ reliable than it is.
 
 ### Fixed
 
+- A failed extraction says which failure it was. Every transport error from
+  either model provider was reported as "extraction service unavailable" with
+  the cause discarded, so a read timeout, a refused connection and the model
+  answering an error were indistinguishable — and none of them reached a log,
+  because only unhandled exceptions were logged. Timeouts and upstream errors
+  now have their own messages, the cause is kept (which is what lets
+  `FailureCategory` classify a timeout as one), a 5xx is logged with it, and a
+  failed model call is recorded in the import diagnostics under
+  `LLM_SERVICE_UNAVAILABLE`.
+- The Azure extraction client had no connect or read timeout at all, so an
+  endpoint that accepted the connection and never answered held the request open
+  indefinitely. Both providers now read `job-posting.parser.connect-timeout-seconds`
+  and `read-timeout-seconds`, as the Gotenberg client already did.
 - SSRF hardening. The URL validator that guarded job posting fetches existed in
   two identical copies; it is now one `OutboundUrlGuard`, used by the parser, the
   snapshot service and the Oracle HCM extractor (which previously concatenated an

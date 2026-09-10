@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /** Prompt text and output guards shared by every JobPostingLlmClient implementation. */
@@ -66,6 +68,40 @@ final class JobPostingLlmPrompt {
     static String truncate(String value, int maxLength) {
         if (value == null || value.isBlank()) return null;
         return value.length() > maxLength ? value.substring(0, maxLength) : value;
+    }
+
+    /**
+     * Nulls any value outside a field's allowed set.
+     *
+     * <p>A German posting invites "weiblich" where the schema says FEMALE. The
+     * grammar should make that impossible, so this is a second line rather than
+     * the first - but Jackson's failure mode is what makes it worth having:
+     * mapping the record rejects the <em>whole object</em> over one bad value,
+     * discarding the four fields the model read correctly. Null is what the
+     * schema offered for "not stated" anyway, and the form leaves a null alone.
+     */
+    static JsonNode coerceEnums(JsonNode node, Map<String, Object> properties) {
+        if (!(node instanceof ObjectNode object)) {
+            return node;
+        }
+        properties.forEach((field, definition) -> allowedValues(definition).ifPresent(allowed -> {
+            JsonNode value = object.get(field);
+            if (value != null && value.isTextual() && !allowed.contains(value.asText())) {
+                object.putNull(field);
+            }
+        }));
+        return object;
+    }
+
+    /** The {@code enum} member of a schema fragment, minus the null the schema adds. */
+    private static Optional<List<String>> allowedValues(Object definition) {
+        if (!(definition instanceof Map<?, ?> fragment) || !(fragment.get("enum") instanceof List<?> values)) {
+            return Optional.empty();
+        }
+        return Optional.of(values.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .toList());
     }
 
     private JobPostingLlmPrompt() {

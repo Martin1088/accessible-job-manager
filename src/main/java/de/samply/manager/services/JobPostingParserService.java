@@ -3,6 +3,8 @@ package de.samply.manager.services;
 import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.PostingPdfTextExtractor;
+import de.samply.manager.jobimport.diagnostics.FailureCategory;
+import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
 import de.samply.manager.jobimport.render.PostingRenderer;
 import de.samply.manager.jobimport.render.RenderProfile;
@@ -23,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 /**
  * Reads a job posting from a user-supplied URL and hands its visible text to a
@@ -51,17 +54,20 @@ public class JobPostingParserService {
     private final PostingPdfTextExtractor pdfTextExtractor;
     private final OutboundUrlGuard urlGuard;
     private final PostingRenderer renderer;
+    private final ImportDiagnostics diagnostics;
 
     public JobPostingParserService(JobPostingLlmClient llmClient,
                                    MessageSource messageSource,
                                    PostingPdfTextExtractor pdfTextExtractor,
                                    OutboundUrlGuard urlGuard,
-                                   PostingRenderer renderer) {
+                                   PostingRenderer renderer,
+                                   ImportDiagnostics diagnostics) {
         this.llmClient = llmClient;
         this.messageSource = messageSource;
         this.pdfTextExtractor = pdfTextExtractor;
         this.urlGuard = urlGuard;
         this.renderer = renderer;
+        this.diagnostics = diagnostics;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -70,6 +76,25 @@ public class JobPostingParserService {
 
     /** Resolved URL (post-redirects) plus the raw HTML fetched from it. */
     public record FetchedPage(URI url, String html) {}
+
+    /**
+     * Runs the model call and writes a diagnostics line if it failed.
+     *
+     * <p>The client sees only text and cannot name the host, so the recording
+     * happens here, where the URL is - the same division
+     * {@code JobPostingImportService.attempt} uses. The category is
+     * {@link FailureCategory#LLM_SERVICE_UNAVAILABLE} whatever the model did,
+     * because none of it is the posting host's doing; the upstream status
+     * distinguishes the cases within that column.
+     */
+    private JobPostingExtraction recordingLlmFailure(String url, Supplier<JobPostingExtraction> extraction) {
+        try {
+            return extraction.get();
+        } catch (ApiException.BadGateway e) {
+            diagnostics.record(url, FailureCategory.LLM_SERVICE_UNAVAILABLE, e.getUpstreamStatus());
+            throw e;
+        }
+    }
 
     /**
      * The posting's key fields, read by the model from the page as a browser
@@ -101,11 +126,18 @@ public class JobPostingParserService {
             // Gotenberg unreachable - our outage, not the posting's. A page that
             // needed a browser will fail on the GET too, but a plain one imports
             // fine, and most postings are plain.
-            return llmClient.extract(visibleText(fetchHtml(urlGuard.validate(rawUrl))));
+            // The fetch stays outside recordingLlmFailure: an unreachable posting
+            // is also a BadGateway, and recording it as a model failure would
+            // blame our own infrastructure for the host's.
+            String fetched = visibleText(fetchHtml(urlGuard.validate(rawUrl)));
+            return recordingLlmFailure(rawUrl, () -> llmClient.extract(fetched));
         }
 
         try {
-            return overviewFromPdf(rendered);
+            // Inlines overviewFromPdf so only the model call is wrapped - the
+            // text extraction throws BadRequest, which belongs to the catch below.
+            String text = pdfTextExtractor.extract(rendered);
+            return recordingLlmFailure(rawUrl, () -> overviewFromText(text));
         } catch (ApiException.BadRequest e) {
             // The page rendered but carried no readable posting - a consent wall
             // or a login screen printed instead of an ad. The length rules stay

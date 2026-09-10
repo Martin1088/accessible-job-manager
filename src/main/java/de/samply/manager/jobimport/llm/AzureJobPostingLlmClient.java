@@ -7,11 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,20 +33,35 @@ public class AzureJobPostingLlmClient implements JobPostingLlmClient {
     private final String deployment;
     private final String apiVersion;
     private final String apiKey;
+    private final int readTimeoutSeconds;
 
     public AzureJobPostingLlmClient(@Value("${job-posting.parser.azure.endpoint}") String endpoint,
                                      @Value("${job-posting.parser.azure.deployment}") String deployment,
                                      @Value("${job-posting.parser.azure.api-version}") String apiVersion,
                                      @Value("${job-posting.parser.azure.api-key}") String apiKey,
+                                     @Value("${job-posting.parser.connect-timeout-seconds:5}") int connectTimeoutSeconds,
+                                     @Value("${job-posting.parser.read-timeout-seconds:120}") int readTimeoutSeconds,
                                      ObjectMapper objectMapper,
                                      MessageSource messageSource) {
         this.endpoint = endpoint.replaceAll("/+$", "");
         this.deployment = deployment;
         this.apiVersion = apiVersion;
         this.apiKey = apiKey;
+        this.readTimeoutSeconds = readTimeoutSeconds;
         this.objectMapper = objectMapper;
         this.messageSource = messageSource;
-        this.restClient = RestClient.builder().build();
+
+        // Was RestClient.builder().build(), which takes the JDK default request
+        // factory and therefore has no connect or read timeout at all - the same
+        // omission GotenbergClientConfig exists to fix. An Azure endpoint that
+        // accepts the connection and then never answers held the request open
+        // indefinitely.
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofSeconds(readTimeoutSeconds));
+        this.restClient = RestClient.builder().requestFactory(requestFactory).build();
     }
 
     @Override
@@ -84,7 +102,7 @@ public class AzureJobPostingLlmClient implements JobPostingLlmClient {
                     .retrieve()
                     .body(String.class);
         } catch (RestClientException e) {
-            throw new ApiException.BadGateway(message("error.llm.unavailable"));
+            throw LlmFailures.translate(e, messageSource, readTimeoutSeconds);
         }
 
         try {

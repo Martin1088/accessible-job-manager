@@ -164,6 +164,72 @@ The build is configured with `-Dnet.bytebuddy.experimental=true` and the Mockito
 
 `oidcLogin()` sets authorities directly and so bypasses the authorities mapper. To exercise the group-name-to-role translation together with the `hasRole` checks, import the real `GroupsGrantedAuthoritiesMapper` and run the claim through it to build the authorities — `RenamedGroupAuthorizationTest` does this, and is the regression guard for a deployment that renames its IdP groups.
 
+### Job posting fixtures
+
+`ExtractionFixtureTest` runs the whole extractor chain over saved postings in
+`src/test/resources/postings/` and writes each run's tier-by-tier report to
+`build/reports/postings/<name>.txt`. A fixture is two files — `<name>.html` (the
+page, saved from a browser) and `<name>.properties`, which must set `url=` and
+may add `boardHint=` and any number of `expect.<field>=` assertions.
+
+```bash
+./gradlew test --tests "*ExtractionFixtureTest"
+```
+
+The URL is not decoration: Jsoup resolves links against it, the ATS tier
+dispatches on its host, and several heuristics read the path — a fixture run
+against the wrong URL is not the extraction the server would have performed.
+A fixture with no `expect.*` keys is reported but not asserted, which is the
+state a posting is in while its parse is still being worked on; adding the keys
+is what turns a fixed parse into a guarded one.
+
+This replaced `POST /api/posting/extractors/test`, a debug endpoint that shipped
+in the production artifact. **Do not reintroduce a live-URL debug endpoint for
+this.** The pipeline is a pure function of a parsed `Document`, so it needs no
+server to exercise, and the boards worth debugging are the ones a server cannot
+fetch — `JobPostingParserService.upstreamFailure` documents Indeed answering 403
+to every request from a server, so a live-URL run against one could only ever
+show its own 502.
+
+The ATS tier is constructed with **no adapters**. Ashby, Personio, OracleHCM and
+Comeet each hold a `RestClient` and call the board's API, which a fixture run
+must not do; that tier's coverage lives in `ComeetAdapterTest` via
+`MockRestServiceServer`. Every other tier is a pure function of the document, so
+the harness touches no network.
+
+### Live probe for the `/overview` path
+
+`LiveOverviewProbeTest` runs the real `/overview` chain against a live URL and
+writes the result to `build/reports/postings/live-overview.txt`:
+
+```bash
+./gradlew test --tests "*LiveOverviewProbeTest" -Dposting.url=https://…
+```
+
+Opt-in — without `-Dposting.url` it skips, so a normal `./gradlew test` makes no
+outbound request. It skips again if Gotenberg is down, and reports the LLM half
+as skipped if Ollama is down, so the render is never lost to a missing model.
+
+**It shows the LLM result, not a tier report.** Gotenberg returns a PDF and only
+`PDFTextStripper` text is read back, so the JSON-LD and microdata tiers cannot
+run on it — that is why `full-chain` still fetches HTML itself. For the tier
+chain use the fixture harness above.
+
+An upstream `401`/`403`/`429` is reported as *the board refusing this host*
+rather than a pipeline failure, because that is a real and common outcome:
+Indeed answers `403` to Gotenberg's Chromium exactly as it does to the plain
+`HttpClient`, including for its own homepage, and from a datacenter IP a browser
+User-Agent only changes the refusal to `401`. The supported route for such a
+board is a printed PDF through `/overview-pdf`.
+
+`DevServices` (`src/test/java/de/samply/manager/testing/`) resolves the dev
+service URLs and holds the shared TCP reachability probe that decides these
+skips — `Din5008PdfGeometryTest` and `CoverLetterPdfUaTest` now use it too,
+where each previously carried its own copy. `build.gradle`'s `test` block
+forwards `posting.url`, `gotenberg.url`, `ollama.url` and `ollama.model` into
+the test JVM; without that forwarding a `-D` on the Gradle command line reaches
+the daemon and never the tests.
+
 ## Automated accessibility checks
 
 Three layers, each answering a question the one below it cannot:

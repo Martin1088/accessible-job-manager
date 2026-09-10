@@ -52,6 +52,14 @@ public enum FailureCategory {
      */
     PDF_SERVICE_UNAVAILABLE,
 
+    /**
+     * The extraction model was unreachable, too slow, or answered with an error.
+     * Kept apart from the host-oriented categories for the same reason as
+     * {@link #PDF_SERVICE_UNAVAILABLE}: it says nothing about the posting's host,
+     * and folding it in would put innocent hosts on the adapter work list.
+     */
+    LLM_SERVICE_UNAVAILABLE,
+
     /** The URL never passed validation (malformed, wrong scheme, private address). Noise. */
     INVALID_URL,
 

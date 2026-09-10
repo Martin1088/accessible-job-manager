@@ -4,7 +4,6 @@ import de.samply.manager.dto.DocumentDto;
 import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.dto.PostingTextRequest;
 import de.samply.manager.dto.UpdateDocumentRequest;
-import de.samply.manager.jobimport.extractor.ExtractionDebugReport;
 import de.samply.manager.jobimport.extractor.JobPosting;
 import de.samply.manager.types.Language;
 import de.samply.manager.services.JobPostingImportService;
@@ -80,19 +79,6 @@ public class JobPostingParserController {
 
         return DocumentDto.from(jobPostingSnapshotService.saveUploaded(
                 file.getBytes(), file.getOriginalFilename(), companyPositionId, label, language, user.getSubject()));
-    }
-
-    /**
-     * Runs every FieldExtractor tier (JSON-LD, ATS-API, contact) against the
-     * given URL and reports each tier's raw output alongside the merged
-     * result - for manually testing/comparing the extractors against a real
-     * posting, without digging through logs.
-     */
-    @PostMapping("/extractors/test")
-    public ExtractionDebugReport testExtractors(
-            @RequestParam("url") String url,
-            @RequestParam(value = "boardHint", required = false) String boardHint) {
-        return jobPostingImportService.extractDebug(url, boardHint);
     }
 
     /**

@@ -1,5 +1,6 @@
 package de.samply.manager.coverletter;
 
+import de.samply.manager.testing.DevServices;
 import de.samply.manager.types.Language;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,10 +14,6 @@ import org.verapdf.pdfa.results.TestAssertion;
 import org.verapdf.pdfa.results.ValidationResult;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.URI;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,14 +38,13 @@ import org.springframework.web.client.RestClient;
  */
 class CoverLetterPdfUaTest {
 
-    private static final String GOTENBERG_URL =
-            System.getProperty("gotenberg.url", System.getenv().getOrDefault("GOTENBERG_URL", "http://localhost:3000"));
+    private static final String GOTENBERG_URL = DevServices.gotenbergUrl();
 
     private static byte[] pdf;
 
     @BeforeAll
     static void renderLetter() {
-        Assumptions.assumeTrue(gotenbergReachable(), "Gotenberg not reachable at " + GOTENBERG_URL);
+        Assumptions.assumeTrue(DevServices.gotenbergReachable(), "Gotenberg not reachable at " + GOTENBERG_URL);
         VeraGreenfieldFoundryProvider.initialise();
 
         CoverLetterModel letter = CoverLetterFixtures.assembler().assemble(
@@ -105,14 +101,4 @@ class CoverLetterPdfUaTest {
                 .orElse("  no failed assertions reported");
     }
 
-    private static boolean gotenbergReachable() {
-        try (Socket socket = new Socket()) {
-            URI uri = URI.create(GOTENBERG_URL);
-            int port = uri.getPort() == -1 ? 80 : uri.getPort();
-            socket.connect(new InetSocketAddress(uri.getHost(), port), 500);
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
 }

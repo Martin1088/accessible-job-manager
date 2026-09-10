@@ -116,6 +116,16 @@ public abstract class ApiException extends RuntimeException {
         public BadGateway(String message, Throwable cause) {
             super(HttpStatus.BAD_GATEWAY, message, null, cause);
         }
+
+        /**
+         * Both at once: an upstream that answered with a status, reported by an
+         * exception worth keeping. Needed wherever the status is the message's
+         * argument and the cause is what tells a timeout from a refusal - see
+         * {@code FailureCategory.of}, which reads each for a different decision.
+         */
+        public BadGateway(String message, Integer upstreamStatus, Throwable cause) {
+            super(HttpStatus.BAD_GATEWAY, message, upstreamStatus, cause);
+        }
     }
 
     public static final class ServiceUnavailable extends ApiException {

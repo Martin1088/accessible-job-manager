@@ -64,6 +64,19 @@ job-posting:
     provider: ${JOB_POSTING_LLM_PROVIDER:ollama}
     ollama-url: ${OLLAMA_URL:http://localhost:11434}
     model: ${OLLAMA_MODEL:qwen2.5:3b}
+    # Both providers, previously hardcoded (and absent entirely on the Azure
+    # client, which had no timeout at all). A local CPU model is the slow case:
+    # a 3B model answers a full posting in tens of seconds, so 120s is headroom
+    # rather than a budget - if it is being hit, something is wrong upstream and
+    # raising it only hides that.
+    connect-timeout-seconds: ${LLM_CONNECT_TIMEOUT_SECONDS:5}
+    read-timeout-seconds: ${LLM_READ_TIMEOUT_SECONDS:120}
+    # Caps how long one answer may run. Not tuning - a stop condition. A JSON
+    # string has no natural end, so a grammar cannot let the model emit EOS
+    # mid-value, and a model unsure of a field pads it instead of closing it.
+    # Uncapped, one posting ran past 420s; capped, the same request answered in
+    # 14s. 300 tokens is several times the largest legitimate answer here.
+    max-output-tokens: ${LLM_MAX_OUTPUT_TOKENS:300}
     azure:
       endpoint: ${AZURE_OPENAI_ENDPOINT:}
       deployment: ${AZURE_OPENAI_DEPLOYMENT:}
