@@ -6,6 +6,22 @@ export type ApplicationMethod = 'EMAIL' | 'WEB_FORM' | 'UNKNOWN';
 /** Language the application for a position should be written in. */
 export type Language = 'GERMAN' | 'ENGLISH' | 'DUTCH';
 
+const UI_TO_LANGUAGE: Record<string, Language> = {
+  de: 'GERMAN',
+  en: 'ENGLISH',
+  nl: 'DUTCH',
+};
+
+/**
+ * The apply language matching a UI language code, for defaulting a new
+ * position's language field to the one the user is already reading in. Only a
+ * default - applying in a language other than the interface's is the point of
+ * this field.
+ */
+export function uiToApplyLanguage(uiLang: string | null | undefined): Language {
+  return UI_TO_LANGUAGE[uiLang ?? ''] ?? 'ENGLISH';
+}
+
 export interface CompanyLocation {
   id?: number;
   street: string;

@@ -148,7 +148,8 @@
             </div>
             <div>
               <label [for]="'contactGender-' + i">{{ 'COMPANIES.CONTACT_GENDER' | translate }}</label>
-              <select [id]="'contactGender-' + i" [(ngModel)]="pos.contactGender" [name]="'contactGender-' + i">
+              <select [id]="'contactGender-' + i" [ngModel]="pos.contactGender ?? ''"
+                      (ngModelChange)="pos.contactGender = $event || null" [name]="'contactGender-' + i">
                 <option value="">{{ 'COMPANIES.SELECT_PLACEHOLDER' | translate }}</option>
                 @for (g of genderOptions; track g) {
                   <option [value]="g.value">{{ g.label | translate }}</option>

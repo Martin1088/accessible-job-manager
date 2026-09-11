@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, computed, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
+import { Company, CompanyLocation, CompanyPosition, uiToApplyLanguage } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { SuggestionService } from '../../services/suggestion.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,6 +10,7 @@ import { Observable, finalize } from 'rxjs';
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { JobPostingImportStore } from '../../services/job-posting-import.store';
+import { LanguageService } from '../../core/language.service';
 import { containsName, isSameName, nameKeys } from './company-name-match';
 
 /** One already-saved company offered to the user, with its sites named. */
@@ -198,6 +199,7 @@ export class CompanyFormComponent implements OnInit {
     private translate: TranslateService,
     private http: HttpClient,
     private importStore: JobPostingImportStore,
+    private language: LanguageService,
   ) {
     this.basePath = this.route.snapshot.data?.['companyBasePath'] ?? '/companies';
   }
@@ -373,7 +375,7 @@ export class CompanyFormComponent implements OnInit {
   }
 
   addPosition(): void {
-    this.company.positions.push({ title: '' });
+    this.company.positions.push({ title: '', applyLanguage: uiToApplyLanguage(this.language.current()) });
   }
 
   removePosition(index: number): void {
