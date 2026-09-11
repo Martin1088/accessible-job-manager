@@ -21,8 +21,13 @@ reliable than it is.
   for Chromium, Gotenberg unreachable), the importer now says so and offers to
   attach a printed PDF, which is filed with the company as the posting record —
   previously that copy failed silently at company-creation time.
-- Release process: `CHANGELOG.md`, `./release.sh`, and a workflow that builds
-  and publishes the container image to `ghcr.io` when a `v*` tag is pushed.
+- Optional encryption at rest for the S3/Garage document store (SSE-C). With
+  `S3_SSE_C_MODE=sse-c` and a 32-byte `S3_SSE_C_KEY`, Garage stores every
+  document encrypted under a key it does not keep, so losing the key loses the
+  documents. Off by default, and switching it on does not convert what is
+  already in the bucket — those objects become unreadable. A missing or
+  malformed key fails startup rather than the first upload. S3/Garage only; the
+  `azure` provider is unaffected.
 
 ### Removed
 

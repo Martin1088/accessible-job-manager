@@ -23,13 +23,15 @@ public class GarageStorageService implements StorageService{
     private final S3Client s3Client;
     private final S3Presigner presigner;
     private final S3Properties props;
+    private final SseCustomerKey sseCustomerKey;
 
     @Override
     public InputStream download(String key) {
         return s3Client.getObject(
-                GetObjectRequest.builder()
-                        .bucket(props.bucket())
-                        .key(key)
+                sseCustomerKey.applyTo(
+                                GetObjectRequest.builder()
+                                        .bucket(props.bucket())
+                                        .key(key))
                         .build()
         );
     }
@@ -37,9 +39,10 @@ public class GarageStorageService implements StorageService{
     @Override
     public String upload(String key, InputStream data, long contentLength, String contentType) {
         s3Client.putObject(
-                PutObjectRequest.builder()
-                        .bucket(props.bucket()).key(key)
-                        .contentType(contentType).contentLength(contentLength)
+                sseCustomerKey.applyTo(
+                                PutObjectRequest.builder()
+                                        .bucket(props.bucket()).key(key)
+                                        .contentType(contentType).contentLength(contentLength))
                         .build(),
                 RequestBody.fromInputStream(data, contentLength));
         return key;
@@ -47,6 +50,10 @@ public class GarageStorageService implements StorageService{
 
     @Override
     public URI presignedGet(String key, Duration ttl) {
+        if (sseCustomerKey.isPresent()) {
+            throw new UnsupportedOperationException(
+                    "A presigned GET cannot carry the SSE-C key: the browser would have to send it.");
+        }
         return presigner.presignGetObject(
                 GetObjectPresignRequest.builder()
                         .signatureDuration(ttl)

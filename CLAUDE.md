@@ -90,11 +90,26 @@ Unauthenticated `text/html` requests are redirected to OAuth; API requests recei
 
 `DocumentAccess` entity stores `(documentId, reviewerSubject)` pairs. Users grant reviewers access via `POST /api/documents/{id}/access`. `ReviewerController` queries `DocumentAccess` to build a grouped view of users who have shared documents with the caller.
 
+### Object storage
+
+Two providers sit behind the `StorageService` interface, selected by `storage.provider`: `GarageStorageService` (S3 via AWS SDK v2, the default) and `AzureBlobStorageService`. Object keys are `{userId}/{type_lowercase}/{uuid}.{ext}`, so the owning subject is in the key prefix.
+
+**Every read goes through the backend.** `DocumentService.bytes`, `ReviewerController`, `JobPostingSnapshotService` and `WordLetterTemplateService` all stream the object through the application, which is what enforces the ownership and `DocumentAccess` checks — a presigned URL would bypass exactly the check the sharing model rests on. `StorageService.presignedGet` has no callers for that reason.
+
+**SSE-C encryption at rest is S3-only and off by default** (`storage.s3.encryption.mode`, `none` or `sse-c`). `SseCustomerKey` is the single place the three `x-amz-server-side-encryption-customer-*` headers are built; it is a null object, so `upload` and `download` carry no conditional and cannot diverge. Rules that are easy to break:
+
+- **The MD5 header is the digest of the raw decoded key bytes, not of the Base64 text.** Both are valid Base64 of 16 bytes, so the mix-up type-checks and only fails against a live Garage. `SseCustomerKeyTest` pins it against fixed vectors.
+- **`delete` takes no key** — `DeleteObjectRequest` has no SSE-C fields at all.
+- **`contentLength` stays the plaintext length.** SSE-C encrypts server-side, so the object is stored and reported at the size sent. Client-side encryption would break that contract, which is why it was not chosen.
+- **`presignedGet` throws when encryption is on.** A browser following the URL cannot send the headers, and signing them in would mean shipping the master key to the browser.
+- **The key is validated at startup** (`S3Properties.Encryption`), so a missing or malformed key fails the boot instead of the first upload — including under `storage.provider=azure`, since `S3Config` is not conditional. `Encryption.toString()` is masked; note that the sibling `secretKey` is not, and that adding `spring-boot-starter-actuator` would expose both through `/actuator/configprops`.
+- **Multipart is not covered.** Every upload today is a single `PutObject` under the 20MB limit; multipart would have to repeat the headers on create, every part, and complete.
+
 ### Cover letter generation
 
 Two providers exist side by side. Both share `CoverLetterLabels` (salutations, subject/greeting prefixes, closing formula) so a contact is greeted identically whichever one is used.
 
-**.docx provider** — `WordCoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `DocumentStorageService`.
+**.docx provider** — `WordCoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `StorageService`.
 
 **HTML provider** (`de.samply.manager.coverletter`, `/api/html/cover-letter`) — Thymeleaf → HTML → Gotenberg (`/forms/chromium/convert/html`). The pipeline is `CoverLetterTemplate` (editable data from the frontend) → `CoverLetterAssembler` → `CoverLetterModel` → `HtmlCoverLetterRenderer` or `TextCoverLetterRenderer`.
 
