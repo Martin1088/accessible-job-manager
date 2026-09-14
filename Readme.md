@@ -144,7 +144,6 @@ automated accessibility gate (axe, pa11y, Lighthouse) in the build yet.
   - **Job posting import** — paste a job posting URL; the backend fetches the page and asks a local Ollama LLM to extract company, position, contact and location fields into a ready-to-review form
   - **Personalized cover letter template** — fill in your name, address and email once to download a `.docx` template pre-filled with your sender details, ready to use as a mail-merge source for future applications
 - **Applications** — table of all job applications with status labels; per-row template dropdown, one-click PDF/Word cover letter download, and a "send as email" button that opens a `mailto:` link pre-filled with subject and body extracted from the generated cover letter
-- **Review queue** — positions that turned up (import, paste flow) wait here instead of joining the catalogue directly. Two actions per row, Accept and Dismiss, each announcing the outcome and how many are left; focus moves to the next row before the acted-on one is removed, so working through the list never loses the reading position
 - **Companies** — manage companies (per-user ownership) with nested locations (street, city, postcode, country) and positions (contact details, gender, email, website)
 - **Documents** — upload cover letter templates (`.docx`) with a custom label; label is editable before upload
 - **User Guide** — role-aware walkthrough of the app's features, linked from the account menu
@@ -227,9 +226,6 @@ work — see [Bootstrapping Garage](docs/local-development.md#bootstrapping-gara
 | POST   | `/api/companies`                                  | USER     | Create company (owned by caller)             |
 | PUT    | `/api/companies/{id}`                             | USER     | Update own company                           |
 | DELETE | `/api/companies/{id}`                             | USER     | Delete own company                           |
-| GET    | `/api/positions/queue`                            | USER     | Positions waiting in the review queue        |
-| POST   | `/api/positions/{id}/accept`                      | USER     | Take a position over; answers `{remaining}`  |
-| POST   | `/api/positions/{id}/dismiss`                     | USER     | Discard a position; answers `{remaining}`    |
 | GET    | `/api/documents`                                  | USER     | List own documents (filter by `?type=`)      |
 | POST   | `/api/documents/upload`                           | USER     | Upload document with label                   |
 | POST   | `/api/documents/{id}/access`                      | USER     | Grant reviewer access to a document          |
@@ -281,6 +277,55 @@ docker compose up -d --build
 ```
 
 Builds the full app (including Angular frontend), starts it behind Traefik and serves at `http://login.localhost`. Gotenberg runs as a sidecar for PDF generation.
+
+### Gotenberg network isolation (required)
+
+Gotenberg is the only service that fetches a URL the user chose. When a job
+posting is archived, the app hands the URL to Gotenberg's Chromium, which
+**resolves and fetches the page itself, from its own container, following its
+own redirects**. The application's own SSRF validation
+(`de.samply.manager.security.OutboundUrlGuard`) runs in the app's network
+vantage point and cannot constrain any of that — a posting URL that redirects to
+`http://postgres:5432` is followed by Chromium, not by us.
+
+So the containment is network-side, and it is a deployment requirement rather
+than a nicety:
+
+- **Gotenberg runs with `--chromium-deny-private-ips`.** This is the one control
+  that sits *inside* the process doing the fetching, so it applies to every
+  redirect hop rather than only to the address the user submitted. It rejects
+  loopback, RFC 1918, link-local and IPv6 unique-local. It does not replace
+  `OutboundUrlGuard`: the guard additionally refuses CGNAT `100.64.0.0/10`,
+  `198.18.0.0/15`, `192.0.0.0/24` and `0.0.0.0/8`, which this flag does not
+  cover. The two are complementary and both are wanted.
+  - Deliberately **not** `--chromium-deny-list`. That flag ships a non-empty
+    default (`^file:(?!//\/tmp/).*`) which is what blocks `file://` reads;
+    setting your own value without carrying that pattern over silently
+    re-enables local file access.
+- **`dev/docker-compose.yml` puts Gotenberg on its own `render` network**, shared
+  only with the app. It cannot resolve or reach `postgres`, `garage`, `traefik`,
+  `error-pages`, or the Authentik stack in `dev/authentik.yml`. Keep it that way
+  when adding services: a new service belongs on `web`, not `render`.
+- **Never give the Gotenberg container `extra_hosts: host.docker.internal:host-gateway`.**
+  The app has it (for the OIDC issuer); Gotenberg having it would hand Chromium a
+  route back to the host.
+- **In production, add egress filtering anyway.** Gotenberg needs outbound
+  internet access to fetch postings at all, so neither Compose networks nor the
+  deny-private-ips flag finishes the job — the flag is Chromium refusing to
+  follow a link, not the network refusing to carry it, and it does nothing about
+  a compromised container.
+  Deny egress from the Gotenberg container to:
+  `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` (RFC 1918), `100.64.0.0/10`
+  (CGNAT), `169.254.0.0/16` (link-local, including the `169.254.169.254` cloud
+  metadata endpoint), `127.0.0.0/8`, and `fc00::/7` (IPv6 ULA). A Kubernetes
+  `NetworkPolicy` with an `ipBlock` `except:` list, a Docker user-defined bridge
+  plus `iptables -I DOCKER-USER`, or the cloud provider's own egress rules all
+  work; pick whichever the platform gives you.
+
+The Azure deployment below already meets the spirit of this — its Gotenberg
+Container App is internal-only, and passes the same flags. The Compose stack now
+matches it. Azure still has no egress rules of its own, so on that deployment the
+flag is the only address-level control there is.
 
 ### Azure Deployment
 

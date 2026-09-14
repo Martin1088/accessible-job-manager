@@ -41,6 +41,7 @@ services:
       - "traefik.http.services.login.loadbalancer.server.port=8060"
     networks:
       - web
+      - render
 
   error-pages:
     image: nginx:alpine
@@ -67,14 +68,43 @@ services:
     networks:
       - web
 
+  # Gotenberg is the one service that fetches attacker-supplied URLs: the job
+  # posting snapshot is rendered by its Chromium, which resolves and fetches the
+  # page itself and follows its own redirects. Nothing the application validates
+  # constrains it, so it is kept off `web` and reachable only from the app over
+  # `render` - it cannot resolve postgres, garage, traefik or the Authentik
+  # stack. It must never be given the app's `extra_hosts: host.docker.internal`
+  # either. Internet egress it still has, by necessity; see the Gotenberg
+  # isolation section in Readme.md for what production has to add on top.
+  #
+  # The published port is host -> container only and adds no network membership;
+  # Din5008PdfGeometryTest and CoverLetterPdfUaTest need it.
   gotenberg:
     image: gotenberg/gotenberg:8
     container_name: gotenberg
     restart: unless-stopped
+    # --chromium-deny-private-ips is the half of the SSRF defence OutboundUrlGuard
+    # structurally cannot cover: the guard checks the address the user submitted,
+    # from the application's vantage point, and then Chromium resolves and
+    # follows redirects on its own. This rejects a private address at every hop,
+    # inside the process that actually connects. It does not replace the guard -
+    # it covers loopback, RFC1918, link-local and unique-local, while the guard
+    # additionally rejects CGNAT 100.64/10, 198.18/15, 192.0.0.0/24 and 0.0.0.0/8.
+    #
+    # Deliberately not --chromium-deny-list: that flag has a non-empty default
+    # (^file:(?!//\/tmp/).*) which is what blocks file:// reads, and setting it
+    # without carrying that pattern over would silently re-enable them.
+    #
+    # --api-timeout is Gotenberg's own default (30s), pinned because the client
+    # read timeout is set relative to it - see gotenberg.read-timeout-seconds.
+    command:
+      - gotenberg
+      - --chromium-deny-private-ips
+      - --api-timeout=30s
     ports:
       - "3000:3000"
     networks:
-      - web
+      - render
 
   garage:
     image: dxflrs/garage:v2.1.0
@@ -106,4 +136,9 @@ services:
       - web
 
 networks:
+  # The data plane: app, proxy, database, object storage.
   web: {}
+  # Rendering only: the app and Gotenberg, nothing else. Splitting these two is
+  # what keeps a job posting URL that redirects to http://postgres:5432 from
+  # being rendered from inside the data plane.
+  render: {}

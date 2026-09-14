@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, computed, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Company, CompanyLocation, CompanyPosition } from '../../model/company';
+import { Company, CompanyLocation, CompanyPosition, uiToApplyLanguage } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { SuggestionService } from '../../services/suggestion.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,6 +10,7 @@ import { Observable, finalize } from 'rxjs';
 
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { JobPostingImportStore } from '../../services/job-posting-import.store';
+import { LanguageService } from '../../core/language.service';
 import { containsName, isSameName, nameKeys } from './company-name-match';
 
 /** One already-saved company offered to the user, with its sites named. */
@@ -49,13 +50,6 @@ export class CompanyFormComponent implements OnInit {
   };
   isEditMode = false;
   companyId?: number;
-
-  /**
-   * The advisor's catalogue, not a user's. Positions filed here skip the review
-   * queue: the queue is the applicant's way of separating what turned up from
-   * what they mean to pursue, and an advisor has no such list to work through.
-   */
-  private isAdvisorContext = false;
   errorMessage = '';
 
   /**
@@ -205,9 +199,9 @@ export class CompanyFormComponent implements OnInit {
     private translate: TranslateService,
     private http: HttpClient,
     private importStore: JobPostingImportStore,
+    private language: LanguageService,
   ) {
     this.basePath = this.route.snapshot.data?.['companyBasePath'] ?? '/companies';
-    this.isAdvisorContext = this.basePath !== '/companies';
   }
 
   ngOnInit(): void {
@@ -381,24 +375,11 @@ export class CompanyFormComponent implements OnInit {
   }
 
   addPosition(): void {
-    this.company.positions.push({ title: '' });
+    this.company.positions.push({ title: '', applyLanguage: uiToApplyLanguage(this.language.current()) });
   }
 
   removePosition(index: number): void {
     this.company.positions.splice(index, 1);
-  }
-
-  /**
-   * What gets posted on create. Only the advisor's side sets a triage state -
-   * everywhere else the server's default applies, which puts a newly found
-   * position into the review queue rather than straight into the catalogue.
-   */
-  private forCreate(): Company {
-    if (!this.isAdvisorContext) return this.company;
-    return {
-      ...this.company,
-      positions: this.company.positions.map(p => ({ ...p, triageState: 'ACCEPTED' as const })),
-    };
   }
 
   save(): void {
@@ -412,7 +393,7 @@ export class CompanyFormComponent implements OnInit {
         }
       });
     } else {
-      this.companyService.create(this.forCreate()).subscribe({
+      this.companyService.create(this.company).subscribe({
         next: (created) => {
           const positionId = created.positions?.[0]?.id;
           // An uploaded PDF is reason enough on its own: the import screen's PDF

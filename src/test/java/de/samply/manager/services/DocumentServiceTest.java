@@ -9,11 +9,15 @@ import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.Language;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
+import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -120,6 +124,40 @@ class DocumentServiceTest {
         verify(shareRepository).deleteAll(any());
         verify(storageService).delete("u1/cv/file.pdf");
         verify(documentRepository).delete(document);
+    }
+
+    // ── upload ───────────────────────────────────────────────────────────────
+
+    @Test
+    void upload_rejectsAFileWhoseBytesAreNotTheDeclaredType_andStoresNothing() {
+        // Content-Type says PDF; the bytes are HTML.
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "cv.pdf", "application/pdf", "<html>gotcha".getBytes(StandardCharsets.UTF_8));
+        when(messageSource.getMessage(eq("error.document.contentMismatch"), any(), eq(Locale.ROOT)))
+                .thenReturn("bad content");
+
+        assertThatThrownBy(() -> service.upload(file, "My CV", DocumentType.CV, Language.ENGLISH, "u1"))
+                .isInstanceOf(ApiException.UnsupportedMediaType.class);
+
+        verifyNoInteractions(storageService);
+        verify(documentRepository, never()).save(any());
+    }
+
+    @Test
+    void upload_sanitisesTheFilename_andStoresTheTypesOwnMime() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "../../etc/pa\"ss.pdf", "application/octet-stream",
+                "%PDF-1.7\nhello".getBytes(StandardCharsets.UTF_8));
+        when(documentRepository.save(any(Document.class))).thenAnswer(call -> call.getArgument(0));
+
+        Document saved = service.upload(file, "My CV", DocumentType.CV, Language.ENGLISH, "u1");
+
+        assertThat(saved.getFilename()).isEqualTo("pa_ss.pdf");
+        assertThat(saved.getMimeType()).isEqualTo("application/pdf");
+
+        ArgumentCaptor<String> mime = ArgumentCaptor.forClass(String.class);
+        verify(storageService).upload(startsWith("u1/cv/"), any(InputStream.class), eq(14L), mime.capture());
+        assertThat(mime.getValue()).isEqualTo("application/pdf");
     }
 
     // ── fixtures ──────────────────────────────────────────────────────────────

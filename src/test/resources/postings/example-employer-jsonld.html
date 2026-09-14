@@ -1,0 +1,70 @@
+<!--
+  Hand-written, not a saved page from any real board.
+
+  It exists so the fixture harness itself is covered: a posting carrying
+  schema.org JSON-LD and a German "Ihr Kontakt" block exercises the JSON-LD
+  tier and the contact tier together, which is the shape most employer career
+  pages have. Real saved postings sit next to it and are what the harness is
+  actually for.
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Senior Java Entwickler (m/w/d) - Beispiel GmbH</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": "Senior Java Entwickler (m/w/d)",
+    "identifier": { "@type": "PropertyValue", "name": "Beispiel GmbH", "value": "BSP-2026-0184" },
+    "datePosted": "2026-08-14",
+    "validThrough": "2026-10-31",
+    "employmentType": "FULL_TIME",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Beispiel GmbH",
+      "sameAs": "https://www.beispiel.example"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Hohenzollernring 42",
+        "addressLocality": "Köln",
+        "postalCode": "50672",
+        "addressCountry": "DE"
+      }
+    }
+  }
+  </script>
+</head>
+<body>
+  <header><a href="/">Beispiel GmbH</a></header>
+  <main>
+    <h1>Senior Java Entwickler (m/w/d)</h1>
+    <p>Standort: Köln &middot; Vollzeit &middot; ab sofort</p>
+
+    <h2>Ihre Aufgaben</h2>
+    <ul>
+      <li>Weiterentwicklung unserer Spring-Boot-Dienste</li>
+      <li>Ablösung eines gewachsenen Monolithen</li>
+      <li>Code-Reviews und fachliche Begleitung neuer Kolleginnen und Kollegen</li>
+    </ul>
+
+    <h2>Ihr Profil</h2>
+    <ul>
+      <li>Mehrjährige Erfahrung mit Java und Spring</li>
+      <li>Sicherer Umgang mit PostgreSQL</li>
+      <li>Sehr gute Deutschkenntnisse</li>
+    </ul>
+
+    <h2>Ihr Kontakt</h2>
+    <p>
+      Fragen zur Stelle beantwortet Ihnen Frau Dr. Annette Vogt gerne vorab
+      unter <a href="mailto:bewerbung@beispiel.example">bewerbung@beispiel.example</a>
+      oder telefonisch unter 0221 1234567.
+    </p>
+  </main>
+  <footer>Beispiel GmbH &middot; Hohenzollernring 42 &middot; 50672 Köln</footer>
+</body>
+</html>

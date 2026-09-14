@@ -4,7 +4,6 @@ import de.samply.manager.dto.CompanyDto;
 import de.samply.manager.dto.CompanyPositionDto;
 import de.samply.manager.jobimport.diagnostics.FailureCategory;
 import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
-import de.samply.manager.jobimport.extractor.ExtractionDebugReport;
 import de.samply.manager.jobimport.extractor.JobPosting;
 import de.samply.manager.jobimport.extractor.JobPostingExtractionPipeline;
 import org.jsoup.Jsoup;
@@ -64,13 +63,6 @@ public class JobPostingImportService {
         return attempt(rawUrl,
                 (page) -> extractionPipeline.run(page.document(), page.plainText(), page.url(), boardHint),
                 Function.identity());
-    }
-
-    /** Debug path: every tier's raw output plus the merged result. */
-    public ExtractionDebugReport extractDebug(String rawUrl, String boardHint) {
-        return attempt(rawUrl,
-                (page) -> extractionPipeline.runDebug(page.document(), page.plainText(), page.url(), boardHint),
-                ExtractionDebugReport::merged);
     }
 
     /**

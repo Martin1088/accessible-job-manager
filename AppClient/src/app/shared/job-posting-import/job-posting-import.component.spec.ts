@@ -4,12 +4,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { ImportedPosting, JobPostingImportComponent } from './job-posting-import.component';
+import { JobPostingImportStore } from '../../services/job-posting-import.store';
 import { expectNoAxeViolations } from '../../../testing/a11y';
 
 describe('JobPostingImportComponent', () => {
   let fixture: ComponentFixture<JobPostingImportComponent>;
   let component: JobPostingImportComponent;
   let http: HttpTestingController;
+  let importStore: JobPostingImportStore;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -24,15 +26,34 @@ describe('JobPostingImportComponent', () => {
     fixture = TestBed.createComponent(JobPostingImportComponent);
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
+    importStore = TestBed.inject(JobPostingImportStore);
     fixture.detectChanges();
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    importStore.clear();
+    http.verify();
+  });
 
   function search(url = 'https://jobs.example.com/42'): void {
     component.jobUrl = url;
     component.searchJobPosting();
   }
+
+  /** A successful extraction fires the post-extraction snapshot probe once. */
+  function flushSnapshotCheck(ok = true): void {
+    const req = http.expectOne(r => r.url === '/api/posting/snapshot-validate');
+    if (ok) {
+      req.flush(new Blob(['%PDF-1.4'], { type: 'application/pdf' }));
+    } else {
+      req.flush(new Blob([JSON.stringify({ message: 'This site does not allow automated access (403).' })]),
+        { status: 502, statusText: 'Bad Gateway' });
+    }
+  }
+
+  // The snapshot probe reads its error body out of a Blob (async), so a couple
+  // of macrotasks have to drain before `snapshotRenderFailure` is set.
+  const flushMicrotasks = () => new Promise(resolve => setTimeout(resolve, 20));
 
   it('runs both extractions in parallel for one URL', () => {
     search();
@@ -42,6 +63,7 @@ describe('JobPostingImportComponent', () => {
     http.expectOne(r => r.url === '/api/posting/full-chain').flush(
       { company: { name: 'MetalBear', locations: [{ city: 'London', street: null }], positions: [{ title: 'Backend Engineer' }] },
         sourceJobId: null, postedAt: null, deadline: null, employmentType: 'Full-time' });
+    flushSnapshotCheck();
 
     expect(component.hasAnyResult).toBeTrue();
   });
@@ -57,6 +79,7 @@ describe('JobPostingImportComponent', () => {
     http.expectOne(r => r.url === '/api/posting/full-chain').flush(
       { company: { name: 'MetalBear', locations: [{ city: 'London', street: 'Hauptstr. 1' }], positions: [{ title: 'Backend Engineer', email: 'jobs@metalbear.co' }] },
         sourceJobId: null, postedAt: null, deadline: null, employmentType: null });
+    flushSnapshotCheck();
 
     component.submit();
 
@@ -101,7 +124,54 @@ describe('JobPostingImportComponent', () => {
     expect(component.selectedSource.name).toBe('overview');
   });
 
+  /**
+   * The page loaded for the parser but Gotenberg could not render it: the
+   * archived snapshot is otherwise dropped silently at company-creation time,
+   * so the importer says so and offers a manual upload.
+   */
+  it('prompts for a manual PDF when the post-extraction snapshot probe fails', async () => {
+    search();
+    http.expectOne(r => r.url === '/api/posting/overview').flush(
+      { title: 'Backend Engineer', company: 'MetalBear', location: 'London', employmentType: 'Full-time' });
+    http.expectOne(r => r.url === '/api/posting/full-chain').flush(
+      { company: { name: 'MetalBear', locations: [], positions: [{ title: 'Backend Engineer' }] },
+        sourceJobId: null, postedAt: null, deadline: null, employmentType: null });
+    flushSnapshotCheck(false);
+    await flushMicrotasks();
+
+    expect(component.snapshotRenderFailure?.kind).toBe('reported');
+    expect(component.snapshotRenderFailure?.message).toContain('automated access');
+  });
+
+  /** The archive upload is not the fallback extractor: it must not touch the fields already parsed. */
+  it('holds an attached archive PDF without re-running extraction', () => {
+    search();
+    http.expectOne(r => r.url === '/api/posting/overview').flush(
+      { title: 'Backend Engineer', company: 'MetalBear', location: 'London', employmentType: 'Full-time' });
+    http.expectOne(r => r.url === '/api/posting/full-chain').flush(
+      { company: { name: 'MetalBear', locations: [], positions: [{ title: 'Backend Engineer' }] },
+        sourceJobId: null, postedAt: null, deadline: null, employmentType: null });
+    flushSnapshotCheck();
+    const file = new File(['%PDF-1.4'], 'posting.pdf', { type: 'application/pdf' });
+
+    component.onArchivePdfSelected({ target: { files: [file], value: '' } } as unknown as Event);
+
+    expect(importStore.hasPending).toBeTrue();
+    expect(component.archivePdfName).toBe('posting.pdf');
+    expect(component.jobPosting?.company).toBe('MetalBear');
+    expect(component.fullChainResult?.company?.name).toBe('MetalBear');
+    http.expectNone('/api/posting/overview-pdf');
+  });
+
   it('has no axe-detectable accessibility violations', async () => {
+    await expectNoAxeViolations(fixture);
+  });
+
+  it('has no axe-detectable accessibility violations with the snapshot-archive panel shown', async () => {
+    component.snapshotRenderFailure = { kind: 'reported', message: 'This job posting could not be found (404).', status: 502 };
+    component.archivePdfName = 'posting.pdf';
+    fixture.detectChanges();
+
     await expectNoAxeViolations(fixture);
   });
 });

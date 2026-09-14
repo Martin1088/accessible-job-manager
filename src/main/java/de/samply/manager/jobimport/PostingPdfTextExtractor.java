@@ -69,7 +69,26 @@ public class PostingPdfTextExtractor {
                 throw new ApiException.BadRequest(message("error.postingPdf.tooManyPages", MAX_PAGES));
             }
             PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setSortByPosition(true);
+            // Content-stream order, not position order, and the difference is
+            // not cosmetic: a consent overlay sits on top of the posting, so
+            // position order merges two lines that share a y-coordinate into
+            // one, character by character. On the ofd-bw.fv-bwl.de posting the
+            // page's "Standort: Karlsruhe; Vollzeit / Teilzeit" and the banner's
+            // "Diese Seite verwendet Cookies..." came out as
+            // "SDiteasen Sdeoitret v: eKrwaernlsdreut heC; ..." - the location
+            // was not merely noisy, it was gone, and every extraction of that
+            // posting returned a null location because of it. Measured over the
+            // same render: sortByPosition(true) yields no "Karlsruhe" anywhere,
+            // sortByPosition(false) yields the line intact and puts the banner
+            // in a block of its own.
+            //
+            // Every PDF reaching this class is browser-produced HTML - Chromium
+            // through Gotenberg, or the user's own print - and a browser emits
+            // text in DOM order, so the content stream already *is* the reading
+            // order. Position sorting is for scanned or typeset documents whose
+            // stream order carries no meaning; here it only has overlaps to get
+            // wrong. See PostingPdfTextExtractorTest#overlaidLinesStayIntact.
+            stripper.setSortByPosition(false);
             text = stripper.getText(document);
         } catch (IOException e) {
             // Cause kept: a truncated upload and a file that is not a PDF at all

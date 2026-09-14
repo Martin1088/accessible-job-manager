@@ -3,7 +3,12 @@ package de.samply.manager.services;
 import de.samply.manager.dto.JobPostingExtraction;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.jobimport.PostingPdfTextExtractor;
+import de.samply.manager.jobimport.diagnostics.FailureCategory;
+import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
 import de.samply.manager.jobimport.llm.JobPostingLlmClient;
+import de.samply.manager.jobimport.render.PostingRenderer;
+import de.samply.manager.jobimport.render.RenderProfile;
+import de.samply.manager.security.OutboundUrlGuard;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,10 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -23,13 +25,18 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 /**
- * Fetches a job posting from a user-supplied URL (with SSRF-safe host
- * validation and redirect handling) and hands the visible text to a
+ * Reads a job posting from a user-supplied URL and hands its visible text to a
  * JobPostingLlmClient to extract the key fields. Which LLM provider is used
  * (Ollama, Azure OpenAI, ...) is decided by job-posting.parser.provider -
  * see de.samply.manager.jobimport.llm.
+ *
+ * <p>{@link #overview} gets that text by printing the page through Chromium;
+ * everything else here still fetches HTML directly, with SSRF-safe host
+ * validation and its own redirect handling. Both paths are kept because they
+ * answer different questions - see the note on {@code overview}.
  */
 @Service
 public class JobPostingParserService {
@@ -45,13 +52,22 @@ public class JobPostingParserService {
     private final HttpClient httpClient;
     private final MessageSource messageSource;
     private final PostingPdfTextExtractor pdfTextExtractor;
+    private final OutboundUrlGuard urlGuard;
+    private final PostingRenderer renderer;
+    private final ImportDiagnostics diagnostics;
 
     public JobPostingParserService(JobPostingLlmClient llmClient,
                                    MessageSource messageSource,
-                                   PostingPdfTextExtractor pdfTextExtractor) {
+                                   PostingPdfTextExtractor pdfTextExtractor,
+                                   OutboundUrlGuard urlGuard,
+                                   PostingRenderer renderer,
+                                   ImportDiagnostics diagnostics) {
         this.llmClient = llmClient;
         this.messageSource = messageSource;
         this.pdfTextExtractor = pdfTextExtractor;
+        this.urlGuard = urlGuard;
+        this.renderer = renderer;
+        this.diagnostics = diagnostics;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -61,10 +77,90 @@ public class JobPostingParserService {
     /** Resolved URL (post-redirects) plus the raw HTML fetched from it. */
     public record FetchedPage(URI url, String html) {}
 
-    public JobPostingExtraction overview(String rawUrl) {
-        URI uri = validate(rawUrl);
-        String text = visibleText(fetchHtml(uri));
-        return llmClient.extract(text);
+    /**
+     * Runs the model call and writes a diagnostics line if it failed.
+     *
+     * <p>The client sees only text and cannot name the host, so the recording
+     * happens here, where the URL is - the same division
+     * {@code JobPostingImportService.attempt} uses. The category is
+     * {@link FailureCategory#LLM_SERVICE_UNAVAILABLE} whatever the model did,
+     * because none of it is the posting host's doing; the upstream status
+     * distinguishes the cases within that column.
+     */
+    private JobPostingExtraction recordingLlmFailure(String url, Supplier<JobPostingExtraction> extraction) {
+        try {
+            return extraction.get();
+        } catch (ApiException.BadGateway e) {
+            diagnostics.record(url, FailureCategory.LLM_SERVICE_UNAVAILABLE, e.getUpstreamStatus());
+            throw e;
+        }
+    }
+
+    /**
+     * The posting's key fields, read by the model from the page as a browser
+     * renders it.
+     *
+     * <p>This used to be a plain GET whose HTML went to the model as
+     * {@code Jsoup.text()}, which meant a posting whose body is written by
+     * JavaScript arrived as an empty page - the case
+     * {@code JobPostingImportService} has always classified as
+     * {@code JS_REQUIRED} and {@code FailureCategory} annotated with "Fix:
+     * fetch through Chromium". Gotenberg was already rendering the very same
+     * URL a few seconds later for the archived snapshot and the result was
+     * thrown away, so the fix was to read what was already being produced.
+     *
+     * <p>Nothing is given up by printing rather than fetching here: this path
+     * never looked at the markup, only at the visible text, and Chromium's is
+     * strictly better. That is not true of the full-chain extraction, which
+     * lives or dies by JSON-LD and microdata that a PDF cannot carry - which is
+     * why that one still fetches HTML and this one no longer does.
+     *
+     * <p>The plain GET remains as the fallback, so a static posting still
+     * imports while Gotenberg is down.
+     */
+    public JobPostingExtraction overview(String rawUrl, String userId) {
+        // The fetch stays outside recordingLlmFailure: an unreachable posting is
+        // also a BadGateway, and recording it as a model failure would blame our
+        // own infrastructure for the host's.
+        String text = renderedPostingText(rawUrl, userId);
+        return recordingLlmFailure(rawUrl, () -> overviewFromText(text));
+    }
+
+    /**
+     * The posting's visible text as a browser renders it, which is the input
+     * every whole-page extraction wants.
+     *
+     * <p>Shared rather than copied because the fallback is the subtle part: when
+     * Gotenberg is unreachable this drops back to the plain GET, so a static
+     * posting still works during an outage, and a caller that reimplemented the
+     * render without it would simply fail instead. Callers that need the page's
+     * <em>markup</em> cannot use this - see {@link #postingTextWithLinks}.
+     *
+     * <p>Repeated calls for one URL are cheap: {@code PostingRenderer} caches per
+     * user, URL and profile, so the field-suggestion endpoints reuse the render
+     * the import already paid for rather than printing the page again.
+     */
+    public String renderedPostingText(String rawUrl, String userId) {
+        byte[] rendered;
+        try {
+            rendered = renderer.render(rawUrl, userId, RenderProfile.EXTRACTION);
+        } catch (ApiException.BadGateway e) {
+            // Gotenberg unreachable - our outage, not the posting's. A page that
+            // needed a browser will fail on the GET too, but a plain one imports
+            // fine, and most postings are plain.
+            return visibleText(fetchHtml(urlGuard.validate(rawUrl)));
+        }
+
+        try {
+            return pdfTextExtractor.extract(rendered);
+        } catch (ApiException.BadRequest e) {
+            // The page rendered but carried no readable posting - a consent wall
+            // or a login screen printed instead of an ad. The length rules stay
+            // shared with the upload path, but its wording cannot: telling
+            // someone whose URL rendered blank that their file might be "a scan
+            // or a screenshot" is advice about a file they never had.
+            throw new ApiException.BadRequest(message("error.posting.renderedNoText"), e);
+        }
     }
 
     /**
@@ -117,13 +213,9 @@ public class JobPostingParserService {
      * that need the parsed DOM themselves (e.g. reading JSON-LD script tags).
      */
     public FetchedPage fetchPage(String rawUrl) {
-        return fetchHtml(validate(rawUrl));
+        return fetchHtml(urlGuard.validate(rawUrl));
     }
 
-    /** The posting's visible text, fetched through the same validated path. */
-    public String postingText(String rawUrl) {
-        return visibleText(fetchHtml(validate(rawUrl)));
-    }
 
     /**
      * The posting's visible text followed by the links found on the page.
@@ -138,7 +230,7 @@ public class JobPostingParserService {
      * choice of which link is the application link stays with the model.
      */
     public String postingTextWithLinks(String rawUrl) {
-        FetchedPage page = fetchHtml(validate(rawUrl));
+        FetchedPage page = fetchHtml(urlGuard.validate(rawUrl));
         Document document = Jsoup.parse(page.html(), page.url().toString());
         String text = truncateText(document.text());
 
@@ -155,50 +247,6 @@ public class JobPostingParserService {
             return text;
         }
         return text + "\n\nLinks on the page:\n" + String.join("\n", links);
-    }
-
-    private URI validate(String rawUrl) {
-        if (rawUrl == null || rawUrl.isBlank()) {
-            throw new ApiException.BadRequest(message("error.url.empty"));
-        }
-
-        URI uri;
-        try {
-            uri = new URI(rawUrl.trim());
-        } catch (URISyntaxException e) {
-            throw new ApiException.BadRequest(message("error.url.malformed"));
-        }
-
-        if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new ApiException.BadRequest(message("error.url.scheme"));
-        }
-        if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ApiException.BadRequest(message("error.url.host"));
-        }
-
-        rejectIfDisallowedHost(uri.getHost());
-        return uri;
-    }
-
-    private void rejectIfDisallowedHost(String host) {
-        InetAddress[] addresses;
-        try {
-            addresses = InetAddress.getAllByName(host);
-        } catch (UnknownHostException e) {
-            throw new ApiException.BadRequest(message("error.url.hostUnresolved"));
-        }
-        for (InetAddress address : addresses) {
-            if (address.isLoopbackAddress() || address.isAnyLocalAddress()
-                    || address.isLinkLocalAddress() || address.isSiteLocalAddress()
-                    || address.isMulticastAddress() || isUniqueLocalIpv6(address)) {
-                throw new ApiException.BadRequest(message("error.url.disallowedHost"));
-            }
-        }
-    }
-
-    private boolean isUniqueLocalIpv6(InetAddress address) {
-        byte[] bytes = address.getAddress();
-        return bytes.length == 16 && (bytes[0] & 0xfe) == 0xfc;
     }
 
     private FetchedPage fetchHtml(URI uri) {
@@ -226,7 +274,7 @@ public class JobPostingParserService {
             if (status >= 300 && status < 400) {
                 String location = response.headers().firstValue("Location")
                         .orElseThrow(() -> new ApiException.BadGateway(message("error.posting.redirectNoLocation")));
-                target = validate(target.resolve(location).toString());
+                target = urlGuard.validate(target.resolve(location).toString());
                 continue;
             }
             if (status < 200 || status >= 300) {
