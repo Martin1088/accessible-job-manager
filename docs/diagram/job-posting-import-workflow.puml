@@ -1,0 +1,42 @@
+@startuml
+title Job posting import - two independent flows
+
+|Frontend|
+start
+if (Server can fetch the URL itself?) then (yes)
+
+  |Rule-based extraction (no LLM)|
+  :Fetch page, parse HTML;
+  partition "Extraction tiers (stop at first complete match)" {
+    :JSON-LD;
+    :ATS adapter (Ashby / Personio / Oracle HCM / Comeet);
+    :Microdata;
+    :HTML regex;
+    :Heuristic fallback;
+  }
+  :Merge into JobPosting\n(company, positions, locations);
+
+else (no - text or PDF only)
+
+  |LLM overview flow|
+  if (Source?) then (URL)
+    :Render via Chromium/Gotenberg;
+  elseif (Pasted text) then
+    :Use text as-is;
+  else (PDF upload)
+    :Extract text from PDF;
+  endif
+  :LLM extraction;
+  :JobPostingExtraction\n(title, company, location, employment type);
+
+endif
+
+|Frontend|
+:User reviews and confirms/edits fields;
+
+|Company aggregate|
+:Save CompanyDto\n+ CompanyPositionDto\n+ CompanyLocationDto;
+
+stop
+
+@enduml

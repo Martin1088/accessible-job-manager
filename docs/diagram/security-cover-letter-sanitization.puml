@@ -1,0 +1,55 @@
+@startuml
+title Cover letter generation - sanitize, then substitute
+
+actor Browser
+participant HtmlCoverLetterController as Ctrl
+participant CoverLetterHtmlService as Svc
+participant CoverLetterAssembler as Asm
+participant MarkupSanitizer as San
+participant PlaceholderResolver as Res
+participant StyleSettingsValidator as StyleVal
+participant "HTML / Text Renderer" as Renderer
+participant "din5008.html" as Tpl
+participant HtmlToPdfConverter as PdfConv
+participant Gotenberg
+
+Browser -> Ctrl: POST render?format=pdf|text|html
+Ctrl -> Svc: renderFor()
+
+group Assemble content
+  loop each content block
+    Svc -> Asm: assemble(block)
+    Asm -> San: sanitize(raw markup)
+    San -> Res: resolveEscaped(sanitized, values)
+    Res --> Asm: resolved block html
+  end
+  Asm -> StyleVal: validate(style)
+  StyleVal --> Asm: validated StyleSettings
+  Asm --> Svc: CoverLetterModel
+end
+
+group Render output
+  alt format = pdf or html
+    Svc -> Renderer: render(model)
+    Renderer -> Tpl: process(model, css)
+    Tpl --> Renderer: rendered HTML
+  else format = text
+    Svc -> Renderer: render(model)
+    Renderer -> Renderer: linearize sanitized blocks
+  end
+end
+
+group Convert to PDF
+  alt format = pdf
+    Svc -> PdfConv: toPdf(html)
+    PdfConv -> Gotenberg: /forms/chromium/convert/html
+    Gotenberg --> PdfConv: PDF bytes
+    PdfConv -> PdfConv: tag PDF/UA metadata
+    PdfConv --> Svc: tagged PDF
+  end
+end
+
+Svc --> Ctrl: rendered output
+Ctrl --> Browser: PDF / text / HTML
+
+@enduml
