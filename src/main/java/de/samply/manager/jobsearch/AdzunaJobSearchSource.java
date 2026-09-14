@@ -1,6 +1,6 @@
 package de.samply.manager.jobsearch;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.samply.manager.exception.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -251,7 +251,7 @@ public class AdzunaJobSearchSource implements JobSearchSource {
         if (value.isMissingNode() || value.isNull()) {
             return null;
         }
-        String text = value.asText().trim();
+        String text = value.asString("").trim();
         return text.isEmpty() ? null : text;
     }
 

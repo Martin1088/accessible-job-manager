@@ -7,8 +7,10 @@ import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyLocation;
 import de.samply.manager.model.CompanyPosition;
+import de.samply.manager.advisory.SuggestionRepository;
 import de.samply.manager.repository.ApplicationRepository;
 import de.samply.manager.repository.CompanyRepository;
+import de.samply.manager.repository.DocumentRepository;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +27,22 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final ApplicationRepository applicationRepository;
+    private final DocumentRepository documentRepository;
+    private final SuggestionRepository suggestionRepository;
+    private final DocumentService documentService;
     private final MessageSource messageSource;
 
     public CompanyService(CompanyRepository companyRepository,
                           ApplicationRepository applicationRepository,
+                          DocumentRepository documentRepository,
+                          SuggestionRepository suggestionRepository,
+                          DocumentService documentService,
                           MessageSource messageSource) {
         this.companyRepository = companyRepository;
         this.applicationRepository = applicationRepository;
+        this.documentRepository = documentRepository;
+        this.suggestionRepository = suggestionRepository;
+        this.documentService = documentService;
         this.messageSource = messageSource;
     }
 
@@ -96,11 +107,54 @@ public class CompanyService {
         return toDto(companyRepository.save(company));
     }
 
+    /**
+     * Deletes a company, its positions, and everything filed against them.
+     *
+     * <p>The dependants have to be removed here, in this order, because
+     * {@code CompanyPosition} owns no inverse collections - it has no
+     * {@code @OneToMany} to Document, Application or Suggestion - so the
+     * {@code cascade = ALL} on {@link Company#getPositions()} issues
+     * {@code delete from company_positions} with no idea those rows exist. Three
+     * foreign keys point at a position and not one of them cascades, so this
+     * used to fail with a raw constraint violation the moment a company had a
+     * posting snapshot.
+     *
+     * <p>Applications are the exception: they block the delete rather than being
+     * destroyed by it. That is not a new rule invented here - {@code
+     * updateCompany} already refuses to drop a position an application refers
+     * to, and a delete that quietly erased what an update protects would be the
+     * inconsistency, not this.
+     */
+    @Transactional
     public void deleteCompany(Long id, String userId) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ApiException.NotFound(message("error.company.notFound", id)));
         if (!company.getUserId().equals(userId))
             throw new ApiException.Forbidden();
+
+        List<Long> positionIds = company.getPositions().stream()
+                .map(CompanyPosition::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (positionIds.isEmpty()) {
+            companyRepository.deleteById(id);
+            return;
+        }
+
+        long applications = positionIds.stream()
+                .filter(applicationRepository::existsByCompanyPositionId)
+                .count();
+        if (applications > 0) {
+            throw new ApiException.Conflict(message("error.company.hasApplications", applications));
+        }
+
+        suggestionRepository.deleteAll(suggestionRepository.findByCompanyPositionIdIn(positionIds));
+        documentRepository.findByCompanyPositionIdIn(positionIds)
+                .forEach(documentService::deleteWithContents);
+        suggestionRepository.flush();
+        documentRepository.flush();
+
         companyRepository.deleteById(id);
     }
 

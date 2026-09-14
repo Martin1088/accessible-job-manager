@@ -56,6 +56,12 @@ storage:
     bucket: ${S3_BUCKET:test-bucket}
     access-key: ${ACCESS_KEY:test}
     secret-key: ${SECRET_KEY:test}
+    # Mirrors the main file so bootTestRun behaves like bootRun. Note that the dev/.env
+    # hook in build.gradle is attached to bootRun only: to reach a dev bucket whose
+    # objects were written with sse-c on, export S3_SSE_C_MODE/S3_SSE_C_KEY by hand.
+    encryption:
+      mode: ${S3_SSE_C_MODE:none}
+      key: ${S3_SSE_C_KEY:}
 
 # Deliberately no Adzuna credentials: the job search reports itself unconfigured
 # and answers 503 instead of calling out to the real API from a test run.

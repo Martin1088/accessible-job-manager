@@ -2,6 +2,7 @@ package de.samply.manager.controller;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.boot.webmvc.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.Map;
 
 @Controller
-public class CustomErrorController implements org.springframework.boot.web.servlet.error.ErrorController {
+public class CustomErrorController implements ErrorController {
 
     @RequestMapping(value = "/error", produces = MediaType.TEXT_HTML_VALUE)
     public String errorHtml() {

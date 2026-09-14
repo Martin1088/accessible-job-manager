@@ -28,10 +28,12 @@ public class HtmlToPdfConverter {
     private final String gotenbergUrl;
     private final MessageSource messageSource;
 
-    public HtmlToPdfConverter(@Value("${gotenberg.url}") String gotenbergUrl, MessageSource messageSource) {
+    public HtmlToPdfConverter(RestClient gotenbergRestClient,
+                              @Value("${gotenberg.url}") String gotenbergUrl,
+                              MessageSource messageSource) {
         this.gotenbergUrl = gotenbergUrl;
         this.messageSource = messageSource;
-        this.restClient = RestClient.create();
+        this.restClient = gotenbergRestClient;
     }
 
     public byte[] toPdf(String html) {
@@ -79,6 +81,14 @@ public class HtmlToPdfConverter {
      * drops {@code pdfuaid:part}. So the identification is written here instead, with
      * the title read back out of the DocInfo dictionary Chromium filled from the
      * document {@code <title>}, which keeps a single source for it.
+     * <p>
+     * Gotenberg 8.36 has since grown a dedicated {@code pdfua} form field, which
+     * does write {@code pdfuaid:part}. It is still not enough on its own, and the
+     * experiment is recorded here so it need not be repeated: with
+     * {@code pdfua=true} and this method removed, {@code Din5008PdfGeometryTest}
+     * stays green but {@code CoverLetterPdfUaTest} fails veraPDF clause 7.1-9 -
+     * the XMP it writes carries no {@code dc:title}. Keeping both would mean
+     * paying for a PDF-engine pass to duplicate half of what this already does.
      */
     private byte[] withPdfUaIdentification(byte[] pdf) {
         try (PDDocument document = Loader.loadPDF(pdf)) {
