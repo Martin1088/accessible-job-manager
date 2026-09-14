@@ -138,5 +138,14 @@ public abstract class ApiException extends RuntimeException {
         public InternalServerError(String message) {
             super(HttpStatus.INTERNAL_SERVER_ERROR, message);
         }
+
+        /**
+         * Mirrors {@link BadGateway#BadGateway(String, Throwable)}: keeps the
+         * original cause so a log still shows what actually failed underneath
+         * the user-facing sentence.
+         */
+        public InternalServerError(String message, Throwable cause) {
+            super(HttpStatus.INTERNAL_SERVER_ERROR, message, null, cause);
+        }
     }
 }

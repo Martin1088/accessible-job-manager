@@ -1,27 +1,32 @@
 package de.samply.manager.services.storage;
 
 import de.samply.manager.config.S3Properties;
+import de.samply.manager.exception.ApiException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,11 +49,14 @@ class GarageStorageServiceTest {
     @Mock
     private S3Presigner presigner;
 
+    @Mock
+    private MessageSource messageSource;
+
     private GarageStorageService service(S3Properties.Encryption encryption) {
         S3Properties props = new S3Properties(
                 "http://localhost:3900", "garage", "test-bucket", "k", "s", encryption);
         return new GarageStorageService(
-                s3Client, presigner, props, SseCustomerKey.of(props.encryption()));
+                s3Client, presigner, props, SseCustomerKey.of(props.encryption()), messageSource);
     }
 
     private GarageStorageService encrypting() {
@@ -150,6 +158,25 @@ class GarageStorageServiceTest {
         verify(s3Client).deleteObject(captor.capture());
         assertThat(captor.getValue().bucket()).isEqualTo("test-bucket");
         assertThat(captor.getValue().key()).isEqualTo("u1/cv/f.pdf");
+    }
+
+    /**
+     * A {@code Document} row whose object went missing from the bucket used to
+     * surface as a bare, unhandled {@code NoSuchKeyException} - a 500 with no
+     * {@code {status, error, message}} body. It must come back as the same
+     * shape every other service-level failure does.
+     */
+    @Test
+    void downloadTranslatesAMissingKeyIntoAnApiException() {
+        NoSuchKeyException notFound = NoSuchKeyException.builder().message("Key not found").build();
+        when(s3Client.getObject(any(GetObjectRequest.class))).thenThrow(notFound);
+        when(messageSource.getMessage(eq("error.document.contentMissing"), any(), eq(Locale.ROOT)))
+                .thenReturn("The document's stored content could not be found");
+
+        assertThatThrownBy(() -> plain().download("u1/cv/f.pdf"))
+                .isInstanceOf(ApiException.InternalServerError.class)
+                .hasMessage("The document's stored content could not be found")
+                .hasCause(notFound);
     }
 
     /**

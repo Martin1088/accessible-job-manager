@@ -42,6 +42,25 @@ reliable than it is.
 
 ### Changed
 
+- Upgraded to Spring Boot 4.1.1 (from 3.5.16, which reached end of life on
+  2026-06-30 with no further patches). Brings Spring Framework 7, Spring
+  Security 7 and Hibernate 7. REST JSON (de)serialization now runs on Jackson
+  3 by default; the job posting extraction and LLM client code that
+  constructs `com.fasterxml.jackson.databind.ObjectMapper` directly keeps
+  working unchanged via the added `spring-boot-jackson2` compatibility
+  module, which Spring ships for exactly this gradual-migration case.
+  `AdzunaJobSearchSource`, which talks to `RestClient` directly rather than
+  through an injected `ObjectMapper`, now reads its response with Jackson 3's
+  own `JsonNode` instead, since `RestClient`'s default converter no longer
+  understands the Jackson 2 type. Boot 4 also modularized what used to be one
+  `spring-boot-autoconfigure` jar: `RestClient.Builder` autoconfiguration
+  moved to its own starter (added as a main dependency, since nothing pulled
+  it in transitively any more), `ErrorController` moved packages, and the
+  `@WebMvcTest`/`@DataJpaTest` slices and their security autoconfiguration
+  moved into separate test starters (added alongside the existing test
+  starter). None of this changes application behavior; the OIDC login flow
+  and CSRF handling were re-verified end to end against the dev Authentik
+  stack.
 - Importing a posting from a URL now reads the page as a browser renders it.
   `POST /api/posting/overview` prints the URL through Gotenberg's Chromium and
   extracts from that, instead of fetching HTML and reducing it to text — so a
@@ -121,3 +140,9 @@ reliable than it is.
   reduces the supplied filename to a safe token (`[A-Za-z0-9._-]`, no path
   segments, max 255) before storing it. The stored MIME type is the document
   type's own, no longer a client-controlled string.
+- Downloading a document whose object is missing from the bucket (S3/Garage or
+  Azure) no longer surfaces as an unhandled `NoSuchKeyException`/
+  `BlobStorageException` and a bodyless 500. Both `StorageService`
+  implementations now translate a missing key into the same `{status, error,
+  message}` shape every other failure gets, with the original exception kept
+  as the cause so it still shows up in the log.

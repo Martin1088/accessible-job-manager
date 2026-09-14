@@ -5,7 +5,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'org.springframework.boot' version '3.5.16'
+    id 'org.springframework.boot' version '4.1.1'
 }
 
 repositories {
@@ -24,9 +24,10 @@ configurations.testRuntimeClasspath {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-jackson2'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    implementation platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
-    annotationProcessor platform('org.springframework.boot:spring-boot-dependencies:3.5.16')
+    implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
+    annotationProcessor platform('org.springframework.boot:spring-boot-dependencies:4.1.1')
     implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.3'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.jsoup:jsoup:1.18.1'
@@ -43,15 +44,20 @@ dependencies {
     api libs.org.springframework.boot.spring.boot.starter.security
     api libs.org.springframework.boot.spring.boot.starter.oauth2.client
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly libs.org.springframework.boot.spring.boot.devtools
     testImplementation libs.org.springframework.boot.spring.boot.starter.test
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
     testRuntimeOnly 'com.h2database:h2'
     testImplementation 'org.verapdf:validation-model:1.28.1'
     testImplementation libs.org.springframework.security.spring.security.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.48'
-    mockitoAgent(platform('org.springframework.boot:spring-boot-dependencies:3.5.16'))
+    mockitoAgent(platform('org.springframework.boot:spring-boot-dependencies:4.1.1'))
     mockitoAgent('org.mockito:mockito-core') { transitive = false }
 }
 
