@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Cuts a release from the terminal: changelog, commit, tag, merge, push, and
+# Cuts a release from the terminal: changelog, commit, PR into main, tag, and
 # the GitHub release. The image is not built here - pushing the tag starts
 # .github/workflows/release.yml, which builds and publishes it.
 #
@@ -9,6 +9,11 @@
 # Every check that can fail does so before anything is written, and each abort
 # says what to do instead. Nothing here asks a question: a release is a thing
 # you either meant to do or did not.
+#
+# main is rule-protected on GitHub (no direct push, from anyone, ever), so the
+# merge happens through a PR via gh, and the release tag is cut from main's
+# resulting tip rather than from the commit made on develop - see the "tag
+# main's merge commit" section below for why.
 #
 # Environment overrides: RELEASE_BRANCH (default develop), MAIN_BRANCH (main),
 # REMOTE (origin), ALLOW_EMPTY_CHANGELOG=1 to release with an empty Unreleased
@@ -50,6 +55,9 @@ git rev-parse --git-dir >/dev/null 2>&1 || die "not a git repository"
 cd "$(git rev-parse --show-toplevel)"
 
 [ -f "$CHANGELOG" ] || die "$CHANGELOG is missing"
+
+command -v gh >/dev/null 2>&1 \
+    || die "gh (GitHub CLI) is required - $MAIN_BRANCH is rule-protected, so the merge into it can only happen through a PR"
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 [ "$branch" = "$RELEASE_BRANCH" ] \
@@ -136,7 +144,7 @@ awk -v version="$VERSION" -v date="$DATE" '
 mv "$CHANGELOG.tmp" "$CHANGELOG"
 echo "Updated $CHANGELOG: [$VERSION] - $DATE"
 
-# --- commit, tag -----------------------------------------------------------
+# --- commit ------------------------------------------------------------------
 
 git add "$CHANGELOG"
 git commit --quiet -m "chore(release): $VERSION"
@@ -152,52 +160,57 @@ notes="$(awk -v heading="## [$VERSION] - $DATE" '
     END { for (i = first; i <= last; i++) print lines[i] }
 ' "$CHANGELOG")"
 
+git push --quiet "$REMOTE" "$RELEASE_BRANCH" || die "pushing $RELEASE_BRANCH failed"
+echo "Pushed $RELEASE_BRANCH to $REMOTE"
+
+# --- merge into main via PR ---------------------------------------------------
+
+# main takes no push, from anyone, by any route other than a merged PR - see
+# the ruleset note at the top of this file. Required approvals are 0, so this
+# merges immediately; it only blocks if that ever changes upstream.
+pr_body="${notes:-Release $VERSION.}"
+pr_url="$(gh pr create --base "$MAIN_BRANCH" --head "$RELEASE_BRANCH" \
+    --title "chore(release): $VERSION" --body "$pr_body")" \
+    || die "opening the PR from $RELEASE_BRANCH into $MAIN_BRANCH failed - $RELEASE_BRANCH is pushed, open it by hand"
+echo "Opened $pr_url"
+
+gh pr merge "$pr_url" --merge --delete-branch=false \
+    || die "merging $pr_url failed - merge it by hand, then tag $MAIN_BRANCH's new tip as $TAG and push the tag (see docs/releasing.md)"
+echo "Merged into $MAIN_BRANCH"
+
+# --- tag main's merge commit --------------------------------------------------
+
+git fetch --quiet "$REMOTE" "$MAIN_BRANCH" || die "fetching $MAIN_BRANCH after the merge failed - $pr_url is merged, tag it by hand"
+merge_sha="$(git rev-parse "$REMOTE/$MAIN_BRANCH")"
+
 # The tag message carries the changelog section, which is what
 # 'gh release create --notes-from-tag' publishes as the release notes.
 # --cleanup=verbatim: the section headings start with '#', which git would
-# otherwise strip from the message as comments.
-printf '%s\n\n%s\n' "$TAG" "$notes" | git tag -a "$TAG" --cleanup=verbatim -F -
-echo "Tagged $TAG"
+# otherwise strip from the message as comments. Tagging the merge commit
+# (rather than the commit just made on develop) is what keeps 'git describe'
+# on main reporting the tag itself, not one commit past it - a GitHub PR
+# merge always adds a commit, so the tag has to move to match it.
+printf '%s\n\n%s\n' "$TAG" "$notes" | git tag -a "$TAG" --cleanup=verbatim -F - "$merge_sha"
+echo "Tagged $TAG on $MAIN_BRANCH ($merge_sha)"
 
-# --- merge, push -----------------------------------------------------------
-
-git switch --quiet "$MAIN_BRANCH"
-
-# Catch up with the remote first, so the push at the end cannot be rejected for
-# a reason that has nothing to do with this release.
-if [ "$(git rev-parse "$MAIN_BRANCH")" != "$(git rev-parse "$REMOTE/$MAIN_BRANCH")" ]; then
-    git merge --quiet --ff-only "$REMOTE/$MAIN_BRANCH" \
-        || die "$MAIN_BRANCH has diverged from $REMOTE/$MAIN_BRANCH - reconcile it, then re-run (the tag $TAG is already created locally)"
-    echo "Fast-forwarded $MAIN_BRANCH to $REMOTE/$MAIN_BRANCH"
-fi
-
-if git merge --quiet --ff-only "$RELEASE_BRANCH" 2>/dev/null; then
-    echo "Fast-forwarded $MAIN_BRANCH to $RELEASE_BRANCH"
-else
-    git merge --no-ff -m "chore(release): merge $RELEASE_BRANCH for $VERSION" "$RELEASE_BRANCH" \
-        || die "merging $RELEASE_BRANCH into $MAIN_BRANCH failed - resolve, then push both branches and $TAG by hand"
-    echo "Merged $RELEASE_BRANCH into $MAIN_BRANCH"
-fi
-
-git push --quiet "$REMOTE" "$MAIN_BRANCH" || die "pushing $MAIN_BRANCH failed"
-git switch --quiet "$RELEASE_BRANCH"
-git push --quiet "$REMOTE" "$RELEASE_BRANCH" || die "pushing $RELEASE_BRANCH failed"
 git push --quiet "$REMOTE" "$TAG" || die "pushing $TAG failed - the image build starts on this push"
-echo "Pushed $MAIN_BRANCH, $RELEASE_BRANCH and $TAG to $REMOTE"
+echo "Pushed $TAG to $REMOTE"
 
-# --- github release --------------------------------------------------------
+# Bring the local mirrors in line with what's now on the remote. main is just
+# a mirror the script manages, never a branch worked on directly, so resetting
+# it to match is not discarding anything.
+git switch --quiet "$MAIN_BRANCH"
+git reset --quiet --hard "$REMOTE/$MAIN_BRANCH"
+git switch --quiet "$RELEASE_BRANCH"
 
-if command -v gh >/dev/null 2>&1; then
-    if gh release create "$TAG" --title "$TAG" --notes-from-tag; then
-        echo "Created GitHub release $TAG"
-    else
-        # The tag is pushed and the image is building; only the release page is
-        # missing, and that is worth saying rather than exiting 0 quietly.
-        die "gh release create failed - the tag is pushed, create the release by hand"
-    fi
+# --- github release ------------------------------------------------------------
+
+if gh release create "$TAG" --title "$TAG" --notes-from-tag; then
+    echo "Created GitHub release $TAG"
 else
-    echo "gh not installed - create the release with:"
-    echo "  gh release create $TAG --title $TAG --notes-from-tag"
+    # The tag is pushed and the image is building; only the release page is
+    # missing, and that is worth saying rather than exiting 0 quietly.
+    die "gh release create failed - the tag is pushed, create the release by hand"
 fi
 
 echo "Done. The image build is running in GitHub Actions (release.yml)."
