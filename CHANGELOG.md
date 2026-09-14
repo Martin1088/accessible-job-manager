@@ -18,6 +18,14 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.1.0] - 2026-09-14
+
+### Added
+
 - Job posting import checks whether the PDF snapshot can be rendered right
   after a URL import succeeds. When it cannot (a consent wall, a page too heavy
   for Chromium, Gotenberg unreachable), the importer now says so and offers to
