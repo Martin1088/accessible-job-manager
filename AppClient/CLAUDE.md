@@ -177,9 +177,10 @@ mixin, and `styles/_correspondence.scss` no longer ships one. The
 hard-coded `#fff`/`#f7f7f7` that stylesheet used to carry is exactly the bug
 the colour rule above describes: in dark mode the cards stayed white while
 the text followed `--color-text`, so a phone showed near-white values on
-white. `reviewer/home` is outside the stationery's scope and follows the
-`--color-*` family instead, but the same rule applies — no literal hex on a
-table surface.
+white. `reviewer/home` keeps a bespoke `<table>` (its download button has a
+per-row busy state `app-data-table` lacks) but restates the same stationery
+rules in its own stylesheet — the same rule applies there, no literal hex on
+a table surface.
 
 ### Sticky elements
 

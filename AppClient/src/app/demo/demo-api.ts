@@ -248,12 +248,18 @@ route('POST', '/api/relationships', (req, db) => {
   return created;
 });
 
-route('POST', '/api/relationships/:id/end', (req, db) => {
-  const id = req.params[0];
-  let ended: Relationship | undefined;
-  db.relationships.update(all => all.map(r => (r.id === id ? (ended = { ...r, status: 'ENDED' }) : r)));
-  return ended;
-});
+route('GET', '/api/relationships/incoming', (_req, db) =>
+  db.relationships().filter(r => r.counterpartId === db.profile().userId));
+
+function setRelationshipStatus(db: DemoDb, id: string, status: Relationship['status']): Relationship | undefined {
+  let changed: Relationship | undefined;
+  db.relationships.update(all => all.map(r => (r.id === id ? (changed = { ...r, status }) : r)));
+  return changed;
+}
+
+route('POST', '/api/relationships/:id/accept', (req, db) => setRelationshipStatus(db, req.params[0], 'ACTIVE'));
+route('POST', '/api/relationships/:id/decline', (req, db) => setRelationshipStatus(db, req.params[0], 'DECLINED'));
+route('POST', '/api/relationships/:id/end', (req, db) => setRelationshipStatus(db, req.params[0], 'ENDED'));
 
 route('GET', '/api/directory/advisors', () => DIRECTORY_ADVISORS);
 route('GET', '/api/directory/reviewers', () => DIRECTORY_REVIEWERS);

@@ -20,6 +20,11 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+- The reviewer dashboard now follows the advisor dashboard: the same DIN 5008
+  correspondence design and reference line, a My Users table of everyone who
+  linked you as their reviewer, and review requests you can accept or decline
+  there. It also follows the dark and high-contrast themes.
+
 ### Fixed
 
 ## [0.1.0] - 2026-09-14
