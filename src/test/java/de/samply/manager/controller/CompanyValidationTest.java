@@ -12,7 +12,7 @@ import de.samply.manager.security.SecurityConfig;
 import de.samply.manager.services.CompanyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * together, and like {@link SecurityConfig} it is a plain {@code @Configuration} that
  * a {@code @WebMvcTest} slice does not pick up on its own - hence the explicit import.
  */
-@WebMvcTest(JobController.class)
+@WebMvcTest(CompanyController.class)
 @Import({SecurityConfig.class, ValidationConfig.class, GlobalExceptionHandler.class})
 class CompanyValidationTest {
 

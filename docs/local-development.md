@@ -33,6 +33,13 @@ This starts:
 | Traefik      | 80   | Reverse proxy                  |
 | Authentik    | 9000 | OIDC provider (`authentik.yml`)|
 
+Everything sits on the `web` network except **Gotenberg, which is on `render`**,
+shared only with the app — it renders job posting URLs the user supplied, so it
+must not be able to reach Postgres or Garage. Port 3000 is still published, so
+`Din5008PdfGeometryTest` and `CoverLetterPdfUaTest` reach it from the host as
+before. See "Gotenberg network isolation" in [Readme.md](../Readme.md) before
+moving it or adding services to `render`.
+
 ## 2. Configure OIDC
 
 Nothing to click. `dev/authentik/blueprints/access-job-manager.yaml` is mounted into

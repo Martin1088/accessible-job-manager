@@ -38,8 +38,23 @@ public class GlobalExceptionHandler {
         this.messageSource = messageSource;
     }
 
+    /**
+     * A 5xx is logged with its cause; a 4xx is not.
+     *
+     * <p>The split is by whose problem it is. A 4xx is the caller's - a bad URL,
+     * a file too large - and logging one per request would bury the others. A
+     * 5xx is ours, and used to vanish entirely: only the catch-all below logged,
+     * so an {@code ApiException.BadGateway} produced a response body and no log
+     * line at all. Services that carefully chained a cause (see
+     * {@code JobPostingParserService}'s fetch failure and
+     * {@code LlmFailures.translate}) were handing it to nobody.
+     */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Map<String, Object>> handleApiException(ApiException ex) {
+        if (ex.getStatus().is5xxServerError()) {
+            log.warn("{} {}{}", ex.getStatus().value(), ex.getMessage(),
+                    ex.getUpstreamStatus() == null ? "" : " (upstream " + ex.getUpstreamStatus() + ")", ex);
+        }
         return body(ex.getStatus(), ex.getMessage() != null ? ex.getMessage() : ex.getStatus().getReasonPhrase());
     }
 

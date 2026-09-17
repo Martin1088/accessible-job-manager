@@ -1,6 +1,8 @@
 package de.samply.manager.services;
 
-import de.samply.manager.jobimport.diagnostics.ImportDiagnostics;
+import de.samply.manager.jobimport.render.PostingRenderer;
+import de.samply.manager.jobimport.render.RenderProfile;
+import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
@@ -32,25 +34,72 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class JobPostingSnapshotServiceTest {
 
+    @Mock PostingRenderer renderer;
     @Mock StorageService storageService;
     @Mock DocumentRepository documentRepository;
     @Mock DocumentService documentService;
     @Mock CompanyPositionRepository companyPositionRepository;
     @Mock MessageSource messageSource;
-    @Mock ImportDiagnostics diagnostics;
 
     private JobPostingSnapshotService service;
 
     @BeforeEach
     void setUp() {
-        service = new JobPostingSnapshotService("http://gotenberg", storageService, documentRepository,
-                documentService, companyPositionRepository, messageSource, diagnostics);
+        service = new JobPostingSnapshotService(renderer, storageService, documentRepository,
+                documentService, companyPositionRepository, messageSource);
+    }
+
+    /**
+     * The URL guard and the render both live in {@link PostingRenderer} now, so
+     * the refusal is asserted in {@code PostingRendererTest}. What is still this
+     * service's own is that it asks for the archival profile - a snapshot filed
+     * as the posting record must not be the single-page render extraction uses.
+     */
+    @Test
+    void snapshotToPdf_asksForTheSnapshotProfile() {
+        when(renderer.render("https://example.com/job", "user-1", RenderProfile.SNAPSHOT))
+                .thenReturn(PDF_BYTES);
+
+        assertThat(service.snapshotToPdf("https://example.com/job", "user-1")).isEqualTo(PDF_BYTES);
     }
 
     private CompanyPosition position(Long id) {
         CompanyPosition position = new CompanyPosition();
         position.setId(id);
         return position;
+    }
+
+    private CompanyPosition ownedPosition(Long id, String userId) {
+        Company company = new Company();
+        company.setUserId(userId);
+        CompanyPosition position = position(id);
+        position.setCompany(company);
+        return position;
+    }
+
+    private static final byte[] PDF_BYTES = "%PDF-1.7\nsnapshot".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+
+    @Test
+    void saveUploaded_rejectsBytesThatAreNotAPdf() {
+        when(companyPositionRepository.findById(7L)).thenReturn(java.util.Optional.of(ownedPosition(7L, "user-1")));
+
+        assertThatThrownBy(() -> service.saveUploaded(
+                "<html>nope".getBytes(), "poster.pdf", 7L, "Snapshot", Language.ENGLISH, "user-1"))
+                .isInstanceOf(de.samply.manager.exception.ApiException.UnsupportedMediaType.class);
+
+        verify(storageService, never()).upload(any(), any(), anyLong(), any());
+        verify(documentRepository, never()).save(any());
+    }
+
+    @Test
+    void saveUploaded_sanitisesTheFilenameBeforeStoringIt() {
+        when(companyPositionRepository.findById(7L)).thenReturn(java.util.Optional.of(ownedPosition(7L, "user-1")));
+        when(documentRepository.save(any(Document.class))).thenAnswer(call -> call.getArgument(0));
+
+        Document saved = service.saveUploaded(
+                PDF_BYTES, "../../evil\".pdf", 7L, "Snapshot", Language.ENGLISH, "user-1");
+
+        assertThat(saved.getFilename()).isEqualTo("evil_.pdf");
     }
 
     private Document snapshot() {

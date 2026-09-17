@@ -10,23 +10,35 @@ to get right.
 
 ## What the script does
 
-1. Refuses to start unless the working tree is clean, `develop` is checked out
-   and in sync with the remote, the tag does not exist yet, and `Unreleased`
-   in `CHANGELOG.md` actually has entries.
+1. Refuses to start unless `gh` is installed, the working tree is clean,
+   `develop` is checked out and in sync with the remote, the tag does not
+   exist yet, and `Unreleased` in `CHANGELOG.md` actually has entries.
 2. Renames `## [Unreleased]` to `## [0.2.0] - <today>`, drops the subsections
    that stayed empty, and opens a fresh `Unreleased` block above it.
-3. Commits `chore(release): 0.2.0`.
-4. Creates the annotated tag `v0.2.0`, with the changelog section as the tag
-   message.
-5. Merges `develop` into `main` - fast-forward where possible, so that
-   `git describe` on `main` is the tag itself rather than one commit past it.
-6. Pushes `main`, `develop` and the tag.
-7. Creates the GitHub release with `gh release create --notes-from-tag`, which
-   is why the notes live in the tag message. Without `gh` installed it prints
-   the command instead of failing.
+3. Commits `chore(release): 0.2.0` and pushes `develop`.
+4. Opens a PR from `develop` into `main` with `gh pr create` and merges it
+   with `gh pr merge --merge`. `main` carries a ruleset that refuses every
+   direct push, with no bypass for anyone, so this is the only way in -
+   see below.
+5. Tags **`main`'s resulting merge commit** (not the commit made in step 3)
+   as `v0.2.0`, with the changelog section as the annotated tag message, then
+   pushes the tag.
+6. Creates the GitHub release with `gh release create --notes-from-tag`, which
+   is why the notes live in the tag message.
 
 Overrides, if a repository ever needs them: `RELEASE_BRANCH`, `MAIN_BRANCH`,
 `REMOTE`, and `ALLOW_EMPTY_CHANGELOG=1`.
+
+### Why the tag moves to the merge commit
+
+A GitHub PR merge always adds a commit on top of `main` - even when the merge
+is a trivial fast-forward, the "Create a merge commit" button still creates
+one. Tagging the commit made on `develop` in step 3 would leave `main`'s tip
+one commit past the tag, which breaks `git describe --tags` on `main`
+(`build.gradle` derives the version from it). Tagging `main`'s tip right after
+the merge instead keeps `git describe` on `main` reporting the tag exactly, at
+the cost of one extra step. The tag simply isn't cut until the content is
+actually on `main`.
 
 ## The changelog
 
