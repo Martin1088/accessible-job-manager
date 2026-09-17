@@ -39,4 +39,12 @@ export class RelationshipService {
   end(id: string): Observable<Relationship> {
     return this.http.post<Relationship>(`${this.apiUrl}/${id}/end`, {});
   }
+
+  /** Shares one of the caller's own documents with the link's counterpart. */
+  grantDocumentShare(relationshipId: string, documentId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${relationshipId}/shares`, {
+      subjectType: 'DOCUMENT',
+      resourceId: documentId,
+    });
+  }
 }

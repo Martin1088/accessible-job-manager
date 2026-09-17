@@ -101,6 +101,11 @@
             #rlaReviewer="routerLinkActive"
           [attr.aria-current]="rlaReviewer.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
         </li>
+        <li>
+          <a routerLink="/reviewer/documents" routerLinkActive="active"
+            #rlaReviewerDocuments="routerLinkActive"
+          [attr.aria-current]="rlaReviewerDocuments.isActive ? 'page' : null">{{ 'NAV.REVIEWER_DOCUMENTS' | translate }}</a>
+        </li>
       </ul>
     </nav>
   }

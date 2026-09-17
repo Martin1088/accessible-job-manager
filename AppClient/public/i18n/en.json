@@ -40,7 +40,8 @@
     "DASHBOARD": "Dashboard",
     "JOB_IMPORTER": "Job Importer",
     "JOB_SEARCH": "Job Search",
-    "JOB_IMPORT": "Import posting"
+    "JOB_IMPORT": "Import posting",
+    "REVIEWER_DOCUMENTS": "Documents to Review"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Account menu",
@@ -278,7 +279,20 @@
     "COL_DOWNLOAD": "Download",
     "DOWNLOAD": "Download",
     "DOWNLOADING": "…",
-    "DOWNLOAD_ARIA": "Download {{label}}"
+    "DOWNLOAD_ARIA": "Download {{label}}",
+    "COL_REVIEW": "Review",
+    "DOCUMENTS_PAGE_TITLE": "Documents to Review",
+    "DOCUMENTS_PAGE_HINT": "{{count}} document(s) shared with you for review.",
+    "UPLOAD_REVIEW": "Upload review (.docx)",
+    "UPLOAD_REVIEW_ARIA": "Upload a review of {{label}}",
+    "REVIEW_FORM_HEADING": "Share a review of {{label}}",
+    "REVIEW_FILE_LABEL": "File:",
+    "REVIEW_LABEL_FIELD": "Label",
+    "REVIEW_LABEL_SUGGESTED": "Review of {{label}}",
+    "REVIEW_UPLOADING": "Sharing…",
+    "REVIEW_SHARE_ACTION": "Share review",
+    "REVIEW_SHARED": "Review shared with {{name}}.",
+    "ERROR_REVIEW_UPLOAD": "Could not share the review. Please try again."
   },
   "COMMON": {
     "BACK": "Back",
@@ -719,6 +733,15 @@
     "ACTION_DELETE": "Delete",
     "ACTION_DELETE_ARIA": "Delete {{label}}",
     "CONFIRM_DELETE": "Delete {{label}}?",
+    "ACTION_SHARE_REVIEW": "Share for review",
+    "ACTION_SHARE_REVIEW_ARIA": "Share {{label}} with a reviewer",
+    "SHARE_FORM_HEADING": "Share \"{{label}}\" for review",
+    "SHARE_NO_REVIEWERS": "You have no active reviewer yet. Add one from your profile directory.",
+    "SHARE_REVIEWER_FIELD": "Reviewer",
+    "SHARE_SHARING": "Sharing…",
+    "SHARE_ACTION": "Share",
+    "SHARE_SHARED": "{{label}} shared with {{name}} for review.",
+    "ERROR_SHARE": "Could not share the document. Please try again.",
     "ERROR_UPDATE": "Failed to update template.",
     "ERROR_DELETE": "Failed to delete template.",
     "FILTER_ARIA": "Filter templates by upload date",
@@ -754,9 +777,16 @@
     "TYPE_CV": "CV",
     "TYPE_CERTIFICATE": "Certificate",
     "TYPE_OTHER": "Other",
+    "TYPE_REVIEW_RESULT": "Reviewer feedback",
     "ACTION_DOWNLOAD": "Download",
     "ACTION_DOWNLOAD_ARIA": "Download {{label}}",
-    "ERROR_DOWNLOAD": "The document could not be downloaded."
+    "ERROR_DOWNLOAD": "The document could not be downloaded.",
+    "SHARED_HEADING": "Feedback from reviewers",
+    "SHARED_CAPTION": "Documents reviewers have shared back with you",
+    "SHARED_COL_LABEL": "Label",
+    "SHARED_COL_FROM": "From",
+    "SHARED_COL_GRANTED": "Shared on",
+    "SHARED_EMPTY": "No reviewer has shared feedback with you yet."
   },
   "SUPPORT": {
     "TITLE": "Support",

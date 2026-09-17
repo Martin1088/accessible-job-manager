@@ -40,7 +40,8 @@
     "DASHBOARD": "Übersicht",
     "JOB_IMPORTER": "Stellenimport",
     "JOB_SEARCH": "Jobsuche",
-    "JOB_IMPORT": "Anzeige importieren"
+    "JOB_IMPORT": "Anzeige importieren",
+    "REVIEWER_DOCUMENTS": "Zu begutachtende Dokumente"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Kontomenü",
@@ -278,7 +279,20 @@
     "COL_DOWNLOAD": "Download",
     "DOWNLOAD": "Herunterladen",
     "DOWNLOADING": "…",
-    "DOWNLOAD_ARIA": "{{label}} herunterladen"
+    "DOWNLOAD_ARIA": "{{label}} herunterladen",
+    "COL_REVIEW": "Begutachtung",
+    "DOCUMENTS_PAGE_TITLE": "Zu begutachtende Dokumente",
+    "DOCUMENTS_PAGE_HINT": "{{count}} Dokument(e) wurden mit Ihnen zur Begutachtung geteilt.",
+    "UPLOAD_REVIEW": "Begutachtung hochladen (.docx)",
+    "UPLOAD_REVIEW_ARIA": "Eine Begutachtung von {{label}} hochladen",
+    "REVIEW_FORM_HEADING": "Begutachtung von {{label}} teilen",
+    "REVIEW_FILE_LABEL": "Datei:",
+    "REVIEW_LABEL_FIELD": "Bezeichnung",
+    "REVIEW_LABEL_SUGGESTED": "Begutachtung von {{label}}",
+    "REVIEW_UPLOADING": "Wird geteilt…",
+    "REVIEW_SHARE_ACTION": "Begutachtung teilen",
+    "REVIEW_SHARED": "Begutachtung mit {{name}} geteilt.",
+    "ERROR_REVIEW_UPLOAD": "Die Begutachtung konnte nicht geteilt werden. Bitte versuchen Sie es erneut."
   },
   "COMMON": {
     "BACK": "Zurück",
@@ -719,6 +733,15 @@
     "ACTION_DELETE": "Löschen",
     "ACTION_DELETE_ARIA": "{{label}} löschen",
     "CONFIRM_DELETE": "{{label}} löschen?",
+    "ACTION_SHARE_REVIEW": "Zur Begutachtung teilen",
+    "ACTION_SHARE_REVIEW_ARIA": "{{label}} mit einem Lektor teilen",
+    "SHARE_FORM_HEADING": "„{{label}}“ zur Begutachtung teilen",
+    "SHARE_NO_REVIEWERS": "Sie haben noch keinen aktiven Lektor. Fügen Sie einen über Ihr Profilverzeichnis hinzu.",
+    "SHARE_REVIEWER_FIELD": "Lektor",
+    "SHARE_SHARING": "Wird geteilt…",
+    "SHARE_ACTION": "Teilen",
+    "SHARE_SHARED": "{{label}} wurde mit {{name}} zur Begutachtung geteilt.",
+    "ERROR_SHARE": "Das Dokument konnte nicht geteilt werden. Bitte versuchen Sie es erneut.",
     "ERROR_UPDATE": "Vorlage konnte nicht aktualisiert werden.",
     "ERROR_DELETE": "Vorlage konnte nicht gelöscht werden.",
     "FILTER_ARIA": "Vorlagen nach Uploaddatum filtern",
@@ -754,9 +777,16 @@
     "TYPE_CV": "Lebenslauf",
     "TYPE_CERTIFICATE": "Zeugnis",
     "TYPE_OTHER": "Sonstiges",
+    "TYPE_REVIEW_RESULT": "Rückmeldung des Lektors",
     "ACTION_DOWNLOAD": "Herunterladen",
     "ACTION_DOWNLOAD_ARIA": "{{label}} herunterladen",
-    "ERROR_DOWNLOAD": "Das Dokument konnte nicht heruntergeladen werden."
+    "ERROR_DOWNLOAD": "Das Dokument konnte nicht heruntergeladen werden.",
+    "SHARED_HEADING": "Rückmeldungen von Lektoren",
+    "SHARED_CAPTION": "Dokumente, die Lektoren mit Ihnen geteilt haben",
+    "SHARED_COL_LABEL": "Bezeichnung",
+    "SHARED_COL_FROM": "Von",
+    "SHARED_COL_GRANTED": "Geteilt am",
+    "SHARED_EMPTY": "Noch hat kein Lektor eine Rückmeldung mit Ihnen geteilt."
   },
   "SUPPORT": {
     "TITLE": "Support",

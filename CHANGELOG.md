@@ -18,6 +18,13 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- Users can share a `.docx` cover letter template with one of their active reviewers
+  directly from My Documents, via a new "Share for review" action.
+- Reviewers can now upload a `.docx` review of a document they were given access to,
+  from a new "Documents to Review" page; it is shared back to the document's owner as a
+  separate, new document, visible under a new "Feedback from reviewers" section on the
+  owner's My Documents page.
+
 ### Changed
 
 - The reviewer dashboard now follows the advisor dashboard: the same DIN 5008

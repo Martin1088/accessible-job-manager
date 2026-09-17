@@ -10,7 +10,8 @@ public enum DocumentType {
     COVER_LETTER_TEMPLATE("application/vnd.openxmlformats-officedocument.wordprocessingml.document",            "docx"),
     CERTIFICATE          ("application/pdf",                                                                    "pdf"),
     JOB_POSTING_SNAPSHOT ("application/pdf",                                                                    "pdf"),
-    OTHER                ("application/pdf",                                                                    "pdf");
+    OTHER                ("application/pdf",                                                                    "pdf"),
+    REVIEW_RESULT        ("application/vnd.openxmlformats-officedocument.wordprocessingml.document",            "docx");
 
     private final String allowedMime;
     private final String extension;

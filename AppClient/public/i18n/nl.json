@@ -40,7 +40,8 @@
     "DASHBOARD": "Dashboard",
     "JOB_IMPORTER": "Vacature-import",
     "JOB_SEARCH": "Vacaturezoeker",
-    "JOB_IMPORT": "Vacature importeren"
+    "JOB_IMPORT": "Vacature importeren",
+    "REVIEWER_DOCUMENTS": "Te beoordelen documenten"
   },
   "ACCOUNT": {
     "TRIGGER_LABEL": "Accountmenu",
@@ -278,7 +279,20 @@
     "COL_DOWNLOAD": "Download",
     "DOWNLOAD": "Downloaden",
     "DOWNLOADING": "…",
-    "DOWNLOAD_ARIA": "{{label}} downloaden"
+    "DOWNLOAD_ARIA": "{{label}} downloaden",
+    "COL_REVIEW": "Beoordeling",
+    "DOCUMENTS_PAGE_TITLE": "Te beoordelen documenten",
+    "DOCUMENTS_PAGE_HINT": "{{count}} document(en) met u gedeeld ter beoordeling.",
+    "UPLOAD_REVIEW": "Beoordeling uploaden (.docx)",
+    "UPLOAD_REVIEW_ARIA": "Een beoordeling van {{label}} uploaden",
+    "REVIEW_FORM_HEADING": "Beoordeling van {{label}} delen",
+    "REVIEW_FILE_LABEL": "Bestand:",
+    "REVIEW_LABEL_FIELD": "Label",
+    "REVIEW_LABEL_SUGGESTED": "Beoordeling van {{label}}",
+    "REVIEW_UPLOADING": "Wordt gedeeld…",
+    "REVIEW_SHARE_ACTION": "Beoordeling delen",
+    "REVIEW_SHARED": "Beoordeling gedeeld met {{name}}.",
+    "ERROR_REVIEW_UPLOAD": "De beoordeling kon niet worden gedeeld. Probeer het opnieuw."
   },
   "COMMON": {
     "BACK": "Terug",
@@ -719,6 +733,15 @@
     "ACTION_DELETE": "Verwijderen",
     "ACTION_DELETE_ARIA": "{{label}} verwijderen",
     "CONFIRM_DELETE": "{{label}} verwijderen?",
+    "ACTION_SHARE_REVIEW": "Delen ter beoordeling",
+    "ACTION_SHARE_REVIEW_ARIA": "{{label}} delen met een beoordelaar",
+    "SHARE_FORM_HEADING": "\"{{label}}\" delen ter beoordeling",
+    "SHARE_NO_REVIEWERS": "U heeft nog geen actieve beoordelaar. Voeg er een toe via uw profieldirectory.",
+    "SHARE_REVIEWER_FIELD": "Beoordelaar",
+    "SHARE_SHARING": "Wordt gedeeld…",
+    "SHARE_ACTION": "Delen",
+    "SHARE_SHARED": "{{label}} gedeeld met {{name}} ter beoordeling.",
+    "ERROR_SHARE": "Het document kon niet worden gedeeld. Probeer het opnieuw.",
     "ERROR_UPDATE": "Sjabloon kon niet worden bijgewerkt.",
     "ERROR_DELETE": "Sjabloon kon niet worden verwijderd.",
     "FILTER_ARIA": "Sjablonen op uploaddatum filteren",
@@ -754,9 +777,16 @@
     "TYPE_CV": "Cv",
     "TYPE_CERTIFICATE": "Diploma",
     "TYPE_OTHER": "Overig",
+    "TYPE_REVIEW_RESULT": "Feedback van beoordelaar",
     "ACTION_DOWNLOAD": "Downloaden",
     "ACTION_DOWNLOAD_ARIA": "{{label}} downloaden",
-    "ERROR_DOWNLOAD": "Het document kon niet worden gedownload."
+    "ERROR_DOWNLOAD": "Het document kon niet worden gedownload.",
+    "SHARED_HEADING": "Feedback van beoordelaars",
+    "SHARED_CAPTION": "Documenten die beoordelaars met u hebben gedeeld",
+    "SHARED_COL_LABEL": "Label",
+    "SHARED_COL_FROM": "Van",
+    "SHARED_COL_GRANTED": "Gedeeld op",
+    "SHARED_EMPTY": "Nog geen beoordelaar heeft feedback met u gedeeld."
   },
   "SUPPORT": {
     "TITLE": "Support",
