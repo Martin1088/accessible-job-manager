@@ -55,6 +55,7 @@
     "EN": "Englisch",
     "DE": "Deutsch",
     "NL": "Niederländisch",
+    "ES": "Spanisch",
     "CHANGED": "Sprache geändert zu {{language}}"
   },
   "PROFILE": {
@@ -498,6 +499,7 @@
     "LANGUAGE_GERMAN": "Deutsch",
     "LANGUAGE_ENGLISH": "Englisch",
     "LANGUAGE_DUTCH": "Niederländisch",
+    "LANGUAGE_SPANISH": "Spanisch",
     "APPLY_METHOD_HINT": "Selbst festlegen oder über „Wie bewerben?“ aus der Anzeige auslesen lassen.",
     "ACTION_SUGGEST": "Einem Benutzer vorschlagen",
     "ACTION_SUGGEST_ARIA": "{{position}} bei {{company}} einem Benutzer vorschlagen",

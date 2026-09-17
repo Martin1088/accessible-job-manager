@@ -24,6 +24,8 @@ orientation, not as a record of releases that happened.
   from a new "Documents to Review" page; it is shared back to the document's owner as a
   separate, new document, visible under a new "Feedback from reviewers" section on the
   owner's My Documents page.
+- Spanish is now a supported interface language, alongside English, German and Dutch,
+  and a supported cover-letter/document language.
 
 ### Changed
 

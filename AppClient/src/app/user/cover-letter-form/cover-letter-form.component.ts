@@ -33,11 +33,12 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** The three languages a letter can be written in, independent of the UI's. */
+/** The languages a letter can be written in, independent of the UI's. */
 const LETTER_LANGUAGE_OPTIONS: { value: DocumentLanguage; label: string }[] = [
   { value: 'GERMAN',  label: 'LANGUAGE.DE' },
   { value: 'ENGLISH', label: 'LANGUAGE.EN' },
   { value: 'DUTCH',   label: 'LANGUAGE.NL' },
+  { value: 'SPANISH', label: 'LANGUAGE.ES' },
 ];
 
 /**

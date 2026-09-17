@@ -55,6 +55,7 @@
     "EN": "Engels",
     "DE": "Duits",
     "NL": "Nederlands",
+    "ES": "Spaans",
     "CHANGED": "Taal gewijzigd naar {{language}}"
   },
   "PROFILE": {
@@ -498,6 +499,7 @@
     "LANGUAGE_GERMAN": "Duits",
     "LANGUAGE_ENGLISH": "Engels",
     "LANGUAGE_DUTCH": "Nederlands",
+    "LANGUAGE_SPANISH": "Spaans",
     "APPLY_METHOD_HINT": "Zelf instellen of via \"Hoe solliciteren?\" uit de vacature laten lezen.",
     "ACTION_SUGGEST": "Aan een gebruiker voorstellen",
     "ACTION_SUGGEST_ARIA": "{{position}} bij {{company}} aan een gebruiker voorstellen",

@@ -43,12 +43,13 @@ const LAYOUT_KEY: Record<LayoutLetterKey, string> = {
 /** Columns an HTML template has no equivalent for; it is edited, never uploaded. */
 const NOT_APPLICABLE = '—';
 
-// Reuses the LANGUAGE.* UI-language keys (EN/DE/NL) since they name the same
-// three human languages the document itself can be written in.
+// Reuses the LANGUAGE.* UI-language keys (EN/DE/NL/ES) since they name the same
+// human languages the document itself can be written in.
 const LANGUAGE_KEY: Record<DocumentLanguage, string> = {
   ENGLISH: 'LANGUAGE.EN',
   GERMAN:  'LANGUAGE.DE',
   DUTCH:   'LANGUAGE.NL',
+  SPANISH: 'LANGUAGE.ES',
 };
 
 function yearOf(iso: string | null | undefined): number | null {
@@ -154,6 +155,7 @@ export class DocumentsComponent implements OnInit {
     { value: 'ENGLISH', label: LANGUAGE_KEY.ENGLISH },
     { value: 'GERMAN',  label: LANGUAGE_KEY.GERMAN },
     { value: 'DUTCH',   label: LANGUAGE_KEY.DUTCH },
+    { value: 'SPANISH', label: LANGUAGE_KEY.SPANISH },
   ];
 
   readonly searchFields = [

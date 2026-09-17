@@ -7,11 +7,12 @@ import { DocumentLanguage, uiToLetterLanguage } from '../../model/document';
 import { LanguageService } from '../../core/language.service';
 import { CoverLetterFormComponent } from '../cover-letter-form/cover-letter-form.component';
 
-// Reuses the LANGUAGE.* UI-language keys (EN/DE/NL), same as the documents list.
+// Reuses the LANGUAGE.* UI-language keys (EN/DE/NL/ES), same as the documents list.
 const LANGUAGE_KEY: Record<DocumentLanguage, string> = {
   ENGLISH: 'LANGUAGE.EN',
   GERMAN:  'LANGUAGE.DE',
   DUTCH:   'LANGUAGE.NL',
+  SPANISH: 'LANGUAGE.ES',
 };
 
 @Component({
@@ -40,6 +41,7 @@ export class CoverLetterTemplateComponent {
     { value: 'GERMAN',  label: LANGUAGE_KEY.GERMAN },
     { value: 'ENGLISH', label: LANGUAGE_KEY.ENGLISH },
     { value: 'DUTCH',   label: LANGUAGE_KEY.DUTCH },
+    { value: 'SPANISH', label: LANGUAGE_KEY.SPANISH },
   ];
 
   private readonly http = inject(HttpClient);

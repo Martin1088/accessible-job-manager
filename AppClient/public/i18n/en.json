@@ -55,6 +55,7 @@
     "EN": "English",
     "DE": "German",
     "NL": "Dutch",
+    "ES": "Spanish",
     "CHANGED": "Language changed to {{language}}"
   },
   "PROFILE": {
@@ -498,6 +499,7 @@
     "LANGUAGE_GERMAN": "German",
     "LANGUAGE_ENGLISH": "English",
     "LANGUAGE_DUTCH": "Dutch",
+    "LANGUAGE_SPANISH": "Spanish",
     "APPLY_METHOD_HINT": "Set it yourself, or let \"How to apply?\" read it from the posting.",
     "ACTION_SUGGEST": "Suggest to a user",
     "ACTION_SUGGEST_ARIA": "Suggest {{position}} at {{company}} to a user",
