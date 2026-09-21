@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ajm.fullname" . }}
+  labels:
+    {{- include "ajm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ajm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/app/config.yaml") . | sha256sum }}
+      labels:
+        {{- include "ajm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: app
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8060
+          envFrom:
+            - configMapRef:
+                name: {{ include "ajm.fullname" . }}-config
+          env:
+            - name: MANAGER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ajm.dbSecret" . }}
+                  key: username
+            - name: MANAGER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ajm.dbSecret" . }}
+                  key: password
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "oidc.existingSecret ist erforderlich" .Values.oidc.existingSecret }}
+                  key: client-secret
+            {{- with .Values.storage.s3.existingSecret }}
+            - name: ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: access-key
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: secret-key
+            {{- end }}
+            {{- if and .Values.jobSource.adzuna.enabled .Values.jobSource.adzuna.existingSecret }}
+            - name: JOBSOURCE_ADZUNA_APP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.jobSource.adzuna.existingSecret }}
+                  key: app-key
+            {{- end }}
+            {{- if eq .Values.llm.provider "ollama" }}
+            - name: OLLAMA_URL
+              value: "http://{{ include "ajm.fullname" . }}-ollama:11434"
+            - name: OLLAMA_MODEL
+              value: {{ .Values.llm.ollama.model | quote }}
+            {{- end }}
+          # The app has no actuator, so probe a path SecurityConfig permits
+          # without login. Startup gets a long budget: Hibernate runs
+          # ddl-auto=update before the port opens.
+          startupProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources.app | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault

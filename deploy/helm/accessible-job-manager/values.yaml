@@ -1,0 +1,84 @@
+image:
+  repository: ghcr.io/martin1088/accessible-job-manager
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8060
+
+ingress:
+  enabled: true
+  className: traefik
+  host: ajm.example.org
+  tls:
+    enabled: true
+    secretName: ajm-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+oidc:
+  issuerUri: ""
+  authUri: ""
+  clientId: ""
+  # Secret mit Key: client-secret
+  existingSecret: ""
+  groups:
+    user: User
+    advisor: Advisor
+    reviewer: Reviewer
+
+postgres:
+  # false = externe DB verwenden
+  deployCnpg: true
+  instances: 2
+  storage:
+    size: 20Gi
+    storageClass: hcloud-volumes
+  backup:
+    enabled: false
+    destinationPath: ""      # s3://ajm-backup/pg
+    existingSecret: ""       # Keys: ACCESS_KEY_ID, ACCESS_SECRET_KEY
+    endpointURL: ""
+  external:
+    url: ""                  # jdbc:postgresql://host:5432/manager
+    existingSecret: ""       # Keys: username, password
+
+storage:
+  provider: s3
+  s3:
+    deployGarage: true
+    endpoint: ""
+    bucket: documents
+    region: garage
+    existingSecret: ""     # Keys: access-key, secret-key
+  garage:
+    storage:
+      size: 20Gi
+      storageClass: hcloud-volumes
+
+gotenberg:
+  enabled: true
+  image: gotenberg/gotenberg:8
+
+llm:
+  provider: ollama
+  ollama:
+    enabled: true
+    model: qwen2.5:7b
+    storage:
+      size: 30Gi
+
+jobSource:
+  adzuna:
+    enabled: false
+    appId: ""
+    country: de
+    existingSecret: ""     # Key: app-key
+
+resources:
+  app:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits:   { memory: 2Gi }
