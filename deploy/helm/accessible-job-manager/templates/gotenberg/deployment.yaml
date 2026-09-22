@@ -18,6 +18,8 @@ spec:
         {{- include "ajm.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: gotenberg
     spec:
+      # Nothing here talks to the Kubernetes API.
+      automountServiceAccountToken: false
       containers:
         - name: gotenberg
           image: {{ .Values.gotenberg.image }}

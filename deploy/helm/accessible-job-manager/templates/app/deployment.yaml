@@ -19,6 +19,8 @@ spec:
         {{- include "ajm.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: app
     spec:
+      # Nothing here talks to the Kubernetes API.
+      automountServiceAccountToken: false
       containers:
         - name: app
           image: "{{ .Values.ajm.image.repository }}:{{ .Values.ajm.image.tag | default .Chart.AppVersion }}"

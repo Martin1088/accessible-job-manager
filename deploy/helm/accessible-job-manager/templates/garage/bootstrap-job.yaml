@@ -20,10 +20,16 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: {{ include "ajm.fullname" . }}-garage-bootstrap
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
       containers:
         - name: bootstrap
           image: {{ .Values.storage.garage.bootstrap.image }}
           env:
+            - name: HOME
+              value: /tmp
             - name: ACCESS_KEY
               valueFrom:
                 secretKeyRef:
@@ -71,8 +77,6 @@ spec:
               fi
 
               echo "==> bucket $BUCKET"
-              # `info` exits non-zero when it does not exist, which is steadier
-              # than grepping `bucket list`'s space-aligned table.
               if g bucket info "$BUCKET" >/dev/null 2>&1; then
                 echo "    already exists"
               else
@@ -83,10 +87,9 @@ spec:
               if g key info "$KEY_NAME" >/dev/null 2>&1; then
                 echo "    already exists"
               else
-                # Imported rather than created: `garage key create` prints the
-                # secret once and never again, so the chart generates the pair
-                # and garage is told about it, not the other way round.
-                g key import "$ACCESS_KEY" "$SECRET_KEY" -n "$KEY_NAME" --yes
+                printf '{"accessKeyId":"%s","secretAccessKey":"%s","name":"%s"}' \
+                  "$ACCESS_KEY" "$SECRET_KEY" "$KEY_NAME" \
+                  | kubectl exec -i "$POD" -c garage -- /garage json-api ImportKey - >/dev/null
               fi
 
               echo "==> granting $KEY_NAME access to $BUCKET"

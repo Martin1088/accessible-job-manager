@@ -8,7 +8,7 @@ data:
   OIDC_ISSUER_URI: {{ .Values.ajm.oidc.issuerUri | quote }}
   OIDC_AUTH_URI: {{ .Values.ajm.oidc.authUri | quote }}
   OIDC_CLIENT_ID: {{ .Values.ajm.oidc.clientId | quote }}
-  OIDC_REDIRECT_URI: "https://{{ .Values.ajm.ingress.host }}/login/oauth2/code/authentik"
+  OIDC_REDIRECT_URI: "http{{ if .Values.ajm.ingress.tls.enabled }}s{{ end }}://{{ .Values.ajm.ingress.host }}/login/oauth2/code/authentik"
   COOKIE_SECURE: {{ .Values.ajm.ingress.tls.enabled | quote }}
   GROUP_USER: {{ .Values.ajm.oidc.groups.user | quote }}
   GROUP_ADVISOR: {{ .Values.ajm.oidc.groups.advisor | quote }}

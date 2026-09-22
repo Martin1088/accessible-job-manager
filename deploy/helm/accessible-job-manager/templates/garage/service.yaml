@@ -12,15 +12,6 @@ spec:
     - name: s3
       port: 3900
       targetPort: s3
-    - name: rpc
-      port: 3901
-      targetPort: rpc
-    - name: web
-      port: 3902
-      targetPort: web
-    - name: admin
-      port: 3903
-      targetPort: admin
   selector:
     {{- include "ajm.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: garage

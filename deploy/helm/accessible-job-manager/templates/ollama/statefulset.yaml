@@ -19,6 +19,12 @@ spec:
         {{- include "ajm.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: ollama
     spec:
+      # Nothing here talks to the Kubernetes API.
+      automountServiceAccountToken: false
+      {{- with .Values.llm.ollama.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       initContainers:
         # The image ships no models. Pulling here rather than in the serving
         # container keeps the multi-GB download in Init, where it has no probe
@@ -26,6 +32,11 @@ spec:
         # traffic.
         - name: pull-model
           image: {{ .Values.llm.ollama.image }}
+          env:
+            # Keeps models and ollama's own keypair on the volume, so a
+            # non-root UID has somewhere writable.
+            - name: HOME
+              value: /models
           command: ["/bin/sh", "-eu", "-c"]
           args:
             - |
@@ -50,7 +61,7 @@ spec:
               kill "$SERVER"
           volumeMounts:
             - name: models
-              mountPath: /root/.ollama
+              mountPath: /models
           resources:
             {{- toYaml .Values.resources.ollama | nindent 12 }}
       containers:
@@ -59,6 +70,11 @@ spec:
           ports:
             - name: http
               containerPort: 11434
+          env:
+            # Keeps models and ollama's own keypair on the volume, so a
+            # non-root UID has somewhere writable.
+            - name: HOME
+              value: /models
           # Ollama exposes no /health; GET / answers "Ollama is running".
           startupProbe:
             httpGet:
@@ -79,7 +95,7 @@ spec:
             failureThreshold: 3
           volumeMounts:
             - name: models
-              mountPath: /root/.ollama
+              mountPath: /models
           resources:
             {{- toYaml .Values.resources.ollama | nindent 12 }}
           securityContext:

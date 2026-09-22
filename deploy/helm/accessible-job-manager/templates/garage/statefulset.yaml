@@ -21,6 +21,11 @@ spec:
         {{- include "ajm.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: garage
     spec:
+      automountServiceAccountToken: false
+      {{- with .Values.storage.garage.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: garage
           image: {{ .Values.storage.garage.image }}
