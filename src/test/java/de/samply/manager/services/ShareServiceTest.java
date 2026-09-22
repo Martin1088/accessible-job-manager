@@ -2,22 +2,26 @@ package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
+import de.samply.manager.model.DocumentType;
 import de.samply.manager.model.HtmlLetterTemplate;
 import de.samply.manager.model.Relationship;
 import de.samply.manager.model.Share;
 import de.samply.manager.repository.HtmlLetterTemplateRepository;
 import de.samply.manager.repository.ShareRepository;
 import de.samply.manager.security.AppRole;
+import de.samply.manager.types.Language;
 import de.samply.manager.types.RelationshipStatus;
 import de.samply.manager.types.SharedSubject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.context.support.StaticMessageSource;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -207,5 +211,53 @@ class ShareServiceTest {
 
         assertThat(service.hasActiveShare(COUNTERPART, SharedSubject.DOCUMENT, DOC_ID)).isTrue();
         assertThat(service.hasActiveShare(COUNTERPART, SharedSubject.DOCUMENT, UUID.randomUUID())).isFalse();
+    }
+
+    @Test
+    void uploadingAReviewSharesItBackOnTheSameRelationship() throws Exception {
+        Relationship relationship = Relationship.builder()
+                .id(REL_ID).applicantId(APPLICANT).counterpartId(COUNTERPART)
+                .kind(AppRole.REVIEWER).status(RelationshipStatus.ACTIVE).build();
+        Document original = Document.builder().id(DOC_ID).userId(APPLICANT).label("CV")
+                .language(Language.ENGLISH).build();
+        when(shareRepository.findActiveForCounterpart(COUNTERPART, SharedSubject.DOCUMENT))
+                .thenReturn(List.of(Share.builder()
+                        .relationship(relationship).subjectType(SharedSubject.DOCUMENT).document(original).build()));
+
+        MockMultipartFile file = new MockMultipartFile("file", "review.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", new byte[]{1});
+        Document reviewDocument = Document.builder().id(UUID.randomUUID()).userId(COUNTERPART)
+                .type(DocumentType.REVIEW_RESULT).label("Review of CV").build();
+        when(documentService.upload(file, "Review of CV", DocumentType.REVIEW_RESULT, Language.ENGLISH, COUNTERPART))
+                .thenReturn(reviewDocument);
+
+        Document result = service.uploadReviewResult(DOC_ID, COUNTERPART, file, "Review of CV");
+
+        assertThat(result).isEqualTo(reviewDocument);
+        ArgumentCaptor<Share> captor = ArgumentCaptor.forClass(Share.class);
+        verify(shareRepository).save(captor.capture());
+        assertThat(captor.getValue().getRelationship()).isEqualTo(relationship);
+        assertThat(captor.getValue().getSubjectType()).isEqualTo(SharedSubject.DOCUMENT);
+        assertThat(captor.getValue().getDocument()).isEqualTo(reviewDocument);
+    }
+
+    @Test
+    void uploadingAReviewRequiresAnExistingShareOfTheOriginalDocument() throws Exception {
+        when(shareRepository.findActiveForCounterpart(COUNTERPART, SharedSubject.DOCUMENT))
+                .thenReturn(List.of());
+        MockMultipartFile file = new MockMultipartFile("file", "review.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", new byte[]{1});
+
+        assertThatThrownBy(() -> service.uploadReviewResult(DOC_ID, COUNTERPART, file, "Review"))
+                .isInstanceOf(ApiException.Forbidden.class);
+        verify(documentService, never()).upload(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void incomingForApplicantDelegatesToTheRepository() {
+        when(shareRepository.findIncomingForApplicant(APPLICANT, SharedSubject.DOCUMENT))
+                .thenReturn(List.of());
+
+        assertThat(service.incomingForApplicant(APPLICANT, SharedSubject.DOCUMENT)).isEmpty();
     }
 }

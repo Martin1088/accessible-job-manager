@@ -1,5 +1,6 @@
 package de.samply.manager.controller;
 
+import de.samply.manager.dto.DocumentDto;
 import de.samply.manager.dto.ReviewerUserDto;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
@@ -11,12 +12,14 @@ import de.samply.manager.services.storage.StorageService;
 import de.samply.manager.types.SharedSubject;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
@@ -79,5 +82,20 @@ public class ReviewerController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getFilename() + "\"")
                 .contentType(MediaType.parseMediaType(document.getMimeType()))
                 .body(bytes);
+    }
+
+    /**
+     * The reviewer's .docx feedback on a document they were given access to, shared back
+     * to that document's owner as a separate, new document.
+     */
+    @PostMapping("/documents/{documentId}/review")
+    @ResponseStatus(HttpStatus.CREATED)
+    public DocumentDto uploadReview(
+            @PathVariable UUID documentId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("label") String label,
+            @AuthenticationPrincipal OidcUser reviewer) throws IOException {
+
+        return DocumentDto.from(shareService.uploadReviewResult(documentId, reviewer.getSubject(), file, label));
     }
 }

@@ -1,58 +1,47 @@
 <main id="main-content" tabindex="-1">
   <div class="masthead">
-    <h1>{{ 'REVIEWER.TITLE' | translate }}</h1>
-
-    <!-- DIN 5008 reference line, as on the advisor dashboard: key/value figures, so a <dl>. -->
-    <dl class="reference-line">
-      <div class="reference-line__entry">
-        <dt>{{ 'REVIEWER.REF_USERS' | translate }}</dt>
-        <dd>{{ userCount }}</dd>
-      </div>
-      <div class="reference-line__entry">
-        <dt>{{ 'REVIEWER.REF_OPEN' | translate }}</dt>
-        <dd>{{ openRequestCount }}</dd>
-      </div>
-      <div class="reference-line__entry">
-        <dt>{{ 'REVIEWER.REF_DOCUMENTS' | translate }}</dt>
-        <dd>{{ documentCount }}</dd>
-      </div>
-      <div class="reference-line__entry">
-        <dt>{{ 'REVIEWER.REF_UPDATED' | translate }}</dt>
-        <dd>{{ asOfDate }}</dd>
-      </div>
-    </dl>
+    <h1>{{ 'REVIEWER.DOCUMENTS_PAGE_TITLE' | translate }}</h1>
+    <p class="section-note">{{ 'REVIEWER.DOCUMENTS_PAGE_HINT' | translate: { count: documentCount } }}</p>
   </div>
 
   @if (errorMessage) {
     <p role="alert" class="notice notice--error">{{ errorMessage }}</p>
   }
 
-  <section aria-labelledby="my-users-heading">
-    <h2 id="my-users-heading" class="section-tab">{{ 'REVIEWER.MY_USERS_HEADING' | translate }}</h2>
-    <app-data-table
-      caption="REVIEWER.MY_USERS_CAPTION"
-      [columns]="myUserColumns"
-      [rows]="myUserRows"
-      emptyMessage="REVIEWER.MY_USERS_EMPTY">
-    </app-data-table>
-  </section>
+  <input #reviewFileInput type="file"
+    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    style="display:none" tabindex="-1" aria-hidden="true"
+    (change)="onReviewFileSelected($event)">
 
-  <section aria-labelledby="requests-heading">
-    <h2 id="requests-heading" class="section-tab">{{ 'REVIEWER.REQUESTS_HEADING' | translate }}</h2>
-    <p class="section-note">{{ 'REVIEWER.REQUESTS_HELP' | translate }}</p>
+  @if (showReviewForm && reviewTarget) {
+    <section class="upload-form" aria-labelledby="review-form-heading">
+      <h2 id="review-form-heading" class="section-tab">
+        {{ 'REVIEWER.REVIEW_FORM_HEADING' | translate: { label: reviewTarget.label } }}
+      </h2>
+      <p class="upload-filename">{{ 'REVIEWER.REVIEW_FILE_LABEL' | translate }} <strong>{{ pendingReviewFile?.name }}</strong></p>
 
-    @if (requestError) {
-      <p role="alert" class="notice notice--error">{{ requestError }}</p>
-    }
+      @if (reviewError) {
+        <p role="alert" class="notice notice--error">{{ reviewError }}</p>
+      }
 
-    <app-data-table
-      caption="REVIEWER.REQUESTS_CAPTION"
-      [columns]="requestColumns"
-      [rows]="requestRows"
-      [actions]="requestActions"
-      emptyMessage="REVIEWER.REQUESTS_EMPTY">
-    </app-data-table>
-  </section>
+      <div class="field">
+        <label for="review-label">{{ 'REVIEWER.REVIEW_LABEL_FIELD' | translate }} <span aria-hidden="true">*</span></label>
+        <input id="review-label" name="review-label" type="text"
+          [(ngModel)]="pendingReviewLabel" required
+          aria-required="true"/>
+      </div>
+
+      <div class="upload-actions">
+        <button type="button" class="btn-primary" (click)="confirmReviewUpload()"
+          [disabled]="reviewUploading || !pendingReviewLabel.trim()">
+          {{ (reviewUploading ? 'REVIEWER.REVIEW_UPLOADING' : 'REVIEWER.REVIEW_SHARE_ACTION') | translate }}
+        </button>
+        <button type="button" class="btn-cancel" (click)="cancelReviewUpload()" [disabled]="reviewUploading">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </section>
+  }
 
   <section aria-labelledby="documents-heading">
     <h2 id="documents-heading" class="section-tab">{{ 'REVIEWER.USERS_HEADING' | translate }}</h2>
@@ -77,9 +66,9 @@
                 <tr>
                   <th scope="col">{{ 'REVIEWER.COL_LABEL' | translate }}</th>
                   <th scope="col">{{ 'REVIEWER.COL_FILE' | translate }}</th>
-                  <th scope="col">{{ 'REVIEWER.COL_TYPE' | translate }}</th>
                   <th scope="col">{{ 'REVIEWER.COL_GRANTED' | translate }}</th>
                   <th scope="col">{{ 'REVIEWER.COL_DOWNLOAD' | translate }}</th>
+                  <th scope="col">{{ 'REVIEWER.COL_REVIEW' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,7 +76,6 @@
                   <tr>
                     <td [attr.data-label]="'REVIEWER.COL_LABEL' | translate">{{ doc.label }}</td>
                     <td [attr.data-label]="'REVIEWER.COL_FILE' | translate">{{ doc.filename }}</td>
-                    <td [attr.data-label]="'REVIEWER.COL_TYPE' | translate">{{ doc.type }}</td>
                     <td [attr.data-label]="'REVIEWER.COL_GRANTED' | translate">{{ doc.grantedAt.slice(0, 10) }}</td>
                     <td [attr.data-label]="'REVIEWER.COL_DOWNLOAD' | translate">
                       <button type="button"
@@ -95,6 +83,13 @@
                         [disabled]="downloading[doc.id]"
                         [attr.aria-label]="'REVIEWER.DOWNLOAD_ARIA' | translate: { label: doc.label }">
                         {{ (downloading[doc.id] ? 'REVIEWER.DOWNLOADING' : 'REVIEWER.DOWNLOAD') | translate }}
+                      </button>
+                    </td>
+                    <td [attr.data-label]="'REVIEWER.COL_REVIEW' | translate">
+                      <button type="button"
+                        (click)="beginReview(doc); reviewFileInput.click()"
+                        [attr.aria-label]="'REVIEWER.UPLOAD_REVIEW_ARIA' | translate: { label: doc.label }">
+                        {{ 'REVIEWER.UPLOAD_REVIEW' | translate }}
                       </button>
                     </td>
                   </tr>

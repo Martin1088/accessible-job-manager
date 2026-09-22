@@ -18,7 +18,21 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- Users can share a `.docx` cover letter template with one of their active reviewers
+  directly from My Documents, via a new "Share for review" action.
+- Reviewers can now upload a `.docx` review of a document they were given access to,
+  from a new "Documents to Review" page; it is shared back to the document's owner as a
+  separate, new document, visible under a new "Feedback from reviewers" section on the
+  owner's My Documents page.
+- Spanish is now a supported interface language, alongside English, German and Dutch,
+  and a supported cover-letter/document language.
+
 ### Changed
+
+- The reviewer dashboard now follows the advisor dashboard: the same DIN 5008
+  correspondence design and reference line, a My Users table of everyone who
+  linked you as their reviewer, and review requests you can accept or decline
+  there. It also follows the dark and high-contrast themes.
 
 ### Fixed
 

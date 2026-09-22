@@ -1,10 +1,11 @@
-export type DocumentType = 'CV' | 'COVER_LETTER_TEMPLATE' | 'CERTIFICATE' | 'OTHER';
-export type DocumentLanguage = 'GERMAN' | 'ENGLISH' | 'DUTCH';
+export type DocumentType = 'CV' | 'COVER_LETTER_TEMPLATE' | 'CERTIFICATE' | 'OTHER' | 'REVIEW_RESULT';
+export type DocumentLanguage = 'GERMAN' | 'ENGLISH' | 'DUTCH' | 'SPANISH';
 
 const UI_TO_DOCUMENT_LANGUAGE: Record<string, DocumentLanguage> = {
   de: 'GERMAN',
   en: 'ENGLISH',
   nl: 'DUTCH',
+  es: 'SPANISH',
 };
 
 /**

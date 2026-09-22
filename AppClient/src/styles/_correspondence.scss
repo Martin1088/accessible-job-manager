@@ -13,10 +13,10 @@
 // carries the stationery in its own stylesheet, so no page retextures it
 // through `::ng-deep` any more.
 //
-// Scope of the look: the advisor screens, the user screens (`user/home`,
-// `company-list`, `documents`, `company-form`, `application-list`, `profile`)
-// and every `app-data-table`. Not the shell (navy header) or the reviewer
-// screen, whose table follows the `--color-*` tokens instead.
+// Scope of the look: the advisor screens, the reviewer dashboard
+// (`reviewer/home`), the user screens (`user/home`, `company-list`,
+// `documents`, `company-form`, `application-list`, `profile`) and every
+// `app-data-table`. Not the shell (navy header).
 //
 // Focus rings deliberately stay on the app-wide `--color-focus` (blue, black in
 // high contrast), not the terracotta accent - that token is tuned for contrast

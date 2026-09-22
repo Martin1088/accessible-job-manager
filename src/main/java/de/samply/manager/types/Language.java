@@ -3,7 +3,8 @@ package de.samply.manager.types;
 import java.util.Locale;
 
 public enum Language {
-    GERMAN(Locale.GERMAN), ENGLISH(Locale.ENGLISH), DUTCH(Locale.forLanguageTag("nl"));
+    GERMAN(Locale.GERMAN), ENGLISH(Locale.ENGLISH), DUTCH(Locale.forLanguageTag("nl")),
+    SPANISH(Locale.forLanguageTag("es"));
 
     private final Locale locale;
 

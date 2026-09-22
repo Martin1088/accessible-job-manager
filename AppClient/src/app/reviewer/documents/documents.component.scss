@@ -1,10 +1,11 @@
 @use '../../../styles/breakpoints' as bp;
 @use '../../../styles/correspondence' as corr;
 
-// Same DIN 5008 stationery as the advisor and user dashboards: the page is a
-// desk, the section a sheet, labels in the monospace voice, names and body copy
-// in the serif. The document tables follow `app-data-table`'s rules, restated
-// here because this table carries a per-row busy state that component lacks.
+// Same DIN 5008 stationery as `reviewer/home` - this page reuses its masthead,
+// section shell, sender list and document table styles verbatim (that page
+// documents why the table is bespoke rather than `app-data-table`: a per-row
+// busy state neither component supports). The review upload form below reuses
+// `user/documents`' field/button classes for the same reason.
 
 :host {
   display: block;
@@ -46,39 +47,6 @@ h1 {
   color: var(--ink);
 }
 
-.reference-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.75rem;
-  margin: 0;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.reference-line__entry {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-
-  dt {
-    font-family: corr.$corr-mono;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-
-  dd {
-    margin: 0;
-    font-family: corr.$corr-mono;
-    font-size: 0.9rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-  }
-}
-
 // --- Section shell ----------------------------------------------------------
 
 section {
@@ -87,6 +55,8 @@ section {
   border-radius: 2px;
   padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
 }
+
+.upload-form { max-width: 480px; }
 
 .section-tab {
   display: inline-block;
@@ -104,14 +74,17 @@ section {
 }
 
 .section-note {
-  margin: 0 0 1rem;
+  margin: 0;
   font-family: corr.$corr-serif;
   font-size: 0.92rem;
   color: var(--ink-soft);
+}
 
-  &:last-child {
-    margin-block-end: 0;
-  }
+.upload-filename {
+  margin: 0 0 1rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
 }
 
 section .notice {
@@ -134,7 +107,90 @@ section .notice {
   color: var(--color-alert-text);
 }
 
-// --- Senders: one entry per person who shared documents ---------------------
+// --- Review upload form -----------------------------------------------------
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+
+  label {
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  input {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+}
+
+.upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn-primary,
+.btn-cancel {
+  min-block-size: 44px;
+  padding: 0.6rem 1.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:disabled {
+    background: var(--paper);
+    border-color: var(--rule);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
+}
+
+.btn-cancel:not(:disabled) {
+  background: var(--paper);
+  color: var(--ink);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+}
+
+.field input:focus-visible,
+.btn-primary:focus-visible,
+.btn-cancel:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+// --- Senders: one entry per person whose documents can be reviewed ----------
 
 .sender-list {
   list-style: none;

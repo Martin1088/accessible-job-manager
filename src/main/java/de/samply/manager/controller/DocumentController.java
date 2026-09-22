@@ -1,11 +1,18 @@
 package de.samply.manager.controller;
 
 import de.samply.manager.dto.DocumentDto;
+import de.samply.manager.dto.SharedWithMeDocumentDto;
 import de.samply.manager.dto.UpdateDocumentRequest;
+import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
 import de.samply.manager.model.DocumentType;
+import de.samply.manager.model.Share;
+import de.samply.manager.model.UserProfile;
+import de.samply.manager.repository.UserProfileRepository;
 import de.samply.manager.services.DocumentService;
+import de.samply.manager.services.ShareService;
 import de.samply.manager.types.Language;
+import de.samply.manager.types.SharedSubject;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -36,6 +43,8 @@ import java.util.UUID;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final ShareService shareService;
+    private final UserProfileRepository userProfileRepository;
 
     @GetMapping
     public List<DocumentDto> getMyDocuments(
@@ -96,5 +105,50 @@ public class DocumentController {
             @AuthenticationPrincipal OidcUser user) {
 
         documentService.delete(documentId, user.getSubject());
+    }
+
+    /**
+     * Documents shared back to the caller by a reviewer - not their own uploads, so they
+     * are not in {@link #getMyDocuments}, and not reachable through {@link #download},
+     * which is gated on ownership rather than a granted {@link Share}.
+     */
+    @GetMapping("/shared-with-me")
+    public List<SharedWithMeDocumentDto> sharedWithMe(@AuthenticationPrincipal OidcUser user) {
+        return shareService.incomingForApplicant(user.getSubject(), SharedSubject.DOCUMENT).stream()
+                .map(share -> {
+                    Document document = share.getDocument();
+                    String reviewerId = share.getRelationship().getCounterpartId();
+                    UserProfile reviewer = userProfileRepository.findById(reviewerId).orElse(null);
+                    return new SharedWithMeDocumentDto(
+                            document.getId(),
+                            document.getLabel(),
+                            document.getFilename(),
+                            document.getType().name(),
+                            reviewer != null ? reviewer.getName() : reviewerId,
+                            share.getGrantedAt() != null ? share.getGrantedAt().toLocalDate().toString() : "");
+                })
+                .toList();
+    }
+
+    @GetMapping("/shared-with-me/{documentId}/download")
+    public ResponseEntity<byte[]> downloadShared(
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal OidcUser user) throws IOException {
+
+        Document document = shareService.incomingForApplicant(user.getSubject(), SharedSubject.DOCUMENT).stream()
+                .map(Share::getDocument)
+                .filter(doc -> doc.getId().equals(documentId))
+                .findFirst()
+                .orElseThrow(ApiException.Forbidden::new);
+
+        byte[] bytes = documentService.bytes(document);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(document.getFilename())
+                        .build()
+                        .toString())
+                .contentType(MediaType.parseMediaType(document.getMimeType()))
+                .body(bytes);
     }
 }
