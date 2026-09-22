@@ -1,0 +1,39 @@
+{{- if .Values.postgres.deployCnpg }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "ajm.fullname" . }}-pg
+  labels:
+    {{- include "ajm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  instances: {{ .Values.postgres.instances }}
+  {{- with .Values.postgres.imageName }}
+  imageName: {{ . }}
+  {{- end }}
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgres.database }}
+      owner: {{ .Values.postgres.database }}
+  storage:
+    size: {{ .Values.postgres.storage.size }}
+    storageClass: {{ .Values.postgres.storage.storageClass }}
+  resources:
+    {{- toYaml .Values.resources.postgres | nindent 4 }}
+  {{- if .Values.postgres.backup.enabled }}
+  backup:
+    retentionPolicy: {{ .Values.postgres.backup.retentionPolicy }}
+    barmanObjectStore:
+      destinationPath: {{ required "postgres.backup.destinationPath ist erforderlich, wenn backup.enabled=true" .Values.postgres.backup.destinationPath | quote }}
+      {{- with .Values.postgres.backup.endpointURL }}
+      endpointURL: {{ . | quote }}
+      {{- end }}
+      s3Credentials:
+        accessKeyId:
+          name: {{ required "postgres.backup.existingSecret ist erforderlich, wenn backup.enabled=true" .Values.postgres.backup.existingSecret }}
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: {{ required "postgres.backup.existingSecret ist erforderlich, wenn backup.enabled=true" .Values.postgres.backup.existingSecret }}
+          key: ACCESS_SECRET_KEY
+  {{- end }}
+{{- end }}

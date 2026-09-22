@@ -1,0 +1,105 @@
+{{- if and .Values.storage.s3.deployGarage .Values.storage.garage.bootstrap.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ajm.fullname" . }}-garage-bootstrap
+  labels:
+    {{- include "ajm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: garage-bootstrap
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "ajm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: garage-bootstrap
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "ajm.fullname" . }}-garage-bootstrap
+      containers:
+        - name: bootstrap
+          image: {{ .Values.storage.garage.bootstrap.image }}
+          env:
+            - name: ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ajm.s3Secret" . }}
+                  key: access-key
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ajm.s3Secret" . }}
+                  key: secret-key
+          command: ["/bin/sh", "-eu", "-c"]
+          args:
+            - |
+              POD={{ include "ajm.fullname" . }}-garage-0
+              BUCKET={{ .Values.storage.s3.bucket | quote }}
+              KEY_NAME={{ .Values.storage.garage.bootstrap.keyName | quote }}
+              ZONE={{ .Values.storage.garage.zone | quote }}
+              CAPACITY={{ .Values.storage.garage.capacity | quote }}
+
+              g() { kubectl exec "$POD" -c garage -- /garage "$@"; }
+
+              echo "==> waiting for $POD to be ready"
+              i=0
+              while [ "$(kubectl get pod "$POD" -o jsonpath='{.status.containerStatuses[0].ready}' 2>/dev/null)" != "true" ]; do
+                i=$((i + 1))
+                if [ "$i" -gt 60 ]; then
+                  echo "!! $POD not ready after 5 minutes" >&2
+                  exit 1
+                fi
+                sleep 5
+              done
+
+              echo "==> cluster layout"
+              LAYOUT=$(g layout show)
+              if echo "$LAYOUT" | grep -q "No nodes currently have a role"; then
+                NODE_ID=$(g node id -q | tr -d '\r' | cut -d@ -f1)
+                echo "    assigning role to $NODE_ID (zone=$ZONE capacity=$CAPACITY)"
+                g layout assign -z "$ZONE" -c "$CAPACITY" "$NODE_ID"
+                # `layout apply` requires exactly previous+1, and refuses to
+                # guess - a fresh cluster is at version 0.
+                CURRENT=$(echo "$LAYOUT" | sed -n 's/^Current cluster layout version: \([0-9]*\).*/\1/p')
+                g layout apply --version "$((CURRENT + 1))"
+              else
+                echo "    a node already holds a role, leaving the layout alone"
+              fi
+
+              echo "==> bucket $BUCKET"
+              # `info` exits non-zero when it does not exist, which is steadier
+              # than grepping `bucket list`'s space-aligned table.
+              if g bucket info "$BUCKET" >/dev/null 2>&1; then
+                echo "    already exists"
+              else
+                g bucket create "$BUCKET"
+              fi
+
+              echo "==> key $KEY_NAME"
+              if g key info "$KEY_NAME" >/dev/null 2>&1; then
+                echo "    already exists"
+              else
+                # Imported rather than created: `garage key create` prints the
+                # secret once and never again, so the chart generates the pair
+                # and garage is told about it, not the other way round.
+                g key import "$ACCESS_KEY" "$SECRET_KEY" -n "$KEY_NAME" --yes
+              fi
+
+              echo "==> granting $KEY_NAME access to $BUCKET"
+              g bucket allow --read --write --owner "$BUCKET" --key "$KEY_NAME"
+
+              echo "==> done"
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+{{- end }}

@@ -5,16 +5,26 @@ metadata:
   labels: {{- include "ajm.labels" . | nindent 4 }}
 data:
   MANAGER_DB_URL: {{ include "ajm.dbUrl" . | quote }}
-  OIDC_ISSUER_URI: {{ .Values.oidc.issuerUri | quote }}
-  OIDC_AUTH_URI: {{ .Values.oidc.authUri | quote }}
-  OIDC_CLIENT_ID: {{ .Values.oidc.clientId | quote }}
-  OIDC_REDIRECT_URI: "https://{{ .Values.ingress.host }}/login/oauth2/code/authentik"
-  COOKIE_SECURE: {{ .Values.ingress.tls.enabled | quote }}
-  GROUP_USER: {{ .Values.oidc.groups.user | quote }}
-  GROUP_ADVISOR: {{ .Values.oidc.groups.advisor | quote }}
-  GROUP_REVIEWER: {{ .Values.oidc.groups.reviewer | quote }}
+  OIDC_ISSUER_URI: {{ .Values.ajm.oidc.issuerUri | quote }}
+  OIDC_AUTH_URI: {{ .Values.ajm.oidc.authUri | quote }}
+  OIDC_CLIENT_ID: {{ .Values.ajm.oidc.clientId | quote }}
+  OIDC_REDIRECT_URI: "https://{{ .Values.ajm.ingress.host }}/login/oauth2/code/authentik"
+  COOKIE_SECURE: {{ .Values.ajm.ingress.tls.enabled | quote }}
+  GROUP_USER: {{ .Values.ajm.oidc.groups.user | quote }}
+  GROUP_ADVISOR: {{ .Values.ajm.oidc.groups.advisor | quote }}
+  GROUP_REVIEWER: {{ .Values.ajm.oidc.groups.reviewer | quote }}
   STORAGE_PROVIDER: {{ .Values.storage.provider | quote }}
   JOB_POSTING_LLM_PROVIDER: {{ .Values.llm.provider | quote }}
+{{- if eq .Values.storage.provider "s3" }}
+{{- $endpoint := .Values.storage.s3.endpoint }}
+{{- if and (not $endpoint) .Values.storage.s3.deployGarage }}
+{{- $endpoint = printf "http://%s-garage:3900" (include "ajm.fullname" .) }}
+{{- end }}
+  S3_ENDPOINT: {{ required "storage.s3.endpoint ist erforderlich, wenn deployGarage=false" $endpoint | quote }}
+  S3_BUCKET: {{ .Values.storage.s3.bucket | quote }}
+  REGION: {{ .Values.storage.s3.region | quote }}
+  S3_SSE_C_MODE: {{ .Values.storage.s3.encryption.mode | quote }}
+{{- end }}
 {{- if .Values.gotenberg.enabled }}
   GOTENBERG_URL: "http://{{ include "ajm.fullname" . }}-gotenberg:3000"
 {{- end }}

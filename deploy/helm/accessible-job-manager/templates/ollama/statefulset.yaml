@@ -1,0 +1,100 @@
+{{- if .Values.llm.ollama.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "ajm.fullname" . }}-ollama
+  labels:
+    {{- include "ajm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama
+spec:
+  serviceName: {{ include "ajm.fullname" . }}-ollama
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ajm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ollama
+  template:
+    metadata:
+      labels:
+        {{- include "ajm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ollama
+    spec:
+      initContainers:
+        # The image ships no models. Pulling here rather than in the serving
+        # container keeps the multi-GB download in Init, where it has no probe
+        # to race, and guarantees the model is on disk before the API accepts
+        # traffic.
+        - name: pull-model
+          image: {{ .Values.llm.ollama.image }}
+          command: ["/bin/sh", "-eu", "-c"]
+          args:
+            - |
+              MODEL={{ .Values.llm.ollama.model | quote }}
+              /bin/ollama serve &
+              SERVER=$!
+              i=0
+              until /bin/ollama list >/dev/null 2>&1; do
+                i=$((i + 1))
+                if [ "$i" -gt 30 ]; then
+                  echo "!! ollama did not start" >&2
+                  exit 1
+                fi
+                sleep 2
+              done
+              if /bin/ollama list | grep -q "$MODEL"; then
+                echo "==> $MODEL already present"
+              else
+                echo "==> pulling $MODEL"
+                /bin/ollama pull "$MODEL"
+              fi
+              kill "$SERVER"
+          volumeMounts:
+            - name: models
+              mountPath: /root/.ollama
+          resources:
+            {{- toYaml .Values.resources.ollama | nindent 12 }}
+      containers:
+        - name: ollama
+          image: {{ .Values.llm.ollama.image }}
+          ports:
+            - name: http
+              containerPort: 11434
+          # Ollama exposes no /health; GET / answers "Ollama is running".
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+          volumeMounts:
+            - name: models
+              mountPath: /root/.ollama
+          resources:
+            {{- toYaml .Values.resources.ollama | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+  volumeClaimTemplates:
+    - metadata:
+        name: models
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.llm.ollama.storage.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.llm.ollama.storage.size }}
+{{- end }}

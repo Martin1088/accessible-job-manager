@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['-q', '-O', '/dev/null', 'http://{{ include "ajm.fullname" . }}:{{ .Values.service.port }}/index.html']
+      args: ['-q', '-O', '/dev/null', 'http://{{ include "ajm.fullname" . }}:{{ .Values.ajm.service.port }}/index.html']
   restartPolicy: Never

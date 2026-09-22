@@ -20,9 +20,20 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/* JDBC-URL: CNPG-Service oder externe DB */}}
 {{- define "ajm.dbUrl" -}}
 {{- if .Values.postgres.deployCnpg -}}
-jdbc:postgresql://{{ include "ajm.fullname" . }}-pg-rw:5432/manager
+jdbc:postgresql://{{ include "ajm.fullname" . }}-pg-rw:5432/{{ .Values.postgres.database }}
 {{- else -}}
 {{ required "postgres.external.url ist erforderlich" .Values.postgres.external.url }}
+{{- end -}}
+{{- end -}}
+
+{{/* Name des Secrets mit S3-Credentials: eigenes garage oder externes S3 */}}
+{{- define "ajm.s3Secret" -}}
+{{- if .Values.storage.s3.existingSecret -}}
+{{ .Values.storage.s3.existingSecret }}
+{{- else if .Values.storage.s3.deployGarage -}}
+{{ include "ajm.fullname" . }}-s3
+{{- else -}}
+{{ required "storage.s3.existingSecret ist erforderlich, wenn deployGarage=false" .Values.storage.s3.existingSecret }}
 {{- end -}}
 {{- end -}}
 

@@ -1,75 +1,106 @@
-image:
-  repository: ghcr.io/martin1088/accessible-job-manager
-  tag: "latest"
-  pullPolicy: IfNotPresent
-
-replicaCount: 1
-
-service:
-  type: ClusterIP
-  port: 8060
-
-ingress:
-  enabled: true
-  className: traefik
-  host: ajm.example.org
-  tls:
+ajm:
+  image:
+    repository: ghcr.io/martin1088/accessible-job-manager
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8060
+  ingress:
     enabled: true
-    secretName: ajm-tls
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-
-oidc:
-  issuerUri: ""
-  authUri: ""
-  clientId: ""
-  # Secret mit Key: client-secret
-  existingSecret: ""
-  groups:
-    user: User
-    advisor: Advisor
-    reviewer: Reviewer
+    className: traefik
+    host: ajm.example.org
+    tls:
+      enabled: true
+      secretName: ajm-tls
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+  oidc:
+    issuerUri: ""
+    authUri: ""
+    clientId: ""
+    # Secret mit Key: client-secret
+    existingSecret: ""
+    groups:
+      user: User
+      advisor: Advisor
+      reviewer: Reviewer
 
 postgres:
-  # false = externe DB verwenden
+  # external DB == false. Needs the CloudNativePG operator installed in the
+  # cluster; the chart renders a Cluster CR, it does not install the operator.
   deployCnpg: true
   instances: 2
+  # Database and its owning role. CNPG puts the generated credentials in
+  # <release>-pg-app, which is what the app reads.
+  database: manager
+  # Empty uses the operator's default PostgreSQL image. The compose stacks run
+  # postgres:16 - set e.g. ghcr.io/cloudnative-pg/postgresql:16 to match.
+  imageName: ""
   storage:
     size: 20Gi
     storageClass: hcloud-volumes
   backup:
+    # barmanObjectStore is deprecated as of CNPG 1.26 in favour of the Barman
+    # Cloud Plugin, but still works and is still the default. Moving to the
+    # plugin means installing it alongside the operator.
     enabled: false
-    destinationPath: ""      # s3://ajm-backup/pg
+    destinationPath: ""      # s3://bucket/path
     existingSecret: ""       # Keys: ACCESS_KEY_ID, ACCESS_SECRET_KEY
     endpointURL: ""
+    retentionPolicy: 30d
   external:
-    url: ""                  # jdbc:postgresql://host:5432/manager
-    existingSecret: ""       # Keys: username, password
+    url: ""
+    existingSecret: ""
 
 storage:
   provider: s3
   s3:
+    # external S3 == false
     deployGarage: true
     endpoint: ""
     bucket: documents
     region: garage
-    existingSecret: ""     # Keys: access-key, secret-key
+    existingSecret: ""
+    encryption:
+      # none | sse-c
+      mode: none
+      existingSecret: ""
   garage:
+    image: dxflrs/garage:v2.1.0
+    zone: dc1
+    capacity: 20GB
     storage:
       size: 20Gi
       storageClass: hcloud-volumes
+    # One-time setup after the node first starts: assign and apply a cluster
+    # layout, create the bucket, import the generated key and grant it access.
+    # Garage accepts no data until a layout is applied, so without this the
+    # chart deploys a storage node the app cannot use. Re-runs are no-ops.
+    bootstrap:
+      enabled: true
+      image: rancher/kubectl:v1.34.1
+      keyName: accessible-job-manager
 
 gotenberg:
   enabled: true
   image: gotenberg/gotenberg:8
+  replicaCount: 1
+  apiTimeout: 30s
+  networkPolicy:
+    enabled: true
 
 llm:
   provider: ollama
   ollama:
+    # provider is azure == false
     enabled: true
-    model: qwen2.5:7b
+    image: ollama/ollama:latest
+    model: qwen2.5:3b
     storage:
       size: 30Gi
+      storageClass: hcloud-volumes
 
 jobSource:
   adzuna:
@@ -82,3 +113,16 @@ resources:
   app:
     requests: { cpu: 500m, memory: 1Gi }
     limits:   { memory: 2Gi }
+  garage:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { memory: 512Mi }
+  gotenberg:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { memory: 2Gi }
+  postgres:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits:   { memory: 1Gi }
+  ollama:
+    # Sized for qwen2.5:3b
+    requests: { cpu: 1, memory: 3Gi }
+    limits:   { memory: 4Gi }

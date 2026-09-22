@@ -6,7 +6,7 @@ metadata:
     {{- include "ajm.labels" . | nindent 4 }}
     app.kubernetes.io/component: app
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.ajm.replicaCount }}
   selector:
     matchLabels:
       {{- include "ajm.selectorLabels" . | nindent 6 }}
@@ -21,8 +21,8 @@ spec:
     spec:
       containers:
         - name: app
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.ajm.image.repository }}:{{ .Values.ajm.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.ajm.image.pullPolicy }}
           ports:
             - name: http
               containerPort: 8060
@@ -43,19 +43,26 @@ spec:
             - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ required "oidc.existingSecret ist erforderlich" .Values.oidc.existingSecret }}
+                  name: {{ required "oidc.existingSecret ist erforderlich" .Values.ajm.oidc.existingSecret }}
                   key: client-secret
-            {{- with .Values.storage.s3.existingSecret }}
+            {{- if eq .Values.storage.provider "s3" }}
             - name: ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ . }}
+                  name: {{ include "ajm.s3Secret" . }}
                   key: access-key
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ . }}
+                  name: {{ include "ajm.s3Secret" . }}
                   key: secret-key
+            {{- if eq .Values.storage.s3.encryption.mode "sse-c" }}
+            - name: S3_SSE_C_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "storage.s3.encryption.existingSecret ist erforderlich, wenn mode=sse-c" .Values.storage.s3.encryption.existingSecret }}
+                  key: sse-c-key
+            {{- end }}
             {{- end }}
             {{- if and .Values.jobSource.adzuna.enabled .Values.jobSource.adzuna.existingSecret }}
             - name: JOBSOURCE_ADZUNA_APP_KEY
@@ -70,9 +77,6 @@ spec:
             - name: OLLAMA_MODEL
               value: {{ .Values.llm.ollama.model | quote }}
             {{- end }}
-          # The app has no actuator, so probe a path SecurityConfig permits
-          # without login. Startup gets a long budget: Hibernate runs
-          # ddl-auto=update before the port opens.
           startupProbe:
             httpGet:
               path: /index.html
