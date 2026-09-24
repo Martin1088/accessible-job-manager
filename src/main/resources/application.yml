@@ -137,3 +137,20 @@ job-manager:
       USER: ${GROUP_USER:User}
       ADVISOR: ${GROUP_ADVISOR:Advisor}
       REVIEWER: ${GROUP_REVIEWER:Reviewer}
+  legal:
+    # A directory of <slug>.<lang>.yaml files holding THIS deployment's privacy
+    # policy and legal notice. Unset serves the documents bundled with the image,
+    # which name the upstream author - fine for the original instance, wrong for
+    # anyone else running it.
+    #
+    # Supplying any language of a document takes that document over completely:
+    # no language of it falls back to the bundled text, because half of somebody
+    # else's imprint is a false statement about who is responsible, not a
+    # fallback. Startup fails if the directory is set but does not cover every
+    # document.
+    documents-dir: ${LEGAL_DOCUMENTS_DIR:}
+    # Served when a document is not published in the requested language.
+    default-language: ${LEGAL_DEFAULT_LANGUAGE:en}
+    # How often to notice that a mounted ConfigMap changed underneath a running
+    # pod. Zero disables re-reading.
+    reload-interval: ${LEGAL_RELOAD_INTERVAL:30s}

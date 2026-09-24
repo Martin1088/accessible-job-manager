@@ -1,0 +1,34 @@
+# Traduccion de impressum.de.yaml, que es la version autoritativa.
+# El aviso legal es una obligacion del derecho aleman (§ 5 DDG); prevalece el aleman.
+#
+# MARCADOR: la direccion que figura abajo debe rellenarse antes de la publicacion.
+language: es
+title: "Aviso legal"
+intro:
+  - "Información conforme al § 5 DDG (Ley alemana de servicios digitales)."
+sections:
+  - heading: "Responsable del contenido de esta versión de prueba"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Nombre"
+            value: "Martin Jurk"
+          - term: "Dirección"
+            value: "[BITTE ANSCHRIFT EINTRAGEN – § 5 DDG verlangt eine ladungsfähige Adresse]"
+          - term: "Correo electrónico"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "Naturaleza de esta oferta"
+    blocks:
+      - type: paragraph
+        text: "Esta aplicación se explota de forma privada y no comercial. Se encuentra en fase de pruebas, el acceso está limitado a personas invitadas personalmente y no se ofrece como servicio."
+      - type: paragraph
+        text: "Su finalidad es ayudar a las personas a organizar sus propias candidaturas y, al hacerlo, probar sus funciones y su accesibilidad."
+
+  - heading: "Responsabilidad por los contenidos y los enlaces"
+    blocks:
+      - type: paragraph
+        text: "La versión de prueba se ofrece sin garantía. Pueden producirse errores, interrupciones y pérdida de datos; no se garantiza la integridad, la exactitud ni la disponibilidad continuada. No la utilice para candidaturas reales ni para documentos importantes."
+      - type: paragraph
+        text: "Esta aplicación puede enlazar a ofertas de empleo o sitios web de terceros. No se asume responsabilidad alguna por el contenido de las páginas externas; sus respectivos operadores son los únicos responsables."

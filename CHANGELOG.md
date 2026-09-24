@@ -29,6 +29,26 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+- The privacy policy and legal notice are no longer built into the application. Each
+  deployment publishes its own complete documents, per language, as structured YAML
+  supplied through Helm values (`legal.documents`), a mounted directory
+  (`LEGAL_DOCUMENTS_DIR`) or, on Azure Container Apps, the YAML files in
+  `deploy/azure/legal/` — no rebuild, one image for every organisation. A deployment
+  that supplies none keeps the documents bundled with the image, unchanged. Supplying any
+  language of a document takes that document over completely: no language of it falls
+  back to the bundled text, because that text names the upstream author rather than the
+  operator. The pages are served from the new public `GET /api/legal/{slug}` and rendered
+  by a template that fixes the accessible semantics, so no deployment can publish
+  unstructured or unsafe markup.
+
+- The Azure Container Apps deployment (`deploy/azure/main.bicep`) now publishes its own
+  privacy policy and legal notice instead of the ones bundled in the image, which named
+  Garage S3 and Authentik — neither of which that template deploys — and omitted Azure
+  OpenAI, which receives the text of imported job postings. The new documents also carry
+  the invite-only test instance's warning not to enter real personal data. Two
+  placeholders (postal address, end of the test phase) must be filled before the link is
+  shared.
+
 - The reviewer dashboard now follows the advisor dashboard: the same DIN 5008
   correspondence design and reference line, a My Users table of everyone who
   linked you as their reviewer, and review requests you can accept or decline

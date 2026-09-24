@@ -1,0 +1,21 @@
+# Der Kurzblock auf der Login-Seite. Massgebliche Fassung - demo-hinweis.{en,nl,es}.yaml
+# sind Uebersetzungen hiervon.
+#
+# Dieser Slug hat KEINE mitgelieferte Fassung. Eine Installation, die ihn nicht
+# veroeffentlicht, bekommt auf /api/legal/demo-hinweis eine 404 und zeigt auf der
+# Login-Seite nichts an - genau deshalb kann eine Produktivinstallation diesen
+# Testhinweis nicht versehentlich erben.
+#
+# Kurz halten: der Block steht ueber den Anmelde-Schaltflaechen. Die ausfuehrliche
+# Fassung steht in datenschutz.de.yaml; die Login-Seite verlinkt sie selbst.
+language: de
+title: "Demo-Version – bitte beachten"
+intro:
+  - "Dies ist eine nicht-öffentliche Testversion für eingeladene Personen. Sie ist kostenlos, ohne Gewähr und kann jederzeit offline gehen."
+sections:
+  - heading: "Bitte keine echten Daten eingeben"
+    blocks:
+      - type: paragraph
+        text: "Bitte gib keine echten persönlichen Daten ein, insbesondere keine Angaben zu Gesundheit oder Behinderung. Nutze nur Beispieldaten."
+      - type: paragraph
+        text: "Alle Daten werden nach der Testphase gelöscht."

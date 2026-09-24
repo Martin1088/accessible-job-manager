@@ -1,0 +1,34 @@
+# Vertaling van impressum.de.yaml, dat de gezaghebbende versie is.
+# Het colofon is een verplichting naar Duits recht (§ 5 DDG); de Duitse tekst geldt.
+#
+# PLAATSHOUDER: het adres hieronder moet voor publicatie worden ingevuld.
+language: nl
+title: "Colofon"
+intro:
+  - "Gegevens conform § 5 DDG (Duitse wet inzake digitale diensten)."
+sections:
+  - heading: "Verantwoordelijk voor de inhoud van deze testversie"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Naam"
+            value: "Martin Jurk"
+          - term: "Adres"
+            value: "[BITTE ANSCHRIFT EINTRAGEN – § 5 DDG verlangt eine ladungsfähige Adresse]"
+          - term: "E-mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "Aard van dit aanbod"
+    blocks:
+      - type: paragraph
+        text: "Deze toepassing wordt particulier en niet-commercieel beheerd. Zij bevindt zich in de testfase, de toegang is beperkt tot persoonlijk uitgenodigde deelnemers en zij wordt niet als dienst aangeboden."
+      - type: paragraph
+        text: "Zij is bedoeld om mensen te helpen hun eigen sollicitaties te organiseren en daarbij functies en toegankelijkheid uit te proberen."
+
+  - heading: "Aansprakelijkheid voor inhoud en links"
+    blocks:
+      - type: paragraph
+        text: "De testversie wordt zonder garantie aangeboden. Fouten, storingen en gegevensverlies zijn mogelijk; er wordt geen garantie gegeven op volledigheid, juistheid of voortdurende beschikbaarheid. Gebruik haar niet voor echte sollicitaties of belangrijke documenten."
+      - type: paragraph
+        text: "Deze toepassing kan verwijzen naar vacatures of websites van derden. Voor de inhoud van externe pagina's wordt geen verantwoordelijkheid aanvaard; uitsluitend de beheerders daarvan zijn daarvoor verantwoordelijk."

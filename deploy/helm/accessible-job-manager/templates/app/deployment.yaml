@@ -15,6 +15,9 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/app/config.yaml") . | sha256sum }}
+        {{- if .Values.legal.documents }}
+        checksum/legal: {{ include (print $.Template.BasePath "/app/legal-configmap.yaml") . | sha256sum }}
+        {{- end }}
       labels:
         {{- include "ajm.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: app
@@ -79,6 +82,14 @@ spec:
             - name: OLLAMA_MODEL
               value: {{ .Values.llm.ollama.model | quote }}
             {{- end }}
+          {{- if .Values.legal.documents }}
+          volumeMounts:
+            # No subPath: a subPath mount is a one-time copy and never sees a ConfigMap
+            # update, which would defeat picking up an edited document without a restart.
+            - name: legal
+              mountPath: /etc/ajm/legal
+              readOnly: true
+          {{- end }}
           startupProbe:
             httpGet:
               path: /index.html
@@ -104,3 +115,9 @@ spec:
               drop: ["ALL"]
             seccompProfile:
               type: RuntimeDefault
+      {{- if .Values.legal.documents }}
+      volumes:
+        - name: legal
+          configMap:
+            name: {{ include "ajm.fullname" . }}-legal
+      {{- end }}

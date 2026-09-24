@@ -72,6 +72,17 @@ job-manager:
       USER: ${GROUP_USER:User}
       ADVISOR: ${GROUP_ADVISOR:Advisor}
       REVIEWER: ${GROUP_REVIEWER:Reviewer}
+  # Mirrors the main file so bootTestRun behaves like bootRun - and bootTestRun is the
+  # only way to run this application without Docker, since the config above swaps in H2
+  # and static OAuth2 URLs. Note the dev/.env hook in build.gradle is attached to bootRun
+  # only, so export LEGAL_DOCUMENTS_DIR by hand to serve a deployment's own documents
+  # from a bootTestRun. Without these three keys the bare env var does not reach
+  # LegalProperties at all: relaxed binding resolves job-manager.legal.documents-dir,
+  # not LEGAL_DOCUMENTS_DIR, so this indirection is what connects the two.
+  legal:
+    documents-dir: ${LEGAL_DOCUMENTS_DIR:}
+    default-language: ${LEGAL_DEFAULT_LANGUAGE:en}
+    reload-interval: ${LEGAL_RELOAD_INTERVAL:30s}
 
 server:
   port: ${SERVER_PORT:8060}

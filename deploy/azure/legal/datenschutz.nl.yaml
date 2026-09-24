@@ -1,0 +1,79 @@
+# Vertaling van datenschutz.de.yaml, dat de gezaghebbende versie is.
+# Bij verschil tussen beide teksten geldt de Duitse.
+#
+# TWEE PLAATSHOUDERS MOETEN VOOR PUBLICATIE WORDEN INGEVULD - zie datenschutz.de.yaml.
+language: nl
+title: "Privacy- en demomededeling"
+intro:
+  - "Dit is een niet-openbare testversie voor genodigden. Zij is gratis, wordt zonder garantie aangeboden en kan op elk moment offline gaan."
+sections:
+  - heading: "Demoversie – lees dit eerst"
+    blocks:
+      - type: paragraph
+        text: "Voer hier geen echte persoonsgegevens in, en in het bijzonder niets over gezondheid of handicap. Gebruik uitsluitend voorbeeldgegevens."
+      - type: paragraph
+        text: "Alle gegevens worden na afloop van de testfase verwijderd."
+
+  - heading: "Wie is verantwoordelijk?"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Naam"
+            value: "Martin Jurk"
+          - term: "Adres"
+            value: "[BITTE ANSCHRIFT EINTRAGEN – § 5 DDG verlangt eine ladungsfähige Adresse]"
+          - term: "E-mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "Waar gaat het om?"
+    blocks:
+      - type: paragraph
+        text: "De Accessible Job Manager is een particulier project in de testfase. De toegang is beperkt tot persoonlijk uitgenodigde deelnemers. Het gebruik is gratis en dient om functies en toegankelijkheid uit te proberen en feedback te verzamelen."
+
+  - heading: "Welke gegevens worden verwerkt?"
+    blocks:
+      - type: paragraph
+        text: "Afhankelijk van hoe u de toepassing gebruikt, worden de volgende persoonsgegevens verwerkt:"
+      - type: list
+        items:
+          - "Aanmeldgegevens uit uw account bij de identiteitsprovider: naam of pseudoniem, e-mailadres, een interne aanduiding en de aan u toegewezen rol. Uw wachtwoord wordt uitsluitend door de identiteitsprovider beheerd — deze toepassing bewaart het niet en krijgt het nooit te zien."
+          - "Gegevens die u zelf in uw profiel invult: adres en telefoonnummer."
+          - "Inhoud die u invoert: bedrijven, contactpersonen, functies en uw sollicitaties met hun status."
+          - "Documenten die u uploadt, en sollicitatiebrieven die daaruit worden gegenereerd."
+          - "Als u de deelfunctie gebruikt: aan welke begeleiders of beoordelaars u toegang tot welk document hebt gegeven."
+          - "Technische loggegevens zoals IP-adres, tijdstip en opgevraagde pagina's; die ontstaan automatisch bij het draaien van de dienst."
+          - "Een technisch noodzakelijke sessiecookie voor het inloggen. Er is geen tracking en geen reclame."
+      - type: paragraph
+        text: "Het adres en het telefoonnummer in uw profiel zijn optioneel. Ook daarvoor geldt in de testfase: gebruik voorbeeldgegevens."
+
+  - heading: "Waarvoor en op welke grondslag?"
+    blocks:
+      - type: paragraph
+        text: "Om u de demo aan te bieden en te verbeteren (art. 6 lid 1 sub b en f AVG). Wanneer u zelf een document deelt met een begeleider of beoordelaar, berust dat delen op uw eigen handeling en toestemming (art. 6 lid 1 sub a AVG)."
+
+  - heading: "Waar worden de gegevens opgeslagen?"
+    blocks:
+      - type: paragraph
+        text: "De toepassing draait in datacenters van Microsoft Azure binnen de Europese Unie. Microsoft treedt daarbij op als verwerker. Omdat Microsoft een Amerikaans bedrijf is, valt toegang vanuit de Verenigde Staten niet volledig uit te sluiten; Microsoft is gecertificeerd onder het EU-US Data Privacy Framework."
+      - type: paragraph
+        text: "Wanneer u een vacature importeert, wordt de tekst daarvan ter verwerking naar Azure OpenAI gestuurd. De demo neemt geen beslissingen over echte sollicitaties of personen."
+      - type: paragraph
+        text: "Voor het maken van PDF-bestanden wordt een conversiedienst (Gotenberg) gebruikt, die in dezelfde omgeving draait."
+
+  - heading: "Hoe lang worden de gegevens bewaard?"
+    blocks:
+      - type: paragraph
+        text: "Tot het einde van de testfase, uiterlijk tot [BITTE ENDDATUM DER TESTPHASE EINTRAGEN]. Daarna worden accounts en inhoud verwijderd. Loggegevens worden automatisch na 30 dagen verwijderd."
+
+  - heading: "Uw rechten"
+    blocks:
+      - type: paragraph
+        text: "U kunt op elk moment inzage, correctie of verwijdering van uw gegevens verlangen, bezwaar maken tegen de verwerking of deze laten beperken. Stuur daarvoor een e-mail naar het hierboven genoemde adres."
+      - type: paragraph
+        text: "Daarnaast kunt u een klacht indienen bij de toezichthouder voor gegevensbescherming van Baden-Württemberg (Landesbeauftragter für den Datenschutz und die Informationsfreiheit Baden-Württemberg)."
+
+  - heading: "Aansprakelijkheid"
+    blocks:
+      - type: paragraph
+        text: "De demo wordt zonder garantie aangeboden. Fouten, storingen en gegevensverlies zijn mogelijk. Gebruik haar niet voor echte sollicitaties of belangrijke documenten."

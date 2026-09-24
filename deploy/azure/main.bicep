@@ -32,6 +32,30 @@
 // Postgres runs as Azure Database for PostgreSQL Flexible Server (managed).
 // Provisioning the server takes about 10-15 minutes on the first deployment.
 //
+// LEGAL DOCUMENTS
+//
+// This deployment publishes its OWN privacy policy and legal notice, from
+// deploy/azure/legal/<slug>.<lang>.yaml. It has to: the documents bundled in the
+// image name Garage S3 and Authentik, which this template does not deploy, and they
+// say nothing about Azure OpenAI receiving the text of imported job postings.
+//
+// >>> TWO PLACEHOLDERS MUST BE FILLED BEFORE THE LINK GOES TO ANYONE <<<
+//     - the postal address (datenschutz + impressum; § 5 DDG requires a real one)
+//     - the end date of the test phase (the four datenschutz files)
+//   Both are marked [BITTE ... EINTRAGEN].
+//
+// To change the text: edit the YAML and redeploy. loadTextContent inlines the files
+// at compile time, so a missing file fails `az bicep build` rather than the
+// deployment, and a malformed one fails the container's startup rather than being
+// served - the application refuses to start on a directory that does not cover
+// every slug, so it can never fall back to the upstream author's imprint.
+//
+// Editing a secret in the portal instead does NOT reach a running app: Container
+// Apps does not restart revisions when a secret changes. Redeploying does, because
+// it creates a new revision. If editing legal text without a redeploy ever becomes
+// a requirement, switch the volume to an Azure Files share - the application re-reads
+// the directory every 30 seconds and would then pick it up live.
+//
 // groupUser/groupAdvisor/groupReviewer must match whatever the OIDC provider
 // puts in the "groups" claim. For Entra ID with cloud-only security groups,
 // that is the group's Object ID (a GUID), not its display name - pass the
@@ -313,6 +337,77 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'adzuna-app-key'
           value: adzunaAppKey
         }
+        // This deployment's own legal documents, mounted as files below. They are
+        // published on a public page, so holding them as secrets costs no
+        // confidentiality - it only puts them in the app's secret list and in the
+        // ARM deployment history. loadTextContent inlines them at compile time, so
+        // deleting one of the twelve files fails `az bicep build` rather than the
+        // deployment.
+        //
+        // Each carries #disable-next-line use-secure-value-for-secure-inputs: the ACA
+        // schema types every secret value as secure, which is right for the five
+        // above and wrong for these. Suppressed per line rather than repo-wide, so a
+        // genuinely leaked secret still warns.
+        {
+          name: 'legal-datenschutz-de'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/datenschutz.de.yaml')
+        }
+        {
+          name: 'legal-datenschutz-en'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/datenschutz.en.yaml')
+        }
+        {
+          name: 'legal-datenschutz-nl'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/datenschutz.nl.yaml')
+        }
+        {
+          name: 'legal-datenschutz-es'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/datenschutz.es.yaml')
+        }
+        {
+          name: 'legal-impressum-de'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/impressum.de.yaml')
+        }
+        {
+          name: 'legal-impressum-en'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/impressum.en.yaml')
+        }
+        {
+          name: 'legal-impressum-nl'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/impressum.nl.yaml')
+        }
+        {
+          name: 'legal-impressum-es'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/impressum.es.yaml')
+        }
+        {
+          name: 'legal-demo-hinweis-de'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/demo-hinweis.de.yaml')
+        }
+        {
+          name: 'legal-demo-hinweis-en'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/demo-hinweis.en.yaml')
+        }
+        {
+          name: 'legal-demo-hinweis-nl'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/demo-hinweis.nl.yaml')
+        }
+        {
+          name: 'legal-demo-hinweis-es'
+          #disable-next-line use-secure-value-for-secure-inputs
+          value: loadTextContent('legal/demo-hinweis.es.yaml')
+        }
       ]
     }
     template: {
@@ -352,6 +447,41 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'JOBSOURCE_ADZUNA_APP_ID', value: adzunaAppId }
             { name: 'JOBSOURCE_ADZUNA_APP_KEY', secretRef: 'adzuna-app-key' }
             { name: 'JOBSOURCE_ADZUNA_COUNTRY', value: adzunaCountry }
+            { name: 'LEGAL_DOCUMENTS_DIR', value: '/etc/ajm/legal' }
+          ]
+          volumeMounts: [
+            {
+              volumeName: 'legal'
+              mountPath: '/etc/ajm/legal'
+            }
+          ]
+        }
+      ]
+      volumes: [
+        {
+          name: 'legal'
+          storageType: 'Secret'
+          // Every legal secret is listed explicitly, each with the file name the
+          // application's loader requires (<slug>.<lang>.yaml). Mounting "all
+          // secrets" instead - which is what you get by omitting this array - would
+          // also write pg-password, oidc-client-secret, storage-connection,
+          // azure-openai-api-key and adzuna-app-key into this directory as files.
+          // LegalDocumentRegistry ignores any file that is not named <slug>.<lang>.yaml,
+          // so nothing would break; but the database password does not belong on disk
+          // beside the privacy policy. Keep this list explicit.
+          secrets: [
+            { secretRef: 'legal-datenschutz-de', path: 'datenschutz.de.yaml' }
+            { secretRef: 'legal-datenschutz-en', path: 'datenschutz.en.yaml' }
+            { secretRef: 'legal-datenschutz-nl', path: 'datenschutz.nl.yaml' }
+            { secretRef: 'legal-datenschutz-es', path: 'datenschutz.es.yaml' }
+            { secretRef: 'legal-impressum-de', path: 'impressum.de.yaml' }
+            { secretRef: 'legal-impressum-en', path: 'impressum.en.yaml' }
+            { secretRef: 'legal-impressum-nl', path: 'impressum.nl.yaml' }
+            { secretRef: 'legal-impressum-es', path: 'impressum.es.yaml' }
+            { secretRef: 'legal-demo-hinweis-de', path: 'demo-hinweis.de.yaml' }
+            { secretRef: 'legal-demo-hinweis-en', path: 'demo-hinweis.en.yaml' }
+            { secretRef: 'legal-demo-hinweis-nl', path: 'demo-hinweis.nl.yaml' }
+            { secretRef: 'legal-demo-hinweis-es', path: 'demo-hinweis.es.yaml' }
           ]
         }
       ]

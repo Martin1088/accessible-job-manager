@@ -137,3 +137,40 @@ resources:
     # Sized for qwen2.5:3b
     requests: { cpu: 1, memory: 3Gi }
     limits:   { memory: 4Gi }
+
+legal:
+  # Language served when a document is not published in the one that was asked for.
+  defaultLanguage: en
+  # This deployment's own privacy policy and legal notice. Empty serves the documents
+  # bundled with the image - those name the upstream author, which is correct for the
+  # original instance and wrong for anybody else running this.
+  #
+  # Supplying ANY language of a document takes that document over completely: no
+  # language of it falls back to the bundled text, because half of somebody else's
+  # imprint is a false statement about who is responsible, not a fallback. Startup
+  # fails if this is set but does not cover every document.
+  #
+  # Slug and language become the ConfigMap key "<slug>.<lang>.yaml", so both must match
+  # [-._a-zA-Z0-9]+. Slugs: datenschutz, impressum. The whole set has to fit the 1 MiB
+  # ConfigMap limit. Legal texts are long - keep them in their own file and pass
+  # `helm upgrade -f values.yaml -f legal.yaml` rather than inlining them here.
+  documents: {}
+  #  impressum:
+  #    de:
+  #      title: Impressum
+  #      intro:
+  #        - Angaben gemäß § 5 DDG.
+  #      sections:
+  #        - heading: Verantwortlich für den Inhalt
+  #          blocks:
+  #            - type: definitions
+  #              items:
+  #                - term: Name
+  #                  value: Beispiel GmbH
+  #                - term: E-Mail
+  #                  value: datenschutz@beispiel.example
+  #                  href: "mailto:datenschutz@beispiel.example"
+  #        - heading: Haftung für Inhalte
+  #          blocks:
+  #            - type: paragraph
+  #              text: Diese Anwendung wird nach bestem Wissen gepflegt.

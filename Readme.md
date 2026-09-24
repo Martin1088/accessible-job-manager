@@ -203,7 +203,7 @@ The short version:
 
 ```bash
 cd dev
-docker compose up -d                    # Postgres, Garage, Gotenberg, Traefik
+docker compose -f local-setup.yml up -d # Postgres, Garage, Gotenberg, Ollama
 docker compose -f authentik.yml up -d   # Authentik (OIDC)
 cd ..
 ./gradlew bootRun                       # backend on :8060, builds the frontend first

@@ -15,6 +15,10 @@ data:
   GROUP_REVIEWER: {{ .Values.ajm.oidc.groups.reviewer | quote }}
   STORAGE_PROVIDER: {{ .Values.storage.provider | quote }}
   JOB_POSTING_LLM_PROVIDER: {{ .Values.llm.provider | quote }}
+{{- if .Values.legal.documents }}
+  LEGAL_DOCUMENTS_DIR: /etc/ajm/legal
+{{- end }}
+  LEGAL_DEFAULT_LANGUAGE: {{ .Values.legal.defaultLanguage | quote }}
 {{- if eq .Values.storage.provider "s3" }}
 {{- $endpoint := .Values.storage.s3.endpoint }}
 {{- if and (not $endpoint) .Values.storage.s3.deployGarage }}

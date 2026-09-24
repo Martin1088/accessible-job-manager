@@ -17,7 +17,7 @@ Back to the [project overview](../Readme.md).
 
 ```bash
 cd dev
-docker compose up -d
+docker compose -f local-setup.yml up -d
 docker compose -f authentik.yml up -d   # OIDC provider, separate stack
 ```
 

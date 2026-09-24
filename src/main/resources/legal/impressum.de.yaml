@@ -1,0 +1,27 @@
+# Bundled default - the document served when a deployment publishes none of its own.
+# It names the upstream author, so any other deployment must replace it: see
+# job-manager.legal.documents-dir in application.yml.
+language: de
+title: "Impressum"
+intro:
+  - "Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)."
+sections:
+  - heading: "Verantwortlich für den Inhalt dieser Anwendung"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "Martin Jurk"
+          - term: "E-Mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+  - heading: "Art dieser Anwendung"
+    blocks:
+      - type: paragraph
+        text: "Diese Anwendung wird privat und nicht-kommerziell betrieben. Sie dient ausschließlich dazu, Nutzerinnen und Nutzern bei der Organisation ihrer eigenen Bewerbungen zu helfen, und wird nicht als kommerzieller Dienst angeboten."
+  - heading: "Haftung für Inhalte und Links"
+    blocks:
+      - type: paragraph
+        text: "Als privates, nicht-kommerzielles Projekt wird diese Anwendung nach bestem Wissen gepflegt, ohne Gewähr für Vollständigkeit, Richtigkeit oder ständige Verfügbarkeit."
+      - type: paragraph
+        text: "Diese Anwendung kann auf Stellenanzeigen oder Websites Dritter verlinken. Für die Inhalte externer Seiten wird keine Verantwortung übernommen; verantwortlich sind ausschließlich deren Betreiber."

@@ -11,6 +11,7 @@ import { BLOCK_SUGGESTIONS } from './seed/cover-letters';
 import { DIRECTORY_ADVISORS, DIRECTORY_REVIEWERS, PEOPLE } from './seed/people';
 import { MY_USERS, SuggestionDto } from './seed/advisor';
 import { POSTING_FULL_CHAIN, POSTING_OVERVIEW } from './seed/extraction';
+import { DEMO_LEGAL } from './seed/legal';
 
 /** A file that really exists in `public/` - the backend fetches it as an asset. */
 export class DemoAsset {
@@ -90,6 +91,22 @@ route('GET', '/api/me', (_req, db) => {
 // Reloading the page is what resets the demo, so logout needs no special case:
 // it sends the browser back to the same document.
 route('POST', '/api/logout', () => ({ redirectUrl: window.location.pathname }));
+
+// ---------------------------------------------------------------------------
+// Legal documents. Public in the real backend too - the footer links them while
+// signed out. The demo publishes its OWN text rather than the bundled default,
+// which describes a database and object storage the demo does not have.
+// ---------------------------------------------------------------------------
+
+route('GET', '/api/legal/:slug', req => {
+  const byLanguage = DEMO_LEGAL[req.params[0]];
+  if (!byLanguage) return undefined;          // unknown slug -> 404, as the server answers
+  const requested = req.query.get('lang') ?? 'en';
+  // Mirrors the server's chain rather than reimplementing it: requested language,
+  // else English, else whichever one this deployment happens to publish.
+  const document = byLanguage[requested] ?? byLanguage['en'] ?? Object.values(byLanguage)[0];
+  return { slug: req.params[0], requestedLanguage: requested, ...document };
+});
 
 route('GET', '/api/profile', (_req, db) => db.profile());
 route('PUT', '/api/profile', (req, db) => db.patchProfile(req.body as Partial<UserProfile>));
