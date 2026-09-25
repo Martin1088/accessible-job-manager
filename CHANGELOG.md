@@ -18,7 +18,41 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- Users can share a `.docx` cover letter template with one of their active reviewers
+  directly from My Documents, via a new "Share for review" action.
+- Reviewers can now upload a `.docx` review of a document they were given access to,
+  from a new "Documents to Review" page; it is shared back to the document's owner as a
+  separate, new document, visible under a new "Feedback from reviewers" section on the
+  owner's My Documents page.
+- Spanish is now a supported interface language, alongside English, German and Dutch,
+  and a supported cover-letter/document language.
+
 ### Changed
+
+- The privacy policy and legal notice are no longer built into the application. Each
+  deployment publishes its own complete documents, per language, as structured YAML
+  supplied through Helm values (`legal.documents`), a mounted directory
+  (`LEGAL_DOCUMENTS_DIR`) or, on Azure Container Apps, the YAML files in
+  `deploy/azure/legal/` — no rebuild, one image for every organisation. A deployment
+  that supplies none keeps the documents bundled with the image, unchanged. Supplying any
+  language of a document takes that document over completely: no language of it falls
+  back to the bundled text, because that text names the upstream author rather than the
+  operator. The pages are served from the new public `GET /api/legal/{slug}` and rendered
+  by a template that fixes the accessible semantics, so no deployment can publish
+  unstructured or unsafe markup.
+
+- The Azure Container Apps deployment (`deploy/azure/main.bicep`) now publishes its own
+  privacy policy and legal notice instead of the ones bundled in the image, which named
+  Garage S3 and Authentik — neither of which that template deploys — and omitted Azure
+  OpenAI, which receives the text of imported job postings. The new documents also carry
+  the invite-only test instance's warning not to enter real personal data. Two
+  placeholders (postal address, end of the test phase) must be filled before the link is
+  shared.
+
+- The reviewer dashboard now follows the advisor dashboard: the same DIN 5008
+  correspondence design and reference line, a My Users table of everyone who
+  linked you as their reviewer, and review requests you can accept or decline
+  there. It also follows the dark and high-contrast themes.
 
 ### Fixed
 

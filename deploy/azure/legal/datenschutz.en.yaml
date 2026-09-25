@@ -1,0 +1,79 @@
+# Translation of datenschutz.de.yaml, which is the authoritative version.
+# If the two ever disagree, the German text governs.
+#
+# TWO PLACEHOLDERS MUST BE FILLED BEFORE RELEASE - see datenschutz.de.yaml.
+language: en
+title: "Privacy and demo notice"
+intro:
+  - "This is a non-public test version for invited participants. It is free of charge, provided without warranty, and may go offline at any time."
+sections:
+  - heading: "Demo version – please read"
+    blocks:
+      - type: paragraph
+        text: "Please do not enter any real personal data, and in particular nothing about health or disability. Use sample data only."
+      - type: paragraph
+        text: "All data will be deleted at the end of the test phase."
+
+  - heading: "Who is responsible?"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "Martin Jurk"
+          - term: "Address"
+            value: "Blumenstr. 6, 68753 Waghäusel"
+          - term: "Email"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "What is this?"
+    blocks:
+      - type: paragraph
+        text: "The Accessible Job Manager is a private project in its test phase. Access is limited to personally invited participants. It is free to use and exists to try out its features and its accessibility, and to gather feedback."
+
+  - heading: "What data is processed?"
+    blocks:
+      - type: paragraph
+        text: "Depending on how you use the application, the following personal data is processed:"
+      - type: list
+        items:
+          - "Account data from your identity provider: name or pseudonym, email address, an internal identifier, and the role assigned to you. Your password is held solely by the identity provider — this application never stores it and never sees it."
+          - "Details you enter in your profile yourself: postal address and phone number."
+          - "Content you enter: companies, contact persons, positions, and your applications and their status."
+          - "Documents you upload, and cover letters generated from them."
+          - "If you use sharing: which advisors or reviewers you have granted access to which document."
+          - "Technical log data such as IP address, timestamp and pages requested; this arises automatically from running the service."
+          - "A technically necessary session cookie for signing in. There is no tracking and no advertising."
+      - type: paragraph
+        text: "The address and phone number in your profile are optional. For the test phase the same rule applies here: please use sample data."
+
+  - heading: "For what purpose, and on what legal basis?"
+    blocks:
+      - type: paragraph
+        text: "To provide the demo to you and to improve it (Art. 6(1)(b) and (f) GDPR). Where you actively share a document with an advisor or reviewer, that sharing rests on your own action and consent (Art. 6(1)(a) GDPR)."
+
+  - heading: "Where is the data stored?"
+    blocks:
+      - type: paragraph
+        text: "The application runs in Microsoft Azure data centres within the European Union. Microsoft acts as a processor. Because Microsoft is a US company, access from the United States cannot be entirely ruled out; Microsoft is certified under the EU-US Data Privacy Framework."
+      - type: paragraph
+        text: "When you import a job posting, its text is sent to Azure OpenAI for extraction. The demo makes no decisions about real applications or real people."
+      - type: paragraph
+        text: "A conversion service (Gotenberg), running in the same environment, is used to produce PDF files."
+
+  - heading: "How long is the data kept?"
+    blocks:
+      - type: paragraph
+        text: "Until the end of the test phase, and no later than 31 July 2027. Accounts and content are deleted afterwards. Log data is deleted automatically after 30 days."
+
+  - heading: "Your rights"
+    blocks:
+      - type: paragraph
+        text: "You may at any time request access to, correction of, or deletion of your data, object to processing, or ask for it to be restricted. Just send an email to the address above."
+      - type: paragraph
+        text: "You may also lodge a complaint with the State Commissioner for Data Protection and Freedom of Information of Baden-Württemberg (Landesbeauftragter für den Datenschutz und die Informationsfreiheit Baden-Württemberg)."
+
+  - heading: "Liability"
+    blocks:
+      - type: paragraph
+        text: "The demo is provided without warranty. Faults, outages and data loss are possible. Please do not use it for real job applications or important documents."

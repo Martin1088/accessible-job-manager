@@ -2,7 +2,7 @@ import { Injectable, inject, signal, DOCUMENT } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, tap } from 'rxjs';
 
-export const SUPPORTED_LANGS = ['en', 'de', 'nl'] as const;
+export const SUPPORTED_LANGS = ['en', 'de', 'nl', 'es'] as const;
 export type SupportedLang = typeof SUPPORTED_LANGS[number];
 
 const STORAGE_KEY = 'lang';

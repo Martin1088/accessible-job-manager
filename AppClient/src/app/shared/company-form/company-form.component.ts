@@ -183,6 +183,7 @@ export class CompanyFormComponent implements OnInit {
     { value: 'GERMAN', label: 'COMPANIES.LANGUAGE_GERMAN' },
     { value: 'ENGLISH', label: 'COMPANIES.LANGUAGE_ENGLISH' },
     { value: 'DUTCH', label: 'COMPANIES.LANGUAGE_DUTCH' },
+    { value: 'SPANISH', label: 'COMPANIES.LANGUAGE_SPANISH' },
   ];
 
   readonly applicationMethodOptions: { value: string; label: string }[] = [

@@ -1,0 +1,84 @@
+# Datenschutzhinweis der Azure-Testinstanz. Massgebliche Fassung - die Dateien
+# datenschutz.{en,nl,es}.yaml sind Uebersetzungen hiervon.
+#
+# ZWEI PLATZHALTER MUESSEN VOR DER FREIGABE GEFUELLT WERDEN:
+#   - die Anschrift im Abschnitt "Wer ist verantwortlich?"
+#   - das Enddatum im Abschnitt "Wie lange werden die Daten gespeichert?"
+# Beide sind unten mit [BITTE ... EINTRAGEN] markiert.
+#
+# Aendern: Datei bearbeiten und `az deployment group create` erneut ausfuehren.
+language: de
+title: "Datenschutz- und Demo-Hinweis"
+intro:
+  - "Dies ist eine nicht-öffentliche Testversion für eingeladene Personen. Sie ist kostenlos, ohne Gewähr und kann jederzeit offline gehen."
+sections:
+  - heading: "Demo-Version – bitte beachten"
+    blocks:
+      - type: paragraph
+        text: "Bitte gib keine echten persönlichen Daten ein, insbesondere keine Angaben zu Gesundheit oder Behinderung. Nutze nur Beispieldaten."
+      - type: paragraph
+        text: "Alle Daten werden nach der Testphase gelöscht."
+
+  - heading: "Wer ist verantwortlich?"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "Martin Jurk"
+          - term: "Anschrift"
+            value: "Blumenstr. 6, 68753 Waghäusel"
+          - term: "E-Mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "Worum geht es?"
+    blocks:
+      - type: paragraph
+        text: "Der Accessible Job Manager ist ein privates Projekt in der Testphase. Der Zugang ist auf persönlich eingeladene Personen beschränkt. Die Nutzung ist kostenlos und dient dazu, Funktionen und Barrierefreiheit zu erproben und Feedback zu sammeln."
+
+  - heading: "Welche Daten werden verarbeitet?"
+    blocks:
+      - type: paragraph
+        text: "Je nachdem, wie du die Anwendung nutzt, werden folgende personenbezogene Daten verarbeitet:"
+      - type: list
+        items:
+          - "Anmeldedaten aus deinem Konto beim Identitätsanbieter: Name oder Pseudonym, E-Mail-Adresse, eine interne Kennung und die dir zugewiesene Rolle. Dein Passwort verwaltet ausschließlich der Identitätsanbieter – diese Anwendung speichert es nicht und bekommt es nie zu sehen."
+          - "Angaben, die du selbst in deinem Profil hinterlegst: Anschrift und Telefonnummer."
+          - "Inhalte, die du eingibst: Unternehmen, Ansprechpersonen, Stellen sowie deine Bewerbungen und deren Status."
+          - "Dokumente, die du hochlädst, und Anschreiben, die daraus erzeugt werden."
+          - "Wenn du die Freigabe nutzt: welchen beratenden oder prüfenden Personen du Zugriff auf welches Dokument gegeben hast."
+          - "Technische Protokolldaten wie IP-Adresse, Zeitpunkt und aufgerufene Seiten; diese entstehen beim Betrieb automatisch."
+          - "Ein technisch notwendiges Sitzungs-Cookie für den Login. Es gibt kein Tracking und keine Werbung."
+      - type: paragraph
+        text: "Die Anschrift und die Telefonnummer im Profil sind freiwillig. Für die Testphase gilt auch hier: bitte Beispieldaten verwenden."
+
+  - heading: "Wofür und auf welcher Grundlage?"
+    blocks:
+      - type: paragraph
+        text: "Um dir die Demo bereitzustellen und sie zu verbessern (Art. 6 Abs. 1 lit. b und f DSGVO). Wenn du ein Dokument aktiv mit einer beratenden oder prüfenden Person teilst, beruht diese Weitergabe auf deiner eigenen Handlung und Einwilligung (Art. 6 Abs. 1 lit. a DSGVO)."
+
+  - heading: "Wo werden die Daten gespeichert?"
+    blocks:
+      - type: paragraph
+        text: "Die Anwendung läuft in Rechenzentren von Microsoft Azure innerhalb der Europäischen Union. Microsoft handelt dabei als Auftragsverarbeiter. Da Microsoft ein US-Unternehmen ist, ist ein Zugriff aus den USA nicht völlig auszuschließen; Microsoft ist nach dem EU-US Data Privacy Framework zertifiziert."
+      - type: paragraph
+        text: "Wenn du eine Stellenanzeige importierst, wird deren Text zur Auswertung an Azure OpenAI übermittelt. Die Demo trifft keine Entscheidungen über echte Bewerbungen oder Personen."
+      - type: paragraph
+        text: "Zur Erzeugung von PDF-Dateien wird ein Konvertierungsdienst (Gotenberg) eingesetzt, der in derselben Umgebung läuft."
+
+  - heading: "Wie lange werden die Daten gespeichert?"
+    blocks:
+      - type: paragraph
+        text: "Bis zum Ende der Testphase, spätestens bis 31. Juli 2027. Danach werden Konten und Inhalte gelöscht. Protokolldaten werden automatisch nach 30 Tagen gelöscht."
+
+  - heading: "Deine Rechte"
+    blocks:
+      - type: paragraph
+        text: "Du kannst jederzeit Auskunft, Berichtigung oder Löschung deiner Daten verlangen, der Verarbeitung widersprechen oder sie einschränken lassen. Schreib dafür einfach eine E-Mail an die oben genannte Adresse."
+      - type: paragraph
+        text: "Außerdem kannst du dich beim Landesbeauftragten für den Datenschutz und die Informationsfreiheit Baden-Württemberg beschweren."
+
+  - heading: "Haftung"
+    blocks:
+      - type: paragraph
+        text: "Die Demo wird ohne Gewähr bereitgestellt. Es kann Fehler, Ausfälle und Datenverlust geben. Bitte nutze sie nicht für echte Bewerbungen oder wichtige Unterlagen."

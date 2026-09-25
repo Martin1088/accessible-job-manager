@@ -1,0 +1,27 @@
+# Bundled default - the document served when a deployment publishes none of its own.
+# It names the upstream author, so any other deployment must replace it: see
+# job-manager.legal.documents-dir in application.yml.
+language: nl
+title: "Colofon"
+intro:
+  - "Informatie conform § 5 DDG (Duitse wet digitale diensten)."
+sections:
+  - heading: "Verantwoordelijk voor de inhoud van deze toepassing"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Naam"
+            value: "Martin Jurk"
+          - term: "E-mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+  - heading: "Aard van deze toepassing"
+    blocks:
+      - type: paragraph
+        text: "Deze toepassing wordt privé en niet-commercieel beheerd. Ze bestaat uitsluitend om gebruikers te helpen bij het organiseren van hun eigen sollicitaties en wordt niet als commerciële dienst aangeboden."
+  - heading: "Aansprakelijkheid voor inhoud en links"
+    blocks:
+      - type: paragraph
+        text: "Als privé, niet-commercieel project wordt deze toepassing naar beste weten onderhouden, zonder garantie voor volledigheid, juistheid of permanente beschikbaarheid."
+      - type: paragraph
+        text: "Deze toepassing kan verwijzen naar vacatures of websites van derden. Voor de inhoud van externe sites wordt geen verantwoordelijkheid aanvaard; uitsluitend de betreffende beheerders zijn hiervoor verantwoordelijk."

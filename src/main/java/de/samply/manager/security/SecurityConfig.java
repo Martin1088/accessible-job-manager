@@ -48,6 +48,14 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/login", "/oauth2/**", "/error").permitAll()
                         .requestMatchers("/impressum", "/datenschutz").permitAll()
+                        // Must precede the /api/** rule below - matcher order decides. The
+                        // pages these feed are linked from the footer, which renders while
+                        // signed out. Read verbs only, so the endpoint stays read-only by
+                        // construction; HEAD needs naming separately, because Spring
+                        // Security's GET matcher does not cover it and a link checker or
+                        // cache probing a public page would otherwise be answered with a 401.
+                        .requestMatchers(HttpMethod.GET, "/api/legal/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/legal/**").permitAll()
                         .requestMatchers("/api/advisor/**").hasRole("ADVISOR")
                         .requestMatchers("/api/reviewer/**").hasRole("REVIEWER")
                         .requestMatchers("/api/**").authenticated()

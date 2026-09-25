@@ -47,8 +47,8 @@ public class DocumentService {
      * to whoever asks for it.
      *
      * <p>Reviewer downloads do not come through here. Their right to a document
-     * is a granted {@link de.samply.manager.model.DocumentAccess}, not ownership,
-     * and it is answered against that table instead.
+     * is a granted {@link de.samply.manager.model.Share}, not ownership, and it
+     * is answered by {@link de.samply.manager.services.ShareService} instead.
      *
      * @throws ApiException.NotFound  no document with that id exists
      * @throws ApiException.Forbidden it exists but belongs to someone else

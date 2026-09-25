@@ -1,0 +1,79 @@
+# Traduccion de datenschutz.de.yaml, que es la version autoritativa.
+# En caso de discrepancia entre ambos textos, prevalece el aleman.
+#
+# DOS MARCADORES DEBEN RELLENARSE ANTES DE LA PUBLICACION - vease datenschutz.de.yaml.
+language: es
+title: "Aviso de privacidad y de demostración"
+intro:
+  - "Esta es una versión de prueba no pública, destinada a personas invitadas. Es gratuita, se ofrece sin garantía y puede dejar de estar disponible en cualquier momento."
+sections:
+  - heading: "Versión de demostración: léalo antes de empezar"
+    blocks:
+      - type: paragraph
+        text: "No introduzca datos personales reales y, en particular, ningún dato sobre salud o discapacidad. Utilice únicamente datos de ejemplo."
+      - type: paragraph
+        text: "Todos los datos se eliminarán al finalizar la fase de pruebas."
+
+  - heading: "¿Quién es el responsable?"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Nombre"
+            value: "Martin Jurk"
+          - term: "Dirección"
+            value: "Blumenstr. 6, 68753 Waghäusel"
+          - term: "Correo electrónico"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "¿De qué se trata?"
+    blocks:
+      - type: paragraph
+        text: "Accessible Job Manager es un proyecto privado en fase de pruebas. El acceso está limitado a personas invitadas personalmente. Su uso es gratuito y sirve para probar sus funciones y su accesibilidad, y para recoger comentarios."
+
+  - heading: "¿Qué datos se tratan?"
+    blocks:
+      - type: paragraph
+        text: "Según cómo utilice la aplicación, se tratan los siguientes datos personales:"
+      - type: list
+        items:
+          - "Datos de acceso de su cuenta en el proveedor de identidad: nombre o seudónimo, dirección de correo electrónico, un identificador interno y el rol que se le haya asignado. Su contraseña la gestiona exclusivamente el proveedor de identidad: esta aplicación no la almacena ni llega a verla."
+          - "Datos que usted mismo indique en su perfil: dirección postal y número de teléfono."
+          - "Contenidos que usted introduce: empresas, personas de contacto, puestos y sus candidaturas con su estado."
+          - "Documentos que sube y cartas de presentación generadas a partir de ellos."
+          - "Si utiliza la función de compartir: a qué personas asesoras o revisoras ha dado acceso a qué documento."
+          - "Datos técnicos de registro como la dirección IP, la hora y las páginas solicitadas; se generan automáticamente al prestar el servicio."
+          - "Una cookie de sesión técnicamente necesaria para iniciar sesión. No hay seguimiento ni publicidad."
+      - type: paragraph
+        text: "La dirección y el teléfono del perfil son opcionales. Durante la fase de pruebas se aplica lo mismo: utilice datos de ejemplo."
+
+  - heading: "¿Con qué finalidad y sobre qué base jurídica?"
+    blocks:
+      - type: paragraph
+        text: "Para ponerle la demostración a su disposición y mejorarla (art. 6.1.b y 6.1.f del RGPD). Cuando usted comparte activamente un documento con una persona asesora o revisora, esa comunicación se basa en su propia acción y consentimiento (art. 6.1.a del RGPD)."
+
+  - heading: "¿Dónde se almacenan los datos?"
+    blocks:
+      - type: paragraph
+        text: "La aplicación se ejecuta en centros de datos de Microsoft Azure dentro de la Unión Europea. Microsoft actúa como encargado del tratamiento. Dado que Microsoft es una empresa estadounidense, no cabe descartar por completo un acceso desde los Estados Unidos; Microsoft está certificada conforme al Marco de Privacidad de Datos UE-EE. UU."
+      - type: paragraph
+        text: "Cuando usted importa una oferta de empleo, su texto se envía a Azure OpenAI para su extracción. La demostración no toma decisiones sobre candidaturas ni sobre personas reales."
+      - type: paragraph
+        text: "Para generar archivos PDF se utiliza un servicio de conversión (Gotenberg) que se ejecuta en el mismo entorno."
+
+  - heading: "¿Durante cuánto tiempo se conservan los datos?"
+    blocks:
+      - type: paragraph
+        text: "Hasta el final de la fase de pruebas y, a más tardar, hasta 31 de julio de 2027. Después se eliminan las cuentas y los contenidos. Los datos de registro se eliminan automáticamente a los 30 días."
+
+  - heading: "Sus derechos"
+    blocks:
+      - type: paragraph
+        text: "Puede solicitar en cualquier momento el acceso, la rectificación o la supresión de sus datos, oponerse al tratamiento o pedir su limitación. Basta con enviar un correo electrónico a la dirección indicada arriba."
+      - type: paragraph
+        text: "También puede presentar una reclamación ante la autoridad de protección de datos de Baden-Wurtemberg (Landesbeauftragter für den Datenschutz und die Informationsfreiheit Baden-Württemberg)."
+
+  - heading: "Responsabilidad"
+    blocks:
+      - type: paragraph
+        text: "La demostración se ofrece sin garantía. Pueden producirse errores, interrupciones y pérdida de datos. No la utilice para candidaturas reales ni para documentos importantes."

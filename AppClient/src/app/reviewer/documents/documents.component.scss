@@ -1,0 +1,383 @@
+@use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
+
+// Same DIN 5008 stationery as `reviewer/home` - this page reuses its masthead,
+// section shell, sender list and document table styles verbatim (that page
+// documents why the table is bespoke rather than `app-data-table`: a per-row
+// busy state neither component supports). The review upload form below reuses
+// `user/documents`' field/button classes for the same reason.
+
+:host {
+  display: block;
+}
+
+// Global `main` (styles.scss) still supplies max-width / margin / padding.
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// --- Masthead -------------------------------------------------------------
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+h1 {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+// --- Section shell ----------------------------------------------------------
+
+section {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+}
+
+.upload-form { max-width: 480px; }
+
+.section-tab {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.section-note {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.upload-filename {
+  margin: 0 0 1rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+section .notice {
+  margin-block-end: 1rem;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.notice--error {
+  background: var(--color-alert-bg);
+  border-color: var(--color-alert-border);
+  color: var(--color-alert-text);
+}
+
+// --- Review upload form -----------------------------------------------------
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+
+  label {
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  input {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+}
+
+.upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn-primary,
+.btn-cancel {
+  min-block-size: 44px;
+  padding: 0.6rem 1.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:disabled {
+    background: var(--paper);
+    border-color: var(--rule);
+    color: var(--ink-soft);
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+
+  &:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
+}
+
+.btn-cancel:not(:disabled) {
+  background: var(--paper);
+  color: var(--ink);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent-deep);
+  }
+}
+
+.field input:focus-visible,
+.btn-primary:focus-visible,
+.btn-cancel:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+// --- Senders: one entry per person whose documents can be reviewed ----------
+
+.sender-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sender + .sender {
+  margin-block-start: 1.5rem;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--rule);
+}
+
+.sender__head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-block-end: 0.9rem;
+}
+
+// A letterhead monogram in the serif, on paper - not a coloured avatar disc.
+.sender__monogram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 1.25rem;
+  color: var(--ink);
+}
+
+.sender__who {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-inline-size: 0;
+}
+
+.sender__name {
+  font-family: corr.$corr-serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+// An email address has no spaces to break on, so it needs its own wrap rule
+// to avoid pushing the sheet wider than the viewport on a phone.
+.sender__email {
+  font-family: corr.$corr-mono;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+// --- Document table (mirrors `app-data-table`) ------------------------------
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  font-size: 0.9rem;
+
+  th {
+    padding: 0.6rem 0.75rem;
+    background: var(--paper);
+    border-block-end: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: middle;
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  td {
+    padding: 0.6rem 0.75rem;
+    border-block-end: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: middle;
+    color: var(--ink);
+  }
+
+  tr:last-child td {
+    border-block-end: none;
+  }
+
+  tbody tr:hover td {
+    background: var(--paper);
+  }
+
+  td button {
+    padding: 0.45rem 0.9rem;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: corr.$corr-mono;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent-deep);
+    }
+
+    // Muted tokens, never opacity - see `app-data-table`.
+    &:disabled {
+      color: var(--ink-soft);
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Mobile card layout: the DOM stays one <table> so VoiceOver still reports
+// table structure and per-cell header association. Never use
+// visibility:hidden/opacity:0 on thead here - it would stay reachable.
+@include bp.mobile {
+  .doc-table {
+    border: 0;
+    background: transparent;
+
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      display: block;
+      margin-block-end: 1rem;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+    }
+
+    tr:last-child td {
+      border-block-end: 1px solid var(--rule);
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      text-align: end;
+      overflow-wrap: anywhere;
+
+      &::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        text-align: start;
+        font-family: corr.$corr-mono;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+    }
+
+    td:has(button) {
+      flex-wrap: wrap;
+      align-items: flex-start;
+
+      &::before {
+        flex-basis: 100%;
+      }
+    }
+
+    tbody tr td:last-child {
+      border-block-end: none;
+    }
+  }
+}

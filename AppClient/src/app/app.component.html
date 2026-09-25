@@ -101,6 +101,11 @@
             #rlaReviewer="routerLinkActive"
           [attr.aria-current]="rlaReviewer.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
         </li>
+        <li>
+          <a routerLink="/reviewer/documents" routerLinkActive="active"
+            #rlaReviewerDocuments="routerLinkActive"
+          [attr.aria-current]="rlaReviewerDocuments.isActive ? 'page' : null">{{ 'NAV.REVIEWER_DOCUMENTS' | translate }}</a>
+        </li>
       </ul>
     </nav>
   }
@@ -113,6 +118,7 @@
         <option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
         <option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
         <option value="nl">{{ 'LANGUAGE.NL' | translate }}</option>
+        <option value="es">{{ 'LANGUAGE.ES' | translate }}</option>
       </select>
     </div>
     @if (auth.me$ | async; as me) {

@@ -1,0 +1,40 @@
+# Impressum der Azure-Testinstanz. Massgebliche Fassung - die Dateien
+# impressum.{en,nl,es}.yaml sind Uebersetzungen hiervon.
+#
+# PLATZHALTER: die Anschrift unten muss vor der Freigabe gefuellt werden.
+# § 5 DDG verlangt eine ladungsfaehige Anschrift; ein Postfach genuegt nicht.
+#
+# Diese Datei ist erforderlich, auch wenn nur die Datenschutzerklaerung geaendert
+# werden soll: LegalDocumentRegistry startet nicht, wenn ein Verzeichnis nur einen
+# Teil der Dokumente liefert - sonst wuerde hier still das Impressum des
+# urspruenglichen Autors ausgeliefert.
+language: de
+title: "Impressum"
+intro:
+  - "Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)."
+sections:
+  - heading: "Verantwortlich für den Inhalt dieser Testversion"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "Martin Jurk"
+          - term: "Anschrift"
+            value: "Blumenstr. 6, 68753 Waghäusel"
+          - term: "E-Mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "Art dieses Angebots"
+    blocks:
+      - type: paragraph
+        text: "Diese Anwendung wird privat und nicht-kommerziell betrieben. Sie befindet sich in der Testphase, der Zugang ist auf persönlich eingeladene Personen beschränkt, und sie wird nicht als Dienst angeboten."
+      - type: paragraph
+        text: "Sie dient dazu, Menschen bei der Organisation ihrer eigenen Bewerbungen zu unterstützen und dabei Funktionen und Barrierefreiheit zu erproben."
+
+  - heading: "Haftung für Inhalte und Links"
+    blocks:
+      - type: paragraph
+        text: "Die Testversion wird ohne Gewähr bereitgestellt. Es kann Fehler, Ausfälle und Datenverlust geben; eine Gewähr für Vollständigkeit, Richtigkeit oder ständige Verfügbarkeit wird nicht übernommen. Bitte nutze sie nicht für echte Bewerbungen oder wichtige Unterlagen."
+      - type: paragraph
+        text: "Diese Anwendung kann auf Stellenanzeigen oder Websites Dritter verlinken. Für die Inhalte externer Seiten wird keine Verantwortung übernommen; verantwortlich sind ausschließlich deren Betreiber."

@@ -35,5 +35,21 @@ public interface ShareRepository extends JpaRepository<Share, UUID> {
     List<Share> findActiveForCounterpart(@Param("counterpartId") String counterpartId,
                                          @Param("subjectType") SharedSubject subjectType);
 
+    /**
+     * Shares where the given user is the relationship's applicant but does not own the
+     * shared document - i.e. documents shared back to them rather than out by them
+     * (see {@code Share.relationship.applicantId} vs {@code Share.document.userId}).
+     */
+    @Query("""
+            select s from Share s
+            where s.relationship.applicantId = :applicantId
+              and s.relationship.status = de.samply.manager.types.RelationshipStatus.ACTIVE
+              and s.revokedAt is null
+              and s.subjectType = :subjectType
+              and s.document.userId <> :applicantId
+            """)
+    List<Share> findIncomingForApplicant(@Param("applicantId") String applicantId,
+                                         @Param("subjectType") SharedSubject subjectType);
+
     List<Share> findByDocumentId(UUID documentId);
 }

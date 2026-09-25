@@ -1,0 +1,31 @@
+// The frame both legal routes put around <app-legal-document>. One file, referenced by
+// both components' styleUrl - they were byte-identical copies before, and a rule that
+// drifts between the imprint and the privacy page is a bug nobody goes looking for.
+//
+// The `#005fcc` these rules used to hardcode is `--color-focus`, which the high-contrast
+// and dark themes redefine; a literal hex here silently opted both legal pages out.
+
+main {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--color-focus);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}

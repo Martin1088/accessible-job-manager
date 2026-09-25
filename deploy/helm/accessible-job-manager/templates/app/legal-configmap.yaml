@@ -1,0 +1,23 @@
+{{- if .Values.legal.documents }}
+{{/*
+This deployment's own privacy policy and legal notice, mounted at /etc/ajm/legal.
+
+Each entry becomes a <slug>.<lang>.yaml file, which is why slug and language must both
+match a ConfigMap key's alphabet - a slug with a slash renders a manifest the API server
+will not accept. `toYaml` is what lets an operator write the document as ordinary nested
+YAML in their values file instead of as an escaped string blob.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ajm.fullname" . }}-legal
+  labels: {{- include "ajm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+data:
+  {{- range $slug, $languages := .Values.legal.documents }}
+  {{- range $language, $document := $languages }}
+  {{ printf "%s.%s.yaml" $slug $language }}: |
+{{ toYaml $document | indent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}

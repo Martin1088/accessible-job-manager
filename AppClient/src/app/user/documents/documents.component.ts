@@ -3,13 +3,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { catchError, forkJoin, of } from 'rxjs';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
 import { CoverLetterService } from '../../services/cover-letter.service';
-import { DocumentService } from '../../services/document.service';
+import { DocumentService, SharedWithMeDocument } from '../../services/document.service';
+import { RelationshipService } from '../../services/relationship.service';
 import { Document, DocumentLanguage, DocumentType } from '../../model/document';
 import { HtmlLetterTemplate, LayoutLetterKey } from '../../model/cover-letter';
+import { Relationship } from '../../model/relationship';
 
 /** Which provider a row came from. The two are stored and edited in different places. */
 type TemplateKind = 'WORD' | 'HTML';
@@ -28,6 +31,7 @@ const TYPE_KEY: Record<DocumentType, string> = {
   CERTIFICATE:           'DOCUMENTS.TYPE_CERTIFICATE',
   OTHER:                 'DOCUMENTS.TYPE_OTHER',
   COVER_LETTER_TEMPLATE: 'DOCUMENTS.KIND_WORD',
+  REVIEW_RESULT:         'DOCUMENTS.TYPE_REVIEW_RESULT',
 };
 
 const LAYOUT_KEY: Record<LayoutLetterKey, string> = {
@@ -39,12 +43,13 @@ const LAYOUT_KEY: Record<LayoutLetterKey, string> = {
 /** Columns an HTML template has no equivalent for; it is edited, never uploaded. */
 const NOT_APPLICABLE = '—';
 
-// Reuses the LANGUAGE.* UI-language keys (EN/DE/NL) since they name the same
-// three human languages the document itself can be written in.
+// Reuses the LANGUAGE.* UI-language keys (EN/DE/NL/ES) since they name the same
+// human languages the document itself can be written in.
 const LANGUAGE_KEY: Record<DocumentLanguage, string> = {
   ENGLISH: 'LANGUAGE.EN',
   GERMAN:  'LANGUAGE.DE',
   DUTCH:   'LANGUAGE.NL',
+  SPANISH: 'LANGUAGE.ES',
 };
 
 function yearOf(iso: string | null | undefined): number | null {
@@ -86,6 +91,18 @@ export class DocumentsComponent implements OnInit {
   /** Rows of the second table: the user's uploaded PDFs. */
   documentRows: any[] = [];
 
+  private sharedWithMe: SharedWithMeDocument[] = [];
+  /** Rows of the third table: reviewers' feedback shared back, not owned by the user. */
+  sharedWithMeRows: any[] = [];
+
+  /** Active reviewer links - who a .docx template can be shared with for review. */
+  reviewers: Relationship[] = [];
+  shareTarget: any | null = null;
+  selectedReviewerId = '';
+  showShareForm = false;
+  sharing = false;
+  shareError = '';
+
   readonly pdfTypeOptions = PDF_TYPES.map(value => ({ value, label: TYPE_KEY[value] }));
 
   documentColumns: TableColumn[] = [
@@ -114,6 +131,20 @@ export class DocumentsComponent implements OnInit {
     },
   ];
 
+  sharedWithMeColumns: TableColumn[] = [
+    { label: 'DOCUMENTS.SHARED_COL_LABEL',   field: 'label',        sortable: true },
+    { label: 'DOCUMENTS.SHARED_COL_FROM',    field: 'sharedByName', sortable: true },
+    { label: 'DOCUMENTS.SHARED_COL_GRANTED', field: 'grantedAt',    sortable: true },
+  ];
+
+  sharedWithMeActions: TableAction[] = [
+    {
+      label: 'DOCUMENTS.ACTION_DOWNLOAD',
+      ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_DOWNLOAD_ARIA', { label: row.label }),
+      handler: (row) => this.downloadSharedDocument(row),
+    },
+  ];
+
   filterYear: number | '' = '';
   filterMonth: number | '' = '';
 
@@ -124,6 +155,7 @@ export class DocumentsComponent implements OnInit {
     { value: 'ENGLISH', label: LANGUAGE_KEY.ENGLISH },
     { value: 'GERMAN',  label: LANGUAGE_KEY.GERMAN },
     { value: 'DUTCH',   label: LANGUAGE_KEY.DUTCH },
+    { value: 'SPANISH', label: LANGUAGE_KEY.SPANISH },
   ];
 
   readonly searchFields = [
@@ -161,6 +193,12 @@ export class DocumentsComponent implements OnInit {
       visible: (row) => row.kind === 'WORD',
     },
     {
+      label: 'DOCUMENTS.ACTION_SHARE_REVIEW',
+      ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_SHARE_REVIEW_ARIA', { label: row.label }),
+      handler: (row) => this.startShare(row),
+      visible: (row) => row.kind === 'WORD',
+    },
+    {
       label: 'DOCUMENTS.ACTION_OPEN',
       ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_OPEN_ARIA', { label: row.label }),
       // With the id: the editor opens this template rather than whichever one
@@ -179,6 +217,8 @@ export class DocumentsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly coverLetters = inject(CoverLetterService);
   private readonly documentService = inject(DocumentService);
+  private readonly relationships = inject(RelationshipService);
+  private readonly announcer = inject(LiveAnnouncer);
 
   constructor(private translate: TranslateService) {
     this.translate.onLangChange.pipe(takeUntilDestroyed()).subscribe(() => this.rebuildRows());
@@ -277,12 +317,16 @@ export class DocumentsComponent implements OnInit {
     forkJoin({
       documents: this.documentService.getAll().pipe(catchError(() => of(null))),
       templates: this.coverLetters.listTemplates().pipe(catchError(() => of(null))),
-    }).subscribe(({ documents, templates }) => {
+      sharedWithMe: this.documentService.getSharedWithMe().pipe(catchError(() => of([]))),
+      reviewers: this.relationships.mine().pipe(catchError(() => of([]))),
+    }).subscribe(({ documents, templates, sharedWithMe, reviewers }) => {
       this.errorMessage = documents && templates
         ? ''
         : this.translate.instant('DOCUMENTS.ERROR_LOAD');
       this.documents = documents ?? [];
       this.htmlTemplates = templates ?? [];
+      this.sharedWithMe = sharedWithMe;
+      this.reviewers = reviewers.filter(r => r.kind === 'REVIEWER' && r.status === 'ACTIVE');
       this.rebuildRows();
     });
   }
@@ -301,6 +345,13 @@ export class DocumentsComponent implements OnInit {
       ...this.documentRow(d),
       typeLabel: this.translate.instant(TYPE_KEY[d.type]),
       type:      d.type,
+    }));
+    this.sharedWithMeRows = this.sharedWithMe.map(d => ({
+      id:            d.id,
+      label:         d.label,
+      filename:      d.filename,
+      sharedByName:  d.sharedByName,
+      grantedAt:     d.grantedAt ? d.grantedAt.substring(0, 10) : NOT_APPLICABLE,
     }));
 
     // The memo is keyed on the filter inputs only, so a new set of rows has to drop it.
@@ -395,6 +446,56 @@ export class DocumentsComponent implements OnInit {
       },
       error: () => this.errorMessage = this.translate.instant('DOCUMENTS.ERROR_DOWNLOAD'),
     });
+  }
+
+  private downloadSharedDocument(row: any): void {
+    this.documentService.downloadShared(row.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = row.filename || row.label; a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage = this.translate.instant('DOCUMENTS.ERROR_DOWNLOAD'),
+    });
+  }
+
+  private startShare(row: any): void {
+    this.shareTarget = row;
+    this.selectedReviewerId = this.reviewers[0]?.id ?? '';
+    this.shareError = '';
+    this.showShareForm = true;
+  }
+
+  confirmShare(): void {
+    if (!this.shareTarget || !this.selectedReviewerId) return;
+
+    const target = this.shareTarget;
+    const reviewer = this.reviewers.find(r => r.id === this.selectedReviewerId);
+    this.sharing = true;
+    this.shareError = '';
+
+    this.relationships.grantDocumentShare(this.selectedReviewerId, target.id).subscribe({
+      next: () => {
+        this.announcer.announce(
+          this.translate.instant('DOCUMENTS.SHARE_SHARED', {
+            label: target.label, name: reviewer?.counterpartName ?? '',
+          }), 'polite');
+        this.sharing = false;
+        this.cancelShare();
+      },
+      error: () => {
+        this.sharing = false;
+        this.shareError = this.translate.instant('DOCUMENTS.ERROR_SHARE');
+      },
+    });
+  }
+
+  cancelShare(): void {
+    this.shareTarget = null;
+    this.selectedReviewerId = '';
+    this.showShareForm = false;
+    this.shareError = '';
   }
 
   saveEdit(): void {

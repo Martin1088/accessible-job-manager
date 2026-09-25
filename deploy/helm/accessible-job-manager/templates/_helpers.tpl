@@ -1,62 +1,47 @@
-{{/*
-Expand the name of the chart.
-*/}}
-{{- define "accessible-job-manager.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-{{- end }}
+{{- define "ajm.name" -}}{{ .Chart.Name }}{{- end -}}
 
-{{/*
-Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
-*/}}
-{{- define "accessible-job-manager.fullname" -}}
-{{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- define "ajm.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
-{{- define "accessible-job-manager.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-{{- end }}
-
-{{/*
-Common labels
-*/}}
-{{- define "accessible-job-manager.labels" -}}
-helm.sh/chart: {{ include "accessible-job-manager.chart" . }}
-{{ include "accessible-job-manager.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "accessible-job-manager.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "accessible-job-manager.name" . }}
+{{- define "ajm.labels" -}}
+app.kubernetes.io/name: {{ include "ajm.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+{{- end -}}
 
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "accessible-job-manager.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "accessible-job-manager.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
+{{- define "ajm.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ajm.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/* JDBC-URL: CNPG-Service oder externe DB */}}
+{{- define "ajm.dbUrl" -}}
+{{- if .Values.postgres.deployCnpg -}}
+jdbc:postgresql://{{ include "ajm.fullname" . }}-pg-rw:5432/{{ .Values.postgres.database }}
+{{- else -}}
+{{ required "postgres.external.url ist erforderlich" .Values.postgres.external.url }}
+{{- end -}}
+{{- end -}}
+
+{{/* Name des Secrets mit S3-Credentials: eigenes garage oder externes S3 */}}
+{{- define "ajm.s3Secret" -}}
+{{- if .Values.storage.s3.existingSecret -}}
+{{ .Values.storage.s3.existingSecret }}
+{{- else if .Values.storage.s3.deployGarage -}}
+{{ include "ajm.fullname" . }}-s3
+{{- else -}}
+{{ required "storage.s3.existingSecret ist erforderlich, wenn deployGarage=false" .Values.storage.s3.existingSecret }}
+{{- end -}}
+{{- end -}}
+
+{{/* Name des Secrets mit DB-Credentials */}}
+{{- define "ajm.dbSecret" -}}
+{{- if .Values.postgres.deployCnpg -}}
+{{ include "ajm.fullname" . }}-pg-app
+{{- else -}}
+{{ required "postgres.external.existingSecret ist erforderlich" .Values.postgres.external.existingSecret }}
+{{- end -}}
+{{- end -}}

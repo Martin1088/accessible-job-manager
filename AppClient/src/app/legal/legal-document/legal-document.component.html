@@ -1,0 +1,78 @@
+@if (document(); as doc) {
+  <article [attr.lang]="documentLanguage()">
+    @if (headingLevel() === 1) {
+      <h1 [attr.id]="titleId()">{{ doc.title }}</h1>
+    } @else {
+      <h2 [attr.id]="titleId()">{{ doc.title }}</h2>
+    }
+
+    @if (documentLanguage(); as lang) {
+      <p class="language-notice" role="status">
+        @switch (lang) {
+          @case ('en') { {{ 'LEGAL.OTHER_LANGUAGE' | translate: { language: ('LANGUAGE.EN' | translate) } }} }
+          @case ('de') { {{ 'LEGAL.OTHER_LANGUAGE' | translate: { language: ('LANGUAGE.DE' | translate) } }} }
+          @case ('nl') { {{ 'LEGAL.OTHER_LANGUAGE' | translate: { language: ('LANGUAGE.NL' | translate) } }} }
+          @case ('es') { {{ 'LEGAL.OTHER_LANGUAGE' | translate: { language: ('LANGUAGE.ES' | translate) } }} }
+          @default { {{ 'LEGAL.OTHER_LANGUAGE' | translate: { language: lang } }} }
+        }
+      </p>
+    }
+
+    @for (paragraph of doc.intro ?? []; track $index) {
+      <p>{{ paragraph }}</p>
+    }
+
+    @for (section of doc.sections; track $index) {
+      <section [attr.aria-labelledby]="sectionId($index)">
+        @if (headingLevel() === 1) {
+          <h2 [id]="sectionId($index)">{{ section.heading }}</h2>
+        } @else {
+          <h3 [id]="sectionId($index)">{{ section.heading }}</h3>
+        }
+
+        @for (block of section.blocks; track $index) {
+          @switch (block.type) {
+            @case ('paragraph') {
+              <p>{{ block.text }}</p>
+            }
+            @case ('list') {
+              <ul role="list">
+                @for (item of block.items; track $index) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            }
+            @case ('definitions') {
+              <dl class="legal-info">
+                @for (definition of block.items; track $index) {
+                  <dt>{{ definition.term }}</dt>
+                  <dd>
+                    @if (definition.href) {
+                      <a [href]="definition.href">{{ definition.value }}</a>
+                    } @else {
+                      {{ definition.value }}
+                    }
+                  </dd>
+                }
+              </dl>
+            }
+          }
+        }
+      </section>
+    }
+  </article>
+} @else if (error()) {
+  @if (headingLevel() === 1) {
+    <h1>{{ titleKey() | translate }}</h1>
+  } @else {
+    <h2>{{ titleKey() | translate }}</h2>
+  }
+  <p role="alert">{{ 'LEGAL.LOAD_ERROR' | translate }}</p>
+} @else if (loading()) {
+  @if (headingLevel() === 1) {
+    <h1>{{ titleKey() | translate }}</h1>
+  } @else {
+    <h2>{{ titleKey() | translate }}</h2>
+  }
+  <p role="status">{{ 'LEGAL.LOADING' | translate }}</p>
+}

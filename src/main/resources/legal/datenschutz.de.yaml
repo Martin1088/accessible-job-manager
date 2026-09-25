@@ -1,0 +1,64 @@
+# Bundled default - the document served when a deployment publishes none of its own.
+# It names the upstream author, so any other deployment must replace it: see
+# job-manager.legal.documents-dir in application.yml.
+language: de
+title: "Datenschutzerklärung"
+intro:
+  - "Diese Seite erklärt, welche personenbezogenen Daten diese Anwendung verarbeitet, zu welchem Zweck, und welche Rechte Sie in Bezug auf Ihre Daten haben – gemäß der Datenschutz-Grundverordnung (DSGVO)."
+sections:
+  - heading: "Verantwortlicher"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "Martin Jurk"
+          - term: "E-Mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+  - heading: "Welche Daten verarbeitet werden"
+    blocks:
+      - type: paragraph
+        text: "Je nachdem, wie Sie die Anwendung nutzen, werden folgende personenbezogene Daten verarbeitet:"
+      - type: list
+        items:
+          - "Kontodaten aus Ihrer Anmeldung (Name, E-Mail-Adresse, eine interne Kennung sowie Ihre zugewiesene Rolle), bereitgestellt vom Single-Sign-On-Anbieter, über den Sie sich anmelden."
+          - "Von Ihnen selbst eingegebene Daten: Unternehmen, Ansprechpersonen, Positionen sowie Ihre Bewerbungen und deren Status."
+          - "Von Ihnen hochgeladene Dokumente (z. B. Anschreiben-Vorlagen) sowie daraus erzeugte Anschreiben, gespeichert im Dokumentenspeicher der Anwendung."
+          - "Sofern Sie die Freigabefunktion nutzen: welchen Beratenden oder Prüfenden Sie Zugriff auf welche Dokumente gewährt haben."
+          - "Ein technisch notwendiges Sitzungs-Cookie, um Sie angemeldet zu halten. Es werden keine Werbe- oder Analyse-Cookies verwendet."
+  - heading: "Rechtsgrundlage"
+    blocks:
+      - type: paragraph
+        text: "Die Verarbeitung ist zur Bereitstellung der von Ihnen genutzten Funktionen erforderlich (Art. 6 Abs. 1 lit. b DSGVO). Wenn Sie ein Dokument aktiv mit einem Beratenden oder Prüfenden teilen, beruht diese Freigabe auf Ihrer eigenen Handlung und Einwilligung (Art. 6 Abs. 1 lit. a DSGVO)."
+  - heading: "Wer Ihre Daten verarbeitet"
+    blocks:
+      - type: paragraph
+        text: "Die Anwendung nutzt folgende Backend-Komponenten zur Bereitstellung ihrer Funktionen. Diese werden vom Verantwortlichen oder dessen Hosting-Anbieter betrieben und ausschließlich für den Betrieb dieser Anwendung eingesetzt:"
+      - type: list
+        items:
+          - "Einen Identity-Provider (Authentik) für Anmeldung und Rollenzuweisung."
+          - "S3-kompatiblen Objektspeicher (Garage) für hochgeladene und erzeugte Dokumente."
+          - "Einen Dokumentkonvertierungsdienst (Gotenberg), der Anschreiben in PDF umwandelt."
+  - heading: "Speicherdauer"
+    blocks:
+      - type: paragraph
+        text: "Ihre Daten werden gespeichert, solange Ihr Konto besteht. Wenn Sie die Löschung Ihres Kontos und der zugehörigen Daten wünschen, wenden Sie sich bitte an die unten genannte E-Mail-Adresse."
+  - heading: "Cookies"
+    blocks:
+      - type: paragraph
+        text: "Es wird ausschließlich ein technisch notwendiges Sitzungs-Cookie verwendet, um Sie angemeldet zu halten. Es wird beim Abmelden oder nach Ablauf der Sitzung gelöscht."
+  - heading: "Ihre Rechte"
+    blocks:
+      - type: paragraph
+        text: "Nach der DSGVO haben Sie das Recht auf:"
+      - type: list
+        items:
+          - "Auskunft über die zu Ihrer Person gespeicherten Daten (Art. 15 DSGVO)."
+          - "Berichtigung unrichtiger Daten (Art. 16 DSGVO)."
+          - "Löschung Ihrer Daten (Art. 17 DSGVO)."
+          - "Einschränkung der Verarbeitung (Art. 18 DSGVO)."
+          - "Erhalt Ihrer Daten in einem übertragbaren Format (Art. 20 DSGVO)."
+          - "Widerspruch gegen eine auf berechtigtem Interesse beruhende Verarbeitung (Art. 21 DSGVO)."
+          - "Beschwerde bei einer Datenschutz-Aufsichtsbehörde."
+      - type: paragraph
+        text: "Um eines dieser Rechte auszuüben, wenden Sie sich bitte an die oben genannte E-Mail-Adresse."

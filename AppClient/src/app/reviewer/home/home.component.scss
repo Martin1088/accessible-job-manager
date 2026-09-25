@@ -1,122 +1,295 @@
 @use '../../../styles/breakpoints' as bp;
+@use '../../../styles/correspondence' as corr;
 
+// Same DIN 5008 stationery as the advisor and user dashboards: the page is a
+// desk, the section a sheet, labels in the monospace voice, names and body copy
+// in the serif. The document tables follow `app-data-table`'s rules, restated
+// here because this table carries a per-row busy state that component lacks.
+
+:host {
+  display: block;
+}
+
+// Global `main` (styles.scss) still supplies max-width / margin / padding.
 main {
-  max-width: 900px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-
-h1 { margin: 0 0 1.5rem; }
-h2 { font-size: 1.1rem; margin: 0 0 1rem; color: var(--color-text); }
-
-.sr-only {
-  position: absolute; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-}
-
-.error {
-  background: var(--color-alert-bg); color: var(--color-alert-text);
-  border: 1px solid var(--color-alert-border); border-radius: 6px;
-  padding: 0.6rem 1rem; margin-bottom: 1rem; font-size: 0.875rem;
-}
-
-.user-list {
-  list-style: none;
-  padding: 0; margin: 0;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.user-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 1.25rem 1.5rem;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.user-header {
+// --- Masthead -------------------------------------------------------------
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+h1 {
+  margin: 0;
+  font-family: corr.$corr-serif;
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.reference-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.75rem;
+  margin: 0;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.reference-line__entry {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+
+  dt {
+    font-family: corr.$corr-mono;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  dd {
+    margin: 0;
+    font-family: corr.$corr-mono;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+}
+
+// --- Section shell ----------------------------------------------------------
+
+section {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+}
+
+.section-tab {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-mono;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.section-note {
+  margin: 0 0 1rem;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+
+  &:last-child {
+    margin-block-end: 0;
+  }
+}
+
+section .notice {
+  margin-block-end: 1rem;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.notice--error {
+  background: var(--color-alert-bg);
+  border-color: var(--color-alert-border);
+  color: var(--color-alert-text);
+}
+
+// --- Senders: one entry per person who shared documents ---------------------
+
+.sender-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sender + .sender {
+  margin-block-start: 1.5rem;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--rule);
+}
+
+.sender__head {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.9rem;
+  margin-block-end: 0.9rem;
 }
 
-.avatar {
-  width: 2.5rem; height: 2.5rem;
-  border-radius: 50%;
-  background: #005fcc;
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 1.1rem;
+// A letterhead monogram in the serif, on paper - not a coloured avatar disc.
+.sender__monogram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-family: corr.$corr-serif;
+  font-size: 1.25rem;
+  color: var(--ink);
 }
 
-.user-info {
-  display: flex; flex-direction: column; gap: 0.1rem;
+.sender__who {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
   min-inline-size: 0;
-  strong { font-size: 1rem; color: var(--color-text); }
-  // An email address has no spaces to break on, so it needs its own wrap
-  // rule to avoid pushing the card wider than the viewport on a phone.
-  span   { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
 }
+
+.sender__name {
+  font-family: corr.$corr-serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+// An email address has no spaces to break on, so it needs its own wrap rule
+// to avoid pushing the sheet wider than the viewport on a phone.
+.sender__email {
+  font-family: corr.$corr-mono;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+// --- Document table (mirrors `app-data-table`) ------------------------------
 
 .doc-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
-
-  th, td {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--color-border);
-    text-align: left;
-  }
+  background: var(--card);
+  border: 1px solid var(--rule);
+  font-size: 0.9rem;
 
   th {
-    background: var(--color-table-header-bg);
-    font-size: 0.78rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--paper);
+    border-block-end: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: middle;
+    font-family: corr.$corr-mono;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-text-muted);
+    color: var(--ink-soft);
   }
 
-  td { color: var(--color-text); }
+  td {
+    padding: 0.6rem 0.75rem;
+    border-block-end: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: middle;
+    color: var(--ink);
+  }
 
-  tbody tr:hover td { background: var(--color-table-hover-bg); }
-}
+  tr:last-child td {
+    border-block-end: none;
+  }
 
-.btn-download {
-  padding: 0.35rem 0.85rem;
-  min-inline-size: 44px;
-  min-block-size: 44px;
-  background: #005fcc;
-  color: #fff;
-  border: none; border-radius: 6px;
-  font-size: 0.82rem; font-family: inherit;
-  cursor: pointer;
-  &:hover:not(:disabled) { background: #004aaa; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+  tbody tr:hover td {
+    background: var(--paper);
+  }
+
+  td button {
+    padding: 0.45rem 0.9rem;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: corr.$corr-mono;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent-deep);
+    }
+
+    // Muted tokens, never opacity - see `app-data-table`.
+    &:disabled {
+      color: var(--ink-soft);
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+  }
 }
 
 // Mobile card layout: the DOM stays one <table> so VoiceOver still reports
-// table structure and per-cell header association - only the visual
-// presentation changes. Never use visibility:hidden/opacity:0 on thead here,
-// it would keep the header row reachable while looking hidden.
+// table structure and per-cell header association. Never use
+// visibility:hidden/opacity:0 on thead here - it would stay reachable.
 @include bp.mobile {
   .doc-table {
-    thead { display: none; }
+    border: 0;
+    background: transparent;
+
+    thead {
+      display: none;
+    }
 
     tbody tr {
       display: block;
-      margin-block-end: 0.75rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: 6px;
+      margin-block-end: 1rem;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
     }
 
-    // Label left, value right - the same card pattern the other tables use.
+    tr:last-child td {
+      border-block-end: 1px solid var(--rule);
+    }
+
     td {
       display: flex;
       justify-content: space-between;
@@ -124,29 +297,31 @@ h2 { font-size: 1.1rem; margin: 0 0 1rem; color: var(--color-text); }
       gap: 1rem;
       text-align: end;
       overflow-wrap: anywhere;
-      color: var(--color-text);
 
       &::before {
         content: attr(data-label);
         flex-shrink: 0;
         text-align: start;
-        font-size: 0.72rem;
+        font-family: corr.$corr-mono;
+        font-size: 0.66rem;
         font-weight: 700;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--color-text-muted);
+        color: var(--ink-soft);
       }
     }
 
-    // The download cell holds a control, not a value to right-align.
     td:has(button) {
       flex-wrap: wrap;
       align-items: flex-start;
-      text-align: start;
 
-      &::before { flex-basis: 100%; }
+      &::before {
+        flex-basis: 100%;
+      }
     }
 
-    tbody tr td:last-child { border-bottom: none; }
+    tbody tr td:last-child {
+      border-block-end: none;
+    }
   }
 }
