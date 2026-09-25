@@ -93,8 +93,6 @@ public class LegalDocumentRegistry {
         return override.isEmpty() ? bundled.keySet() : override.keySet();
     }
 
-    // ---------------------------------------------------------------- loading
-
     private Map<String, Map<String, LoadedDocument>> loadBundled() {
         List<LoadedDocument> documents = new ArrayList<>();
         List<String> defects = new ArrayList<>();
@@ -145,8 +143,6 @@ public class LegalDocumentRegistry {
                     .sorted(Comparator.comparing(path -> path.getFileName().toString()))
                     .forEach(file -> {
                         String filename = file.getFileName().toString();
-                        // A ConfigMap volume carries ..data and ..2024_… entries; ignore
-                        // anything that is not one of ours rather than rejecting it.
                         DocumentKey key = LegalDocumentLoader.keyOf(filename);
                         if (key == null) {
                             return;
@@ -203,8 +199,6 @@ public class LegalDocumentRegistry {
         return Map.copyOf(immutable);
     }
 
-    // ---------------------------------------------------------------- reload
-
     /**
      * The kubelet re-syncs a mounted ConfigMap without restarting the pod, so a document
      * can change underneath a running application. Checking a cheap directory fingerprint
@@ -234,8 +228,6 @@ public class LegalDocumentRegistry {
             this.overrideFingerprint = current;
             log.info("Reloaded legal documents from {}: {}", dir, describe(reloaded));
         } catch (RuntimeException e) {
-            // Keep serving the last good set. Unlike startup there is no previous
-            // ReplicaSet behind us, so failing here would take working pages down.
             this.overrideFingerprint = current;
             log.error("The legal documents in {} changed but could not be loaded. The previous documents"
                     + " are still being served. {}", dir, e.getMessage());
@@ -263,8 +255,6 @@ public class LegalDocumentRegistry {
         }
         return out.toString();
     }
-
-    // ---------------------------------------------------------------- logging
 
     private void logSummary() {
         if (properties.hasOverride()) {

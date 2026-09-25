@@ -35,17 +35,12 @@ public class LegalController {
 
         LegalDocumentService.Resolved resolved = service.resolve(slug, lang);
 
-        // Returning null after this leaves the 304 Spring has already written.
         if (request.checkNotModified(resolved.etag())) {
             return null;
         }
 
         return ResponseEntity.ok()
                 .eTag(resolved.etag())
-                // no-cache means "revalidate every time", not "do not store". A positive
-                // max-age on a privacy policy would keep serving a withdrawn or corrected
-                // document from browser caches with no way to purge it; the ETag is what
-                // makes revalidating cost a 304 with no body.
                 .cacheControl(CacheControl.noCache())
                 .header(HttpHeaders.VARY, HttpHeaders.ACCEPT_LANGUAGE)
                 .header(HttpHeaders.CONTENT_LANGUAGE, Locale.forLanguageTag(resolved.language()).toLanguageTag())

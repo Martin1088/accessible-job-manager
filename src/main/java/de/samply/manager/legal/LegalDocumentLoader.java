@@ -82,8 +82,6 @@ public final class LegalDocumentLoader {
             throw new LegalDocumentException(String.join("\n  ", defects));
         }
 
-        // The filename is authoritative: a file may omit `language:` entirely, and when it
-        // states one the validator has already checked the two agree.
         LegalDocument withLanguage = new LegalDocument(
                 key.language(), document.title(), document.intro(), document.sections());
 
@@ -92,8 +90,6 @@ public final class LegalDocumentLoader {
 
     private static Yaml yaml() {
         LoaderOptions options = new LoaderOptions();
-        // An operator document is trusted input, but a ConfigMap is edited by hand and a
-        // billion-laughs alias expansion is an easy accident to commit.
         options.setAllowDuplicateKeys(false);
         options.setMaxAliasesForCollections(50);
         return new Yaml(new SafeConstructor(options));
