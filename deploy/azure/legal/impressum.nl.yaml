@@ -14,7 +14,7 @@ sections:
           - term: "Naam"
             value: "Martin Jurk"
           - term: "Adres"
-            value: "[BITTE ANSCHRIFT EINTRAGEN – § 5 DDG verlangt eine ladungsfähige Adresse]"
+            value: "Blumenstr. 6, 68753 Waghäusel"
           - term: "E-mail"
             value: "access.job.manager@gmail.com"
             href: "mailto:access.job.manager@gmail.com"

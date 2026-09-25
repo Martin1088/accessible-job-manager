@@ -26,7 +26,7 @@ sections:
           - term: "Name"
             value: "Martin Jurk"
           - term: "Anschrift"
-            value: "[BITTE ANSCHRIFT EINTRAGEN – § 5 DDG verlangt eine ladungsfähige Adresse]"
+            value: "Blumenstr. 6, 68753 Waghäusel"
           - term: "E-Mail"
             value: "access.job.manager@gmail.com"
             href: "mailto:access.job.manager@gmail.com"
@@ -69,7 +69,7 @@ sections:
   - heading: "Wie lange werden die Daten gespeichert?"
     blocks:
       - type: paragraph
-        text: "Bis zum Ende der Testphase, spätestens bis [BITTE ENDDATUM DER TESTPHASE EINTRAGEN]. Danach werden Konten und Inhalte gelöscht. Protokolldaten werden automatisch nach 30 Tagen gelöscht."
+        text: "Bis zum Ende der Testphase, spätestens bis 31. Juli 2027. Danach werden Konten und Inhalte gelöscht. Protokolldaten werden automatisch nach 30 Tagen gelöscht."
 
   - heading: "Deine Rechte"
     blocks:

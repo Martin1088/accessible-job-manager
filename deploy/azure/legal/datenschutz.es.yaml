@@ -21,7 +21,7 @@ sections:
           - term: "Nombre"
             value: "Martin Jurk"
           - term: "Dirección"
-            value: "[BITTE ANSCHRIFT EINTRAGEN – § 5 DDG verlangt eine ladungsfähige Adresse]"
+            value: "Blumenstr. 6, 68753 Waghäusel"
           - term: "Correo electrónico"
             value: "access.job.manager@gmail.com"
             href: "mailto:access.job.manager@gmail.com"
@@ -64,7 +64,7 @@ sections:
   - heading: "¿Durante cuánto tiempo se conservan los datos?"
     blocks:
       - type: paragraph
-        text: "Hasta el final de la fase de pruebas y, a más tardar, hasta [BITTE ENDDATUM DER TESTPHASE EINTRAGEN]. Después se eliminan las cuentas y los contenidos. Los datos de registro se eliminan automáticamente a los 30 días."
+        text: "Hasta el final de la fase de pruebas y, a más tardar, hasta 31 de julio de 2027. Después se eliminan las cuentas y los contenidos. Los datos de registro se eliminan automáticamente a los 30 días."
 
   - heading: "Sus derechos"
     blocks:

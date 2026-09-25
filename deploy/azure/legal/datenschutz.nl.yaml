@@ -21,7 +21,7 @@ sections:
           - term: "Naam"
             value: "Martin Jurk"
           - term: "Adres"
-            value: "[BITTE ANSCHRIFT EINTRAGEN – § 5 DDG verlangt eine ladungsfähige Adresse]"
+            value: "Blumenstr. 6, 68753 Waghäusel"
           - term: "E-mail"
             value: "access.job.manager@gmail.com"
             href: "mailto:access.job.manager@gmail.com"
@@ -64,7 +64,7 @@ sections:
   - heading: "Hoe lang worden de gegevens bewaard?"
     blocks:
       - type: paragraph
-        text: "Tot het einde van de testfase, uiterlijk tot [BITTE ENDDATUM DER TESTPHASE EINTRAGEN]. Daarna worden accounts en inhoud verwijderd. Loggegevens worden automatisch na 30 dagen verwijderd."
+        text: "Tot het einde van de testfase, uiterlijk tot 31 juli 2027. Daarna worden accounts en inhoud verwijderd. Loggegevens worden automatisch na 30 dagen verwijderd."
 
   - heading: "Uw rechten"
     blocks:
