@@ -106,6 +106,9 @@ param appImage string = 'ghcr.io/martin1088/accessible-job-manager:latest'
 @description('Minimum replicas of the app. 0 = scale-to-zero (cheaper, but cold start)')
 param appMinReplicas int = 0
 
+@description('Maximum replicas of the app. Sessions are held in replica memory, so a scale-in drops the sessions on the removed replica even with sticky ingress - keep this at 1 unless sessions are moved to a shared store')
+param appMaxReplicas int = 1
+
 @description('Job posting LLM extractor provider. No Ollama container is deployed here, so this defaults to "azure"')
 param jobPostingLlmProvider string = 'azure'
 
@@ -310,11 +313,22 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     managedEnvironmentId: env.id
     configuration: {
+      // Stated explicitly: sticky sessions are validated against this field, and
+      // leaving it to the default fails with "not supported for  revision mode".
+      activeRevisionsMode: 'Single'
       ingress: {
         external: true
         targetPort: 8060
         transport: 'http'
         allowInsecure: false
+        // The HTTP session - and with it the OAuth2 authorization request stored
+        // between the redirect to the IdP and the callback - lives in the memory of
+        // one replica. Without affinity the callback can land on the other replica,
+        // which knows nothing of the request and rejects the login
+        // (authorization_request_not_found). Requires activeRevisionsMode Single.
+        stickySessions: {
+          affinity: 'sticky'
+        }
       }
       secrets: [
         {
@@ -487,7 +501,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
       ]
       scale: {
         minReplicas: appMinReplicas
-        maxReplicas: 2
+        maxReplicas: appMaxReplicas
       }
     }
   }
