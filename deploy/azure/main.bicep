@@ -39,10 +39,6 @@
 // image name Garage S3 and Authentik, which this template does not deploy, and they
 // say nothing about Azure OpenAI receiving the text of imported job postings.
 //
-// >>> TWO PLACEHOLDERS MUST BE FILLED BEFORE THE LINK GOES TO ANYONE <<<
-//     - the postal address (datenschutz + impressum; § 5 DDG requires a real one)
-//     - the end date of the test phase (the four datenschutz files)
-//   Both are marked [BITTE ... EINTRAGEN].
 //
 // To change the text: edit the YAML and redeploy. loadTextContent inlines the files
 // at compile time, so a missing file fails `az bicep build` rather than the
