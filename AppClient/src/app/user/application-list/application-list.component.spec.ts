@@ -76,6 +76,21 @@ describe('ApplicationListComponent', () => {
     httpMock.expectOne(r => r.url === '/api/documents').flush([WORD_TEMPLATE]);
   });
 
+  it('opens on the current month', () => {
+    const now = new Date();
+    expect(component.filterYear).toBe(now.getFullYear());
+    expect(component.filterMonth).toBe(now.getMonth() + 1);
+  });
+
+  it('lists the most recently updated application first, falling back to creation', () => {
+    const rows = (component as any).toRows([
+      { ...APPLICATION, id: 1, createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-02-01T00:00:00Z' },
+      { ...APPLICATION, id: 2, createdAt: '2026-03-01T00:00:00Z' },
+      { ...APPLICATION, id: 3, createdAt: '2026-01-15T00:00:00Z' },
+    ]);
+    expect(rows.map((r: any) => r.id)).toEqual([2, 1, 3]);
+  });
+
   it('offers the templates of both providers', () => {
     expect(component.wordTemplates).toEqual([{ id: 'word-1', label: 'Standard .docx', provider: 'WORD' }]);
     expect(component.htmlTemplates).toEqual([{ id: 'html-1', label: 'DIN 5008 letter', provider: 'HTML' }]);

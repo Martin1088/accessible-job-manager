@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
+import { byMostRecent } from '../sort';
 
 interface JobPostingSnapshot {
   id: string;
@@ -67,8 +68,9 @@ export class CompanyListComponent implements OnInit {
   suggestSuccess = false;
   private lastFocusedSuggestElement: HTMLElement | null = null;
 
-  filterYear: number | '' = '';
-  filterMonth: number | '' = '';
+  // Opens on the current month; Clear filter is the way to everything.
+  filterYear: number | '' = new Date().getFullYear();
+  filterMonth: number | '' = new Date().getMonth() + 1;
 
   searchField = 'all';
   searchTerm = '';
@@ -356,6 +358,7 @@ export class CompanyListComponent implements OnInit {
         positionDate:  p.createdAt ? p.createdAt.substring(0, 10) : '—',
         rawCreatedAt:  p.createdAt ?? null,
       }))
-    );
+    // A position has no updatedAt, so its creation is the most recent change it has.
+    ).sort(byMostRecent('rawCreatedAt'));
   }
 }

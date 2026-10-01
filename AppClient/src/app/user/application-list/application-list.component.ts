@@ -12,6 +12,7 @@ import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
 import { Document } from '../../model/document';
+import { byMostRecent } from '../../shared/sort';
 
 /**
  * One entry of the template picker. Both cover letter providers write a letter for
@@ -85,8 +86,9 @@ export class ApplicationListComponent implements OnInit {
   sortField: string | null = null;
   sortDir: 'asc' | 'desc' | null = null;
 
-  filterYear: number | '' = '';
-  filterMonth: number | '' = '';
+  // Opens on the current month; Clear filter is the way to everything.
+  filterYear: number | '' = new Date().getFullYear();
+  filterMonth: number | '' = new Date().getMonth() + 1;
 
   searchField = 'all';
   searchTerm = '';
@@ -501,6 +503,7 @@ export class ApplicationListComponent implements OnInit {
       appliedDateRaw:    a.appliedDate ?? '',
       notes:             a.notes ?? '',
       createdAt:         a.createdAt ?? null,
-    }));
+      updatedAt:         a.updatedAt ?? a.createdAt ?? null,
+    })).sort(byMostRecent('updatedAt'));
   }
 }

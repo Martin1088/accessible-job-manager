@@ -89,6 +89,27 @@ header {
   &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 }
 
+// Icon-only link to the display settings. Square and 44px at every width, not only
+// under the mobile breakpoint: it is sized to its glyph, which is exactly the case the
+// touch-target rule covers.
+.a11y-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: transparent;
+  color: #c8d0e0;
+  text-decoration: none;
+
+  &:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
+  &:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  &.active { color: #fff; border-color: #fff; }
+}
+
 .account-menu {
   display: flex;
   flex-direction: column;
