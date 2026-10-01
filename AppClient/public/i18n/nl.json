@@ -417,6 +417,7 @@
     "ACTION_APPLY_ARIA": "Solliciteren naar {{position}} bij {{company}}",
     "ACTION_VIEW_JOB_POSTING": "Vacature bekijken",
     "ACTION_VIEW_JOB_POSTING_ARIA": "Bekijk de opgeslagen vacature voor {{position}} bij {{company}}",
+    "SHOW_DETAILS_ARIA": "{{company}}: details van {{position}} tonen",
     "ACTION_EDIT": "Bewerken",
     "ACTION_EDIT_ARIA": "{{company}} bewerken",
     "ACTION_DELETE": "Verwijderen",

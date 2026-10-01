@@ -9,6 +9,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
 import { byMostRecent } from '../sort';
+import { PositionDetailsComponent } from '../position-details/position-details.component';
 
 interface JobPostingSnapshot {
   id: string;
@@ -37,7 +38,7 @@ function monthOf(iso: string | null | undefined): number | null {
 
 @Component({
   selector: 'app-company-list',
-  imports: [FormsModule, DataTableComponent, TranslatePipe],
+  imports: [FormsModule, DataTableComponent, PositionDetailsComponent, TranslatePipe],
   templateUrl: './company-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './company-list.component.scss'
@@ -68,9 +69,8 @@ export class CompanyListComponent implements OnInit {
   suggestSuccess = false;
   private lastFocusedSuggestElement: HTMLElement | null = null;
 
-  // Opens on the current month; Clear filter is the way to everything.
-  filterYear: number | '' = new Date().getFullYear();
-  filterMonth: number | '' = new Date().getMonth() + 1;
+  filterYear: number | '' = '';
+  filterMonth: number | '' = '';
 
   searchField = 'all';
   searchTerm = '';
@@ -85,7 +85,11 @@ export class CompanyListComponent implements OnInit {
   readonly monthIndexes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
   columns: TableColumn[] = [
-    { label: 'COMPANIES.COL_NAME',     field: 'name',          sortable: true },
+    {
+      label: 'COMPANIES.COL_NAME', field: 'name', sortable: true,
+      open: (row) => this.viewJobPosting(row),
+      openAriaLabel: (row) => this.translate.instant('COMPANIES.SHOW_DETAILS_ARIA', { company: row.name, position: row.positionTitle }),
+    },
     { label: 'COMPANIES.COL_CITY',     field: 'city',          sortable: true },
     { label: 'COMPANIES.COL_POSITION', field: 'positionTitle', sortable: true },
     { label: 'COMPANIES.COL_ADDED',    field: 'positionDate',  sortable: true },
@@ -336,15 +340,6 @@ export class CompanyListComponent implements OnInit {
 
   get viewingPosition(): CompanyPosition | undefined {
     return this.viewingCompany?.positions.find(p => p.id === this.viewingRow.positionId);
-  }
-
-  formatLocation(loc: { street: string; postcode?: string; city: string; country?: string }): string {
-    return [loc.street, loc.postcode, loc.city, loc.country].filter(v => v).join(', ');
-  }
-
-  formatContact(position?: CompanyPosition): string {
-    if (!position) return '';
-    return [position.contactTitle, position.contactLastName].filter(v => v).join(' ');
   }
 
   private toRows(companies: Company[]): any[] {

@@ -8,6 +8,8 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { ApplicationListComponent } from './application-list.component';
 import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
+import { CompanyService } from '../../services/company.service';
+import { Company } from '../../model/company';
 import { Application } from '../../model/application';
 import { Document } from '../../model/document';
 import { HtmlLetterTemplate } from '../../model/cover-letter';
@@ -21,6 +23,13 @@ const APPLICATION: Application = {
   status: 'DRAFT',
   appliedDate: '2026-01-02',
   notes: '',
+};
+
+const COMPANY: Company = {
+  id: 1,
+  name: 'Acme GmbH',
+  locations: [],
+  positions: [{ id: 3, title: 'Developer', email: 'jobs@acme.example' }],
 };
 
 const WORD_TEMPLATE = { id: 'word-1', label: 'Standard .docx' } as Document;
@@ -57,6 +66,7 @@ describe('ApplicationListComponent', () => {
       providers: [
         { provide: ApplicationService, useValue: applicationServiceSpy },
         { provide: CoverLetterService, useValue: coverLetterServiceSpy },
+        { provide: CompanyService, useValue: { getAll: () => of([COMPANY]) } },
         { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
         { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
         provideTranslateService({ fallbackLang: 'en' }),
@@ -76,10 +86,10 @@ describe('ApplicationListComponent', () => {
     httpMock.expectOne(r => r.url === '/api/documents').flush([WORD_TEMPLATE]);
   });
 
-  it('opens on the current month', () => {
-    const now = new Date();
-    expect(component.filterYear).toBe(now.getFullYear());
-    expect(component.filterMonth).toBe(now.getMonth() + 1);
+  it('opens unfiltered, showing every application', () => {
+    expect(component.filterYear).toBe('');
+    expect(component.filterMonth).toBe('');
+    expect(component.filterActive).toBeFalse();
   });
 
   it('lists the most recently updated application first, falling back to creation', () => {
@@ -89,6 +99,33 @@ describe('ApplicationListComponent', () => {
       { ...APPLICATION, id: 3, createdAt: '2026-01-15T00:00:00Z' },
     ]);
     expect(rows.map((r: any) => r.id)).toEqual([2, 1, 3]);
+  });
+
+  it('the company name opens the details of its position, and Close clears them', () => {
+    fixture.detectChanges();
+    const name: HTMLButtonElement = fixture.nativeElement.querySelector('td button.cell-link');
+    expect(name.textContent!.trim()).toBe('Acme GmbH');
+
+    name.click();
+    fixture.detectChanges();
+    const panel: HTMLElement = fixture.nativeElement.querySelector('section.position-details');
+    expect(panel.textContent).toContain('jobs@acme.example');
+
+    component.closeDetails();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('section.position-details')).toBeNull();
+  });
+
+  it('leaves the company name as plain text when its position is unknown', () => {
+    component.rows = (component as any).toRows([{ ...APPLICATION, companyPositionId: 99 }]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('td button.cell-link')).toBeNull();
+  });
+
+  it('has no axe-detectable accessibility violations with the details open', async () => {
+    component.openDetails({ companyPositionId: 3 });
+    fixture.detectChanges();
+    await expectNoAxeViolations(fixture);
   });
 
   it('offers the templates of both providers', () => {

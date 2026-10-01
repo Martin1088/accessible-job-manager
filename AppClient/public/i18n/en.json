@@ -417,6 +417,7 @@
     "ACTION_APPLY_ARIA": "Apply for {{position}} at {{company}}",
     "ACTION_VIEW_JOB_POSTING": "View job posting",
     "ACTION_VIEW_JOB_POSTING_ARIA": "View the saved job posting for {{position}} at {{company}}",
+    "SHOW_DETAILS_ARIA": "{{company}}: show details for {{position}}",
     "ACTION_EDIT": "Edit",
     "ACTION_EDIT_ARIA": "Edit {{company}}",
     "ACTION_DELETE": "Delete",

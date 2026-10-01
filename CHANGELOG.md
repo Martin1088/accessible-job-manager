@@ -18,6 +18,9 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- In Companies and Applications, a company's name now opens its details: locations,
+  contact, email, website, how and in which language to apply, and notes. Only the
+  fields that are filled in are shown.
 - The header now has an accessibility button (the universal-access symbol) on every
   page. It opens the display & accessibility settings directly, so reaching them no
   longer takes a trip through the account menu.
@@ -36,9 +39,10 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
-- Companies, Applications and Documents now open on the current month, with the most
-  recently changed entry first. Clear filter shows everything as before, and clicking a
-  column header a third time returns to the newest-first order.
+- Table column headings and captions are larger and easier to read, in every table and
+  in the mobile card layout.
+- Companies, Applications and Documents now list the most recently changed entry first.
+  Clicking a column header a third time returns to that order.
 - The privacy policy and legal notice are no longer built into the application. Each
   deployment publishes its own complete documents, per language, as structured YAML
   supplied through Helm values (`legal.documents`), a mounted directory
@@ -65,6 +69,15 @@ orientation, not as a record of releases that happened.
   there. It also follows the dark and high-contrast themes.
 
 ### Fixed
+
+- In the Applications table, a long status ("Vorstellungsgespräch geplant") and the
+  edit/delete buttons are no longer cut off at high zoom. Columns now grow to fit their
+  content, and a table too wide for the screen scrolls sideways; the scroll area can be
+  reached and scrolled with the keyboard.
+- The font chosen in the display & accessibility settings (sans-serif, serif,
+  dyslexia-friendly) now applies on every screen. Headings, company names and labels on
+  the user, advisor and reviewer pages used to keep the serif and monospace fonts
+  regardless of the choice.
 
 ## [0.1.0] - 2026-09-14
 

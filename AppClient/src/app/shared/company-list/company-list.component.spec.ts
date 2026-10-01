@@ -45,11 +45,11 @@ describe('CompanyListComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('opens on the current month', () => {
-    const now = new Date();
+  it('opens unfiltered, showing every position', () => {
     const component = create().componentInstance;
-    expect(component.filterYear).toBe(now.getFullYear());
-    expect(component.filterMonth).toBe(now.getMonth() + 1);
+    expect(component.filterYear).toBe('');
+    expect(component.filterMonth).toBe('');
+    expect(component.filterActive).toBeFalse();
   });
 
   it('lists the most recently created position first, undated ones last', () => {
@@ -118,15 +118,19 @@ describe('CompanyListComponent', () => {
     expect(fixture.componentInstance.viewingRow).toBeNull();
   });
 
-  it('formatLocation() joins only the present address parts', () => {
+  it('the company name opens the details panel for its row', () => {
     const fixture = create();
-    const formatted = fixture.componentInstance.formatLocation({ street: 'Main St 1', city: 'Berlin', country: undefined, postcode: undefined });
-    expect(formatted).toBe('Main St 1, Berlin');
-  });
+    fixture.detectChanges();
+    const name: HTMLButtonElement = fixture.nativeElement.querySelector('td button.cell-link');
+    expect(name.textContent!.trim()).toBe('Acme GmbH');
 
-  it('formatContact() joins title and last name, tolerating a missing title', () => {
-    const fixture = create();
-    expect(fixture.componentInstance.formatContact({ id: 5, title: 'Developer', contactLastName: 'Schmidt' })).toBe('Schmidt');
+    name.click();
+    http.expectOne('/api/posting/snapshot?companyPositionId=5').flush([]);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.viewingRow.positionId).toBe(5);
+    const details: HTMLElement = fixture.nativeElement.querySelector('app-position-details');
+    expect(details.textContent).toContain('jobs@acme.example');
   });
 
   it('has no axe-detectable accessibility violations', async () => {

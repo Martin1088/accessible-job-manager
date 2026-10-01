@@ -146,9 +146,8 @@ export class DocumentsComponent implements OnInit {
     },
   ];
 
-  // Opens on the current month; Clear filter is the way to everything.
-  filterYear: number | '' = new Date().getFullYear();
-  filterMonth: number | '' = new Date().getMonth() + 1;
+  filterYear: number | '' = '';
+  filterMonth: number | '' = '';
 
   searchField = 'all';
   searchTerm = '';

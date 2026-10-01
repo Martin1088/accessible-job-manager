@@ -1,0 +1,43 @@
+<dl class="structure-view">
+  <dt>{{ 'COMPANIES.COL_NAME' | translate }}</dt>
+  <dd>{{ company().name }}</dd>
+
+  @if (position().title) {
+    <dt>{{ 'COMPANIES.COL_POSITION' | translate }}</dt>
+    <dd>{{ position().title }}</dd>
+  }
+
+  @for (loc of locations(); track $index) {
+    <dt>{{ 'COMPANIES.LOCATIONS_HEADING' | translate }}</dt>
+    <dd>{{ loc }}</dd>
+  }
+
+  @if (contact()) {
+    <dt>{{ 'COMPANIES.CONTACT_LAST_NAME' | translate }}</dt>
+    <dd>{{ contact() }}</dd>
+  }
+  @if (position().email; as email) {
+    <dt>{{ 'COMPANIES.EMAIL' | translate }}</dt>
+    <dd><a [href]="'mailto:' + email">{{ email }}</a></dd>
+  }
+  @if (position().website; as website) {
+    <dt>{{ 'COMPANIES.WEBSITE' | translate }}</dt>
+    <dd><a [href]="website" target="_blank" rel="noopener">{{ website }}</a></dd>
+  }
+  @if (method(); as m) {
+    <dt>{{ 'COMPANIES.APPLY_METHOD' | translate }}</dt>
+    <dd>{{ ('COMPANIES.APPLY_METHOD_' + m) | translate }}</dd>
+  }
+  @if (position().applyLanguage; as lang) {
+    <dt>{{ 'COMPANIES.APPLY_LANGUAGE' | translate }}</dt>
+    <dd>{{ ('COMPANIES.LANGUAGE_' + lang) | translate }}</dd>
+  }
+  @if (addedOn()) {
+    <dt>{{ 'COMPANIES.COL_ADDED' | translate }}</dt>
+    <dd>{{ addedOn() }}</dd>
+  }
+  @if (position().notes) {
+    <dt>{{ 'COMPANIES.NOTES' | translate }}</dt>
+    <dd class="notes">{{ position().notes }}</dd>
+  }
+</dl>

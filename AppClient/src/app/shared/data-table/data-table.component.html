@@ -43,7 +43,14 @@
       @for (row of sortedRows; track row.id ?? $index) {
         <tr>
           @for (col of columns; track col) {
-            <td [attr.data-label]="col.label | translate">{{ row[col.field] }}</td>
+            <td [attr.data-label]="col.label | translate">
+              @if (col.open) {
+                <button type="button" class="cell-link" (click)="col.open(row)"
+                  [attr.aria-label]="col.openAriaLabel ? col.openAriaLabel(row) : null">{{ row[col.field] }}</button>
+              } @else {
+                {{ row[col.field] }}
+              }
+            </td>
           }
           @if (actions.length > 0) {
             <td [attr.data-label]="'TABLE.ACTIONS' | translate">

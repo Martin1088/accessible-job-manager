@@ -417,6 +417,7 @@
     "ACTION_APPLY_ARIA": "Solicitar {{position}} en {{company}}",
     "ACTION_VIEW_JOB_POSTING": "Ver oferta de empleo",
     "ACTION_VIEW_JOB_POSTING_ARIA": "Ver la oferta de empleo guardada para {{position}} en {{company}}",
+    "SHOW_DETAILS_ARIA": "{{company}}: ver detalles de {{position}}",
     "ACTION_EDIT": "Editar",
     "ACTION_EDIT_ARIA": "Editar {{company}}",
     "ACTION_DELETE": "Eliminar",
