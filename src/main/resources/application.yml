@@ -31,7 +31,7 @@ spring:
             client-secret: ${OIDC_CLIENT_SECRET}
             client-authentication-method: client_secret_basic
             authorization-grant-type: authorization_code
-            scope: "openid, email, profile"
+            scope: ${OIDC_SCOPE:openid, email, profile}
             redirect-uri: ${OIDC_REDIRECT_URI:http://localhost:8060/login/oauth2/code/authentik}
         provider:
           authentik:

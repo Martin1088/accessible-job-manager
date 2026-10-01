@@ -56,6 +56,7 @@ export CHROME_BIN=/opt/homebrew/bin/chromium              # macOS/Homebrew
 ```bash
 cd dev && docker compose -f local-setup.yml up -d     # Postgres, Garage (S3), Gotenberg, Ollama
 cd dev && docker compose -f authentik.yml up -d       # Authentik (OIDC), separate stack
+cd dev && docker compose -f pocket-id.yml up -d       # Pocket ID (OIDC), lighter alternative - setup in dev/pocket-id/README.md
 ```
 
 ## Architecture

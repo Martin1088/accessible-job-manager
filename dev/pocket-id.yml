@@ -1,0 +1,30 @@
+
+# Pocket ID as a lighter alternative to authentik.yml for local OIDC testing.
+# Pocket ID has no blueprint mechanism and its first admin must register a
+# passkey in a browser, so the groups and the OIDC client are created by hand
+# once - see pocket-id/README.md.
+services:
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:${POCKET_ID_TAG:-v2.16.0}
+    container_name: pocket-id
+    environment:
+      APP_URL: ${POCKET_ID_APP_URL:-http://localhost:1411}
+      TRUST_PROXY: "false"
+      ENCRYPTION_KEY: ${POCKET_ID_ENCRYPTION_KEY:-ZGV2LW9ubHktZW5jcnlwdGlvbi1rZXktZG8tbm90LXJldXNl}
+      ANALYTICS_DISABLED: "true"
+    volumes:
+      - ./pocket-id/data:/app/data
+    ports:
+      - "1411:1411"
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - web
+
+networks:
+  web: {}
