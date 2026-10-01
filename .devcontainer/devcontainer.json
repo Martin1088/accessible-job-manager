@@ -28,11 +28,12 @@
     "CHROME_BIN": "/usr/bin/chromium"
   },
 
-  "forwardPorts": [8060, 9000, 9443, 5432, 3900, 3901, 3909, 3000],
+  "forwardPorts": [8060, 9000, 9443, 1411, 5432, 3900, 3901, 3909, 3000],
   "portsAttributes": {
     "8060": { "label": "Backend (Spring Boot)" },
     "9000": { "label": "Authentik (OIDC)" },
     "9443": { "label": "Authentik (OIDC, TLS)" },
+    "1411": { "label": "Pocket ID (OIDC)" },
     "5432": { "label": "PostgreSQL" },
     "3900": { "label": "Garage S3" },
     "3901": { "label": "Garage Admin" },
