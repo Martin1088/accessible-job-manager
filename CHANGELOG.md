@@ -21,6 +21,10 @@ orientation, not as a record of releases that happened.
 - The header now has an accessibility button (the universal-access symbol) on every
   page. It opens the display & accessibility settings directly, so reaching them no
   longer takes a trip through the account menu.
+- The requested OIDC scopes are configurable via `OIDC_SCOPE` (default unchanged:
+  `openid, email, profile`), so identity providers such as Pocket ID that only emit the
+  `groups` claim for a `groups` scope can be used. A local Pocket ID stack
+  (`dev/pocket-id.yml`) sits alongside the Authentik one for testing.
 - Users can share a `.docx` cover letter template with one of their active reviewers
   directly from My Documents, via a new "Share for review" action.
 - Reviewers can now upload a `.docx` review of a document they were given access to,
