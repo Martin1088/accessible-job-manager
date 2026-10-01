@@ -1,4 +1,6 @@
-package de.samply.manager.model;
+package de.samply.manager.types;
+
+import de.samply.manager.model.Document;
 
 import java.util.regex.Pattern;
 

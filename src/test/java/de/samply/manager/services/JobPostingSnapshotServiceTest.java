@@ -5,7 +5,7 @@ import de.samply.manager.jobimport.render.RenderProfile;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
-import de.samply.manager.model.DocumentType;
+import de.samply.manager.types.DocumentType;
 import de.samply.manager.repository.CompanyPositionRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.services.storage.StorageService;

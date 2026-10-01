@@ -2,7 +2,7 @@ package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
-import de.samply.manager.model.DocumentType;
+import de.samply.manager.types.DocumentType;
 import de.samply.manager.model.HtmlLetterTemplate;
 import de.samply.manager.model.Relationship;
 import de.samply.manager.model.Share;

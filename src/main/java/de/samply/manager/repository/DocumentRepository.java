@@ -1,7 +1,7 @@
 package de.samply.manager.repository;
 
 import de.samply.manager.model.Document;
-import de.samply.manager.model.DocumentType;
+import de.samply.manager.types.DocumentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

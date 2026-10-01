@@ -1,6 +1,6 @@
 package de.samply.manager.dto;
 
-import de.samply.manager.model.ApplicationStatus;
+import de.samply.manager.types.ApplicationStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

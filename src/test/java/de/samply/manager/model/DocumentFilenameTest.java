@@ -1,5 +1,6 @@
 package de.samply.manager.model;
 
+import de.samply.manager.types.DocumentFilename;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -2,7 +2,7 @@ package de.samply.manager.dto;
 
 import java.time.LocalDate;
 
-import de.samply.manager.model.ApplicationStatus;
+import de.samply.manager.types.ApplicationStatus;
 
 public record CompanyOverviewExport(
     String companyName,

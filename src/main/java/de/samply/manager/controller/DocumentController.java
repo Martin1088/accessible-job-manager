@@ -5,7 +5,7 @@ import de.samply.manager.dto.SharedWithMeDocumentDto;
 import de.samply.manager.dto.UpdateDocumentRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
-import de.samply.manager.model.DocumentType;
+import de.samply.manager.types.DocumentType;
 import de.samply.manager.model.Share;
 import de.samply.manager.model.UserProfile;
 import de.samply.manager.repository.UserProfileRepository;

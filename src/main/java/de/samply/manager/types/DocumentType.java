@@ -1,4 +1,4 @@
-package de.samply.manager.model;
+package de.samply.manager.types;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,7 @@ package de.samply.manager.services;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.model.Document;
-import de.samply.manager.model.DocumentType;
+import de.samply.manager.types.DocumentType;
 import de.samply.manager.repository.CompanyRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.types.Language;

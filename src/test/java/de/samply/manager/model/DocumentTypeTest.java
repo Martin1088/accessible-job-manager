@@ -1,5 +1,6 @@
 package de.samply.manager.model;
 
+import de.samply.manager.types.DocumentType;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;

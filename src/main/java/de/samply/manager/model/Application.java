@@ -1,5 +1,6 @@
 package de.samply.manager.model;
 
+import de.samply.manager.types.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

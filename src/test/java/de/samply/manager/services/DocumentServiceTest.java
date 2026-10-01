@@ -2,7 +2,7 @@ package de.samply.manager.services;
 
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Document;
-import de.samply.manager.model.DocumentType;
+import de.samply.manager.types.DocumentType;
 import de.samply.manager.repository.ShareRepository;
 import de.samply.manager.repository.DocumentRepository;
 import de.samply.manager.services.storage.StorageService;

@@ -4,7 +4,7 @@ import de.samply.manager.dto.ApplicationDto;
 import de.samply.manager.dto.ApplicationRequest;
 import de.samply.manager.exception.ApiException;
 import de.samply.manager.model.Application;
-import de.samply.manager.model.ApplicationStatus;
+import de.samply.manager.types.ApplicationStatus;
 import de.samply.manager.model.Company;
 import de.samply.manager.model.CompanyPosition;
 import de.samply.manager.repository.ApplicationRepository;
