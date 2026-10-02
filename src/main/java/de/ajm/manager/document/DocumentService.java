@@ -14,8 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -23,7 +25,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DocumentService {
 
+    /** The types a user can pick a default of, one per language. */
+    static final Set<DocumentType> DEFAULTABLE =
+            EnumSet.of(DocumentType.CV, DocumentType.CERTIFICATE, DocumentType.COVER_LETTER_TEMPLATE);
+
     private final DocumentRepository documentRepository;
+    private final DefaultDocumentRepository defaultDocumentRepository;
     private final ShareRepository shareRepository;
     private final StorageService storageService;
     private final MessageSource messageSource;
@@ -108,6 +115,8 @@ public class DocumentService {
     @Transactional
     public Document update(UUID documentId, UpdateDocumentRequest request, String userId) {
         Document document = findOwned(documentId, userId);
+        DocumentType typeBefore = document.getType();
+        Language languageBefore = document.getLanguage();
 
         if (request.label() != null) document.setLabel(request.label());
         if (request.language() != null) document.setLanguage(request.language());
@@ -120,9 +129,52 @@ public class DocumentService {
             }
             document.setType(request.type());
         }
+        if (document.getType() != typeBefore || document.getLanguage() != languageBefore) {
+            // A default slot is keyed by the type and language the document had. It no
+            // longer fits that slot, and moving it into the new one could silently
+            // replace a default the user picked there - so it simply stops being one.
+            defaultDocumentRepository.deleteByDocument_Id(documentId);
+        }
         document.setUpdatedAt(LocalDateTime.now());
 
         return documentRepository.save(document);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DefaultDocument> findDefaults(String userId) {
+        return defaultDocumentRepository.findByUserId(userId);
+    }
+
+    /**
+     * Makes this document the caller's default for its own type and language,
+     * replacing whichever document held that slot before.
+     *
+     * @throws ApiException.BadRequest the document's type has no default (a job posting snapshot, say)
+     */
+    @Transactional
+    public DefaultDocument makeDefault(UUID documentId, String userId) {
+        Document document = findOwned(documentId, userId);
+        if (!DEFAULTABLE.contains(document.getType())) {
+            throw new ApiException.BadRequest(message("error.document.notDefaultable", document.getType()));
+        }
+
+        // Found: managed, so the new document is written by dirty checking at commit.
+        // Not found: a new, transient slot that save() persists.
+        DefaultDocument slot = defaultDocumentRepository
+                .findByUserIdAndTypeAndLanguage(userId, document.getType(), document.getLanguage())
+                .orElseGet(DefaultDocument::new);
+        slot.setUserId(userId);
+        slot.setType(document.getType());
+        slot.setLanguage(document.getLanguage());
+        slot.setDocument(document);
+        return defaultDocumentRepository.save(slot);
+    }
+
+    /** Stops this document being a default. A document that is not one is left as it is. */
+    @Transactional
+    public void clearDefault(UUID documentId, String userId) {
+        findOwned(documentId, userId);
+        defaultDocumentRepository.deleteByDocument_Id(documentId);
     }
 
     public byte[] bytes(Document document) throws IOException {

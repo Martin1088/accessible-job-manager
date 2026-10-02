@@ -27,6 +27,7 @@ import static org.mockito.Mockito.*;
 class DocumentServiceTest {
 
     @Mock DocumentRepository documentRepository;
+    @Mock DefaultDocumentRepository defaultDocumentRepository;
     @Mock ShareRepository shareRepository;
     @Mock StorageService storageService;
     @Mock MessageSource messageSource;
@@ -155,6 +156,96 @@ class DocumentServiceTest {
         ArgumentCaptor<String> mime = ArgumentCaptor.forClass(String.class);
         verify(storageService).upload(startsWith("u1/cv/"), any(InputStream.class), eq(14L), mime.capture());
         assertThat(mime.getValue()).isEqualTo("application/pdf");
+    }
+
+    // ── default documents ─────────────────────────────────────────────────────
+
+    @Test
+    void makeDefault_fillsAnEmptySlotKeyedByTheDocumentsOwnTypeAndLanguage() {
+        Document cv = document("u1", DocumentType.CV);
+        when(documentRepository.findById(ID)).thenReturn(Optional.of(cv));
+        when(defaultDocumentRepository.findByUserIdAndTypeAndLanguage("u1", DocumentType.CV, Language.GERMAN))
+                .thenReturn(Optional.empty());
+        when(defaultDocumentRepository.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        DefaultDocument slot = service.makeDefault(ID, "u1");
+
+        assertThat(slot.getUserId()).isEqualTo("u1");
+        assertThat(slot.getType()).isEqualTo(DocumentType.CV);
+        assertThat(slot.getLanguage()).isEqualTo(Language.GERMAN);
+        assertThat(slot.getDocument()).isSameAs(cv);
+    }
+
+    @Test
+    void makeDefault_replacesTheDocumentInAnOccupiedSlot_ratherThanAddingASecondOne() {
+        Document cv = document("u1", DocumentType.CV);
+        DefaultDocument occupied = new DefaultDocument();
+        occupied.setId(7L);
+        occupied.setDocument(document("u1", DocumentType.CV));
+        when(documentRepository.findById(ID)).thenReturn(Optional.of(cv));
+        when(defaultDocumentRepository.findByUserIdAndTypeAndLanguage("u1", DocumentType.CV, Language.GERMAN))
+                .thenReturn(Optional.of(occupied));
+        when(defaultDocumentRepository.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        DefaultDocument slot = service.makeDefault(ID, "u1");
+
+        assertThat(slot).isSameAs(occupied);
+        assertThat(slot.getDocument()).isSameAs(cv);
+    }
+
+    @Test
+    void makeDefault_rejectsATypeThatHasNoDefault() {
+        when(documentRepository.findById(ID))
+                .thenReturn(Optional.of(document("u1", DocumentType.JOB_POSTING_SNAPSHOT)));
+
+        assertThatThrownBy(() -> service.makeDefault(ID, "u1"))
+                .isInstanceOf(ApiException.BadRequest.class);
+        verify(defaultDocumentRepository, never()).save(any());
+    }
+
+    @Test
+    void makeDefault_refusesAnotherUsersDocument() {
+        when(documentRepository.findById(ID)).thenReturn(Optional.of(document("u1", DocumentType.CV)));
+
+        assertThatThrownBy(() -> service.makeDefault(ID, "u2"))
+                .isInstanceOf(ApiException.Forbidden.class);
+        verifyNoInteractions(defaultDocumentRepository);
+    }
+
+    @Test
+    void clearDefault_refusesAnotherUsersDocument() {
+        when(documentRepository.findById(ID)).thenReturn(Optional.of(document("u1", DocumentType.CV)));
+
+        assertThatThrownBy(() -> service.clearDefault(ID, "u2"))
+                .isInstanceOf(ApiException.Forbidden.class);
+        verifyNoInteractions(defaultDocumentRepository);
+    }
+
+    @Test
+    void update_vacatesTheDefaultSlot_whenTheLanguageChanges() {
+        when(documentRepository.findById(ID)).thenReturn(Optional.of(document("u1", DocumentType.CV)));
+
+        service.update(ID, new UpdateDocumentRequest(null, Language.ENGLISH, null), "u1");
+
+        verify(defaultDocumentRepository).deleteByDocument_Id(ID);
+    }
+
+    @Test
+    void update_vacatesTheDefaultSlot_whenTheTypeChanges() {
+        when(documentRepository.findById(ID)).thenReturn(Optional.of(document("u1", DocumentType.CV)));
+
+        service.update(ID, new UpdateDocumentRequest(null, null, DocumentType.CERTIFICATE), "u1");
+
+        verify(defaultDocumentRepository).deleteByDocument_Id(ID);
+    }
+
+    @Test
+    void update_keepsTheDefaultSlot_whenOnlyTheLabelOrTheSameLanguageIsSent() {
+        when(documentRepository.findById(ID)).thenReturn(Optional.of(document("u1", DocumentType.CV)));
+
+        service.update(ID, new UpdateDocumentRequest("Renamed", Language.GERMAN, DocumentType.CV), "u1");
+
+        verifyNoInteractions(defaultDocumentRepository);
     }
 
     // ── fixtures ──────────────────────────────────────────────────────────────

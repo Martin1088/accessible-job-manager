@@ -18,6 +18,11 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- A document can be marked as the default CV, certificate or cover letter template for
+  its language - one default of each per language (`GET /api/documents/defaults`,
+  `PUT`/`DELETE /api/documents/{id}/default`). Deleting the document, or changing its
+  type or language, removes it as a default. The interface for choosing defaults is
+  not built yet.
 - In Companies and Applications, a company's name now opens its details: locations,
   contact, email, website, how and in which language to apply, and notes. Only the
   fields that are filled in are shown.

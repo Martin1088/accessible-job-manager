@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,6 +70,32 @@ public class DocumentController {
             @AuthenticationPrincipal OidcUser user) {
 
         return DocumentDto.from(documentService.update(documentId, request, user.getSubject()));
+    }
+
+    /** The caller's default CV, certificate and cover letter template, one per language. */
+    @GetMapping("/defaults")
+    public List<DefaultDocumentDto> getMyDefaults(@AuthenticationPrincipal OidcUser user) {
+        return documentService.findDefaults(user.getSubject()).stream()
+                .map(DefaultDocumentDto::from)
+                .toList();
+    }
+
+    /** Makes this document the default for its own type and language. */
+    @PutMapping("/{documentId}/default")
+    public DefaultDocumentDto makeDefault(
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal OidcUser user) {
+
+        return DefaultDocumentDto.from(documentService.makeDefault(documentId, user.getSubject()));
+    }
+
+    @DeleteMapping("/{documentId}/default")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void clearDefault(
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal OidcUser user) {
+
+        documentService.clearDefault(documentId, user.getSubject());
     }
 
     /**
