@@ -51,8 +51,12 @@ G_USER=$(ensure_group "${GROUP_USER:-User}")
 G_ADVISOR=$(ensure_group "${GROUP_ADVISOR:-Advisor}")
 G_REVIEWER=$(ensure_group "${GROUP_REVIEWER:-Reviewer}")
 
+# The logout callback is registered with and without the trailing slash:
+# LoginController sends the bare context root, and an unmatched URL makes
+# Pocket ID ask the user to confirm the logout instead of redirecting back.
 CLIENT=$(jq -n --arg id "$CLIENT_ID" --arg cb "$REDIRECT_URI" --arg lo "$LOGOUT_URI" \
-  '{id: $id, name: "access-job-manager", callbackURLs: [$cb], logoutCallbackURLs: [$lo],
+  '{id: $id, name: "access-job-manager", callbackURLs: [$cb],
+    logoutCallbackURLs: ([$lo, ($lo | rtrimstr("/"))] | unique),
     isPublic: false, pkceEnabled: false, skipConsent: false}')
 if api GET "/oidc/clients/$CLIENT_ID" >/dev/null 2>&1; then
   api PUT "/oidc/clients/$CLIENT_ID" -d "$CLIENT" >/dev/null
