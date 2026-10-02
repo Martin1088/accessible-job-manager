@@ -1,0 +1,19 @@
+package de.ajm.manager.advisory.suggestion;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
+public class SuggestionDto {
+    private Long id;
+    private String targetUserId;
+    private String targetUserName;
+    private String advisorName;
+    private String companyName;
+    private String positionTitle;
+    private Long companyPositionId;
+    private String message;
+    private SuggestionStatus status;
+    private LocalDateTime createdAt;
+}

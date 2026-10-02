@@ -1,0 +1,18 @@
+package de.ajm.manager.types;
+
+import java.util.Locale;
+
+public enum Language {
+    GERMAN(Locale.GERMAN), ENGLISH(Locale.ENGLISH), DUTCH(Locale.forLanguageTag("nl")),
+    SPANISH(Locale.forLanguageTag("es"));
+
+    private final Locale locale;
+
+    Language(Locale locale) {
+        this.locale = locale;
+    }
+
+    public Locale locale() {
+        return locale;
+    }
+}

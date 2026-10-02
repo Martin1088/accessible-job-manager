@@ -62,7 +62,7 @@ dependencies {
 }
 
 
-group = 'de.samply'
+group = 'de.ajm'
 
 /*
  * The version is the release tag, so that `git describe`, the jar name and the

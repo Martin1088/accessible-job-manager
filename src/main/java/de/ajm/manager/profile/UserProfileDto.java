@@ -1,0 +1,18 @@
+package de.ajm.manager.profile;
+
+import de.ajm.manager.security.AppRole;
+import java.util.Set;
+
+
+public record UserProfileDto(
+        String userId,
+        String name,
+        String email,
+        String street,
+        String postalCode,
+        String city,
+        String phone,
+        Set<AppRole> roles,
+        UserPreferencesDto preferences
+) {
+}

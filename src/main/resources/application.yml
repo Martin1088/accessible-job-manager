@@ -118,8 +118,7 @@ logging:
     org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
     org.springframework.security.oauth2: ${OAUTH2_LOG_LEVEL:INFO}
     org.springframework.web.client: ${WEB_CLIENT_LOG_LEVEL:INFO}
-    de.samply.manager.jobsearch: ${JOBSOURCE_LOG_LEVEL:INFO}
-    de.samply.manager.controller.AdvisorJobSearchController: ${JOBSOURCE_LOG_LEVEL:INFO}
+    de.ajm.manager.jobsearch: ${JOBSOURCE_LOG_LEVEL:INFO}
     ajm.diagnostics: ${DIAGNOSTICS_LOG_LEVEL:OFF}
 job-manager:
   metrics:
