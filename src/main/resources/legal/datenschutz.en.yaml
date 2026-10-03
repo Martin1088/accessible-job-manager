@@ -1,0 +1,64 @@
+# Bundled default - the document served when a deployment publishes none of its own.
+# It names the upstream author, so any other deployment must replace it: see
+# job-manager.legal.documents-dir in application.yml.
+language: en
+title: "Privacy policy"
+intro:
+  - "This page explains what personal data this application processes, why, and what rights you have regarding your data, in line with the EU General Data Protection Regulation (GDPR)."
+sections:
+  - heading: "Controller"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "Martin Jurk"
+          - term: "Email"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+  - heading: "What data is processed"
+    blocks:
+      - type: paragraph
+        text: "Depending on how you use the application, the following personal data is processed:"
+      - type: list
+        items:
+          - "Account data from your login (name, email address, an internal subject identifier, and your assigned role) provided by the single sign-on provider used to authenticate you."
+          - "Data you enter yourself: companies, contact persons, job positions, and your job applications and their status."
+          - "Documents you upload (e.g. cover letter templates) and cover letter documents generated from them, stored in the application's document storage."
+          - "If you use the sharing feature, which advisors or reviewers you have granted access to which documents."
+          - "A technical session cookie used to keep you logged in. No advertising or analytics cookies are used."
+  - heading: "Legal basis"
+    blocks:
+      - type: paragraph
+        text: "Processing is necessary to provide the functionality you use (Art. 6(1)(b) GDPR). Where you actively share a document with an advisor or reviewer, that sharing is based on your own action and consent (Art. 6(1)(a) GDPR)."
+  - heading: "Who processes your data"
+    blocks:
+      - type: paragraph
+        text: "The application relies on the following backend components to provide its functionality. These are operated by the controller or its hosting provider and are not used for any purpose beyond running this application:"
+      - type: list
+        items:
+          - "An identity provider (Authentik) for login and role assignment."
+          - "S3-compatible object storage (Garage) for uploaded and generated documents."
+          - "A document conversion service (Gotenberg) used to turn cover letter documents into PDF."
+  - heading: "Storage duration"
+    blocks:
+      - type: paragraph
+        text: "Your data is stored for as long as your account exists. If you would like your account and associated data deleted, please contact us using the email address below."
+  - heading: "Cookies"
+    blocks:
+      - type: paragraph
+        text: "Only a technically necessary session cookie is used to keep you signed in. It is deleted when you log out or your session expires."
+  - heading: "Your rights"
+    blocks:
+      - type: paragraph
+        text: "Under the GDPR, you have the right to:"
+      - type: list
+        items:
+          - "Access the personal data we hold about you (Art. 15 GDPR)."
+          - "Have inaccurate data corrected (Art. 16 GDPR)."
+          - "Have your data deleted (Art. 17 GDPR)."
+          - "Request restriction of processing (Art. 18 GDPR)."
+          - "Receive your data in a portable format (Art. 20 GDPR)."
+          - "Object to processing based on legitimate interest (Art. 21 GDPR)."
+          - "Lodge a complaint with a data protection supervisory authority."
+      - type: paragraph
+        text: "To exercise any of these rights, please contact us at the email address above."

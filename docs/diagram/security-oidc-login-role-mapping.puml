@@ -1,0 +1,54 @@
+@startuml
+title OIDC login -> role mapping -> authorization
+
+actor Browser
+participant "SecurityConfig" as Filter
+participant LoginController
+participant Authentik as IdP
+participant "GroupsGrantedAuthoritiesMapper" as Mapper
+participant RoleMapper
+participant RoleCheckSuccessHandler as Handler
+database UserProfileRepository as DB
+participant "Angular AuthService" as Angular
+
+group Unauthenticated request
+  Browser -> Filter: request protected route
+  Filter --> Browser: redirect to login (HTML)\nor 401 (API)
+end
+
+group OIDC login
+  Browser -> IdP: authenticate
+  IdP -> Filter: callback with code
+  Filter -> IdP: exchange code -> ID token / userinfo
+end
+
+group Map groups to roles
+  Filter -> Mapper: mapAuthorities()
+  Mapper -> RoleMapper: rolesFromClaim(groups)
+  RoleMapper --> Mapper: Set<AppRole>
+  Mapper --> Filter: ROLE_* authorities
+end
+
+group Post-login check
+  Filter -> Handler: onAuthenticationSuccess()
+  alt no role, or requested role not held
+    Handler --> Browser: logout, redirect /login?error
+  else at least one role held
+    Handler -> DB: upsert UserProfile(roles)
+    Handler --> Browser: redirect /
+  end
+end
+
+group Frontend reads identity
+  Browser -> Angular: app bootstraps
+  Angular -> LoginController: GET /api/me
+  LoginController --> Angular: { roles: [...] } or 401
+  Angular -> Angular: isUser$ / isAdvisor$ / isReviewer$
+end
+
+group Every subsequent request
+  Browser -> Filter: request /api/advisor/** or /api/reviewer/**
+  Filter --> Browser: 200 or 403 (hasRole check)
+end
+
+@enduml

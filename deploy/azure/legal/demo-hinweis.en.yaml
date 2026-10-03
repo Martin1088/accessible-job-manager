@@ -1,0 +1,14 @@
+# Translation of demo-hinweis.de.yaml, which is the authoritative version.
+# This slug has NO bundled default: a deployment that does not publish it gets a 404
+# and shows nothing on the login page.
+language: en
+title: "Demo version – please read"
+intro:
+  - "This is a non-public test version for invited participants. It is free of charge, provided without warranty, and may go offline at any time."
+sections:
+  - heading: "Please do not enter real data"
+    blocks:
+      - type: paragraph
+        text: "Please do not enter any real personal data, and in particular nothing about health or disability. Use sample data only."
+      - type: paragraph
+        text: "All data will be deleted at the end of the test phase."

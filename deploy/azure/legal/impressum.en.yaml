@@ -1,0 +1,34 @@
+# Translation of impressum.de.yaml, which is the authoritative version.
+# The legal notice is a German-law obligation (§ 5 DDG), so the German text governs.
+#
+# PLACEHOLDER: the address below must be filled before release.
+language: en
+title: "Legal notice"
+intro:
+  - "Information according to § 5 DDG (German Digital Services Act)."
+sections:
+  - heading: "Responsible for the content of this test version"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "Martin Jurk"
+          - term: "Address"
+            value: "Blumenstr. 6, 68753 Waghäusel"
+          - term: "Email"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+
+  - heading: "Nature of this offering"
+    blocks:
+      - type: paragraph
+        text: "This application is operated privately and non-commercially. It is in its test phase, access is limited to personally invited participants, and it is not offered as a service."
+      - type: paragraph
+        text: "It exists to help people organise their own job applications, and to try out its features and its accessibility while doing so."
+
+  - heading: "Liability for content and links"
+    blocks:
+      - type: paragraph
+        text: "The test version is provided without warranty. Faults, outages and data loss are possible; no warranty is given as to completeness, accuracy or continuous availability. Please do not use it for real job applications or important documents."
+      - type: paragraph
+        text: "This application may link to third-party job postings or websites. No responsibility is accepted for the content of external sites; their respective operators are solely responsible for it."

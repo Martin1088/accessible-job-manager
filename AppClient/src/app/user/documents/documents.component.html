@@ -57,6 +57,43 @@
     </section>
   }
 
+  @if (showShareForm && shareTarget) {
+    <section class="upload-form" aria-labelledby="share-form-heading">
+      <h2 id="share-form-heading" class="section-tab">
+        {{ 'DOCUMENTS.SHARE_FORM_HEADING' | translate: { label: shareTarget.label } }}
+      </h2>
+
+      @if (shareError) {
+        <p role="alert" class="notice notice--error">{{ shareError }}</p>
+      }
+
+      @if (reviewers.length === 0) {
+        <p class="hint">{{ 'DOCUMENTS.SHARE_NO_REVIEWERS' | translate }}</p>
+        <div class="upload-actions">
+          <button type="button" class="btn-cancel" (click)="cancelShare()">{{ 'COMMON.CANCEL' | translate }}</button>
+        </div>
+      } @else {
+        <div class="field">
+          <label for="share-reviewer">{{ 'DOCUMENTS.SHARE_REVIEWER_FIELD' | translate }}</label>
+          <select id="share-reviewer" name="share-reviewer" [(ngModel)]="selectedReviewerId">
+            @for (r of reviewers; track r.id) {
+              <option [value]="r.id">{{ r.counterpartName }}</option>
+            }
+          </select>
+        </div>
+        <div class="upload-actions">
+          <button type="button" class="btn-primary" (click)="confirmShare()"
+            [disabled]="sharing || !selectedReviewerId">
+            {{ (sharing ? 'DOCUMENTS.SHARE_SHARING' : 'DOCUMENTS.SHARE_ACTION') | translate }}
+          </button>
+          <button type="button" class="btn-cancel" (click)="cancelShare()" [disabled]="sharing">
+            {{ 'COMMON.CANCEL' | translate }}
+          </button>
+        </div>
+      }
+    </section>
+  }
+
   <div class="filter-bar" role="search" [attr.aria-label]="'DOCUMENTS.FILTER_ARIA' | translate">
     <fieldset class="filter-fieldset">
       <legend class="sr-only">{{ 'DOCUMENTS.FILTER_ARIA' | translate }}</legend>
@@ -129,6 +166,17 @@
       [rows]="filteredDocumentRows"
       [actions]="documentActions"
       emptyMessage="DOCUMENTS.DOCUMENTS_EMPTY">
+    </app-data-table>
+  </section>
+
+  <section aria-labelledby="shared-with-me-heading">
+    <h2 id="shared-with-me-heading" class="section-tab">{{ 'DOCUMENTS.SHARED_HEADING' | translate }}</h2>
+    <app-data-table
+      caption="DOCUMENTS.SHARED_CAPTION"
+      [columns]="sharedWithMeColumns"
+      [rows]="sharedWithMeRows"
+      [actions]="sharedWithMeActions"
+      emptyMessage="DOCUMENTS.SHARED_EMPTY">
     </app-data-table>
   </section>
 </main>

@@ -1,0 +1,26 @@
+{{- if .Values.ajm.ingress.enabled }}
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ajm.fullname" . }}
+  labels: {{- include "ajm.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.ajm.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ajm.ingress.className }}
+{{- if .Values.ajm.ingress.tls.enabled }}
+  tls:
+    - hosts: [{{ .Values.ajm.ingress.host | quote }}]
+      secretName: {{ .Values.ajm.ingress.tls.secretName }}
+{{- end }}
+  rules:
+    - host: {{ .Values.ajm.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ajm.fullname" . }}
+                port: { name: http }
+{{- end }}

@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { AuthService, UserMe } from '../../core/auth.service';
@@ -7,7 +7,7 @@ import { ImportedPosting, JobPostingImportComponent } from '../../shared/job-pos
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, TranslatePipe, JobPostingImportComponent],
+  imports: [TranslatePipe, JobPostingImportComponent],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss'

@@ -177,6 +177,21 @@ section,
   border-top: 3px solid var(--accent);
 }
 
+// The caution sheet. It is marked by an edge and by a different stock, but what
+// actually carries the meaning is its heading - "Demo-Version, bitte beachten" -
+// so the warning survives a reader who gets no colour at all. Deliberately not
+// styled as `.error`: this is standing advice, not something that went wrong.
+.demo-notice {
+  border-left: 4px solid var(--accent);
+  background: var(--paper);
+
+  &__more {
+    margin: 1rem 0 0;
+    font-family: $serif;
+    font-size: 0.9rem;
+  }
+}
+
 // A tab clipped to the top of the sheet, matching the rest of the app.
 .section-label {
   display: inline-block;

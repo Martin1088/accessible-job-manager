@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew bootRun              # starts backend + builds Angular first (port 8060)
 
 # Run a single test class
-./gradlew test --tests "de.samply.manager.services.CompanyServiceTest"
+./gradlew test --tests "de.ajm.manager.company.CompanyServiceTest"
 ```
 
 ### Frontend (run from `AppClient/`)
@@ -54,15 +54,27 @@ export CHROME_BIN=/opt/homebrew/bin/chromium              # macOS/Homebrew
 ### Dev infrastructure
 
 ```bash
-cd dev && docker compose up -d                        # Postgres, Garage (S3), Gotenberg, Traefik
+cd dev && docker compose -f local-setup.yml up -d     # Postgres, Garage (S3), Gotenberg, Ollama
 cd dev && docker compose -f authentik.yml up -d       # Authentik (OIDC), separate stack
+cd dev && docker compose -f pocket-id.yml up -d       # Pocket ID (OIDC), lighter alternative - setup in dev/pocket-id/README.md
 ```
 
 ## Architecture
 
 ### Tech stack
 
-Spring Boot 3.5.16 · Java 26 · Lombok 1.18.38 · Angular 22 standalone · PostgreSQL · Garage S3 · Gotenberg (LibreOffice PDF) · OIDC via Authentik
+Spring Boot 4.1.1 · Java 26 · Lombok 1.18.38 · Angular 22 standalone · PostgreSQL · Garage S3 · Gotenberg (LibreOffice PDF) · OIDC via Authentik
+
+### Package layout
+
+The backend (`de.ajm.manager`) is packaged **by topic, not by layer**: each folder
+(`company/`, `document/`, `profile/`, `relationship/`, `coverletter/`, …) holds that
+feature's controller, service, entity, repository and DTOs together, ideally ≤ 12 files,
+with a sub-package once it outgrows that (`company/fieldsuggestion/`,
+`document/storage/`, `coverletter/render/`). There are no `controller/`, `services/`,
+`model/`, `repository/` or `dto/` folders - put a new class next to the feature it
+serves. `types/` holds only enums shared across features (`Language`, `Gender`). Tests
+live in the package of the class they test, since several rely on package-private access.
 
 ### Build pipeline
 
@@ -111,7 +123,7 @@ Two providers exist side by side. Both share `CoverLetterLabels` (salutations, s
 
 **.docx provider** — `WordCoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `StorageService`.
 
-**HTML provider** (`de.samply.manager.coverletter`, `/api/html/cover-letter`) — Thymeleaf → HTML → Gotenberg (`/forms/chromium/convert/html`). The pipeline is `CoverLetterTemplate` (editable data from the frontend) → `CoverLetterAssembler` → `CoverLetterModel` → `HtmlCoverLetterRenderer` or `TextCoverLetterRenderer`.
+**HTML provider** (`de.ajm.manager.coverletter`, `/api/html/cover-letter`) — Thymeleaf → HTML → Gotenberg (`/forms/chromium/convert/html`). The pipeline is `CoverLetterTemplate` (editable data from the frontend) → `CoverLetterAssembler` → `CoverLetterModel` → `HtmlCoverLetterRenderer` or `TextCoverLetterRenderer`.
 
 Rules this split enforces, in order of how easily they are broken:
 
@@ -121,7 +133,45 @@ Rules this split enforces, in order of how easily they are broken:
 - **`StyleSettings` is untrusted input.** `StyleSettingsValidator` fills unset components with `StyleSettings.din5008FormB()` and rejects impossible geometry. Its `fontFamily` whitelist matters: that value is the only style setting written into the stylesheet as text, and the Thymeleaf CSS inlining used there is the unescaped `[(${...})]` form (the escaped `[[...]]` form emits CSS identifier escapes like `\32 4\.1mm`, which Chromium does not read as a length).
 - **`CssLengths` formats locale-free.** A `24,1mm` produced under a German default locale is an invalid CSS length and Chromium drops the declaration silently.
 
-`Din5008PdfGeometryTest` prints a letter through the dev Gotenberg and reads the text coordinates back with PDFBox, asserting each line lands in its DIN zone. It skips itself when Gotenberg is unreachable (`cd dev && docker compose up -d gotenberg`).
+`Din5008PdfGeometryTest` prints a letter through the dev Gotenberg and reads the text coordinates back with PDFBox, asserting each line lands in its DIN zone. It skips itself when Gotenberg is unreachable (`cd dev && docker compose -f local-setup.yml up -d gotenberg`).
+
+### Legal documents (`/impressum`, `/datenschutz`)
+
+Neither page's text lives in the frontend. Both fetch the deployment's own document from
+the public `GET /api/legal/{slug}` and render it through one component,
+`AppClient/src/app/legal/legal-document/`.
+
+A document is **structured blocks**, never markup: a title, an intro, and sections each
+holding an ordered list of `paragraph` / `list` / `definitions` blocks. The template fixes
+the accessible semantics — the single `<h1>`, `<section aria-labelledby>` with *generated*
+ids, `<ul role="list">`, `<dl>` for the controller's contact details — so an operator
+supplies wording and cannot break them. All text is interpolated, so nothing needs
+sanitizing; the only URL a document carries is a `Definition.href`, held to a scheme
+allow-list at load time.
+
+`de.ajm.manager.legal` owns the backend. Rules that are easy to break:
+
+- **Source selection is per slug, never per file.** Supplying any language of a document
+  takes that document over completely; a missing language falls back to another language
+  *of the same deployment*. The bundled documents in `src/main/resources/legal/` name the
+  upstream author, so serving the bundled English imprint to an organisation's English
+  visitors would be a false statement about who is legally responsible. `LegalProperties`
+  additionally fails startup when `documents-dir` is set but does not cover every slug.
+- **Startup and hot reload have opposite failure policies.** A malformed document fails
+  startup — under a rolling update the old ReplicaSet keeps serving, so the operator gets
+  the feedback and the users keep the page. A document that breaks during a live ConfigMap
+  refresh keeps the last-known-good snapshot and logs `ERROR`, because there is nothing to
+  roll back to there.
+- **`Cache-Control: no-cache` plus an ETag**, not a `max-age`. A withdrawn or corrected
+  privacy policy must not keep being served from a browser cache.
+- **The response's `language` is the language actually served**, which the renderer puts
+  on the region's `lang` attribute when it differs from the interface language (WCAG
+  3.1.2). Without it a German policy is read out by a Spanish speech synthesiser.
+- The `/api/legal/**` `permitAll` matcher must stay **above** `/api/**` → `authenticated()`
+  in `SecurityConfig`; the footer links these pages while signed out.
+- The demo publishes its **own** documents (`AppClient/src/app/demo/seed/legal.ts`), served
+  by `DemoBackend`. That is not duplication to remove: the demo stores nothing on a server,
+  so the bundled text describing a database and object storage would be untrue there.
 
 ### Angular routing & guards
 
@@ -136,7 +186,7 @@ Home components for each role redirect away if the role doesn't match (advisors 
 
 ### Error handling
 
-Services must throw `de.samply.manager.exception.ApiException` subtypes (`NotFound`, `Forbidden`, `Conflict`, `BadRequest`, `UnsupportedMediaType`, `Unauthorized`, `BadGateway`, `InternalServerError`) instead of constructing `ResponseStatusException` inline. `GlobalExceptionHandler` is the single place that maps exceptions to the `{status, error, message}` response body — add a new `@ExceptionHandler` there (or a new `ApiException` subtype) rather than handling errors ad hoc in a controller or service.
+Services must throw `de.ajm.manager.exception.ApiException` subtypes (`NotFound`, `Forbidden`, `Conflict`, `BadRequest`, `UnsupportedMediaType`, `Unauthorized`, `BadGateway`, `InternalServerError`) instead of constructing `ResponseStatusException` inline. `GlobalExceptionHandler` is the single place that maps exceptions to the `{status, error, message}` response body — add a new `@ExceptionHandler` there (or a new `ApiException` subtype) rather than handling errors ad hoc in a controller or service.
 
 ### No hardcoded user-facing strings
 
@@ -237,7 +287,7 @@ Indeed answers `403` to Gotenberg's Chromium exactly as it does to the plain
 User-Agent only changes the refusal to `401`. The supported route for such a
 board is a printed PDF through `/overview-pdf`.
 
-`DevServices` (`src/test/java/de/samply/manager/testing/`) resolves the dev
+`DevServices` (`src/test/java/de/ajm/manager/testing/`) resolves the dev
 service URLs and holds the shared TCP reachability probe that decides these
 skips — `Din5008PdfGeometryTest` and `CoverLetterPdfUaTest` now use it too,
 where each previously carried its own copy. `build.gradle`'s `test` block

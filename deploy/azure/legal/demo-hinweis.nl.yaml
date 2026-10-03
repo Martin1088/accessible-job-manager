@@ -1,0 +1,14 @@
+# Vertaling van demo-hinweis.de.yaml, dat de gezaghebbende versie is.
+# Deze slug heeft GEEN meegeleverde versie: een installatie die hem niet publiceert
+# krijgt een 404 en toont niets op de inlogpagina.
+language: nl
+title: "Demoversie – lees dit eerst"
+intro:
+  - "Dit is een niet-openbare testversie voor genodigden. Zij is gratis, wordt zonder garantie aangeboden en kan op elk moment offline gaan."
+sections:
+  - heading: "Voer geen echte gegevens in"
+    blocks:
+      - type: paragraph
+        text: "Voer hier geen echte persoonsgegevens in, en in het bijzonder niets over gezondheid of handicap. Gebruik uitsluitend voorbeeldgegevens."
+      - type: paragraph
+        text: "Alle gegevens worden na afloop van de testfase verwijderd."

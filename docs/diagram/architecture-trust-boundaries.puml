@@ -1,0 +1,57 @@
+@startuml
+!pragma layout smetana
+title System architecture and trust boundaries (dev topology)
+
+skinparam rectangle {
+    BackgroundColor<<public>> #FFF3CD
+    BackgroundColor<<internal>> #E8E8E8
+    BackgroundColor<<devonly>> #F5F5F5
+    BackgroundColor<<external>> #DDEBF7
+}
+
+actor Browser
+
+rectangle "External internet" <<external>> as ExtInternet {
+  rectangle "Authentik login UI" as IdPFront
+  rectangle "Job posting URLs (SSRF surface)" as JobUrls
+  rectangle "LLM backend (Ollama / Azure OpenAI)" as LlmBackend
+}
+
+frame "Docker host" {
+
+  rectangle "Web network" <<internal>> {
+    rectangle "Traefik :80" <<public>> as Traefik
+    rectangle "accessible-job-manager\n(Spring Boot + Angular) :8060" <<public>> as App
+    database "postgres :5432" as Postgres
+    database "garage (S3) :3900" as Garage
+    rectangle "garage-webui\n(dev admin tool)" <<devonly>> as GarageUi
+
+    rectangle "Authentik trust zone" {
+      rectangle "authentik-server/worker\nOIDC issuer" as Authentik
+      database "authentik-postgres" as AuthDb
+      database "authentik-redis" as AuthRedis
+    }
+  }
+
+  rectangle "Render network (isolated)" <<internal>> {
+    rectangle "gotenberg :3000\n(Chromium + LibreOffice)" as Gotenberg
+  }
+}
+
+Browser -down-> Traefik : HTTPS/HTTP
+Traefik -down-> App : HTTP
+Browser -right-> IdPFront : OIDC login/consent
+
+App -down-> Postgres : JDBC
+App -right-> Garage : S3 API
+App -down-> Authentik : token exchange
+App -down-> Gotenberg : render request
+App -right-> LlmBackend : field extraction
+
+Gotenberg -up-> JobUrls : outbound fetch\n(only internet-facing egress)
+
+Authentik -down-> AuthDb
+Authentik -down-> AuthRedis
+GarageUi -up-> Garage
+
+@enduml

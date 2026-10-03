@@ -17,7 +17,7 @@ Back to the [project overview](../Readme.md).
 
 ```bash
 cd dev
-docker compose up -d
+docker compose -f local-setup.yml up -d
 docker compose -f authentik.yml up -d   # OIDC provider, separate stack
 ```
 
@@ -32,6 +32,7 @@ This starts:
 | Gotenberg    | 3000 | LibreOffice PDF conversion     |
 | Traefik      | 80   | Reverse proxy                  |
 | Authentik    | 9000 | OIDC provider (`authentik.yml`)|
+| Pocket ID    | 1411 | OIDC provider, lighter alternative (`pocket-id.yml`, setup in `dev/pocket-id/README.md`) |
 
 Everything sits on the `web` network except **Gotenberg, which is on `render`**,
 shared only with the app — it renders job posting URLs the user supplied, so it
@@ -474,7 +475,7 @@ daemon: every database in it is gone at once, without any command having deleted
 anything.
 
 The dev stacks avoid that by binding their data into the workspace folder rather
-than into named volumes — `dev/postgres-data`, `dev/authentik/*`, `dev/meta` and
+than into named volumes — `dev/postgres-data`, `dev/authentik/*`, `dev/pocket-id/data`, `dev/meta` and
 `dev/garage-data`. The workspace folder is mounted from the machine's disk
 (`/.devpod/agent/contexts/…/content`), so it outlives the container and survives a
 recreate. Only `devpod delete` removes it, together with the machine's volume.
@@ -492,7 +493,7 @@ startup, and only the user accounts and group assignments have to be recreated.
 
 ### Ports
 
-`forwardPorts` covers 8060 (backend), 9000/9443 (Authentik), 5432, 3900/3901/3909
+`forwardPorts` covers 8060 (backend), 9000/9443 (Authentik), 1411 (Pocket ID), 5432, 3900/3901/3909
 (Garage) and 3000 (Gotenberg). Port 80 is deliberately absent: ports below 1024
 cannot be bound by the forwarding process on the host side and produce a
 `bind: permission denied` on every connect. Reach Traefik from inside the

@@ -1,0 +1,49 @@
+@startuml
+title Document & template sharing
+
+actor USER as U
+actor "ADVISOR / REVIEWER" as A
+participant RelationshipController as RC
+participant RelationshipService as RS
+participant ShareService as SS
+participant DocumentService as DS
+participant ReviewerController as RevC
+database "Relationship / Share" as DB
+
+group Establish relationship
+  U -> RC: request relationship (counterpart, kind)
+  RC -> RS: request()
+  RS -> DB: save Relationship(REQUESTED)
+  A -> RC: accept relationship
+  RC -> RS: accept()
+  RS -> DB: status = ACTIVE
+end
+
+group Grant a share
+  U -> RC: share document with relationship
+  RC -> SS: grant()
+  SS -> RS: verify caller owns the relationship
+  SS -> DS: verify caller owns the document
+  SS -> DB: save Share(ACTIVE)
+end
+
+group Counterpart reads shared content
+  A -> RevC: list shared users / documents
+  RevC -> SS: activeForCounterpart(caller)
+  SS -> DB: shares WHERE counterpartId = caller
+  A -> RevC: download document
+  RevC -> SS: verify share is active for caller
+  RevC --> A: document bytes or 403
+end
+
+group Revoke
+  U -> RC: revoke one share
+  RC -> SS: revoke()
+  SS -> DB: revokedAt = now()
+  U -> RC: end relationship
+  A -> RC: end relationship
+  RC -> RS: end()
+  RS -> DB: status = ENDED, revoke all shares
+end
+
+@enduml

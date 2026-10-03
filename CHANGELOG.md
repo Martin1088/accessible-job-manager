@@ -18,9 +18,79 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- A document can be marked as the default CV, certificate or cover letter template for
+  its language - one default of each per language (`GET /api/documents/defaults`,
+  `PUT`/`DELETE /api/documents/{id}/default`). Deleting the document, or changing its
+  type or language, removes it as a default. The interface for choosing defaults is
+  not built yet.
+- In Companies and Applications, a company's name now opens its details: locations,
+  contact, email, website, how and in which language to apply, and notes. Only the
+  fields that are filled in are shown.
+- The header now has an accessibility button (the universal-access symbol) on every
+  page. It opens the display & accessibility settings directly, so reaching them no
+  longer takes a trip through the account menu.
+- The requested OIDC scopes are configurable via `OIDC_SCOPE` (default unchanged:
+  `openid, email, profile`), so identity providers such as Pocket ID that only emit the
+  `groups` claim for a `groups` scope can be used. A local Pocket ID stack
+  (`dev/pocket-id.yml`) sits alongside the Authentik one for testing.
+- Users can share a `.docx` cover letter template with one of their active reviewers
+  directly from My Documents, via a new "Share for review" action.
+- Reviewers can now upload a `.docx` review of a document they were given access to,
+  from a new "Documents to Review" page; it is shared back to the document's owner as a
+  separate, new document, visible under a new "Feedback from reviewers" section on the
+  owner's My Documents page.
+- Spanish is now a supported interface language, alongside English, German and Dutch,
+  and a supported cover-letter/document language.
+
 ### Changed
 
+- Table column headings and captions are larger and easier to read, in every table and
+  in the mobile card layout.
+- Companies, Applications and Documents now list the most recently changed entry first.
+  Clicking a column header a third time returns to that order.
+- The privacy policy and legal notice are no longer built into the application. Each
+  deployment publishes its own complete documents, per language, as structured YAML
+  supplied through Helm values (`legal.documents`), a mounted directory
+  (`LEGAL_DOCUMENTS_DIR`) or, on Azure Container Apps, the YAML files in
+  `deploy/azure/legal/` — no rebuild, one image for every organisation. A deployment
+  that supplies none keeps the documents bundled with the image, unchanged. Supplying any
+  language of a document takes that document over completely: no language of it falls
+  back to the bundled text, because that text names the upstream author rather than the
+  operator. The pages are served from the new public `GET /api/legal/{slug}` and rendered
+  by a template that fixes the accessible semantics, so no deployment can publish
+  unstructured or unsafe markup.
+
+- The Azure Container Apps deployment (`deploy/azure/main.bicep`) now publishes its own
+  privacy policy and legal notice instead of the ones bundled in the image, which named
+  Garage S3 and Authentik — neither of which that template deploys — and omitted Azure
+  OpenAI, which receives the text of imported job postings. The new documents also carry
+  the invite-only test instance's warning not to enter real personal data. Two
+  placeholders (postal address, end of the test phase) must be filled before the link is
+  shared.
+
+- The reviewer dashboard now follows the advisor dashboard: the same DIN 5008
+  correspondence design and reference line, a My Users table of everyone who
+  linked you as their reviewer, and review requests you can accept or decline
+  there. It also follows the dark and high-contrast themes.
+
 ### Fixed
+
+- In the Applications table, a long status ("Vorstellungsgespräch geplant") and the
+  edit/delete buttons are no longer cut off at high zoom. Columns now grow to fit their
+  content, and a table too wide for the screen scrolls sideways; the scroll area can be
+  reached and scrolled with the keyboard.
+- The font chosen in the display & accessibility settings (sans-serif, serif,
+  dyslexia-friendly) now applies on every screen. Headings, company names and labels on
+  the user, advisor and reviewer pages used to keep the serif and monospace fonts
+  regardless of the choice.
+- Saving a cover letter template that was changed in the meantime - in another tab, say -
+  no longer silently overwrites the newer version. The save is refused with a message
+  asking to reload first (`PUT /api/html/cover-letter/template/{id}` answers 409 when
+  the request's `version` is stale). A lost optimistic-locking race anywhere else now
+  also answers 409 instead of 500.
+- After creating or updating a cover letter template, the response carries the real
+  `createdAt` and the new `version`; it used to return `createdAt: null` on creation
+  and the previous version after an update.
 
 ## [0.1.0] - 2026-09-14
 

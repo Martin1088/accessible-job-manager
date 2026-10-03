@@ -4,6 +4,7 @@ import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { NgTemplateOutlet } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, switchMap, take, tap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { LanguageService } from '../../core/language.service';
@@ -33,11 +34,12 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** The three languages a letter can be written in, independent of the UI's. */
+/** The languages a letter can be written in, independent of the UI's. */
 const LETTER_LANGUAGE_OPTIONS: { value: DocumentLanguage; label: string }[] = [
   { value: 'GERMAN',  label: 'LANGUAGE.DE' },
   { value: 'ENGLISH', label: 'LANGUAGE.EN' },
   { value: 'DUTCH',   label: 'LANGUAGE.NL' },
+  { value: 'SPANISH', label: 'LANGUAGE.ES' },
 ];
 
 /**
@@ -78,6 +80,13 @@ export class CoverLetterFormComponent implements OnInit {
   /** The template being edited; null until the first save has returned one. */
   templateId: string | null = null;
 
+  /**
+   * The version of the template as last loaded or saved. Sent back on update so the
+   * server can refuse a save made from a stale form (409) instead of silently
+   * overwriting a newer one saved in another tab.
+   */
+  private templateVersion: number | null = null;
+
   /** Ids of the single-occurrence blocks, so saving twice does not churn them. */
   private readonly slotIds = new Map<BlockKey, string>();
 
@@ -86,6 +95,8 @@ export class CoverLetterFormComponent implements OnInit {
 
   saving = false;
   saveError = false;
+  /** The save was refused because the template changed elsewhere since it was loaded. */
+  saveConflict = false;
   savedAt = false;
 
   previewText = '';
@@ -182,6 +193,7 @@ export class CoverLetterFormComponent implements OnInit {
    */
   startNewTemplate(): void {
     this.templateId = null;
+    this.templateVersion = null;
     this.slotIds.clear();
     this.blocks.clear();
     this.attachments.clear();
@@ -240,6 +252,7 @@ export class CoverLetterFormComponent implements OnInit {
   /** Fans the stored blocks back out into the form's fixed slots and its block list. */
   private applyTemplate(template: HtmlLetterTemplate): void {
     this.templateId = template.id;
+    this.templateVersion = template.version;
     this.slotIds.clear();
     this.blocks.clear();
 
@@ -550,6 +563,7 @@ export class CoverLetterFormComponent implements OnInit {
     if (this.nameMissing()) return;
     this.saving = true;
     this.saveError = false;
+    this.saveConflict = false;
     this.savedAt = false;
     this.saveTemplate().subscribe({
       next: () => {
@@ -557,8 +571,9 @@ export class CoverLetterFormComponent implements OnInit {
         this.savedAt = true;
         this.announce('COVER_LETTER_FORM.SAVED');
       },
-      error: () => {
-        this.saveError = true;
+      error: (err: unknown) => {
+        if (this.isConflict(err)) this.saveConflict = true;
+        else this.saveError = true;
         this.saving = false;
       },
     });
@@ -568,6 +583,7 @@ export class CoverLetterFormComponent implements OnInit {
     if (this.nameMissing()) return;
     this.previewing = true;
     this.renderError = false;
+    this.saveConflict = false;
     const applicationId = this.letter.controls.applicationId.value;
     this.saveTemplate().pipe(
       switchMap(template => applicationId
@@ -579,8 +595,9 @@ export class CoverLetterFormComponent implements OnInit {
         this.previewing = false;
         this.announce('COVER_LETTER_FORM.PREVIEW_READY');
       },
-      error: () => {
-        this.renderError = true;
+      error: (err: unknown) => {
+        if (this.isConflict(err)) this.saveConflict = true;
+        else this.renderError = true;
         this.previewing = false;
       },
     });
@@ -590,6 +607,7 @@ export class CoverLetterFormComponent implements OnInit {
     if (this.nameMissing()) return;
     this.downloading = true;
     this.renderError = false;
+    this.saveConflict = false;
     this.revokePdfUrl();
     const applicationId = this.letter.controls.applicationId.value;
     this.saveTemplate().pipe(
@@ -604,8 +622,9 @@ export class CoverLetterFormComponent implements OnInit {
         this.announce('COVER_LETTER_FORM.PDF_READY');
         this.focusAfterRender('pdf-download');
       },
-      error: () => {
-        this.renderError = true;
+      error: (err: unknown) => {
+        if (this.isConflict(err)) this.saveConflict = true;
+        else this.renderError = true;
         this.downloading = false;
       },
     });
@@ -620,10 +639,11 @@ export class CoverLetterFormComponent implements OnInit {
     const language = this.letterLanguage();
     const creating = !this.templateId;
     const saved = this.templateId
-      ? this.coverLetters.updateTemplate(this.templateId, request, language)
+      ? this.coverLetters.updateTemplate(this.templateId, { ...request, version: this.templateVersion ?? undefined }, language)
       : this.coverLetters.createTemplate(request, language);
     return saved.pipe(tap(template => {
       this.templateId = template.id;
+      this.templateVersion = template.version;
       // Put the new template's id in the URL, so a reload reopens this letter
       // rather than silently starting yet another one.
       if (creating) this.router.navigate(['/cover-letter-template', template.id], { replaceUrl: true });
@@ -660,6 +680,11 @@ export class CoverLetterFormComponent implements OnInit {
     // Omitted rather than sent empty: the server keeps the stored name in that case
     // instead of overwriting it, and picks a localized default on first creation.
     return name ? { name, blocks } : { blocks };
+  }
+
+  /** A 409 means the server refused a save from a stale form; see {@link templateVersion}. */
+  private isConflict(err: unknown): boolean {
+    return err instanceof HttpErrorResponse && err.status === 409;
   }
 
   private slotBlock(key: BlockKey, content: string): LetterBlock {

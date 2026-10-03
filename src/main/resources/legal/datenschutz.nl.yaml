@@ -1,0 +1,64 @@
+# Bundled default - the document served when a deployment publishes none of its own.
+# It names the upstream author, so any other deployment must replace it: see
+# job-manager.legal.documents-dir in application.yml.
+language: nl
+title: "Privacybeleid"
+intro:
+  - "Deze pagina legt uit welke persoonsgegevens deze toepassing verwerkt, waarom, en welke rechten u heeft met betrekking tot uw gegevens, conform de Algemene Verordening Gegevensbescherming (AVG/GDPR)."
+sections:
+  - heading: "Verwerkingsverantwoordelijke"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Naam"
+            value: "Martin Jurk"
+          - term: "E-mail"
+            value: "access.job.manager@gmail.com"
+            href: "mailto:access.job.manager@gmail.com"
+  - heading: "Welke gegevens worden verwerkt"
+    blocks:
+      - type: paragraph
+        text: "Afhankelijk van hoe u de toepassing gebruikt, worden de volgende persoonsgegevens verwerkt:"
+      - type: list
+        items:
+          - "Accountgegevens van uw aanmelding (naam, e-mailadres, een interne identificatiecode en uw toegewezen rol), verstrekt door de single-sign-on-provider waarmee u zich aanmeldt."
+          - "Door uzelf ingevoerde gegevens: bedrijven, contactpersonen, functies, en uw sollicitaties en hun status."
+          - "Door u geüploade documenten (bijv. sollicitatiebriefsjablonen) en daaruit gegenereerde sollicitatiebrieven, opgeslagen in de documentopslag van de toepassing."
+          - "Als u de deelfunctie gebruikt: aan welke adviseurs of beoordelaars u toegang tot welke documenten heeft verleend."
+          - "Een technisch noodzakelijk sessiecookie om u aangemeld te houden. Er worden geen advertentie- of analysecookies gebruikt."
+  - heading: "Rechtsgrondslag"
+    blocks:
+      - type: paragraph
+        text: "De verwerking is noodzakelijk om de door u gebruikte functionaliteit te leveren (art. 6 lid 1 sub b AVG). Wanneer u zelf een document deelt met een adviseur of beoordelaar, berust dit delen op uw eigen handeling en toestemming (art. 6 lid 1 sub a AVG)."
+  - heading: "Wie uw gegevens verwerkt"
+    blocks:
+      - type: paragraph
+        text: "De toepassing maakt gebruik van de volgende backend-componenten om haar functionaliteit te leveren. Deze worden beheerd door de verwerkingsverantwoordelijke of diens hostingprovider en uitsluitend gebruikt voor het functioneren van deze toepassing:"
+      - type: list
+        items:
+          - "Een identity provider (Authentik) voor aanmelding en roltoewijzing."
+          - "S3-compatibele objectopslag (Garage) voor geüploade en gegenereerde documenten."
+          - "Een documentconversiedienst (Gotenberg) die sollicitatiebrieven omzet naar PDF."
+  - heading: "Bewaartermijn"
+    blocks:
+      - type: paragraph
+        text: "Uw gegevens worden bewaard zolang uw account bestaat. Als u wilt dat uw account en bijbehorende gegevens worden verwijderd, neem dan contact op via onderstaand e-mailadres."
+  - heading: "Cookies"
+    blocks:
+      - type: paragraph
+        text: "Er wordt uitsluitend een technisch noodzakelijk sessiecookie gebruikt om u aangemeld te houden. Dit cookie wordt verwijderd bij afmelden of na afloop van de sessie."
+  - heading: "Uw rechten"
+    blocks:
+      - type: paragraph
+        text: "Op grond van de AVG heeft u het recht op:"
+      - type: list
+        items:
+          - "Inzage in de over u opgeslagen gegevens (art. 15 AVG)."
+          - "Rectificatie van onjuiste gegevens (art. 16 AVG)."
+          - "Verwijdering van uw gegevens (art. 17 AVG)."
+          - "Beperking van de verwerking (art. 18 AVG)."
+          - "Ontvangst van uw gegevens in een overdraagbaar formaat (art. 20 AVG)."
+          - "Bezwaar tegen verwerking op basis van gerechtvaardigd belang (art. 21 AVG)."
+          - "Het indienen van een klacht bij een toezichthoudende autoriteit voor gegevensbescherming."
+      - type: paragraph
+        text: "Om een van deze rechten uit te oefenen, kunt u contact opnemen via bovenstaand e-mailadres."

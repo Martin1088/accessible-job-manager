@@ -209,6 +209,10 @@
     <p role="alert" class="notice notice--error">{{ 'COVER_LETTER_FORM.SAVE_ERROR' | translate }}</p>
   }
 
+  @if (saveConflict) {
+    <p role="alert" class="notice notice--error">{{ 'COVER_LETTER_FORM.SAVE_CONFLICT' | translate }}</p>
+  }
+
   @if (renderError) {
     <p role="alert" class="notice notice--error">{{ 'COVER_LETTER_FORM.RENDER_ERROR' | translate }}</p>
   }

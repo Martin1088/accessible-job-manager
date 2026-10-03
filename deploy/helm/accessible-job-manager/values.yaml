@@ -1,0 +1,176 @@
+ajm:
+  image:
+    repository: ghcr.io/martin1088/accessible-job-manager
+    tag: ""
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8060
+  ingress:
+    enabled: true
+    className: traefik
+    host: ajm.example.org
+    tls:
+      enabled: true
+      secretName: ajm-tls
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+  oidc:
+    issuerUri: ""
+    authUri: ""
+    clientId: ""
+    # Secret mit Key: client-secret
+    existingSecret: ""
+    groups:
+      user: User
+      advisor: Advisor
+      reviewer: Reviewer
+
+postgres:
+  # external DB == false. Needs the CloudNativePG operator installed in the
+  # cluster; the chart renders a Cluster CR, it does not install the operator.
+  deployCnpg: true
+  instances: 2
+  # Database and its owning role. CNPG puts the generated credentials in
+  # <release>-pg-app, which is what the app reads.
+  database: manager
+  # Empty uses the operator's default PostgreSQL image. The compose stacks run
+  # postgres:16 - set e.g. ghcr.io/cloudnative-pg/postgresql:16 to match.
+  imageName: ""
+  storage:
+    size: 20Gi
+    storageClass: hcloud-volumes
+  backup:
+    enabled: false
+    destinationPath: ""
+    existingSecret: ""
+    endpointURL: ""
+    retentionPolicy: 30d
+  external:
+    url: ""
+    existingSecret: ""
+
+storage:
+  provider: s3
+  s3:
+    # external S3 == false
+    deployGarage: true
+    endpoint: ""
+    bucket: documents
+    region: garage
+    existingSecret: ""
+    encryption:
+      # none | sse-c
+      mode: none
+      existingSecret: ""
+  garage:
+    image: dxflrs/garage:v2.1.0
+    zone: dc1
+    capacity: 20GB
+    storage:
+      size: 20Gi
+      storageClass: hcloud-volumes
+    # The image is FROM scratch and runs as root by default; it holds no user
+    # database, so any numeric UID works given fsGroup on the data volume.
+    # Set to {} if the pod cannot write /var/lib/garage on your storage class.
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+    # One-time setup after the node first starts: assign and apply a cluster
+    # layout, create the bucket, import the generated key and grant it access.
+    # Garage accepts no data until a layout is applied, so without this the
+    # chart deploys a storage node the app cannot use. Re-runs are no-ops.
+    bootstrap:
+      enabled: true
+      image: rancher/kubectl:v1.34.1
+      keyName: accessible-job-manager
+
+gotenberg:
+  enabled: true
+  image: gotenberg/gotenberg:8
+  replicaCount: 1
+  apiTimeout: 30s
+  networkPolicy:
+    enabled: true
+    extraExcludedCIDRs: []
+
+llm:
+  provider: ollama
+  ollama:
+    # provider is azure == false
+    enabled: true
+    image: ollama/ollama:0.34.2
+    model: qwen2.5:3b
+    storage:
+      size: 30Gi
+      storageClass: hcloud-volumes
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+
+jobSource:
+  adzuna:
+    enabled: false
+    appId: ""
+    country: de
+    existingSecret: ""     # Key: app-key
+
+resources:
+  app:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits:   { memory: 2Gi }
+  garage:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { memory: 512Mi }
+  gotenberg:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { memory: 2Gi }
+  postgres:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits:   { memory: 1Gi }
+  ollama:
+    # Sized for qwen2.5:3b
+    requests: { cpu: 1, memory: 3Gi }
+    limits:   { memory: 4Gi }
+
+legal:
+  # Language served when a document is not published in the one that was asked for.
+  defaultLanguage: en
+  # This deployment's own privacy policy and legal notice. Empty serves the documents
+  # bundled with the image - those name the upstream author, which is correct for the
+  # original instance and wrong for anybody else running this.
+  #
+  # Supplying ANY language of a document takes that document over completely: no
+  # language of it falls back to the bundled text, because half of somebody else's
+  # imprint is a false statement about who is responsible, not a fallback. Startup
+  # fails if this is set but does not cover every document.
+  #
+  # Slug and language become the ConfigMap key "<slug>.<lang>.yaml", so both must match
+  # [-._a-zA-Z0-9]+. Slugs: datenschutz, impressum. The whole set has to fit the 1 MiB
+  # ConfigMap limit. Legal texts are long - keep them in their own file and pass
+  # `helm upgrade -f values.yaml -f legal.yaml` rather than inlining them here.
+  documents: {}
+  #  impressum:
+  #    de:
+  #      title: Impressum
+  #      intro:
+  #        - Angaben gemäß § 5 DDG.
+  #      sections:
+  #        - heading: Verantwortlich für den Inhalt
+  #          blocks:
+  #            - type: definitions
+  #              items:
+  #                - term: Name
+  #                  value: Beispiel GmbH
+  #                - term: E-Mail
+  #                  value: datenschutz@beispiel.example
+  #                  href: "mailto:datenschutz@beispiel.example"
+  #        - heading: Haftung für Inhalte
+  #          blocks:
+  #            - type: paragraph
+  #              text: Diese Anwendung wird nach bestem Wissen gepflegt.

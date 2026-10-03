@@ -16,6 +16,24 @@
       </p>
     }
 
+    <!--
+      Published only by deployments that want it; a 404 renders nothing. It sits above
+      the sign-in buttons on purpose - a warning about what not to type is worth nothing
+      below the control that starts the typing.
+    -->
+    @if (demoNotice(); as notice) {
+      <section class="demo-notice" aria-labelledby="demo-notice-title">
+        <app-legal-document
+          [document]="notice"
+          [headingLevel]="2"
+          titleId="demo-notice-title"
+          titleKey="LEGAL.DEMO_NOTICE" />
+        <p class="demo-notice__more">
+          <a routerLink="/datenschutz">{{ 'LEGAL.FULL_NOTICE' | translate }}</a>
+        </p>
+      </section>
+    }
+
     <section class="sign-in" aria-labelledby="sign-in-heading">
       <h2 id="sign-in-heading" class="section-label">{{ 'LOGIN.SIGN_IN_HEADING' | translate }}</h2>
 

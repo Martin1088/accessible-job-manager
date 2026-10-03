@@ -147,6 +147,12 @@ export const routes: Routes = [
     canActivate: [reviewerGuard]
   },
   {
+    path: 'reviewer/documents',
+    loadComponent: () => import('./reviewer/documents/documents.component')
+      .then(m => m.ReviewerDocumentsComponent),
+    canActivate: [reviewerGuard]
+  },
+  {
     path: 'forbidden',
     loadComponent: () => import('./core/forbidden/forbidden.component')
       .then(m => m.ForbiddenComponent)

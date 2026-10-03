@@ -10,6 +10,16 @@ export interface UpdateDocumentRequest {
   type?: DocumentType;
 }
 
+/** A document a reviewer shared back - not owned by the caller, so it is not a Document. */
+export interface SharedWithMeDocument {
+  id: string;
+  label: string;
+  filename: string;
+  type: DocumentType;
+  sharedByName: string;
+  grantedAt: string;
+}
+
 /**
  * The caller's stored documents - cover letter templates (.docx) and the PDFs they
  * keep on file. Mirrors the backend's `DocumentController`; sharing one with a
@@ -55,5 +65,14 @@ export class DocumentService {
    */
   download(id: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${id}/download`, { responseType: 'blob' });
+  }
+
+  /** Documents reviewers have shared back, keyed by their own id rather than the caller's. */
+  getSharedWithMe(): Observable<SharedWithMeDocument[]> {
+    return this.http.get<SharedWithMeDocument[]>(`${this.apiUrl}/shared-with-me`);
+  }
+
+  downloadShared(id: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/shared-with-me/${id}/download`, { responseType: 'blob' });
   }
 }

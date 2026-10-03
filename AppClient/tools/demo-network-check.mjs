@@ -97,6 +97,10 @@ await visit('#/documents', 'Dokumente');
 await visit('#/cover-letter-template', 'Anschreiben-Vorlage');
 await visit('#/profile', 'Profil');
 await visit('#/preferences', 'Einstellungen');
+// The legal pages fetch their text from /api/legal/<slug>, which DemoBackend answers
+// from seed/legal.ts - so they belong in the walk that proves no route reaches the net.
+await visit('#/impressum', 'Impressum');
+await visit('#/datenschutz', 'Datenschutz');
 await visit('#/advisor', 'Advisor-Dashboard');
 await visit('#/reviewer', 'Reviewer-Dashboard');
 

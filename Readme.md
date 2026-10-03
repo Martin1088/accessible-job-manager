@@ -203,7 +203,7 @@ The short version:
 
 ```bash
 cd dev
-docker compose up -d                    # Postgres, Garage, Gotenberg, Traefik
+docker compose -f local-setup.yml up -d # Postgres, Garage, Gotenberg, Ollama
 docker compose -f authentik.yml up -d   # Authentik (OIDC)
 cd ..
 ./gradlew bootRun                       # backend on :8060, builds the frontend first
@@ -284,7 +284,7 @@ Gotenberg is the only service that fetches a URL the user chose. When a job
 posting is archived, the app hands the URL to Gotenberg's Chromium, which
 **resolves and fetches the page itself, from its own container, following its
 own redirects**. The application's own SSRF validation
-(`de.samply.manager.security.OutboundUrlGuard`) runs in the app's network
+(`de.ajm.manager.security.OutboundUrlGuard`) runs in the app's network
 vantage point and cannot constrain any of that — a posting URL that redirects to
 `http://postgres:5432` is followed by Chromium, not by us.
 

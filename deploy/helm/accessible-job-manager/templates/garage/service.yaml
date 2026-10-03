@@ -1,0 +1,18 @@
+{{- if .Values.storage.s3.deployGarage }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ajm.fullname" . }}-garage
+  labels:
+    {{- include "ajm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: garage
+spec:
+  clusterIP: None
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: s3
+  selector:
+    {{- include "ajm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: garage
+{{- end }}

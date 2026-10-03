@@ -101,6 +101,11 @@
             #rlaReviewer="routerLinkActive"
           [attr.aria-current]="rlaReviewer.isActive ? 'page' : null">{{ 'NAV.DASHBOARD' | translate }}</a>
         </li>
+        <li>
+          <a routerLink="/reviewer/documents" routerLinkActive="active"
+            #rlaReviewerDocuments="routerLinkActive"
+          [attr.aria-current]="rlaReviewerDocuments.isActive ? 'page' : null">{{ 'NAV.REVIEWER_DOCUMENTS' | translate }}</a>
+        </li>
       </ul>
     </nav>
   }
@@ -113,9 +118,30 @@
         <option value="en">{{ 'LANGUAGE.EN' | translate }}</option>
         <option value="de">{{ 'LANGUAGE.DE' | translate }}</option>
         <option value="nl">{{ 'LANGUAGE.NL' | translate }}</option>
+        <option value="es">{{ 'LANGUAGE.ES' | translate }}</option>
       </select>
     </div>
     @if (auth.me$ | async; as me) {
+      <!-- The display settings sit one step away on every page rather than inside the
+           account menu: the people who need larger text or higher contrast are the ones
+           least able to go looking for them. A link, not a button, because it navigates. -->
+      <a routerLink="/preferences" class="a11y-trigger"
+        routerLinkActive="active"
+        #rlaPrefs="routerLinkActive"
+        [attr.aria-current]="rlaPrefs.isActive ? 'page' : null"
+        [attr.aria-label]="'PREFERENCES.LEGEND' | translate"
+        [title]="'PREFERENCES.LEGEND' | translate"
+        [attr.aria-keyshortcuts]="isWindows ? 'Alt+Shift+E' : 'e'">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="10.25"></circle>
+          <circle cx="12" cy="6.6" r="1.4" fill="currentColor" stroke="none"></circle>
+          <path d="M6.5 9.4c3.7 1 7.3 1 11 0"></path>
+          <path d="M12 10.2v3.6"></path>
+          <path d="M12 13.8l-2.6 4.6"></path>
+          <path d="M12 13.8l2.6 4.6"></path>
+        </svg>
+      </a>
       <button type="button" class="account-trigger" [cdkMenuTriggerFor]="accountMenu">
         {{ me.name }}
       </button>

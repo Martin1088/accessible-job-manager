@@ -84,35 +84,9 @@
       </div>
 
       @if (viewMode === 'structure') {
-        <dl class="structure-view">
-          <dt>{{ 'COMPANIES.COL_NAME' | translate }}</dt>
-          <dd>{{ viewingCompany?.name }}</dd>
-
-          <dt>{{ 'COMPANIES.COL_POSITION' | translate }}</dt>
-          <dd>{{ viewingPosition?.title }}</dd>
-
-          @for (loc of viewingCompany?.locations ?? []; track loc) {
-            <dt>{{ 'COMPANIES.LOCATIONS_HEADING' | translate }}</dt>
-            <dd>{{ formatLocation(loc) }}</dd>
-          }
-
-          @if (viewingPosition?.contactLastName) {
-            <dt>{{ 'COMPANIES.CONTACT_LAST_NAME' | translate }}</dt>
-            <dd>{{ formatContact(viewingPosition) }}</dd>
-          }
-          @if (viewingPosition?.email) {
-            <dt>{{ 'COMPANIES.EMAIL' | translate }}</dt>
-            <dd><a [href]="'mailto:' + viewingPosition?.email">{{ viewingPosition?.email }}</a></dd>
-          }
-          @if (viewingPosition?.website) {
-            <dt>{{ 'COMPANIES.WEBSITE' | translate }}</dt>
-            <dd><a [href]="viewingPosition?.website" target="_blank" rel="noopener">{{ viewingPosition?.website }}</a></dd>
-          }
-          @if (viewingPosition?.notes) {
-            <dt>{{ 'COMPANIES.NOTES' | translate }}</dt>
-            <dd>{{ viewingPosition?.notes }}</dd>
-          }
-        </dl>
+        @if (viewingCompany && viewingPosition) {
+          <app-position-details [company]="viewingCompany" [position]="viewingPosition" />
+        }
       } @else {
         @switch (snapshotState) {
           @case ('loading') {

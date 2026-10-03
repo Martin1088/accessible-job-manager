@@ -27,6 +27,16 @@ entries:
       client_secret: !Env OIDC_CLIENT_SECRET
       sub_mode: hashed_user_id
       include_claims_in_id_token: true
+      # authentik 2026.x added an explicit grant-type allowlist on the
+      # provider; unlike the similarly-named field on dynamic client
+      # registration, an empty list here means NO grant type is permitted
+      # (see https://docs.goauthentik.io/docs/add-secure-apps/providers/oauth2/),
+      # so every /authorize request 400s with "Invalid grant_type for
+      # provider" unless this is set. The app only ever does the
+      # authorization-code flow and refreshes its session token.
+      grant_types:
+        - authorization_code
+        - refresh_token
       authorization_flow:
         !Find [
           authentik_flows.flow,

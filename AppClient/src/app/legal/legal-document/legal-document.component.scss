@@ -1,0 +1,63 @@
+// The document body. The page frame (`main`, the back link) stays with the route
+// component, because it is chrome rather than document content.
+//
+// Colours are tokens, not literals. These rules moved here from the two route
+// stylesheets, which hardcoded `#005fcc` and `#1a1a2e`: the second is near-invisible on
+// the dark theme's `--color-bg`, which is exactly the background-dependent bug a literal
+// hex hides.
+
+h1 {
+  font-size: 1.6rem;
+}
+
+section {
+  margin-top: 2rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  color: var(--color-text);
+}
+
+// Reached when the document is embedded under an existing <h1> (headingLevel 2),
+// as on the login page. Without this the section headings would fall back to the
+// browser default and read larger than the document's own title.
+h3 {
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.language-notice {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+ul[role='list'] {
+  padding-left: 1.25rem;
+
+  li {
+    margin-bottom: 0.4rem;
+  }
+}
+
+.legal-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 1.5rem;
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+
+  dt {
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  a {
+    color: var(--color-focus);
+  }
+}

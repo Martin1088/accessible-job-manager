@@ -1,107 +1,164 @@
 @startuml
+!pragma layout smetana
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam padding 4
 
-entity companies {
-    * id primary key
-    --
-    * name
+package "Sharing" {
+  entity relationship {
+      * id primary key
+      --
+      * applicant_id
+      * counterpart_id
+      * kind
+      * status
+      created_at
+      updated_at
+  }
+
+  entity share {
+      * id primary key
+      --
+      * relationship_id foreign key
+      * subject_type
+      document_id foreign key
+      html_letter_id foreign key
+      granted_at
+      revoked_at
+  }
 }
 
-entity company_locations {
-    * id primary key
-    --
-    * company_id foreign key
-    street
-    city
-    postcode
-    country
+package "Applications & documents" {
+  entity applications {
+      * id primary key
+      --
+      * user_id
+      * company_position_id foreign key
+      cover_letter_document_id foreign key
+      * status
+      applied_date
+      notes
+      created_at
+      updated_at
+  }
+
+  entity documents {
+      * id primary key
+      --
+      * user_id
+      * type
+      * label
+      * filename
+      * mime_type
+      * storage_key
+      * language
+      company_position_id foreign key
+      created_at
+      updated_at
+  }
+
+  entity html_letter_template {
+      * id primary key
+      --
+      * user_id
+      * name
+      * language
+      * layout_letter
+      * style
+      * blocks
+      version
+      created_at
+      updated_at
+  }
 }
 
-entity company_positions {
-    * id primary key
-    --
-    * company_id foreign key
-    title
-    contact_gender
-    contact_title
-    contact_last_name
-    email
-    website
-    notes
+package "Job postings" {
+  entity companies {
+      * id primary key
+      --
+      * user_id
+      * name
+      created_at
+  }
+
+  entity company_locations {
+      * id primary key
+      --
+      * company_id foreign key
+      street
+      * city
+      postcode
+      country
+  }
+
+  entity company_positions {
+      * id primary key
+      --
+      * company_id foreign key
+      title
+      deadline
+      apply_language
+      application_method
+      contact_gender
+      contact_title
+      contact_last_name
+      email
+      website
+      notes
+      created_at
+  }
 }
 
-entity applications {
-    * id primary key
-    --
-    * user_id
-    * company_position_id foreign key
-    cover_letter_document_id foreign key
-    * status
-    applied_date
-    notes
-    created_at
-    updated_at
+package "Users & advisory" {
+  entity user_profiles {
+      * user_id primary key
+      --
+      name
+      email
+      street
+      postal_code
+      city
+      phone
+      language
+      font_scale
+      contrast_mode
+      reduce_motion
+      hide_images
+      line_height
+      font_family
+      created_at
+  }
+
+  entity user_profile_roles {
+      * user_id foreign key
+      * role
+  }
+
+  entity suggestions {
+      * id primary key
+      --
+      advisor_id
+      user_profile_id foreign key
+      company_position_id foreign key
+      message
+      status
+      created_at
+  }
 }
 
-entity documents {
-    * id primary key
-    --
-    * user_id
-    * type
-    * label
-    * filename
-    * mime_type
-    * storage_key
-    created_at
-    updated_at
-}
+relationship "1" -- "n" share
+share "n" -- "0..1" documents
+share "n" -- "0..1" html_letter_template
 
-entity document_access {
-    * id primary key
-    --
-    document_id foreign key
-    reviewer_id
-    granted_by_user_id
-    granted_at
-}
-
-entity user_profiles {
-    * user_id primary key
-    --
-    role
-    name
-    email
-    created_at
-}
-
-entity user_advisors {
-    * user_id foreign key
-    * advisor_id foreign key
-}
-
-entity user_reviewers {
-    * user_id foreign key
-    * reviewer_id foreign key
-}
-
-entity suggestions {
-    * id primary key
-    --
-    advisor_id
-    user_profile_id foreign key
-    company_position_id foreign key
-    message
-    status
-    created_at
-}
+applications "n" -- "1" company_positions
+applications "n" -- "0..1" documents
+company_positions "1" -- "n" documents
 
 companies "1" -- "n" company_locations
 companies "1" -- "n" company_positions
-applications "n" -- "1" company_positions
-applications "n" -- "0..1" documents
-document_access "n" -- "1" documents
-suggestions "n" -- "1" user_profiles
-suggestions "n" -- "1" company_positions
-user_profiles "1" -- "n" user_advisors
-user_profiles "1" -- "n" user_reviewers
+
+user_profiles "1" -- "n" user_profile_roles
+suggestions "n" -- "0..1" user_profiles
+suggestions "n" -- "0..1" company_positions
 
 @enduml

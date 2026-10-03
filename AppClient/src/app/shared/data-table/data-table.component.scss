@@ -26,7 +26,7 @@ caption {
   margin-block-end: 0.5rem;
   text-align: left;
   font-family: corr.$corr-mono;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -42,7 +42,7 @@ th {
   text-align: left;
   vertical-align: middle;
   font-family: corr.$corr-mono;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -107,7 +107,7 @@ tbody tr:hover td {
 // terracotta on hover. Never opacity for a disabled state - muted tokens.
 // Several buttons in one cell lay out as a wrapping row - a gap rather than a
 // trailing margin, so the last one needs no exception.
-td:has(button) {
+td:has(button:not(.cell-link)) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
@@ -142,6 +142,27 @@ td button {
   &:focus-visible {
     outline: 3px solid var(--color-focus);
     outline-offset: 2px;
+  }
+}
+
+// A cell whose value opens more about its row. Reads as the value it is - serif,
+// underlined like a link - rather than as one more row action, but keeps the
+// 44px touch target.
+td button.cell-link {
+  padding: 0;
+  min-inline-size: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+
+  &:hover:not(:disabled) {
+    color: var(--accent-deep);
   }
 }
 
@@ -193,7 +214,7 @@ td button {
       flex-shrink: 0;
       text-align: start;
       font-family: corr.$corr-mono;
-      font-size: 0.66rem;
+      font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -203,7 +224,7 @@ td button {
 
   // A cell of controls is not a value to line up on the right edge: its label
   // takes the full row and the buttons sit under it, spread across the card.
-  td:has(button) {
+  td:has(button:not(.cell-link)) {
     flex-wrap: wrap;
     align-items: flex-start;
 

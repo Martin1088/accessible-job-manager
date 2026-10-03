@@ -1,0 +1,14 @@
+# Traduccion de demo-hinweis.de.yaml, que es la version autoritativa.
+# Este slug NO tiene version incluida: una instalacion que no lo publique recibe un
+# 404 y no muestra nada en la pagina de inicio de sesion.
+language: es
+title: "Versión de demostración: léalo antes de empezar"
+intro:
+  - "Esta es una versión de prueba no pública, destinada a personas invitadas. Es gratuita, se ofrece sin garantía y puede dejar de estar disponible en cualquier momento."
+sections:
+  - heading: "No introduzca datos reales"
+    blocks:
+      - type: paragraph
+        text: "No introduzca datos personales reales y, en particular, ningún dato sobre salud o discapacidad. Utilice únicamente datos de ejemplo."
+      - type: paragraph
+        text: "Todos los datos se eliminarán al finalizar la fase de pruebas."

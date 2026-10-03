@@ -4,12 +4,13 @@ export type Gender = 'MALE' | 'FEMALE' | 'DIVERSE';
 export type ApplicationMethod = 'EMAIL' | 'WEB_FORM' | 'UNKNOWN';
 
 /** Language the application for a position should be written in. */
-export type Language = 'GERMAN' | 'ENGLISH' | 'DUTCH';
+export type Language = 'GERMAN' | 'ENGLISH' | 'DUTCH' | 'SPANISH';
 
 const UI_TO_LANGUAGE: Record<string, Language> = {
   de: 'GERMAN',
   en: 'ENGLISH',
   nl: 'DUTCH',
+  es: 'SPANISH',
 };
 
 /**
