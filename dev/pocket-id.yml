@@ -1,0 +1,50 @@
+
+# Pocket ID as a lighter alternative to authentik.yml for local OIDC testing.
+# pocket-id-seed plays the role of Authentik's blueprint: it creates the role
+# groups, the OIDC client and one test user per role - see pocket-id/README.md.
+services:
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:${POCKET_ID_TAG:-v2.16.0}
+    container_name: pocket-id
+    environment:
+      APP_URL: ${POCKET_ID_APP_URL:-http://localhost:1411}
+      TRUST_PROXY: "false"
+      ENCRYPTION_KEY: ${POCKET_ID_ENCRYPTION_KEY:-ZGV2LW9ubHktZW5jcnlwdGlvbi1rZXktZG8tbm90LXJldXNl}
+      # Authenticates the seed as a built-in admin. Dev only.
+      STATIC_API_KEY: &static-api-key ${POCKET_ID_STATIC_API_KEY:-dev-only-static-api-key-do-not-reuse}
+      ANALYTICS_DISABLED: "true"
+    volumes:
+      - ./pocket-id/data:/app/data
+    ports:
+      - "1411:1411"
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - web
+
+  pocket-id-seed:
+    image: alpine:3
+    container_name: pocket-id-seed
+    entrypoint: ["sh", "-c", "apk add --no-cache -q curl jq && sh /seed.sh"]
+    environment:
+      STATIC_API_KEY: *static-api-key
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-crwWfMQ8Ml9hSqnhzIjUNX8xsB2Q4pedrR2QU4jh}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-Vfc6Ebg5P6FPUhxk6qX7BFsd1YCB4tE4ia1MFhLRsfGZ3U72lF2rjah8tx5Psk1nU5N13hIrr5qgymwzs5twZniMfE1rwUlxs8HUWvhkkaN4AXxo9ZTlJ1lKqxhCMQOw}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-http://localhost:8060/login/oauth2/code/authentik}
+      OIDC_POST_LOGOUT_REDIRECT_URI: ${OIDC_POST_LOGOUT_REDIRECT_URI:-http://localhost:8060/}
+    volumes:
+      - ./pocket-id/seed.sh:/seed.sh:ro
+    depends_on:
+      pocket-id:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - web
+
+networks:
+  web: {}

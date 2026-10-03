@@ -66,6 +66,7 @@ dev/authentik/database
 dev/authentik/redis
 dev/authentik/media
 dev/authentik/templates
+dev/pocket-id/data
 
 # Claude Code - personal/machine-local settings (permission allowlists etc.)
 .claude/settings.local.json

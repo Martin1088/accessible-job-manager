@@ -5,7 +5,7 @@
  * Structured data, never markup: the renderer fixes the accessible semantics (heading
  * level, `<section aria-labelledby>`, `<dl>` for key-value pairs) so a deployment supplies
  * wording and cannot supply a document that breaks them. Mirrors the Java records in
- * `de.samply.manager.legal`.
+ * `de.ajm.manager.legal`.
  */
 
 export interface LegalDefinition {

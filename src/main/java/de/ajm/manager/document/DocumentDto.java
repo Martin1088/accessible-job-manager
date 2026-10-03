@@ -1,0 +1,29 @@
+package de.ajm.manager.document;
+
+import de.ajm.manager.types.Language;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record DocumentDto(
+        UUID id,
+        DocumentType type,
+        Language language,
+        String label,
+        String filename,
+        String mimeType,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt) {
+
+    public static DocumentDto from(Document document) {
+        return new DocumentDto(
+                document.getId(),
+                document.getType(),
+                document.getLanguage(),
+                document.getLabel(),
+                document.getFilename(),
+                document.getMimeType(),
+                document.getCreatedAt(),
+                document.getUpdatedAt());
+    }
+}

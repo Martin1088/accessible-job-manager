@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew bootRun              # starts backend + builds Angular first (port 8060)
 
 # Run a single test class
-./gradlew test --tests "de.samply.manager.services.CompanyServiceTest"
+./gradlew test --tests "de.ajm.manager.company.CompanyServiceTest"
 ```
 
 ### Frontend (run from `AppClient/`)
@@ -56,6 +56,7 @@ export CHROME_BIN=/opt/homebrew/bin/chromium              # macOS/Homebrew
 ```bash
 cd dev && docker compose -f local-setup.yml up -d     # Postgres, Garage (S3), Gotenberg, Ollama
 cd dev && docker compose -f authentik.yml up -d       # Authentik (OIDC), separate stack
+cd dev && docker compose -f pocket-id.yml up -d       # Pocket ID (OIDC), lighter alternative - setup in dev/pocket-id/README.md
 ```
 
 ## Architecture
@@ -63,6 +64,17 @@ cd dev && docker compose -f authentik.yml up -d       # Authentik (OIDC), separa
 ### Tech stack
 
 Spring Boot 4.1.1 · Java 26 · Lombok 1.18.38 · Angular 22 standalone · PostgreSQL · Garage S3 · Gotenberg (LibreOffice PDF) · OIDC via Authentik
+
+### Package layout
+
+The backend (`de.ajm.manager`) is packaged **by topic, not by layer**: each folder
+(`company/`, `document/`, `profile/`, `relationship/`, `coverletter/`, …) holds that
+feature's controller, service, entity, repository and DTOs together, ideally ≤ 12 files,
+with a sub-package once it outgrows that (`company/fieldsuggestion/`,
+`document/storage/`, `coverletter/render/`). There are no `controller/`, `services/`,
+`model/`, `repository/` or `dto/` folders - put a new class next to the feature it
+serves. `types/` holds only enums shared across features (`Language`, `Gender`). Tests
+live in the package of the class they test, since several rely on package-private access.
 
 ### Build pipeline
 
@@ -111,7 +123,7 @@ Two providers exist side by side. Both share `CoverLetterLabels` (salutations, s
 
 **.docx provider** — `WordCoverLetterService` fills mail-merge fields in a `.docx` template using docx4j, then POSTs the filled file to Gotenberg (`/forms/libreoffice/convert`) as multipart to get a PDF back. Template files are stored in Garage S3 via `StorageService`.
 
-**HTML provider** (`de.samply.manager.coverletter`, `/api/html/cover-letter`) — Thymeleaf → HTML → Gotenberg (`/forms/chromium/convert/html`). The pipeline is `CoverLetterTemplate` (editable data from the frontend) → `CoverLetterAssembler` → `CoverLetterModel` → `HtmlCoverLetterRenderer` or `TextCoverLetterRenderer`.
+**HTML provider** (`de.ajm.manager.coverletter`, `/api/html/cover-letter`) — Thymeleaf → HTML → Gotenberg (`/forms/chromium/convert/html`). The pipeline is `CoverLetterTemplate` (editable data from the frontend) → `CoverLetterAssembler` → `CoverLetterModel` → `HtmlCoverLetterRenderer` or `TextCoverLetterRenderer`.
 
 Rules this split enforces, in order of how easily they are broken:
 
@@ -137,7 +149,7 @@ supplies wording and cannot break them. All text is interpolated, so nothing nee
 sanitizing; the only URL a document carries is a `Definition.href`, held to a scheme
 allow-list at load time.
 
-`de.samply.manager.legal` owns the backend. Rules that are easy to break:
+`de.ajm.manager.legal` owns the backend. Rules that are easy to break:
 
 - **Source selection is per slug, never per file.** Supplying any language of a document
   takes that document over completely; a missing language falls back to another language
@@ -174,7 +186,7 @@ Home components for each role redirect away if the role doesn't match (advisors 
 
 ### Error handling
 
-Services must throw `de.samply.manager.exception.ApiException` subtypes (`NotFound`, `Forbidden`, `Conflict`, `BadRequest`, `UnsupportedMediaType`, `Unauthorized`, `BadGateway`, `InternalServerError`) instead of constructing `ResponseStatusException` inline. `GlobalExceptionHandler` is the single place that maps exceptions to the `{status, error, message}` response body — add a new `@ExceptionHandler` there (or a new `ApiException` subtype) rather than handling errors ad hoc in a controller or service.
+Services must throw `de.ajm.manager.exception.ApiException` subtypes (`NotFound`, `Forbidden`, `Conflict`, `BadRequest`, `UnsupportedMediaType`, `Unauthorized`, `BadGateway`, `InternalServerError`) instead of constructing `ResponseStatusException` inline. `GlobalExceptionHandler` is the single place that maps exceptions to the `{status, error, message}` response body — add a new `@ExceptionHandler` there (or a new `ApiException` subtype) rather than handling errors ad hoc in a controller or service.
 
 ### No hardcoded user-facing strings
 
@@ -275,7 +287,7 @@ Indeed answers `403` to Gotenberg's Chromium exactly as it does to the plain
 User-Agent only changes the refusal to `401`. The supported route for such a
 board is a printed PDF through `/overview-pdf`.
 
-`DevServices` (`src/test/java/de/samply/manager/testing/`) resolves the dev
+`DevServices` (`src/test/java/de/ajm/manager/testing/`) resolves the dev
 service URLs and holds the shared TCP reachability probe that decides these
 skips — `Din5008PdfGeometryTest` and `CoverLetterPdfUaTest` now use it too,
 where each previously carried its own copy. `build.gradle`'s `test` block

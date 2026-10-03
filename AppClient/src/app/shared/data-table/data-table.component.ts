@@ -7,6 +7,10 @@ export interface TableColumn {
   label: string;
   field: string;
   sortable?: boolean;
+  /** Makes the cell a button that opens more about its row, e.g. a details panel. */
+  open?: (row: any) => void;
+  /** Spoken name for that button; without it the cell value is the name. */
+  openAriaLabel?: (row: any) => string;
 }
 
 export interface TableAction {

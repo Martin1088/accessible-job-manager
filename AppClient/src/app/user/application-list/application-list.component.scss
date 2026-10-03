@@ -23,6 +23,16 @@
 
 .sr-only { @extend %visually-hidden; }
 
+// The mono overline every label on this page is set in - section tabs, field
+// labels, column heads, the definition terms. Each keeps its own size and
+// tracking; declaring the shared part once keeps the stylesheet in budget.
+%overline {
+  font-family: corr.$corr-mono;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
 // Wide table: this page keeps its own width rather than the 860px global.
 main {
   max-width: 1600px;
@@ -56,7 +66,8 @@ h1 {
 // --- Sheets: create form, letter preview ---------------------------
 
 .create-form,
-.letter-preview {
+.letter-preview,
+.position-details {
   padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
   border: 1px solid var(--rule);
   border-radius: 2px;
@@ -70,6 +81,12 @@ h1 {
   outline-offset: 2px;
 }
 
+// The details sheet's heading takes focus on open, so that ring stays too.
+.position-details {
+  h2:focus-visible { outline: 3px solid var(--color-focus); }
+  .btn-secondary { margin-block-start: 1rem; }
+}
+
 .section-tab {
   display: inline-block;
   margin: 0 0 1rem;
@@ -77,12 +94,9 @@ h1 {
   background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: 2px;
-  font-family: corr.$corr-mono;
+  @extend %overline;
   font-size: 0.72rem;
-  font-weight: 700;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
 }
 
 .preview-template {
@@ -114,12 +128,9 @@ h1 {
   font-size: 0.95rem;
 
   dt {
-    font-family: corr.$corr-mono;
+    @extend %overline;
     font-size: 0.68rem;
-    font-weight: 700;
     letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
   }
 
   dd { margin: 0; color: var(--ink); }
@@ -134,12 +145,9 @@ h1 {
   gap: 0.35rem;
 
   label {
-    font-family: corr.$corr-mono;
+    @extend %overline;
     font-size: 0.7rem;
-    font-weight: 700;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
   }
 }
 
@@ -190,12 +198,12 @@ textarea {
 // --- Buttons ----------------------------------------------------
 // Two kinds only: the ink-filled form submit, and one paper style for
 // everything else (cancel / close / clear, and every in-row control button).
+// Every paper button carries `.btn-secondary` rather than being matched by
+// its cell: the selector list was repeated in the hover, disabled and focus
+// rules and alone pushed this stylesheet over the component style budget.
 
 .btn-primary,
-.btn-secondary,
-.btn-download,
-.status-cell button,
-.actions-cell button {
+.btn-secondary {
   min-block-size: 44px;
   min-inline-size: 44px;
   padding: 0.45rem 0.9rem;
@@ -242,7 +250,11 @@ textarea {
 
   table {
     width: 100%;
-    table-layout: fixed;
+    // Auto, not fixed: a column grows to its widest control instead of
+    // clipping it - a long status in the select ("Vorstellungsgespräch
+    // geplant") was cut off at 190% zoom. The widths below are only starting
+    // points; past them the wrapper scrolls rather than hiding content.
+    table-layout: auto;
     border-collapse: collapse;
     border: 1px solid var(--rule);
     background: var(--card);
@@ -258,12 +270,9 @@ textarea {
 
     caption,
     th {
-      font-family: corr.$corr-mono;
-      font-size: 0.7rem;
-      font-weight: 700;
+      @extend %overline;
+      font-size: 0.8rem;
       letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
     }
 
     caption {
@@ -277,27 +286,40 @@ textarea {
       border-bottom: 1px solid var(--rule);
       text-align: left;
       vertical-align: middle;
-      overflow: hidden;
-      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     td { color: var(--ink); }
     th { background: var(--paper); }
 
+    // A sortable head is a full-bleed button that brings its own padding and
+    // centres its text, the same as `app-data-table` - otherwise it rides high
+    // beside the plain heads. Browsers reset tracking and case on a button, so
+    // both are inherited back or the sortable heads read smaller.
+    th:has(button) { padding: 0; }
+
     th button {
-      display: inline-flex;
-      min-inline-size: 44px;
-      min-block-size: 44px;
-      padding: 0;
-      border: 0;
-      background: none;
       font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
       color: inherit;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 0.75rem;
+      min-block-size: 44px;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      text-align: left;
       cursor: pointer;
 
+      &:hover { background: var(--rule); }
+
       &:focus-visible {
-        outline: 2px solid var(--color-focus);
-        border-radius: 2px;
+        outline: 3px solid var(--color-focus);
+        outline-offset: -3px;
       }
     }
 
@@ -329,8 +351,8 @@ textarea {
       }
 
       // Label left, value right - the card pattern every table in the app
-      // shares; `app-data-table` carries the same rules.
-      th,
+      // shares; `app-data-table` carries the same rules. Every `th` sits in
+      // the hidden thead, so only cells need them.
       td {
         display: flex;
         justify-content: space-between;
@@ -345,7 +367,7 @@ textarea {
           flex-shrink: 0;
           text-align: start;
           font-family: corr.$corr-mono;
-          font-size: 0.66rem;
+          font-size: 0.75rem;
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
@@ -356,7 +378,7 @@ textarea {
       // A cell of controls is not a value to line up on the right edge: its
       // label takes the full row and the controls sit under it.
       td:has(> div),
-      td:has(> button),
+      td:has(> button:not(.cell-link)),
       td:has(> select) {
         flex-wrap: wrap;
         align-items: flex-start;
@@ -423,13 +445,9 @@ textarea {
   color: var(--ink-soft);
 }
 
-.actions-cell {
-  white-space: nowrap;
-
-  button {
-    margin-right: 0.4rem;
-    &:last-child { margin-right: 0; }
-  }
+.actions-cell button {
+  margin: 0.2rem 0.4rem 0.2rem 0;
+  &:last-child { margin-right: 0; }
 }
 
 // --- Focus: one ring for every control ---------------------
@@ -439,9 +457,7 @@ select:focus-visible,
 textarea:focus-visible,
 .btn-primary:focus-visible,
 .btn-secondary:focus-visible,
-.btn-download:focus-visible,
-.status-cell button:focus-visible,
-.actions-cell button:focus-visible {
+.table-wrapper:focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
