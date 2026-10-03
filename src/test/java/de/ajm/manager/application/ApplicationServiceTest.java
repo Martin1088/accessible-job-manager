@@ -144,7 +144,7 @@ class ApplicationServiceTest {
     void update_publishesATransitionOnlyWhenTheStatusChanges() {
         Application app = application(1L, "u1");
         when(applicationRepo.findById(1L)).thenReturn(Optional.of(app));
-        when(applicationRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(applicationRepo.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
 
         service.update(1L, new ApplicationRequest(null, ApplicationStatus.DRAFT, null, "same"), "u1");
         verify(eventPublisher, never()).publishEvent(any(Object.class));

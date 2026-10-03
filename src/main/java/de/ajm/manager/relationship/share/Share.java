@@ -6,18 +6,20 @@ import de.ajm.manager.relationship.Relationship;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "share")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -43,7 +45,8 @@ public class Share {
     @JoinColumn(name = "html_letter_id")
     private HtmlLetterTemplate htmlLetterTemplate;
 
-    @CreationTimestamp
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime grantedAt;
 
     private LocalDateTime revokedAt;

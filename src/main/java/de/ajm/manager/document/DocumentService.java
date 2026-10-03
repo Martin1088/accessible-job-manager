@@ -94,8 +94,6 @@ public class DocumentService {
         String filename = DocumentFilename.sanitize(file.getOriginalFilename());
         String key = userId + "/" + type.name().toLowerCase()
                 + "/" + UUID.randomUUID() + "." + type.getExtension();
-        // Store the type's own MIME rather than the client's - the content is now
-        // verified, and the download controllers parse this value into a header.
         storageService.upload(key, new ByteArrayInputStream(content), content.length, type.getAllowedMime());
 
         LocalDateTime now = LocalDateTime.now();
@@ -121,8 +119,6 @@ public class DocumentService {
         if (request.label() != null) document.setLabel(request.label());
         if (request.language() != null) document.setLanguage(request.language());
         if (request.type() != null && request.type() != document.getType()) {
-            // Reclassifying is a metadata change; the stored file stays as uploaded, so
-            // the new type has to accept what is already there.
             if (!request.type().accepts(document.getMimeType())) {
                 throw new ApiException.UnsupportedMediaType(message(
                         "error.document.unsupportedType", request.type(), request.type().getAllowedMime()));
@@ -130,9 +126,6 @@ public class DocumentService {
             document.setType(request.type());
         }
         if (document.getType() != typeBefore || document.getLanguage() != languageBefore) {
-            // A default slot is keyed by the type and language the document had. It no
-            // longer fits that slot, and moving it into the new one could silently
-            // replace a default the user picked there - so it simply stops being one.
             defaultDocumentRepository.deleteByDocument_Id(documentId);
         }
         document.setUpdatedAt(LocalDateTime.now());
@@ -157,9 +150,6 @@ public class DocumentService {
         if (!DEFAULTABLE.contains(document.getType())) {
             throw new ApiException.BadRequest(message("error.document.notDefaultable", document.getType()));
         }
-
-        // Found: managed, so the new document is written by dirty checking at commit.
-        // Not found: a new, transient slot that save() persists.
         DefaultDocument slot = defaultDocumentRepository
                 .findByUserIdAndTypeAndLanguage(userId, document.getType(), document.getLanguage())
                 .orElseGet(DefaultDocument::new);

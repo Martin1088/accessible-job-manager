@@ -3,6 +3,7 @@ package de.ajm.manager.exception;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -43,6 +44,11 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/broken")
         String broken() {
             throw new IllegalStateException("something actually broke");
+        }
+
+        @GetMapping("/stale")
+        String stale() {
+            throw new ObjectOptimisticLockingFailureException(Object.class, 1L);
         }
 
         @PostMapping("/echo")
@@ -95,5 +101,15 @@ class GlobalExceptionHandlerTest {
                         .content("{ this is not json"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    /** A lost @Version race is the caller's cue to reload, not a server fault. */
+    @Test
+    void aLostOptimisticLockIsAConflictNotAServerError() throws Exception {
+        mvc.perform(get("/stale"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value(
+                        "This record was changed by another request in the meantime. Reload it and try again."));
     }
 }

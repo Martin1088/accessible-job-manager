@@ -3,10 +3,7 @@ package de.ajm.manager.profile;
 import de.ajm.manager.security.AppRole;
 import de.ajm.manager.types.Language;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -15,7 +12,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "user_profiles")
-@Data
+@Setter
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -83,6 +83,14 @@ orientation, not as a record of releases that happened.
   dyslexia-friendly) now applies on every screen. Headings, company names and labels on
   the user, advisor and reviewer pages used to keep the serif and monospace fonts
   regardless of the choice.
+- Saving a cover letter template that was changed in the meantime - in another tab, say -
+  no longer silently overwrites the newer version. The save is refused with a message
+  asking to reload first (`PUT /api/html/cover-letter/template/{id}` answers 409 when
+  the request's `version` is stale). A lost optimistic-locking race anywhere else now
+  also answers 409 instead of 500.
+- After creating or updating a cover letter template, the response carries the real
+  `createdAt` and the new `version`; it used to return `createdAt: null` on creation
+  and the previous version after an update.
 
 ## [0.1.0] - 2026-09-14
 

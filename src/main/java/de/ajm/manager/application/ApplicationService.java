@@ -9,7 +9,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
@@ -69,9 +68,6 @@ public class ApplicationService {
         app.setStatus(req.status() != null ? req.status() : ApplicationStatus.DRAFT);
         app.setAppliedDate(req.appliedDate());
         app.setNotes(req.notes());
-        app.setCreatedAt(LocalDateTime.now());
-        app.setUpdatedAt(LocalDateTime.now());
-
         return toDto(applicationRepository.save(app));
     }
 
@@ -86,9 +82,8 @@ public class ApplicationService {
         }
         if (req.appliedDate() != null) app.setAppliedDate(req.appliedDate());
         if (req.notes() != null)       app.setNotes(req.notes());
-        app.setUpdatedAt(LocalDateTime.now());
 
-        return toDto(applicationRepository.save(app));
+        return toDto(applicationRepository.saveAndFlush(app));
     }
 
     @Transactional

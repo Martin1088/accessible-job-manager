@@ -5,17 +5,19 @@ import de.ajm.manager.application.ApplicationMethod;
 import de.ajm.manager.types.Gender;
 import de.ajm.manager.types.Language;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @ToString(exclude = "company")
-@EqualsAndHashCode(exclude = "company")
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "company_positions")
 public class CompanyPosition {
     @Id
@@ -45,6 +47,7 @@ public class CompanyPosition {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @CreationTimestamp
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 }

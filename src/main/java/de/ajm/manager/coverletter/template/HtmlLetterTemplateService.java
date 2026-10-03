@@ -42,7 +42,10 @@ public class HtmlLetterTemplateService {
 
     @Transactional
     public HtmlLetterTemplateDto create(HtmlLetterTemplateRequest request, Language language, String userId) {
-        return HtmlLetterTemplateDto.from(repository.save(HtmlLetterTemplate.builder()
+        // A UUID id is generated without the database, so save() defers the INSERT - and
+        // with it @CreationTimestamp - to flush. Without flushing here the response would
+        // carry createdAt = null, because the commit happens after this method returns.
+        return HtmlLetterTemplateDto.from(repository.saveAndFlush(HtmlLetterTemplate.builder()
                 .userId(userId)
                 .name(requiredName(request))
                 .language(language)
@@ -55,12 +58,23 @@ public class HtmlLetterTemplateService {
     @Transactional
     public HtmlLetterTemplateDto update(UUID id, HtmlLetterTemplateRequest request, Language language, String userId) {
         HtmlLetterTemplate template = owned(id, userId);
+        // Optimistic locking across requests. Hibernate's own @Version check only compares
+        // against the version loaded in *this* transaction, which is always current - and
+        // writing the client's version into the managed entity would be ignored. So the
+        // version the client loaded is compared here, before anything is changed.
+        if (request != null && request.version() != null && request.version() != template.getVersion()) {
+            throw new ApiException.Conflict(
+                    messageSource.getMessage("error.letterTemplate.versionConflict", null, Locale.ROOT));
+        }
         template.setName(nameOf(request, language, template.getName()));
         template.setLanguage(language);
         template.setLayoutLetter(layoutOf(request));
         template.setStyle(styleSettingsValidator.validated(request == null ? null : request.style()));
         template.setBlocks(blocksOf(request, language));
-        return HtmlLetterTemplateDto.from(repository.save(template));
+        // Managed, so the UPDATE comes from dirty checking at flush, and only then are
+        // @Version incremented and @UpdateTimestamp set. Flushing here puts the new
+        // version in the response instead of the one the update started from.
+        return HtmlLetterTemplateDto.from(repository.saveAndFlush(template));
     }
 
     /**

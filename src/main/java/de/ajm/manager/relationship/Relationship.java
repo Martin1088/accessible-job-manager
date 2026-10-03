@@ -13,12 +13,14 @@ import de.ajm.manager.security.AppRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "relationship")
-@Data
+@Setter
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,6 +35,7 @@ public class Relationship {
 
     @Column(nullable = false)
     private String counterpartId;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -48,7 +48,7 @@ class HtmlLetterTemplateNameTest {
      */
     private HtmlLetterTemplateRequest named(String name) {
         List<Block> blocks = List.of(new Block(UUID.randomUUID(), BlockKey.PARAGRAPH, "text", List.of()));
-        return new HtmlLetterTemplateRequest(name, LayoutLetterKey.DIN5008_COVER_LETTER_B, null, blocks);
+        return new HtmlLetterTemplateRequest(name, LayoutLetterKey.DIN5008_COVER_LETTER_B, null, blocks, null);
     }
 
     @ParameterizedTest
@@ -58,7 +58,7 @@ class HtmlLetterTemplateNameTest {
         assertThatThrownBy(() -> service.create(named(name), Language.GERMAN, "test-sub"))
                 .isInstanceOf(ApiException.BadRequest.class);
 
-        verify(repository, never()).save(any());
+        verify(repository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -69,7 +69,7 @@ class HtmlLetterTemplateNameTest {
 
     @Test
     void aGivenNameIsTrimmedAndKept() {
-        when(repository.save(any(HtmlLetterTemplate.class))).thenAnswer(i -> i.getArgument(0));
+        when(repository.saveAndFlush(any(HtmlLetterTemplate.class))).thenAnswer(i -> i.getArgument(0));
 
         assertThat(service.create(named("  Bewerbung Muster  "), Language.GERMAN, "test-sub").name())
                 .isEqualTo("Bewerbung Muster");
@@ -87,7 +87,7 @@ class HtmlLetterTemplateNameTest {
                 .blocks(List.of())
                 .build();
         when(repository.findById(stored.getId())).thenReturn(Optional.of(stored));
-        when(repository.save(any(HtmlLetterTemplate.class))).thenAnswer(i -> i.getArgument(0));
+        when(repository.saveAndFlush(any(HtmlLetterTemplate.class))).thenAnswer(i -> i.getArgument(0));
 
         assertThat(service.update(stored.getId(), named("  "), Language.GERMAN, "test-sub").name())
                 .isEqualTo("Bewerbung Muster");

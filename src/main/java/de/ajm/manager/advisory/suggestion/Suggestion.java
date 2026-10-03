@@ -3,20 +3,25 @@ package de.ajm.manager.advisory.suggestion;
 import de.ajm.manager.company.CompanyPosition;
 import de.ajm.manager.profile.UserProfile;
 import jakarta.persistence.*;
-import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "suggestions")
-@Data
+@Getter
+@Setter
 public class Suggestion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, updatable = false)
     private String advisorId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,6 +37,7 @@ public class Suggestion {
     @Enumerated(EnumType.STRING)
     private SuggestionStatus status;
 
-    @CreationTimestamp
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 }

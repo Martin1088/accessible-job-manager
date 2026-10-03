@@ -648,6 +648,7 @@
     "SAVING": "Saving…",
     "SAVED": "Template saved.",
     "SAVE_ERROR": "The template could not be saved.",
+    "SAVE_CONFLICT": "This template was changed elsewhere in the meantime, perhaps in another tab. Reload the page to see the current version before saving again.",
     "LANGUAGE_LABEL": "Letter language",
     "LANGUAGE_HELP": "The language the letter is written in. It starts at the language of the interface, and can differ from it.",
     "INSERT_SUGGESTIONS": "Insert suggested text",

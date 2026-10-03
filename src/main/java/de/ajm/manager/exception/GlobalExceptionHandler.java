@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -138,6 +139,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUploadTooLarge(MaxUploadSizeExceededException ex) {
         return body(HttpStatus.PAYLOAD_TOO_LARGE,
                 messageSource.getMessage("error.upload.tooLarge", null, Locale.ROOT));
+    }
+
+    /**
+     * A {@code @Version} check failing at flush: another transaction committed the same
+     * row between this one's read and its write. That is a lost race, not a server
+     * fault - the caller should reload and retry - so it answers 409 instead of falling
+     * through to the catch-all below as a 500.
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        return body(HttpStatus.CONFLICT,
+                messageSource.getMessage("error.optimisticLock", null, Locale.ROOT));
     }
 
     @ExceptionHandler(Exception.class)

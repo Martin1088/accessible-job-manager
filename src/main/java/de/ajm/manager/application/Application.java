@@ -1,23 +1,22 @@
 package de.ajm.manager.application;
 
 import de.ajm.manager.company.CompanyPosition;
-import de.ajm.manager.document.Document;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Data
-@ToString
-@EqualsAndHashCode
+@Getter
+@Setter
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "applications")
 public class Application {
 
@@ -25,7 +24,7 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private String userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -40,13 +39,10 @@ public class Application {
 
     private String notes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cover_letter_document_id")
-    private Document coverLetter;
-
-    @CreationTimestamp
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime createdAt;
-    
-    @UpdateTimestamp
+
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 }

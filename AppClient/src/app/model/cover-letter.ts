@@ -32,6 +32,8 @@ export interface HtmlLetterTemplateRequest {
   layoutLetter?: LayoutLetterKey;
   blocks: LetterBlock[];
   style?: unknown;
+  /** The version the form was loaded at; on update a mismatch is answered with 409. */
+  version?: number;
 }
 
 export interface CoverLetterRenderRequest {
