@@ -18,7 +18,7 @@ repositories {
 configurations { mockitoAgent }
 
 configurations.testRuntimeClasspath {
-    resolutionStrategy.force 'com.sun.xml.bind:jaxb-impl:2.3.2', 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+    resolutionStrategy.force 'com.sun.xml.bind:jaxb-impl:4.0.9', 'com.sun.xml.bind:jaxb-core:2.3.0.1'
 }
 
 dependencies {
