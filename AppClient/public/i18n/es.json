@@ -474,6 +474,8 @@
     "ADD_POSITION": "+ Añadir puesto",
     "UPDATE": "Actualizar",
     "CREATE": "Crear",
+    "CREATE_AND_APPLY": "Crear y postular",
+    "CREATE_AND_APPLY_HINT": "Crea la empresa y abre una candidatura para el primer puesto.",
     "ERROR_UPDATE_CONFLICT": "No se puede quitar un puesto que tiene candidaturas asociadas.",
     "ERROR_UPDATE": "No se pudo actualizar la empresa.",
     "ERROR_CREATE": "No se pudo crear la empresa.",

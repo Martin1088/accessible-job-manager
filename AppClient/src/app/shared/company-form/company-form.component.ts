@@ -383,7 +383,7 @@ export class CompanyFormComponent implements OnInit {
     this.company.positions.splice(index, 1);
   }
 
-  save(): void {
+  save(thenApply = false): void {
     if (this.isEditMode && this.companyId) {
       this.companyService.update(this.companyId, this.company).subscribe({
         next: () => this.router.navigate([this.basePath]),
@@ -404,13 +404,29 @@ export class CompanyFormComponent implements OnInit {
           if (positionId && (this.sourceJobUrl || this.importStore.hasPending)) {
             this.createSnapshot(positionId, this.sourceJobUrl ?? '');
           }
-          this.router.navigate([this.basePath]);
+          const position = created.positions?.[0];
+          if (thenApply && position?.id) {
+            // Same hand-over as the company list's "Apply for this position".
+            this.router.navigate(['/applications'], {
+              queryParams: { positionId: position.id, companyName: created.name, positionTitle: position.title }
+            });
+          } else {
+            this.router.navigate([this.basePath]);
+          }
         },
         error: (err: HttpErrorResponse) => {
           this.errorMessage = err.error?.message ?? this.translate.instant('COMPANIES.ERROR_CREATE');
         }
       });
     }
+  }
+
+  /**
+   * The quick path: only for the applicant's own new company, since
+   * /applications is closed to advisors, and only with a position to apply for.
+   */
+  get canCreateAndApply(): boolean {
+    return !this.isEditMode && this.basePath === '/companies' && !!this.company.positions[0]?.title?.trim();
   }
 
   cancel(): void {
