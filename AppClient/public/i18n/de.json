@@ -474,6 +474,8 @@
     "ADD_POSITION": "+ Position hinzufügen",
     "UPDATE": "Aktualisieren",
     "CREATE": "Erstellen",
+    "CREATE_AND_APPLY": "Erstellen und bewerben",
+    "CREATE_AND_APPLY_HINT": "Legt das Unternehmen an und öffnet die Bewerbung für die erste Position.",
     "ERROR_UPDATE_CONFLICT": "Eine Position mit zugehörigen Bewerbungen kann nicht entfernt werden.",
     "ERROR_UPDATE": "Unternehmen konnte nicht aktualisiert werden.",
     "ERROR_CREATE": "Unternehmen konnte nicht erstellt werden.",

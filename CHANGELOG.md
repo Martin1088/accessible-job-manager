@@ -18,6 +18,8 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- The new-company form has a "Create and apply" button next to "Create": it saves the company
+  and opens the application form for its first position.
 - A document can be marked as the default CV, certificate or cover letter template for
   its language - one default of each per language (`GET /api/documents/defaults`,
   `PUT`/`DELETE /api/documents/{id}/default`). Deleting the document, or changing its

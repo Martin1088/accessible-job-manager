@@ -474,6 +474,8 @@
     "ADD_POSITION": "+ Functie toevoegen",
     "UPDATE": "Bijwerken",
     "CREATE": "Aanmaken",
+    "CREATE_AND_APPLY": "Aanmaken en solliciteren",
+    "CREATE_AND_APPLY_HINT": "Maakt het bedrijf aan en opent een sollicitatie voor de eerste functie.",
     "ERROR_UPDATE_CONFLICT": "Een functie met bijbehorende sollicitaties kan niet worden verwijderd.",
     "ERROR_UPDATE": "Bedrijf kon niet worden bijgewerkt.",
     "ERROR_CREATE": "Bedrijf kon niet worden aangemaakt.",

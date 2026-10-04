@@ -474,6 +474,8 @@
     "ADD_POSITION": "+ Add Position",
     "UPDATE": "Update",
     "CREATE": "Create",
+    "CREATE_AND_APPLY": "Create and apply",
+    "CREATE_AND_APPLY_HINT": "Creates the company and opens an application for the first position.",
     "ERROR_UPDATE_CONFLICT": "Cannot remove a position that has associated applications.",
     "ERROR_UPDATE": "Failed to update company.",
     "ERROR_CREATE": "Failed to create company.",
