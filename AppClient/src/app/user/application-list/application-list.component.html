@@ -48,6 +48,16 @@
     </section>
   }
 
+  @if (details) {
+    <section class="position-details" aria-labelledby="details-heading">
+      <h2 id="details-heading" #detailsHeading tabindex="-1" class="section-tab">
+        {{ 'COMPANIES.JOB_POSTING_VIEW_HEADING' | translate: { position: details.position.title, company: details.company.name } }}
+      </h2>
+      <app-position-details [company]="details.company" [position]="details.position" />
+      <button type="button" class="btn-secondary" (click)="closeDetails()">{{ 'COMMON.CLOSE' | translate }}</button>
+    </section>
+  }
+
   <div class="filter-bar" role="search" [attr.aria-label]="'APPLICATIONS.FILTER_ARIA' | translate">
     <fieldset class="filter-fieldset">
       <legend class="sr-only">{{ 'APPLICATIONS.FILTER_ARIA' | translate }}</legend>
@@ -92,7 +102,7 @@
     }
   </div>
 
-  <div role="region" [attr.aria-label]="'APPLICATIONS.TABLE_CAPTION' | translate" class="table-wrapper">
+  <div role="region" [attr.aria-label]="'APPLICATIONS.TABLE_CAPTION' | translate" class="table-wrapper" tabindex="0">
     <table>
       <caption>{{ 'APPLICATIONS.TABLE_CAPTION' | translate }}</caption>
       <colgroup>
@@ -129,7 +139,10 @@
         <tr>
           @for (col of columns; track col) {
             <td [attr.data-label]="col.label | translate">
-              @if (col.field !== 'statusLabel') {
+              @if (col.field === 'companyName' && hasDetails(row)) {
+                <button type="button" class="cell-link" (click)="openDetails(row)"
+                  [attr.aria-label]="'COMPANIES.SHOW_DETAILS_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">{{ row.companyName }}</button>
+              } @else if (col.field !== 'statusLabel') {
                 {{ row[col.field] }}
               } @else {
                 <div class="status-cell">
@@ -139,7 +152,7 @@
                       <option [value]="s">{{ statusLabel(s) }}</option>
                     }
                   </select>
-                  <button type="button"
+                  <button type="button" class="btn-secondary"
                     [disabled]="statusDraft[row.id] === row.status || updatingStatus[row.id]"
                     (click)="applyStatusChange(row)"
                     [attr.aria-label]="'APPLICATIONS.UPDATE_STATUS_ARIA' | translate: { company: row.companyName }">
@@ -170,28 +183,28 @@
               }
             </select>
             <button type="button"
-              class="btn-download"
+              class="btn-secondary"
               [disabled]="!selectedTemplate[row.id] || previewing[row.id]"
               (click)="previewCoverLetter(row.id)"
               [attr.aria-label]="'APPLICATIONS.PREVIEW_ARIA' | translate: { company: row.companyName }">
               {{ (previewing[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.PREVIEW') | translate }}
             </button>
             <button type="button"
-              class="btn-download"
+              class="btn-secondary"
               [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
               (click)="downloadCoverLetter(row.id)"
               [attr.aria-label]="'APPLICATIONS.DOWNLOAD_ARIA' | translate: { company: row.companyName }">
               {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_PDF') | translate }}
             </button>
             <button type="button"
-              class="btn-download"
+              class="btn-secondary"
               [disabled]="!supportsWord(row.id) || downloading[row.id]"
               (click)="downloadCoverLetterWord(row.id)"
               [attr.aria-label]="'APPLICATIONS.DOWNLOAD_WORD_ARIA' | translate: { company: row.companyName }">
               {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_WORD') | translate }}
             </button>
             <button type="button"
-              class="btn-download"
+              class="btn-secondary"
               [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
               (click)="emailCoverLetter(row.id)"
               [attr.aria-label]="'APPLICATIONS.SEND_EMAIL_ARIA' | translate: { company: row.companyName }">
@@ -202,11 +215,11 @@
             }
           </td>
           <td class="actions-cell" [attr.data-label]="'TABLE.ACTIONS' | translate">
-            <button type="button" (click)="startEdit(row)"
+            <button type="button" class="btn-secondary" (click)="startEdit(row)"
               [attr.aria-label]="'APPLICATIONS.ACTION_EDIT_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
               {{ 'APPLICATIONS.ACTION_EDIT' | translate }}
             </button>
-            <button type="button" (click)="deleteApplication(row)"
+            <button type="button" class="btn-secondary" (click)="deleteApplication(row)"
               [attr.aria-label]="'APPLICATIONS.ACTION_DELETE_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
               {{ 'APPLICATIONS.ACTION_DELETE' | translate }}
             </button>

@@ -12,6 +12,10 @@ import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
 import { Document } from '../../model/document';
+import { byMostRecent } from '../../shared/sort';
+import { Company, CompanyPosition } from '../../model/company';
+import { CompanyService } from '../../services/company.service';
+import { PositionDetailsComponent } from '../../shared/position-details/position-details.component';
 
 /**
  * One entry of the template picker. Both cover letter providers write a letter for
@@ -49,7 +53,7 @@ function matchesFilter(iso: string | null | undefined, filterYear: number | '', 
 @Component({
   selector: 'app-application-list',
   standalone: true,
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, PositionDetailsComponent, TranslatePipe],
   templateUrl: './application-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './application-list.component.scss',
@@ -81,6 +85,12 @@ export class ApplicationListComponent implements OnInit {
   editingId: number | null = null;
 
   @ViewChild('previewPanel') private previewPanel?: ElementRef<HTMLElement>;
+  @ViewChild('detailsHeading') private detailsHeading?: ElementRef<HTMLElement>;
+
+  /** The company and position behind each application, keyed by position id. */
+  private positions = new Map<number, { company: Company; position: CompanyPosition }>();
+  details: { company: Company; position: CompanyPosition } | null = null;
+  private lastFocusedDetailsElement: HTMLElement | null = null;
 
   sortField: string | null = null;
   sortDir: 'asc' | 'desc' | null = null;
@@ -124,6 +134,7 @@ export class ApplicationListComponent implements OnInit {
   constructor(
     private applicationService: ApplicationService,
     private coverLetterService: CoverLetterService,
+    private companyService: CompanyService,
     private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
@@ -146,6 +157,40 @@ export class ApplicationListComponent implements OnInit {
     });
     this.loadApplications();
     this.loadTemplates();
+    this.loadPositions();
+  }
+
+  /** Whether a row's company name can open its details. */
+  hasDetails(row: any): boolean {
+    return this.positions.has(row.companyPositionId);
+  }
+
+  // Same panel pattern as the Companies page: focus lands on the heading, and
+  // closing returns it to the company name that opened it.
+  openDetails(row: any): void {
+    const entry = this.positions.get(row.companyPositionId);
+    if (!entry) return;
+    this.lastFocusedDetailsElement = document.activeElement as HTMLElement | null;
+    this.details = entry;
+    setTimeout(() => this.detailsHeading?.nativeElement.focus());
+  }
+
+  closeDetails(): void {
+    this.details = null;
+    this.lastFocusedDetailsElement?.focus();
+  }
+
+  // Quiet on failure: the names simply stay plain text, the table works without it.
+  private loadPositions(): void {
+    this.companyService.getAll().subscribe({
+      next: companies => {
+        this.positions = new Map(companies.flatMap(company =>
+          company.positions
+            .filter(p => p.id != null)
+            .map(position => [position.id!, { company, position }] as const)));
+      },
+      error: () => {},
+    });
   }
 
   submit(): void {
@@ -501,6 +546,7 @@ export class ApplicationListComponent implements OnInit {
       appliedDateRaw:    a.appliedDate ?? '',
       notes:             a.notes ?? '',
       createdAt:         a.createdAt ?? null,
-    }));
+      updatedAt:         a.updatedAt ?? a.createdAt ?? null,
+    })).sort(byMostRecent('updatedAt'));
   }
 }

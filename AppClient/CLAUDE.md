@@ -10,7 +10,9 @@ runs as — it uses `ChromeHeadlessNoSandbox`, because Chromium refuses to start
 without `--no-sandbox`. Everywhere else it uses the stock, sandboxed `ChromeHeadless`.
 Passing `--browsers=ChromeHeadless` overrides the choice, which is what CI does.
 
-A browser still has to exist. The devcontainer ships without one:
+A browser still has to exist. The devcontainer installs Chromium and sets `CHROME_BIN`
+itself (`onCreateCommand` and `containerEnv` in `.devcontainer/devcontainer.json`), and
+GitHub's runners and most desktops have one on `PATH`. Anywhere else, install one first:
 
 ```bash
 sudo apt-get update && sudo apt-get install -y chromium
@@ -41,8 +43,8 @@ Accessibility is a core requirement, not an afterthought:
 
 ## Internationalization (i18n)
 
-Every user-facing string ships in all three locales at once —
-`public/i18n/en.json`, `de.json`, `nl.json` — never just one. A component
+Every user-facing string ships in all four locales at once —
+`public/i18n/en.json`, `de.json`, `nl.json`, `es.json` — never just one. A component
 with hardcoded English text is a latent bug, not a shortcut: the login page
 went untranslated for a while for exactly this reason (it predated the rest
 of the app's `| translate` convention) and nobody noticed until someone
@@ -58,7 +60,7 @@ tested it in German. Adding a key to only `en.json` reproduces that bug.
   `login.component.html`'s handling of the `error` query param.
 - A person's name or the product name (`Job Application Manager`,
   `Martin Jurk`) is not a translation key — it doesn't change per locale, and
-  the value is byte-identical in all three files. It still *lives* in
+  the value is byte-identical in all four files. It still *lives* in
   `LOGIN.TITLE` / `HOME.TITLE`, so read those rather than hardcoding the
   string: one edit renames the product everywhere. German compounds it with
   Durchkopplung (`Job-Application-Manager-Dashboard`), Dutch hyphenates only
@@ -73,7 +75,7 @@ tested it in German. Adding a key to only `en.json` reproduces that bug.
 **Verify translations render, not just parse.** After adding or changing
 keys:
 
-- [ ] All three JSON files still parse (`node -e "JSON.parse(require('fs').readFileSync(path))"`
+- [ ] All four JSON files still parse (`node -e "JSON.parse(require('fs').readFileSync(path))"`
       per file, or just load the page — a syntax error breaks the whole
       bundle, not just the new key).
 - [ ] Switch the language selector and confirm the new text actually

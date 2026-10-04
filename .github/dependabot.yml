@@ -13,6 +13,13 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # The framework packages pin each other as exact peers (@angular/common
+    # 22.2.1 requires @angular/core 22.2.1), so a PR bumping one alone can
+    # never pass `npm ci`. They move together or not at all.
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
 
   - package-ecosystem: github-actions
     directory: "/"

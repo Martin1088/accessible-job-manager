@@ -46,6 +46,12 @@
 
   --font-scale: 1;
   --line-height: 1.5;
+
+  /* The correspondence look's two stacks (`$corr-serif` / `$corr-mono` resolve to
+     these). Custom properties rather than Sass constants so the font preference
+     below can replace them on every screen. */
+  --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Consolas, 'Liberation Mono', monospace;
 }
 
 /* html[data-contrast="high"] beats :root on specificity, so no !important is needed. */
@@ -138,13 +144,29 @@ html[data-hide-images='true'] img {
 
 /* No bundled dyslexia-friendly webfont yet - this falls through to widely available
    system fonts with the kind of open letterforms and spacing that helps, and picks
-   up a locally installed OpenDyslexic if the user already has one. */
+   up a locally installed OpenDyslexic if the user already has one.
+   The 'system' choice keeps the correspondence serif for display text; every other
+   choice replaces it too, and dyslexia-friendly also replaces the monospace stack,
+   whose letterforms are no easier for that audience. */
+html[data-font-family='sans-serif'] {
+  --font-display: Arial, Helvetica, sans-serif;
+}
+
 html[data-font-family='sans-serif'] body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+html[data-font-family='serif'] {
+  --font-display: Georgia, 'Times New Roman', serif;
+}
+
 html[data-font-family='serif'] body {
   font-family: Georgia, 'Times New Roman', serif;
+}
+
+html[data-font-family='dyslexia-friendly'] {
+  --font-display: 'OpenDyslexic', Verdana, Tahoma, sans-serif;
+  --font-mono: 'OpenDyslexic', Verdana, Tahoma, sans-serif;
 }
 
 html[data-font-family='dyslexia-friendly'] body {
@@ -252,6 +274,25 @@ button {
     outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
+}
+
+/* A table value that opens more about its row (a company name opening its
+   details). Reads as the value, underlined like a link, rather than as one more
+   row button, and keeps the 44px touch target. app-data-table restates it in its
+   own stylesheet, where its generic `td button` rule would otherwise win. */
+.cell-link {
+  min-block-size: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+
+  &:hover { color: var(--accent-deep); }
 }
 
 /* Table */

@@ -216,6 +216,10 @@
 
     <div class="actions">
       <button (click)="save()">{{ (isEditMode ? 'COMPANIES.UPDATE' : 'COMPANIES.CREATE') | translate }}</button>
+      @if (!isEditMode && basePath === '/companies') {
+        <button type="button" (click)="save(true)" [disabled]="!canCreateAndApply" aria-describedby="create-apply-hint">{{ 'COMPANIES.CREATE_AND_APPLY' | translate }}</button>
+        <span id="create-apply-hint" class="sr-only">{{ 'COMPANIES.CREATE_AND_APPLY_HINT' | translate }}</span>
+      }
       <button (click)="cancel()">{{ 'COMMON.CANCEL' | translate }}</button>
     </div>
   </div>

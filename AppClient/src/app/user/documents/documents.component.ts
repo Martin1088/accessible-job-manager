@@ -13,6 +13,7 @@ import { RelationshipService } from '../../services/relationship.service';
 import { Document, DocumentLanguage, DocumentType } from '../../model/document';
 import { HtmlLetterTemplate, LayoutLetterKey } from '../../model/cover-letter';
 import { Relationship } from '../../model/relationship';
+import { byMostRecent } from '../../shared/sort';
 
 /** Which provider a row came from. The two are stored and edited in different places. */
 type TemplateKind = 'WORD' | 'HTML';
@@ -340,12 +341,13 @@ export class DocumentsComponent implements OnInit {
     const templates = this.documents.filter(d => d.type === 'COVER_LETTER_TEMPLATE');
     const pdfs = this.documents.filter(d => PDF_TYPES.includes(d.type));
 
-    this.allRows = [...this.wordRows(templates), ...this.htmlRows(this.htmlTemplates)];
+    this.allRows = [...this.wordRows(templates), ...this.htmlRows(this.htmlTemplates)]
+      .sort(byMostRecent('rawChangedAt'));
     this.documentRows = pdfs.map(d => ({
       ...this.documentRow(d),
       typeLabel: this.translate.instant(TYPE_KEY[d.type]),
       type:      d.type,
-    }));
+    })).sort(byMostRecent('rawChangedAt'));
     this.sharedWithMeRows = this.sharedWithMe.map(d => ({
       id:            d.id,
       label:         d.label,
@@ -377,6 +379,7 @@ export class DocumentsComponent implements OnInit {
       languageLabel: this.translate.instant(LANGUAGE_KEY[d.language]),
       createdAt:     d.createdAt ? d.createdAt.substring(0, 10) : NOT_APPLICABLE,
       rawCreatedAt:  d.createdAt ?? null,
+      rawChangedAt:  d.updatedAt ?? d.createdAt ?? null,
     };
   }
 
@@ -398,6 +401,7 @@ export class DocumentsComponent implements OnInit {
         languageLabel: t.language ? this.translate.instant(LANGUAGE_KEY[t.language]) : NOT_APPLICABLE,
         createdAt:     changedAt ? changedAt.substring(0, 10) : NOT_APPLICABLE,
         rawCreatedAt:  changedAt ?? null,
+        rawChangedAt:  changedAt ?? null,
       };
     });
   }

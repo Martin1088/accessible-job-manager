@@ -1,0 +1,57 @@
+package de.ajm.manager.relationship;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import de.ajm.manager.relationship.share.Share;
+import de.ajm.manager.security.AppRole;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "relationship")
+@Setter
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Relationship {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(nullable = false)
+    private String applicantId;
+
+    @Column(nullable = false)
+    private String counterpartId;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppRole kind;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RelationshipStatus status;
+
+    @OneToMany(mappedBy = "relationship", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Share> sharedResources = new ArrayList<>();
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+}
