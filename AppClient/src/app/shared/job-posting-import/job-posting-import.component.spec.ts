@@ -51,9 +51,16 @@ describe('JobPostingImportComponent', () => {
     }
   }
 
-  // The snapshot probe reads its error body out of a Blob (async), so a couple
-  // of macrotasks have to drain before `snapshotRenderFailure` is set.
-  const flushMicrotasks = () => new Promise(resolve => setTimeout(resolve, 20));
+  // The snapshot probe reads its error body out of a Blob, which resolves on
+  // the browser's own schedule rather than on a timer the test controls - so
+  // wait for the outcome itself. A fixed delay is outlasted on a loaded CI
+  // runner and fails intermittently.
+  async function waitFor(condition: () => boolean, timeoutMs = 2000): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (!condition() && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 5));
+    }
+  }
 
   it('runs both extractions in parallel for one URL', () => {
     search();
@@ -137,7 +144,7 @@ describe('JobPostingImportComponent', () => {
       { company: { name: 'MetalBear', locations: [], positions: [{ title: 'Backend Engineer' }] },
         sourceJobId: null, postedAt: null, deadline: null, employmentType: null });
     flushSnapshotCheck(false);
-    await flushMicrotasks();
+    await waitFor(() => component.snapshotRenderFailure !== null);
 
     expect(component.snapshotRenderFailure?.kind).toBe('reported');
     expect(component.snapshotRenderFailure?.message).toContain('automated access');
