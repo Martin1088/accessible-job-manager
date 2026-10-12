@@ -10,6 +10,16 @@
         submitLabelKey="HOME.USE_FOR_NEW_COMPANY"
         (imported)="onImported($event)" />
     </section>
+
+    <!-- CV matching - reached from here until it joins the import itself. -->
+    <ul class="quick-nav" role="list">
+      <li>
+        <a routerLink="/matching">
+          <span class="quick-nav__title">{{ 'MATCHING.TEASER_TITLE' | translate }}</span>
+          <span class="quick-nav__desc">{{ 'MATCHING.TEASER_DESC' | translate }}</span>
+        </a>
+      </li>
+    </ul>
   }
 
   @if (profileError) {

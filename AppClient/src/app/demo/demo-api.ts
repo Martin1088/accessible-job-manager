@@ -12,6 +12,7 @@ import { DIRECTORY_ADVISORS, DIRECTORY_REVIEWERS, PEOPLE } from './seed/people';
 import { MY_USERS, SuggestionDto } from './seed/advisor';
 import { POSTING_FULL_CHAIN, POSTING_OVERVIEW } from './seed/extraction';
 import { DEMO_LEGAL } from './seed/legal';
+import { DEMO_MATCHING } from './seed/matching';
 
 /** A file that really exists in `public/` - the backend fetches it as an asset. */
 export class DemoAsset {
@@ -429,6 +430,25 @@ route('POST', '/api/posting/snapshot-validate', () => SAMPLE_PDF);
 route('POST', '/api/posting/snapshot', () => ({ id: 'snap-demo' }));
 route('GET', '/api/posting/snapshot', () => [{ id: 'snap-demo' }]);
 route('GET', '/api/posting/snapshot/:id', () => SAMPLE_PDF);
+
+// ---------------------------------------------------------------------------
+// CV matching - a fixed result for any posting and either CV, labelled as an
+// example where it is displayed. Only the CV id is echoed back, so the result
+// names the CV that was picked.
+// ---------------------------------------------------------------------------
+
+function matchingResult(lang: string | null | undefined, cvDocumentId: unknown) {
+  // Mirrors the legal documents' chain: requested language, else English.
+  const result = DEMO_MATCHING[lang ?? ''] ?? DEMO_MATCHING['en'];
+  return { ...result, cvDocumentId: String(cvDocumentId ?? '') };
+}
+
+route('POST', '/api/matching', req =>
+  matchingResult(req.query.get('lang'), req.query.get('cvDocumentId')));
+route('POST', '/api/matching/text', req => {
+  const body = req.body as { cvDocumentId?: string; lang?: string } | null;
+  return matchingResult(body?.lang, body?.cvDocumentId);
+});
 
 // ---------------------------------------------------------------------------
 // Endpoints the demo does not answer. Listed on purpose: a 501 here says "not
