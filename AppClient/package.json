@@ -14,7 +14,7 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/cdk": "^22.1.6",
+    "@angular/cdk": "^22.2.1",
     "@angular/common": "^22.2.1",
     "@angular/compiler": "^22.2.1",
     "@angular/core": "^22.2.1",
@@ -28,7 +28,7 @@
     "zone.js": "~0.16.3"
   },
   "devDependencies": {
-    "@angular/build": "^22.1.8",
+    "@angular/build": "^22.2.1",
     "@angular/cli": "^22.2.1",
     "@angular/compiler-cli": "^22.2.1",
     "@eslint/js": "^10.0.1",
