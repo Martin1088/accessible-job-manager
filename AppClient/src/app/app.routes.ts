@@ -77,6 +77,12 @@ export const routes: Routes = [
     canActivate: [authGuard, userGuard]
   },
   {
+    path: 'matching',
+    loadComponent: () => import('./user/cv-match/cv-match.component')
+      .then(m => m.CvMatchComponent),
+    canActivate: [authGuard, userGuard]
+  },
+  {
     path: 'support',
     loadComponent: () => import('./user/support/support.component')
       .then(m => m.SupportComponent),

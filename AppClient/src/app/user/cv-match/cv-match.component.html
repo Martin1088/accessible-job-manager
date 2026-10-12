@@ -1,0 +1,158 @@
+<main id="main-content" tabindex="-1">
+  <h1>{{ 'MATCHING.TITLE' | translate }}</h1>
+  <p class="lead">{{ 'MATCHING.LEAD' | translate }}</p>
+
+  <form class="match-form" (submit)="run($event)" novalidate>
+
+    <!-- The posting: a link, or its text where the link cannot be read. -->
+    <section class="sheet" aria-labelledby="match-posting-heading">
+      <h2 id="match-posting-heading" class="section-tab">{{ 'MATCHING.POSTING_HEADING' | translate }}</h2>
+
+      <fieldset class="choice">
+        <legend>{{ 'MATCHING.SOURCE_LEGEND' | translate }}</legend>
+        <label class="choice__option">
+          <input type="radio" name="match-source" value="url"
+            [checked]="sourceKind() === 'url'" (change)="sourceKind.set('url')">
+          {{ 'MATCHING.SOURCE_URL' | translate }}
+        </label>
+        <label class="choice__option">
+          <input type="radio" name="match-source" value="text"
+            [checked]="sourceKind() === 'text'" (change)="sourceKind.set('text')">
+          {{ 'MATCHING.SOURCE_TEXT' | translate }}
+        </label>
+      </fieldset>
+
+      @if (sourceKind() === 'url') {
+        <div class="field">
+          <label for="match-url">{{ 'MATCHING.URL_LABEL' | translate }}</label>
+          <input id="match-url" type="url" autocomplete="url" aria-required="true"
+            [value]="postingUrl()" (input)="postingUrl.set($any($event.target).value)"
+            [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate">
+        </div>
+      } @else {
+        <div class="field">
+          <label for="match-text">{{ 'MATCHING.TEXT_LABEL' | translate }}</label>
+          <textarea id="match-text" rows="8" aria-required="true" aria-describedby="match-text-help"
+            [value]="postingText()" (input)="postingText.set($any($event.target).value)"></textarea>
+          <p id="match-text-help" class="hint">{{ 'MATCHING.TEXT_HELP' | translate }}</p>
+        </div>
+      }
+    </section>
+
+    <!-- The CV to hold against it. -->
+    <section class="sheet" aria-labelledby="match-cv-heading">
+      <h2 id="match-cv-heading" class="section-tab">{{ 'MATCHING.CV_HEADING' | translate }}</h2>
+
+      @if (cvsError()) {
+        <p role="alert" class="notice notice--error">{{ 'MATCHING.CVS_ERROR' | translate }}</p>
+      } @else if (cvs() === null) {
+        <p role="status" class="hint">{{ 'MATCHING.CVS_LOADING' | translate }}</p>
+      } @else if (cvs()!.length === 0) {
+        <p class="notice">
+          {{ 'MATCHING.NO_CV' | translate }}
+          <a routerLink="/documents">{{ 'MATCHING.NO_CV_LINK' | translate }}</a>
+        </p>
+      } @else {
+        <fieldset class="choice">
+          <legend>{{ 'MATCHING.CV_LEGEND' | translate }}</legend>
+          @for (cv of cvs(); track cv.id) {
+            <label class="choice__option">
+              <input type="radio" name="match-cv" [value]="cv.id"
+                [checked]="cvId() === cv.id" (change)="cvId.set(cv.id)">
+              {{ cv.label }}
+              <span class="choice__meta">({{ cv.filename }})</span>
+            </label>
+          }
+        </fieldset>
+      }
+    </section>
+
+    <p id="match-privacy" class="notice notice--info">{{ 'MATCHING.PRIVACY' | translate }}</p>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" [disabled]="!canRun()" aria-describedby="match-privacy">
+        {{ (busy() ? 'MATCHING.RUNNING' : 'MATCHING.RUN') | translate }}
+      </button>
+      @if (busy()) {
+        <button type="button" class="btn-secondary" (click)="cancel()">{{ 'MATCHING.CANCEL' | translate }}</button>
+      }
+    </div>
+
+    <!-- Always present, so the first status message is announced rather than inserted silently. -->
+    <p role="status" class="hint">
+      @if (busy()) { {{ 'MATCHING.RUNNING_HINT' | translate }} }
+    </p>
+  </form>
+
+  @if (failure(); as failed) {
+    <p role="alert" class="notice notice--error">
+      <app-error-text [failure]="failed" fallbackKey="MATCHING.ERROR" />
+    </p>
+  }
+
+  @if (result(); as r) {
+    <section class="sheet result" aria-labelledby="match-result-heading" [attr.lang]="resultLang()">
+      <h2 id="match-result-heading" class="result__heading" tabindex="-1" #resultHeading>
+        {{ 'MATCHING.RESULT_HEADING' | translate }}
+        @if (r.postingTitle) { <span class="result__posting">{{ r.postingTitle }}@if (r.company) { — {{ r.company }} }</span> }
+      </h2>
+
+      @if (demoMode) {
+        <p class="notice">{{ 'MATCHING.DEMO_SAMPLE' | translate }}</p>
+      }
+
+      <p class="result__level" [attr.data-level]="r.level">
+        <span class="glyph" aria-hidden="true">@switch (r.level) { @case ('STRONG') { ● } @case ('PARTIAL') { ◐ } @default { ○ } }</span>
+        {{ ('MATCHING.LEVEL_' + r.level) | translate }}
+      </p>
+      <p class="result__summary">{{ r.summary }}</p>
+
+      <dl class="result__counts">
+        <div><dt>{{ 'MATCHING.STATUS_MET' | translate }}</dt><dd>{{ counts().met }}</dd></div>
+        <div><dt>{{ 'MATCHING.STATUS_PARTIAL' | translate }}</dt><dd>{{ counts().partial }}</dd></div>
+        <div><dt>{{ 'MATCHING.STATUS_MISSING' | translate }}</dt><dd>{{ counts().missing }}</dd></div>
+      </dl>
+
+      @for (group of groups(); track group.status) {
+        <section class="group" [attr.aria-labelledby]="'match-group-' + group.status">
+          <h3 [id]="'match-group-' + group.status" class="group__heading">
+            {{ ('MATCHING.GROUP_' + group.status) | translate }}
+            <span class="group__count">({{ group.skills.length }})</span>
+          </h3>
+          <ul role="list" class="skills">
+            @for (s of group.skills; track s.skill) {
+              <li class="skill" [attr.data-status]="s.status">
+                <details [open]="group.status === 'MISSING'">
+                  <summary>
+                    <span class="glyph" aria-hidden="true">@switch (s.status) { @case ('MET') { ✓ } @case ('PARTIAL') { ◐ } @default { ✗ } }</span>
+                    <span class="skill__name">{{ s.skill }}</span>
+                    <span class="skill__importance">{{ ('MATCHING.IMPORTANCE_' + s.importance) | translate }}</span>
+                    <span class="sr-only">, {{ ('MATCHING.STATUS_' + s.status) | translate }}</span>
+                  </summary>
+                  <dl class="skill__details">
+                    @if (s.postingQuote) {
+                      <dt>{{ 'MATCHING.POSTING_SAYS' | translate }}</dt>
+                      <dd><blockquote [attr.lang]="quoteLang(r.postingLanguage)">{{ s.postingQuote }}</blockquote></dd>
+                    }
+                    @if (s.cvEvidence) {
+                      <dt>{{ 'MATCHING.CV_SAYS' | translate }}</dt>
+                      <dd><blockquote [attr.lang]="quoteLang(r.cvLanguage)">{{ s.cvEvidence }}</blockquote></dd>
+                    }
+                    <dt>{{ 'MATCHING.REASONING' | translate }}</dt>
+                    <dd>{{ s.reasoning }}</dd>
+                    @if (s.suggestion) {
+                      <dt>{{ 'MATCHING.SUGGESTION' | translate }}</dt>
+                      <dd>{{ s.suggestion }}</dd>
+                    }
+                  </dl>
+                </details>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <p class="result__disclaimer">{{ 'MATCHING.DISCLAIMER' | translate }}</p>
+    </section>
+  }
+</main>

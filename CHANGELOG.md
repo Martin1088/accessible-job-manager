@@ -18,6 +18,11 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- A "Check my fit" page (`/matching`, linked from the home page) holds one of the
+  user's CVs against a job posting and lists, requirement by requirement, what the CV
+  covers and which skills are missing, each with the posting's wording, an assessment
+  and a suggestion. First draft for the demo only: the demo answers with a fixed
+  example result, and the backend for `POST /api/matching` is not built yet.
 - The new-company form has a "Create and apply" button next to "Create": it saves the company
   and opens the application form for its first position.
 - A document can be marked as the default CV, certificate or cover letter template for
