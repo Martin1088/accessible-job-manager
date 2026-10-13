@@ -8,7 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 ./gradlew compileJava          # compile only
-./gradlew test                 # unit tests (excludes AngularTemplateApplicationTests which needs a live DB)
+./gradlew test                 # unit tests (excludes AngularTemplateApplicationTests which needs a live DB;
+                               # @PostgresDataJpaTest classes need Docker)
+./gradlew check                # tests + JaCoCo report + coverage gate
+                               # report: build/reports/jacoco/test/html/index.html
 ./gradlew bootRun              # starts backend + builds Angular first (port 8060)
 
 # Run a single test class
@@ -219,6 +222,28 @@ The build is configured with `-Dnet.bytebuddy.experimental=true` and the Mockito
 
 `AngularTemplateApplicationTests` (full `@SpringBootTest`) is excluded because it requires a live PostgreSQL and OIDC server. Add `@SpringBootTest` integration tests to the same exclusion pattern only when a test DB is available.
 
+### Coverage (JaCoCo)
+
+`test` is finalized by `jacocoTestReport` (HTML + XML), and `check` runs
+`jacocoTestCoverageVerification`, a **line-coverage minimum of 64 %**. CI uploads the
+HTML report as the `jacoco-report` artifact of `build.yml`. Rules that are easy to break:
+
+- **The minimum is measured under CI conditions**, Gotenberg and Ollama unreachable,
+  so the tests that need them skip as they do on GitHub's runners:
+  `GOTENBERG_URL=http://127.0.0.1:9 OLLAMA_URL=http://127.0.0.1:9 ./gradlew test`.
+  Baseline on 2026-10-13: 66.35 % lines, 56.96 % branches; with the dev services up,
+  67.29 % / 57.02 %. A local number is therefore not the number the gate sees.
+- **Raise the minimum, don't lower it** without a reason in the commit message.
+- **`toolVersion = '0.8.15'`** is the first JaCoCo with official Java 26 support; don't
+  drop the pin in favour of Gradle's bundled default.
+- **`lombok.config` sets `lombok.addLombokGeneratedAnnotation`**, which is what keeps
+  generated getters, builders and `equals` out of the count. Without it the figure
+  drops and the gate fails for code nobody wrote.
+- A failing test skips `jacocoTestReport` (it depends on `test`). To read coverage from
+  a red run, `./gradlew jacocoTestReport -x test` rebuilds it from the existing
+  `build/jacoco/test.exec`. Without exec data (the Docker build's `-x test`) the gate
+  task skips itself rather than failing.
+
 ### @WebMvcTest setup
 
 `src/test/resources/application.yml` provides:
@@ -228,6 +253,50 @@ The build is configured with `-Dnet.bytebuddy.experimental=true` and the Mockito
 `@WebMvcTest` on controllers needs `@MockitoBean` for `CompanyService`, `RoleCheckSuccessHandler`, and `GroupsGrantedAuthoritiesMapper` (the latter two are referenced by `SecurityConfig`). Use `SecurityMockMvcRequestPostProcessors.oidcLogin()` to supply a test principal, with `.authorities(…)` to give it a role.
 
 `oidcLogin()` sets authorities directly and so bypasses the authorities mapper. To exercise the group-name-to-role translation together with the `hasRole` checks, import the real `GroupsGrantedAuthoritiesMapper` and run the claim through it to build the authorities — `RenamedGroupAuthorizationTest` does this, and is the regression guard for a deployment that renames its IdP groups.
+
+### Database tests: H2 or PostgreSQL
+
+`@DataJpaTest` runs on H2, which is right for tests of mapping and repository logic.
+A test whose subject is the database itself - a foreign key refusing, transaction
+semantics, the generated schema - uses `@PostgresDataJpaTest`
+(`src/test/java/de/ajm/manager/testing/`) instead, which starts PostgreSQL through
+Testcontainers as a `@ServiceConnection` bean. Today that is `CompanyDeletionSchemaTest`
+and `ApplicationLifecycleTest`. Rules that are easy to break:
+
+- **Without Docker these tests fail, they do not skip.** That is the opposite of
+  `DevServices` on purpose: falling back to H2 silently would hide exactly the
+  difference they exist to catch. The devcontainer (`docker-in-docker`) and CI
+  (`ubuntu-latest`) both have Docker.
+- **Do not put `driver-class-name` or `database-platform` back into the test
+  `application.yml`.** `@ServiceConnection` replaces URL and credentials only; a fixed
+  `H2Dialect` would stay in effect and send H2 SQL to PostgreSQL. Both are detected
+  from the URL.
+- **The image is `testing.postgres.image`** in the test `application.yml`
+  (`POSTGRES_TEST_IMAGE` overrides it), not a literal in code. Its default matches the
+  compose stacks; production's CNPG image is whatever `postgres.imageName` in the Helm
+  values says, or the operator's default when that is empty.
+- **Each distinct `@Import` set is its own context and its own container** (about 2 s
+  each). Keep extra imports uniform once there are more such tests.
+- **Test methods declared in an abstract base class lose the test transaction.** Spring
+  looks for the class-level `@Transactional` (which `@DataJpaTest` carries) on the
+  method's *declaring* class, so annotating only the subclass leaves each repository
+  call committing on its own.
+
+Differences observed between the two (details in
+`docs/plans/2026-10-13-testcontainers-postgres.md`): Hibernate maps `@Enumerated(STRING)`
+to a native `enum` type on H2 but to `varchar` plus a check constraint on PostgreSQL. The
+check constraint is not altered by production's `ddl-auto: update`. After a failed flush
+PostgreSQL aborts the transaction (`25P02`), and on both databases the session is
+unusable, because Hibernate re-runs the failed statement on the next auto-flush. A
+constraint violation reaches the caller as `DataIntegrityViolationException` only through
+a repository proxy; through the shared `EntityManager` it is Hibernate's own
+`ConstraintViolationException`. SQLState (`23503`) is the same on both; vendor error code,
+message text and the case of the constraint name are not.
+
+To verify the no-Docker failure, `DOCKER_HOST=…` is not enough:
+`~/.testcontainers.properties` caches the Unix-socket strategy, which finds
+`/var/run/docker.sock` anyway. Hide the socket instead
+(`unshare -m sh -c 'mount --bind /dev/null /var/run/docker.sock && ./gradlew test …'`).
 
 ### Job posting fixtures
 

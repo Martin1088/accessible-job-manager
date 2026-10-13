@@ -38,6 +38,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build --no-daemon
 
+      # Also on a red build: when the coverage gate fails, the report is what
+      # shows where. A failing test skips the report task, hence the warning.
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: jacoco-report
+          path: build/reports/jacoco/test/
+          if-no-files-found: warn
+
   frontend-tests:
     name: Angular unit tests (Karma)
     runs-on: ubuntu-latest

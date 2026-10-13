@@ -4,6 +4,7 @@
 
 plugins {
     id 'java-library'
+    id 'jacoco'
     id 'maven-publish'
     id 'org.springframework.boot' version '4.1.1'
 }
@@ -138,6 +139,45 @@ test {
         }
     }
 }
+
+/*
+ * Coverage. 0.8.15 is the first JaCoCo release that supports Java 26 class files
+ * officially; Gradle's bundled default only reads them experimentally.
+ *
+ * The gate sits a little below the line coverage measured under CI conditions -
+ * Gotenberg and Ollama unreachable, so the tests that need them skip, as they do
+ * on GitHub's runners. A local run with the dev services up reports more. Raise
+ * the minimum when coverage grows; lowering it should need a reason.
+ * lombok.config marks generated code @Generated, which JaCoCo leaves out.
+ */
+jacoco {
+    toolVersion = '0.8.15'
+}
+
+test {
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                minimum = 0.64
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
 
 def frontendDir = "$projectDir/AppClient"
 def staticDir = "$projectDir/src/main/resources/static"
