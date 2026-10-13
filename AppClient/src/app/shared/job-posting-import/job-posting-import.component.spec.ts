@@ -3,7 +3,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideTranslateService } from '@ngx-translate/core';
 
-import { ImportedPosting, JobPostingImportComponent } from './job-posting-import.component';
+import { ImportedPosting, JobPostingImportComponent, deadlineDate } from './job-posting-import.component';
 import { JobPostingImportStore } from '../../services/job-posting-import.store';
 import { expectNoAxeViolations } from '../../../testing/a11y';
 
@@ -85,15 +85,30 @@ describe('JobPostingImportComponent', () => {
       { title: null, company: null, location: null, employmentType: null });
     http.expectOne(r => r.url === '/api/posting/full-chain').flush(
       { company: { name: 'MetalBear', locations: [{ city: 'London', street: 'Hauptstr. 1' }], positions: [{ title: 'Backend Engineer', email: 'jobs@metalbear.co' }] },
-        sourceJobId: null, postedAt: null, deadline: null, employmentType: null });
+        sourceJobId: null, postedAt: null, deadline: '2026-10-31T23:59:59+02:00', employmentType: null });
     flushSnapshotCheck();
 
     component.submit();
 
     expect(emitted?.company.name).toBe('MetalBear');
+    expect(emitted?.company.positions[0].deadline).toBe('2026-10-31');
     expect(emitted?.company.positions[0].title).toBe('Backend Engineer');
     expect(emitted?.company.locations[0].city).toBe('London');
     expect(emitted?.sourceJobUrl).toBe('https://jobs.example.com/42');
+  });
+
+  describe('deadlineDate()', () => {
+    it('keeps a plain date', () => expect(deadlineDate('2026-09-30')).toBe('2026-09-30'));
+
+    it('keeps the posting\'s own day from a timestamp, whatever the browser\'s zone', () =>
+      expect(deadlineDate('2026-10-31T23:59:59+02:00')).toBe('2026-10-31'));
+
+    it('drops what it cannot read rather than guessing', () => {
+      expect(deadlineDate('31.10.2026')).toBeUndefined();
+      expect(deadlineDate('2026-10-31x')).toBeUndefined();
+      expect(deadlineDate('')).toBeUndefined();
+      expect(deadlineDate(null)).toBeUndefined();
+    });
   });
 
   it('emits nothing when there is no result to submit', () => {

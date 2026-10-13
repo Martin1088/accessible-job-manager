@@ -1,17 +1,18 @@
 import {
   ChangeDetectionStrategy, Component, ElementRef, Injector, OnDestroy, OnInit,
-  afterNextRender, computed, inject, signal, viewChild,
+  afterNextRender, booleanAttribute, computed, inject, input, signal, viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
+import { Subscription, catchError, forkJoin, of } from 'rxjs';
 
 import { HttpFailure, describeHttpFailure } from '../../core/http-error';
 import { DEMO_MODE } from '../../demo/demo-mode';
 import { CvMatchResult, PostingSource, SkillAssessment, SkillStatus } from '../../model/cv-match';
-import { Document } from '../../model/document';
+import { DefaultDocument, Document, defaultFor, uiToLetterLanguage } from '../../model/document';
 import { CvMatchService } from '../../services/cv-match.service';
 import { DocumentService } from '../../services/document.service';
 import { ErrorTextComponent } from '../../shared/error-text/error-text.component';
@@ -37,10 +38,15 @@ const GROUP_ORDER: readonly SkillStatus[] = ['MISSING', 'PARTIAL', 'MET'];
  *
  * Built as the demo's showcase first: only `DemoBackend` answers
  * `/api/matching` so far.
+ *
+ * Two places show it. As its own page (`/matching`) it is the page's `<main>`
+ * and `<h1>`. `embedded` puts it on the demo's user home instead, as one more
+ * sheet under the posting import: no second `<main>`, and every heading one
+ * level deeper, so the home page's outline stays a single tree.
  */
 @Component({
   selector: 'app-cv-match',
-  imports: [TranslatePipe, RouterLink, ErrorTextComponent],
+  imports: [TranslatePipe, RouterLink, NgTemplateOutlet, ErrorTextComponent],
   templateUrl: './cv-match.component.html',
   styleUrl: './cv-match.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +59,9 @@ export class CvMatchComponent implements OnInit, OnDestroy {
   private readonly translate = inject(TranslateService);
   private readonly injector = inject(Injector);
   readonly demoMode = inject(DEMO_MODE);
+
+  /** On the home page rather than a page of its own - see the class comment. */
+  readonly embedded = input(false, { transform: booleanAttribute });
 
   private readonly resultHeading = viewChild<ElementRef<HTMLElement>>('resultHeading');
   private running?: Subscription;
@@ -110,15 +119,31 @@ export class CvMatchComponent implements OnInit, OnDestroy {
   readonly selectedCv = computed(() => this.cvs()?.find(cv => cv.id === this.cvId()) ?? null);
 
   ngOnInit(): void {
-    this.documents.getAll('CV').subscribe({
-      next: cvs => {
-        // Newest first, and the newest is preselected: it is the one most likely current.
+    forkJoin({
+      cvs: this.documents.getAll('CV'),
+      // Only a preselection: without the defaults the newest CV is chosen, as before.
+      defaults: this.documents.getDefaults().pipe(catchError(() => of([] as DefaultDocument[]))),
+    }).subscribe({
+      next: ({ cvs, defaults }) => {
+        // Newest first: the list reads from the one most likely current.
         const sorted = [...cvs].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
         this.cvs.set(sorted);
-        this.cvId.set(sorted[0]?.id ?? null);
+        this.cvId.set(this.preselect(sorted, defaults));
       },
       error: () => this.cvsError.set(true),
     });
+  }
+
+  /**
+   * The user's default CV in the interface language, else any default CV, else
+   * the newest. The interface language is the best guess there is before a
+   * posting has been read - the posting's own language is only known afterwards.
+   */
+  private preselect(cvs: Document[], defaults: DefaultDocument[]): string | null {
+    const present = (id: string | null) => (id && cvs.some(cv => cv.id === id) ? id : null);
+    const inInterfaceLanguage = defaultFor(defaults, 'CV', uiToLetterLanguage(this.translate.currentLang()));
+    const anyDefault = defaults.find(d => d.type === 'CV')?.document.id ?? null;
+    return present(inInterfaceLanguage) ?? present(anyDefault) ?? cvs[0]?.id ?? null;
   }
 
   ngOnDestroy(): void {

@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -87,6 +88,23 @@ class CompanyServiceTest {
 
         assertThat(result.getId()).isEqualTo(42L);
         assertThat(result.getName()).isEqualTo("Acme");
+    }
+
+    @Test
+    void createCompany_keepsThePositionsDeadline() {
+        CompanyPositionDto position = new CompanyPositionDto();
+        position.setTitle("Developer");
+        position.setDeadline(LocalDate.of(2026, 9, 30));
+        CompanyDto dto = new CompanyDto();
+        dto.setName("Acme");
+        dto.setPositions(List.of(position));
+
+        when(repo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        CompanyDto result = service.createCompany(dto, "u1");
+
+        verify(repo).save(argThat(c -> LocalDate.of(2026, 9, 30).equals(c.getPositions().getFirst().getDeadline())));
+        assertThat(result.getPositions().getFirst().getDeadline()).isEqualTo(LocalDate.of(2026, 9, 30));
     }
 
     // ── deleteCompany ─────────────────────────────────────────────────────────

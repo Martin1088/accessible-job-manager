@@ -7,7 +7,7 @@ import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 
 import { CvMatchComponent } from './cv-match.component';
 import { CvMatchResult, SkillAssessment } from '../../model/cv-match';
-import { Document } from '../../model/document';
+import { DefaultDocument, Document } from '../../model/document';
 import { DEMO_MODE } from '../../demo/demo-mode';
 import { expectNoAxeViolations } from '../../../testing/a11y';
 
@@ -56,15 +56,25 @@ describe('CvMatchComponent', () => {
 
   // Injecting instantiates the test module, so it waits until a test has had
   // its chance to override a provider (the demo case below).
-  function create(cvs: Document[] = [cv()]) {
+  function create(cvs: Document[] = [cv()], embedded = false, defaults: DefaultDocument[] | 'error' = []) {
     http = TestBed.inject(HttpTestingController);
     TestBed.inject(TranslateService).use('en');
     const fixture = TestBed.createComponent(CvMatchComponent);
+    fixture.componentRef.setInput('embedded', embedded);
     fixture.detectChanges();
     http.expectOne(r => r.url === '/api/documents' && r.params.get('type') === 'CV').flush(cvs);
+    const defaultsRequest = http.expectOne('/api/documents/defaults');
+    if (defaults === 'error') {
+      defaultsRequest.flush(null, { status: 500, statusText: 'Server Error' });
+    } else {
+      defaultsRequest.flush(defaults);
+    }
     fixture.detectChanges();
     return fixture;
   }
+
+  const defaultCv = (document: Document): DefaultDocument =>
+    ({ type: 'CV', language: document.language, document });
 
   function runWithUrl(fixture: ReturnType<typeof create>, body: CvMatchResult = result()) {
     fixture.componentInstance.postingUrl.set('https://jobs.example/1');
@@ -78,6 +88,28 @@ describe('CvMatchComponent', () => {
   it('preselects the newest CV', () => {
     const fixture = create([cv({ id: 'old', createdAt: '2025-01-01' }), cv({ id: 'new', createdAt: '2026-06-01' })]);
     expect(fixture.componentInstance.cvId()).toBe('new');
+  });
+
+  describe('preselection from the default CVs', () => {
+    const older = cv({ id: 'de', language: 'GERMAN', createdAt: '2025-01-01' });
+    const olderEn = cv({ id: 'en', language: 'ENGLISH', createdAt: '2025-02-01' });
+    const newest = cv({ id: 'new', language: 'GERMAN', createdAt: '2026-06-01' });
+
+    it('takes the default in the interface language over the newest', () => {
+      const fixture = create([older, olderEn, newest], false, [defaultCv(older), defaultCv(olderEn)]);
+      expect(fixture.componentInstance.cvId()).toBe('en');
+    });
+
+    it('takes a default in another language when there is none in the interface language', () => {
+      const fixture = create([older, newest], false, [defaultCv(older)]);
+      expect(fixture.componentInstance.cvId()).toBe('de');
+    });
+
+    it('falls back to the newest when the defaults cannot be read', () => {
+      const fixture = create([older, newest], false, 'error');
+      expect(fixture.componentInstance.cvId()).toBe('new');
+      expect(fixture.componentInstance.cvsError()).toBeFalse();
+    });
   });
 
   it('links to the documents page when there is no CV, and cannot run', () => {
@@ -172,6 +204,43 @@ describe('CvMatchComponent', () => {
     const fixture = create();
     runWithUrl(fixture);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('MATCHING.DEMO_SAMPLE');
+  });
+
+  describe('embedded on the home page', () => {
+    const headings = (el: HTMLElement, selector: string) =>
+      Array.from(el.querySelectorAll(selector)).map(h => h.id);
+
+    it('is a section under the page\'s own h1, not a second main', () => {
+      const el: HTMLElement = create([cv()], true).nativeElement;
+      expect(el.querySelector('main')).toBeNull();
+      expect(el.querySelector('h1')).toBeNull();
+      const section = el.querySelector('section.match-sheet');
+      expect(section?.getAttribute('aria-labelledby')).toBe('match-heading');
+      expect(el.querySelector('h2#match-heading')).not.toBeNull();
+    });
+
+    it('puts every heading one level deeper', () => {
+      const fixture = create([cv()], true);
+      runWithUrl(fixture);
+      const el: HTMLElement = fixture.nativeElement;
+      expect(headings(el, 'h2')).toEqual(['match-heading']);
+      expect(headings(el, 'h3')).toEqual(['match-posting-heading', 'match-cv-heading', 'match-result-heading']);
+      expect(headings(el, 'h4')).toEqual(['match-group-MISSING', 'match-group-PARTIAL', 'match-group-MET']);
+    });
+
+    it('still moves focus to the result heading', async () => {
+      const fixture = create([cv()], true);
+      runWithUrl(fixture);
+      await fixture.whenStable();
+      expect(document.activeElement?.id).toBe('match-result-heading');
+      expect(document.activeElement?.tagName).toBe('H3');
+    });
+
+    it('has no axe-detectable accessibility violations with a result', async () => {
+      const fixture = create([cv()], true);
+      runWithUrl(fixture);
+      await expectNoAxeViolations(fixture);
+    });
   });
 
   it('has no axe-detectable accessibility violations before a check', async () => {

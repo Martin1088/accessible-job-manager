@@ -18,18 +18,29 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- A position has an application deadline. The deadline a job posting states
+  (`validThrough`) is carried from the import into the company form, can be edited
+  there, and is shown in the position's details and copied along with an advisor's
+  suggestion. It is stored in a new `date` column, `application_deadline`; the old,
+  never-written `deadline` timestamp column on `company_positions` can be dropped by
+  hand (`ALTER TABLE company_positions DROP COLUMN deadline;`).
 - A "Check my fit" page (`/matching`, linked from the home page) holds one of the
   user's CVs against a job posting and lists, requirement by requirement, what the CV
   covers and which skills are missing, each with the posting's wording, an assessment
   and a suggestion. First draft for the demo only: the demo answers with a fixed
-  example result, and the backend for `POST /api/matching` is not built yet.
+  example result, and the backend for `POST /api/matching` is not built yet. In the
+  demo the check sits directly on the home page, under the posting import, with the
+  posting and the CV side by side.
 - The new-company form has a "Create and apply" button next to "Create": it saves the company
   and opens the application form for its first position.
 - A document can be marked as the default CV, certificate or cover letter template for
   its language - one default of each per language (`GET /api/documents/defaults`,
   `PUT`/`DELETE /api/documents/{id}/default`). Deleting the document, or changing its
-  type or language, removes it as a default. The interface for choosing defaults is
-  not built yet.
+  type or language, removes it as a default. On the Documents page each CV,
+  certificate and Word template has a "Make default" / "Remove default" action and a
+  Default column. The default CV in the interface language is preselected when
+  checking your fit for a job, and the default Word template in the language a
+  position is applied in is preselected in the applications' cover letter picker.
 - In Companies and Applications, a company's name now opens its details: locations,
   contact, email, website, how and in which language to apply, and notes. Only the
   fields that are filled in are shown.

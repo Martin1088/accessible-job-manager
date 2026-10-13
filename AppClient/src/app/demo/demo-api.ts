@@ -1,6 +1,6 @@
 import { Application } from '../model/application';
 import { Company } from '../model/company';
-import { Document, DocumentType } from '../model/document';
+import { DEFAULTABLE_TYPES, DefaultDocument, Document, DocumentType } from '../model/document';
 import { HtmlLetterTemplate } from '../model/cover-letter';
 import { Relationship } from '../model/relationship';
 import { UserPreferences } from '../model/user-preferences';
@@ -228,8 +228,13 @@ route('POST', '/api/documents/upload', (req, db) => {
 route('PATCH', '/api/documents/:id', (req, db) => {
   const id = req.params[0];
   const change = req.body as Partial<Document>;
+  const before = db.documents().find(d => d.id === id);
   let updated: Document | undefined;
   db.documents.update(all => all.map(d => (d.id === id ? (updated = { ...d, ...change }) : d)));
+  // As on the server: a document that changes type or language no longer fits its slot.
+  if (before && updated && (before.type !== updated.type || before.language !== updated.language)) {
+    vacateDefault(db, id);
+  }
   return updated;
 });
 
@@ -237,8 +242,39 @@ route('DELETE', '/api/documents/:id', (req, db) => {
   const id = req.params[0];
   db.documents.update(all => all.filter(d => d.id !== id));
   db.shares.update(all => all.filter(s => s.documentId !== id));
+  vacateDefault(db, id);
   return null;
 });
+
+// Defaults: one document per type and language, as the server's unique constraint keeps it.
+route('GET', '/api/documents/defaults', (_req, db) => {
+  const documents = db.documents();
+  return db.defaults().flatMap(slot => {
+    const document = documents.find(d => d.id === slot.documentId);
+    return document ? [{ type: slot.type, language: slot.language, document } satisfies DefaultDocument] : [];
+  });
+});
+
+route('PUT', '/api/documents/:id/default', (req, db) => {
+  const document = db.documents().find(d => d.id === req.params[0]);
+  // The page only offers the action for these types; the server answers anything else with a 400.
+  if (!document || !DEFAULTABLE_TYPES.includes(document.type)) return null;
+  const slot = { type: document.type, language: document.language, documentId: document.id };
+  db.defaults.update(all => [
+    ...all.filter(d => !(d.type === slot.type && d.language === slot.language)),
+    slot,
+  ]);
+  return { type: slot.type, language: slot.language, document } satisfies DefaultDocument;
+});
+
+route('DELETE', '/api/documents/:id/default', (req, db) => {
+  vacateDefault(db, req.params[0]);
+  return null;
+});
+
+function vacateDefault(db: DemoDb, documentId: string): void {
+  db.defaults.update(all => all.filter(d => d.documentId !== documentId));
+}
 
 route('GET', '/api/documents/:id/download', () => SAMPLE_PDF);
 

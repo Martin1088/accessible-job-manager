@@ -125,6 +125,12 @@ section {
   color: var(--ink-soft);
 }
 
+// Holds the place of the deferred CV matching sheet, so `on viewport` has
+// something to watch and the page does not jump when it arrives.
+.match-placeholder {
+  min-block-size: 24rem;
+}
+
 // --- Focus: one ring for every control on the sheet ----
 
 .quick-nav a:focus-visible {

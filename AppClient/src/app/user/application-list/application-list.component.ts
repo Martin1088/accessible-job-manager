@@ -11,7 +11,8 @@ import { Application, ApplicationRequest, ApplicationStatus } from '../../model/
 import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
-import { Document } from '../../model/document';
+import { DefaultDocument, Document, defaultFor } from '../../model/document';
+import { DocumentService } from '../../services/document.service';
 import { byMostRecent } from '../../shared/sort';
 import { Company, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
@@ -64,6 +65,9 @@ export class ApplicationListComponent implements OnInit {
   wordTemplates: TemplateOption[] = [];
   htmlTemplates: TemplateOption[] = [];
   selectedTemplate: Record<number, TemplateOption | undefined> = {};
+  /** The user's default documents; their cover letter templates preselect the picker. */
+  private defaults: DefaultDocument[] = [];
+  private readonly documentService = inject(DocumentService);
   downloading: Record<number, boolean> = {};
   previewing: Record<number, boolean> = {};
   preview: { company: string; template: string; text: string } | null = null;
@@ -188,6 +192,7 @@ export class ApplicationListComponent implements OnInit {
           company.positions
             .filter(p => p.id != null)
             .map(position => [position.id!, { company, position }] as const)));
+        this.preselectTemplates();
       },
       error: () => {},
     });
@@ -513,13 +518,40 @@ export class ApplicationListComponent implements OnInit {
   // written with either, so one being unavailable must not empty the whole picker.
   private loadTemplates(): void {
     this.http.get<Document[]>('/api/documents', { params: { type: 'COVER_LETTER_TEMPLATE' } }).subscribe({
-      next: (docs) => this.wordTemplates = docs.map(
-        doc => ({ id: doc.id, label: doc.label, provider: 'WORD' })),
+      next: (docs) => {
+        this.wordTemplates = docs.map(doc => ({ id: doc.id, label: doc.label, provider: 'WORD' }));
+        this.preselectTemplates();
+      },
+    });
+    // Quiet on failure: without defaults nothing is preselected, as before.
+    this.documentService.getDefaults().subscribe({
+      next: (defaults) => {
+        this.defaults = defaults;
+        this.preselectTemplates();
+      },
+      error: () => {},
     });
     this.coverLetterService.listTemplates().subscribe({
       next: (letters) => this.htmlTemplates = letters.map(
         letter => ({ id: letter.id, label: letter.name, provider: 'HTML' })),
     });
+  }
+
+  /**
+   * Fills an untouched picker with the default Word template for the language the
+   * position is applied in. Runs after each of the four loads it depends on, since
+   * they arrive in any order; a row the user has chosen for is never changed, and
+   * a position without a language gets no guess.
+   */
+  private preselectTemplates(): void {
+    for (const application of this.applications) {
+      if (application.id == null || this.selectedTemplate[application.id] !== undefined) continue;
+      const language = this.positions.get(application.companyPositionId)?.position.applyLanguage;
+      if (!language) continue;
+      const id = defaultFor(this.defaults, 'COVER_LETTER_TEMPLATE', language);
+      const template = this.wordTemplates.find(t => t.id === id);
+      if (template) this.selectedTemplate[application.id] = template;
+    }
   }
 
   private loadApplications(): void {
@@ -529,6 +561,7 @@ export class ApplicationListComponent implements OnInit {
         this.rows = this.toRows(data);
         this.statusDraft = {};
         data.forEach(a => { if (a.id != null) this.statusDraft[a.id] = a.status; });
+        this.preselectTemplates();
       },
       error: () => this.errorMessage = this.translate.instant('APPLICATIONS.ERROR_LOAD'),
     });

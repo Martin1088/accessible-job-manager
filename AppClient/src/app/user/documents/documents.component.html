@@ -14,6 +14,8 @@
     <p role="alert" class="notice notice--error">{{ errorMessage }}</p>
   }
 
+  <p class="hint">{{ 'DOCUMENTS.DEFAULTS_HELP' | translate }}</p>
+
   @if (showUploadForm) {
     <section class="upload-form" aria-labelledby="upload-heading">
       <h2 id="upload-heading" class="section-tab">{{ (editingId ? 'DOCUMENTS.EDIT_TEMPLATE_HEADING' : 'DOCUMENTS.NEW_TEMPLATE_HEADING') | translate }}</h2>

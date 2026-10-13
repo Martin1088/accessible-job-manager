@@ -5,12 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { catchError, forkJoin, of } from 'rxjs';
+import { Observable, catchError, forkJoin, of, switchMap } from 'rxjs';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { DocumentService, SharedWithMeDocument } from '../../services/document.service';
 import { RelationshipService } from '../../services/relationship.service';
-import { Document, DocumentLanguage, DocumentType } from '../../model/document';
+import { DEFAULTABLE_TYPES, DefaultDocument, Document, DocumentLanguage, DocumentType } from '../../model/document';
 import { HtmlLetterTemplate, LayoutLetterKey } from '../../model/cover-letter';
 import { Relationship } from '../../model/relationship';
 import { byMostRecent } from '../../shared/sort';
@@ -39,6 +39,13 @@ const LAYOUT_KEY: Record<LayoutLetterKey, string> = {
   DIN5008_COVER_LETTER_A: 'DOCUMENTS.LAYOUT_DIN5008_A',
   DIN5008_COVER_LETTER_B: 'DOCUMENTS.LAYOUT_DIN5008_B',
   DIN5008_CV:             'DOCUMENTS.LAYOUT_DIN5008_CV',
+};
+
+/** How a default's slot is named in a sentence: "the default for CVs (German)". */
+const SLOT_KEY: Partial<Record<DocumentType, string>> = {
+  CV:                    'DOCUMENTS.SLOT_CV',
+  CERTIFICATE:           'DOCUMENTS.SLOT_CERTIFICATE',
+  COVER_LETTER_TEMPLATE: 'DOCUMENTS.SLOT_COVER_LETTER_TEMPLATE',
 };
 
 /** Columns an HTML template has no equivalent for; it is edited, never uploaded. */
@@ -76,6 +83,8 @@ function monthOf(iso: string | null | undefined): number | null {
 export class DocumentsComponent implements OnInit {
 
   private documents: Document[] = [];
+  /** Ids of the documents that fill a default slot. */
+  private defaultIds = new Set<string>();
   private htmlTemplates: HtmlLetterTemplate[] = [];
   allRows: any[] = [];
   errorMessage = '';
@@ -112,6 +121,7 @@ export class DocumentsComponent implements OnInit {
     { label: 'DOCUMENTS.COL_FILENAME', field: 'filename',     sortable: true },
     { label: 'DOCUMENTS.COL_LANGUAGE', field: 'languageLabel', sortable: true },
     { label: 'DOCUMENTS.COL_UPLOADED', field: 'createdAt',    sortable: true },
+    { label: 'DOCUMENTS.COL_DEFAULT',  field: 'defaultLabel', sortable: true },
   ];
 
   documentActions: TableAction[] = [
@@ -130,6 +140,7 @@ export class DocumentsComponent implements OnInit {
       ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_DELETE_ARIA', { label: row.label }),
       handler: (row) => this.deleteDocument(row),
     },
+    ...this.defaultActions(),
   ];
 
   sharedWithMeColumns: TableColumn[] = [
@@ -176,6 +187,7 @@ export class DocumentsComponent implements OnInit {
     { label: 'DOCUMENTS.COL_FILENAME', field: 'filename',     sortable: true  },
     { label: 'DOCUMENTS.COL_LANGUAGE', field: 'languageLabel', sortable: true },
     { label: 'DOCUMENTS.COL_UPLOADED', field: 'createdAt',    sortable: true  },
+    { label: 'DOCUMENTS.COL_DEFAULT',  field: 'defaultLabel', sortable: true  },
   ];
 
   // Edit and delete act on the uploaded file, which only a Word row has; an HTML
@@ -213,6 +225,7 @@ export class DocumentsComponent implements OnInit {
       handler: (row) => this.deleteHtmlTemplate(row),
       visible: (row) => row.kind === 'HTML',
     },
+    ...this.defaultActions(),
   ];
 
   private readonly router = inject(Router);
@@ -320,7 +333,9 @@ export class DocumentsComponent implements OnInit {
       templates: this.coverLetters.listTemplates().pipe(catchError(() => of(null))),
       sharedWithMe: this.documentService.getSharedWithMe().pipe(catchError(() => of([]))),
       reviewers: this.relationships.mine().pipe(catchError(() => of([]))),
-    }).subscribe(({ documents, templates, sharedWithMe, reviewers }) => {
+      // Without the defaults the tables still work; they just show none.
+      defaults: this.documentService.getDefaults().pipe(catchError(() => of([] as DefaultDocument[]))),
+    }).subscribe(({ documents, templates, sharedWithMe, reviewers, defaults }) => {
       this.errorMessage = documents && templates
         ? ''
         : this.translate.instant('DOCUMENTS.ERROR_LOAD');
@@ -328,6 +343,7 @@ export class DocumentsComponent implements OnInit {
       this.htmlTemplates = templates ?? [];
       this.sharedWithMe = sharedWithMe;
       this.reviewers = reviewers.filter(r => r.kind === 'REVIEWER' && r.status === 'ACTIVE');
+      this.setDefaults(defaults);
       this.rebuildRows();
     });
   }
@@ -380,6 +396,10 @@ export class DocumentsComponent implements OnInit {
       createdAt:     d.createdAt ? d.createdAt.substring(0, 10) : NOT_APPLICABLE,
       rawCreatedAt:  d.createdAt ?? null,
       rawChangedAt:  d.updatedAt ?? d.createdAt ?? null,
+      docType:       d.type,
+      defaultable:   DEFAULTABLE_TYPES.includes(d.type),
+      isDefault:     this.defaultIds.has(d.id),
+      defaultLabel:  this.defaultIds.has(d.id) ? this.translate.instant('DOCUMENTS.DEFAULT_MARK') : '',
     };
   }
 
@@ -402,6 +422,10 @@ export class DocumentsComponent implements OnInit {
         createdAt:     changedAt ? changedAt.substring(0, 10) : NOT_APPLICABLE,
         rawCreatedAt:  changedAt ?? null,
         rawChangedAt:  changedAt ?? null,
+        // Not a stored document, so it cannot fill a default slot.
+        defaultable:   false,
+        isDefault:     false,
+        defaultLabel:  '',
       };
     });
   }
@@ -587,5 +611,67 @@ export class DocumentsComponent implements OnInit {
     this.pendingLabel = '';
     this.pendingLanguage = 'ENGLISH';
     this.uploadMode = 'TEMPLATE';
+  }
+
+  // --- Defaults ---------------------------------------------------------
+
+  /**
+   * "Make default" and "Remove default", shown one at a time. Both tables carry the
+   * pair; `defaultable` keeps them off HTML templates and other PDFs.
+   */
+  private defaultActions(): TableAction[] {
+    return [
+      {
+        label: 'DOCUMENTS.ACTION_MAKE_DEFAULT',
+        ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_MAKE_DEFAULT_ARIA', this.slotParams(row)),
+        handler: (row) => this.makeDefault(row),
+        visible: (row) => row.defaultable && !row.isDefault,
+      },
+      {
+        label: 'DOCUMENTS.ACTION_CLEAR_DEFAULT',
+        ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_CLEAR_DEFAULT_ARIA', this.slotParams(row)),
+        handler: (row) => this.clearDefault(row),
+        visible: (row) => row.isDefault,
+      },
+    ];
+  }
+
+  makeDefault(row: any): void {
+    this.changeDefault(this.documentService.makeDefault(row.id),
+      this.translate.instant('DOCUMENTS.DEFAULT_SET', this.slotParams(row)));
+  }
+
+  clearDefault(row: any): void {
+    this.changeDefault(this.documentService.clearDefault(row.id),
+      this.translate.instant('DOCUMENTS.DEFAULT_CLEARED', { label: row.label }));
+  }
+
+  /**
+   * Re-reads every slot afterwards rather than patching one row: making a document
+   * the default silently takes the slot from whichever document held it before.
+   */
+  private changeDefault(change: Observable<unknown>, announcement: string): void {
+    this.errorMessage = '';
+    change.pipe(switchMap(() => this.documentService.getDefaults())).subscribe({
+      next: (defaults) => {
+        this.setDefaults(defaults);
+        this.rebuildRows();
+        this.announcer.announce(announcement, 'polite');
+      },
+      error: () => this.errorMessage = this.translate.instant('DOCUMENTS.ERROR_DEFAULT'),
+    });
+  }
+
+  private setDefaults(defaults: DefaultDocument[]): void {
+    this.defaultIds = new Set(defaults.map(d => d.document.id));
+  }
+
+  private slotParams(row: any): { label: string; slot: string; language: string } {
+    const slot = SLOT_KEY[row.docType as DocumentType];
+    return {
+      label: row.label,
+      slot: slot ? this.translate.instant(slot) : '',
+      language: row.languageLabel,
+    };
   }
 }

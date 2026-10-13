@@ -3,11 +3,13 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { AuthService, UserMe } from '../../core/auth.service';
+import { DEMO_MODE } from '../../demo/demo-mode';
+import { CvMatchComponent } from '../cv-match/cv-match.component';
 import { ImportedPosting, JobPostingImportComponent } from '../../shared/job-posting-import/job-posting-import.component';
 
 @Component({
   selector: 'app-home',
-  imports: [TranslatePipe, RouterLink, JobPostingImportComponent],
+  imports: [TranslatePipe, RouterLink, JobPostingImportComponent, CvMatchComponent],
   templateUrl: './home.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss'
@@ -15,6 +17,12 @@ import { ImportedPosting, JobPostingImportComponent } from '../../shared/job-pos
 export class HomeComponent implements OnInit {
   profile: UserMe | null = null;
   profileError = false;
+
+  /**
+   * The demo shows the CV matching right here; every other build links to its
+   * page. Only `DemoBackend` answers `/api/matching` so far.
+   */
+  readonly demoMode = inject(DEMO_MODE);
 
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);

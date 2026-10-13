@@ -46,6 +46,19 @@ interface JobPostingFullChain {
   employmentType: string | null;
 }
 
+/**
+ * The day a posting's deadline falls on, as `yyyy-MM-dd`, or `undefined`.
+ *
+ * schema.org's `validThrough` arrives as a date or as a full timestamp with an
+ * offset (`2026-10-31T23:59:59+02:00`). The leading date is the posting's own
+ * calendar day - converting through `Date` would move it into the browser's
+ * time zone. Anything else is dropped rather than guessed; the form field
+ * stays empty and can be typed in.
+ */
+export function deadlineDate(value: string | null | undefined): string | undefined {
+  return value?.trim().match(/^\d{4}-\d{2}-\d{2}(?=$|T)/)?.[0];
+}
+
 /** What a finished import hands to whichever page hosted it. */
 export interface ImportedPosting {
   company: Company;
@@ -502,6 +515,7 @@ export class JobPostingImportComponent implements OnDestroy {
         contactGender: this.mapGender(fcPosition?.contactGender),
         contactTitle: fcPosition?.contactTitle ?? undefined,
         contactLastName: fcPosition?.contactLastName ?? undefined,
+        deadline: deadlineDate(this.fullChainResult?.deadline),
         email: fcPosition?.email ?? undefined,
         // If neither extraction found a company website, fall back to the job
         // posting URL the user searched for rather than leaving it blank. `||`,

@@ -11,7 +11,7 @@ import { CoverLetterService } from '../../services/cover-letter.service';
 import { CompanyService } from '../../services/company.service';
 import { Company } from '../../model/company';
 import { Application } from '../../model/application';
-import { Document } from '../../model/document';
+import { DefaultDocument, Document } from '../../model/document';
 import { HtmlLetterTemplate } from '../../model/cover-letter';
 import { expectNoAxeViolations } from '../../../testing/a11y';
 
@@ -52,7 +52,11 @@ describe('ApplicationListComponent', () => {
     return anchor;
   }
 
+  /** What the company list answers with; a test may swap it before creating its own instance. */
+  let companies: Company[] = [COMPANY];
+
   beforeEach(async () => {
+    companies = [COMPANY];
     applicationServiceSpy = jasmine.createSpyObj('ApplicationService', ['getAll', 'create', 'update', 'delete']);
     applicationServiceSpy.getAll.and.returnValue(of([APPLICATION]));
     applicationServiceSpy.update.and.returnValue(of(APPLICATION));
@@ -66,7 +70,7 @@ describe('ApplicationListComponent', () => {
       providers: [
         { provide: ApplicationService, useValue: applicationServiceSpy },
         { provide: CoverLetterService, useValue: coverLetterServiceSpy },
-        { provide: CompanyService, useValue: { getAll: () => of([COMPANY]) } },
+        { provide: CompanyService, useValue: { getAll: () => of(companies) } },
         { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
         { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
         provideTranslateService({ fallbackLang: 'en' }),
@@ -232,6 +236,47 @@ describe('ApplicationListComponent', () => {
 
     component.selectedTemplate[7] = component.wordTemplates[0];
     expect(component.supportsWord(7)).toBeTrue();
+  });
+
+  describe('preselecting the default Word template', () => {
+    const OTHER_TEMPLATE = { id: 'word-2', label: 'Other .docx' } as Document;
+    const germanDefault: DefaultDocument = {
+      type: 'COVER_LETTER_TEMPLATE', language: 'GERMAN', document: WORD_TEMPLATE,
+    };
+
+    /** A fresh instance whose position is applied for in `language`. */
+    function createFor(language: 'GERMAN' | 'ENGLISH' | undefined, defaults: DefaultDocument[]) {
+      companies = [{ ...COMPANY, positions: [{ ...COMPANY.positions[0], applyLanguage: language }] }];
+      const own = TestBed.createComponent(ApplicationListComponent);
+      own.detectChanges();
+      // The instance from the outer beforeEach asked too; answer the newest requests.
+      httpMock.match(r => r.url === '/api/documents').at(-1)!.flush([OTHER_TEMPLATE, WORD_TEMPLATE]);
+      httpMock.match('/api/documents/defaults').at(-1)!.flush(defaults);
+      own.detectChanges();
+      return own.componentInstance;
+    }
+
+    it('picks the default template in the language the position is applied in', () => {
+      const list = createFor('GERMAN', [germanDefault]);
+      expect(list.selectedTemplate[APPLICATION.id!]?.id).toBe('word-1');
+    });
+
+    it('guesses nothing for a position without a language, or a language without a default', () => {
+      expect(createFor(undefined, [germanDefault]).selectedTemplate[APPLICATION.id!]).toBeUndefined();
+      expect(createFor('ENGLISH', [germanDefault]).selectedTemplate[APPLICATION.id!]).toBeUndefined();
+    });
+
+    it('never replaces a template the user picked', () => {
+      companies = [{ ...COMPANY, positions: [{ ...COMPANY.positions[0], applyLanguage: 'GERMAN' }] }];
+      const own = TestBed.createComponent(ApplicationListComponent);
+      own.detectChanges();
+      httpMock.match(r => r.url === '/api/documents').at(-1)!.flush([OTHER_TEMPLATE, WORD_TEMPLATE]);
+      const chosen = own.componentInstance.wordTemplates[0];
+      own.componentInstance.selectedTemplate[APPLICATION.id!] = chosen;
+      // The defaults arrive after the user has already chosen.
+      httpMock.match('/api/documents/defaults').at(-1)!.flush([germanDefault]);
+      expect(own.componentInstance.selectedTemplate[APPLICATION.id!]).toBe(chosen);
+    });
   });
 
   it('has no axe-detectable accessibility violations', async () => {

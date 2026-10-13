@@ -1,71 +1,95 @@
-<main id="main-content" tabindex="-1">
-  <h1>{{ 'MATCHING.TITLE' | translate }}</h1>
-  <p class="lead">{{ 'MATCHING.LEAD' | translate }}</p>
+<!-- One body, two frames: a page of its own, or a sheet on the demo's user home.
+     Embedded, every heading sits one level deeper under the home page's own h1. -->
+@if (embedded()) {
+  <section class="match-sheet" aria-labelledby="match-heading">
+    <h2 id="match-heading" class="section-tab">{{ 'MATCHING.TITLE' | translate }}</h2>
+    <p class="lead">{{ 'MATCHING.LEAD' | translate }}</p>
+    <ng-container [ngTemplateOutlet]="body" />
+  </section>
+} @else {
+  <main id="main-content" tabindex="-1">
+    <h1>{{ 'MATCHING.TITLE' | translate }}</h1>
+    <p class="lead">{{ 'MATCHING.LEAD' | translate }}</p>
+    <ng-container [ngTemplateOutlet]="body" />
+  </main>
+}
 
+<ng-template #body>
   <form class="match-form" (submit)="run($event)" novalidate>
 
-    <!-- The posting: a link, or its text where the link cannot be read. -->
-    <section class="sheet" aria-labelledby="match-posting-heading">
-      <h2 id="match-posting-heading" class="section-tab">{{ 'MATCHING.POSTING_HEADING' | translate }}</h2>
-
-      <fieldset class="choice">
-        <legend>{{ 'MATCHING.SOURCE_LEGEND' | translate }}</legend>
-        <label class="choice__option">
-          <input type="radio" name="match-source" value="url"
-            [checked]="sourceKind() === 'url'" (change)="sourceKind.set('url')">
-          {{ 'MATCHING.SOURCE_URL' | translate }}
-        </label>
-        <label class="choice__option">
-          <input type="radio" name="match-source" value="text"
-            [checked]="sourceKind() === 'text'" (change)="sourceKind.set('text')">
-          {{ 'MATCHING.SOURCE_TEXT' | translate }}
-        </label>
-      </fieldset>
-
-      @if (sourceKind() === 'url') {
-        <div class="field">
-          <label for="match-url">{{ 'MATCHING.URL_LABEL' | translate }}</label>
-          <input id="match-url" type="url" autocomplete="url" aria-required="true"
-            [value]="postingUrl()" (input)="postingUrl.set($any($event.target).value)"
-            [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate">
-        </div>
-      } @else {
-        <div class="field">
-          <label for="match-text">{{ 'MATCHING.TEXT_LABEL' | translate }}</label>
-          <textarea id="match-text" rows="8" aria-required="true" aria-describedby="match-text-help"
-            [value]="postingText()" (input)="postingText.set($any($event.target).value)"></textarea>
-          <p id="match-text-help" class="hint">{{ 'MATCHING.TEXT_HELP' | translate }}</p>
-        </div>
-      }
-    </section>
-
-    <!-- The CV to hold against it. -->
-    <section class="sheet" aria-labelledby="match-cv-heading">
-      <h2 id="match-cv-heading" class="section-tab">{{ 'MATCHING.CV_HEADING' | translate }}</h2>
-
-      @if (cvsError()) {
-        <p role="alert" class="notice notice--error">{{ 'MATCHING.CVS_ERROR' | translate }}</p>
-      } @else if (cvs() === null) {
-        <p role="status" class="hint">{{ 'MATCHING.CVS_LOADING' | translate }}</p>
-      } @else if (cvs()!.length === 0) {
-        <p class="notice">
-          {{ 'MATCHING.NO_CV' | translate }}
-          <a routerLink="/documents">{{ 'MATCHING.NO_CV_LINK' | translate }}</a>
-        </p>
-      } @else {
+    <!-- Posting and CV side by side when embedded: one held against the other. -->
+    <div class="match-pair">
+      <!-- The posting: a link, or its text where the link cannot be read. -->
+      <section class="sheet" aria-labelledby="match-posting-heading">
+        @if (embedded()) {
+          <h3 id="match-posting-heading" class="section-tab">{{ 'MATCHING.POSTING_HEADING' | translate }}</h3>
+        } @else {
+          <h2 id="match-posting-heading" class="section-tab">{{ 'MATCHING.POSTING_HEADING' | translate }}</h2>
+        }
+  
         <fieldset class="choice">
-          <legend>{{ 'MATCHING.CV_LEGEND' | translate }}</legend>
-          @for (cv of cvs(); track cv.id) {
-            <label class="choice__option">
-              <input type="radio" name="match-cv" [value]="cv.id"
-                [checked]="cvId() === cv.id" (change)="cvId.set(cv.id)">
-              {{ cv.label }}
-              <span class="choice__meta">({{ cv.filename }})</span>
-            </label>
-          }
+          <legend>{{ 'MATCHING.SOURCE_LEGEND' | translate }}</legend>
+          <label class="choice__option">
+            <input type="radio" name="match-source" value="url"
+              [checked]="sourceKind() === 'url'" (change)="sourceKind.set('url')">
+            {{ 'MATCHING.SOURCE_URL' | translate }}
+          </label>
+          <label class="choice__option">
+            <input type="radio" name="match-source" value="text"
+              [checked]="sourceKind() === 'text'" (change)="sourceKind.set('text')">
+            {{ 'MATCHING.SOURCE_TEXT' | translate }}
+          </label>
         </fieldset>
-      }
-    </section>
+  
+        @if (sourceKind() === 'url') {
+          <div class="field">
+            <label for="match-url">{{ 'MATCHING.URL_LABEL' | translate }}</label>
+            <input id="match-url" type="url" autocomplete="url" aria-required="true"
+              [value]="postingUrl()" (input)="postingUrl.set($any($event.target).value)"
+              [attr.placeholder]="'HOME.JOB_URL_PLACEHOLDER' | translate">
+          </div>
+        } @else {
+          <div class="field">
+            <label for="match-text">{{ 'MATCHING.TEXT_LABEL' | translate }}</label>
+            <textarea id="match-text" rows="8" aria-required="true" aria-describedby="match-text-help"
+              [value]="postingText()" (input)="postingText.set($any($event.target).value)"></textarea>
+            <p id="match-text-help" class="hint">{{ 'MATCHING.TEXT_HELP' | translate }}</p>
+          </div>
+        }
+      </section>
+  
+      <!-- The CV to hold against it. -->
+      <section class="sheet" aria-labelledby="match-cv-heading">
+        @if (embedded()) {
+          <h3 id="match-cv-heading" class="section-tab">{{ 'MATCHING.CV_HEADING' | translate }}</h3>
+        } @else {
+          <h2 id="match-cv-heading" class="section-tab">{{ 'MATCHING.CV_HEADING' | translate }}</h2>
+        }
+  
+        @if (cvsError()) {
+          <p role="alert" class="notice notice--error">{{ 'MATCHING.CVS_ERROR' | translate }}</p>
+        } @else if (cvs() === null) {
+          <p role="status" class="hint">{{ 'MATCHING.CVS_LOADING' | translate }}</p>
+        } @else if (cvs()!.length === 0) {
+          <p class="notice">
+            {{ 'MATCHING.NO_CV' | translate }}
+            <a routerLink="/documents">{{ 'MATCHING.NO_CV_LINK' | translate }}</a>
+          </p>
+        } @else {
+          <fieldset class="choice">
+            <legend>{{ 'MATCHING.CV_LEGEND' | translate }}</legend>
+            @for (cv of cvs(); track cv.id) {
+              <label class="choice__option">
+                <input type="radio" name="match-cv" [value]="cv.id"
+                  [checked]="cvId() === cv.id" (change)="cvId.set(cv.id)">
+                {{ cv.label }}
+                <span class="choice__meta">({{ cv.filename }})</span>
+              </label>
+            }
+          </fieldset>
+        }
+      </section>
+    </div>
 
     <p id="match-privacy" class="notice notice--info">{{ 'MATCHING.PRIVACY' | translate }}</p>
 
@@ -92,10 +116,19 @@
 
   @if (result(); as r) {
     <section class="sheet result" aria-labelledby="match-result-heading" [attr.lang]="resultLang()">
-      <h2 id="match-result-heading" class="result__heading" tabindex="-1" #resultHeading>
+      <ng-template #resultTitle>
         {{ 'MATCHING.RESULT_HEADING' | translate }}
         @if (r.postingTitle) { <span class="result__posting">{{ r.postingTitle }}@if (r.company) { — {{ r.company }} }</span> }
-      </h2>
+      </ng-template>
+      @if (embedded()) {
+        <h3 id="match-result-heading" class="result__heading" tabindex="-1" #resultHeading>
+          <ng-container [ngTemplateOutlet]="resultTitle" />
+        </h3>
+      } @else {
+        <h2 id="match-result-heading" class="result__heading" tabindex="-1" #resultHeading>
+          <ng-container [ngTemplateOutlet]="resultTitle" />
+        </h2>
+      }
 
       @if (demoMode) {
         <p class="notice">{{ 'MATCHING.DEMO_SAMPLE' | translate }}</p>
@@ -115,10 +148,19 @@
 
       @for (group of groups(); track group.status) {
         <section class="group" [attr.aria-labelledby]="'match-group-' + group.status">
-          <h3 [id]="'match-group-' + group.status" class="group__heading">
+          <ng-template #groupTitle>
             {{ ('MATCHING.GROUP_' + group.status) | translate }}
             <span class="group__count">({{ group.skills.length }})</span>
-          </h3>
+          </ng-template>
+          @if (embedded()) {
+            <h4 [id]="'match-group-' + group.status" class="group__heading">
+              <ng-container [ngTemplateOutlet]="groupTitle" />
+            </h4>
+          } @else {
+            <h3 [id]="'match-group-' + group.status" class="group__heading">
+              <ng-container [ngTemplateOutlet]="groupTitle" />
+            </h3>
+          }
           <ul role="list" class="skills">
             @for (s of group.skills; track s.skill) {
               <li class="skill" [attr.data-status]="s.status">
@@ -155,4 +197,4 @@
       <p class="result__disclaimer">{{ 'MATCHING.DISCLAIMER' | translate }}</p>
     </section>
   }
-</main>
+</ng-template>
