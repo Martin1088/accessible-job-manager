@@ -3,11 +3,11 @@ package de.ajm.manager.company;
 import de.ajm.manager.document.Document;
 import de.ajm.manager.document.DocumentRepository;
 import de.ajm.manager.document.DocumentType;
+import de.ajm.manager.testing.PostgresDataJpaTest;
 import de.ajm.manager.types.Language;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.time.LocalDateTime;
 
@@ -22,9 +22,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * <p>Every other test around {@code deleteCompany} mocks the repository, and a
  * mocked {@code deleteById} cannot violate a constraint - so the whole suite
  * stayed green while deleting any company with a posting snapshot failed. This
- * one runs against a real schema (the H2 configuration already in
- * {@code src/test/resources/application.yml}), where the constraint exists and
- * can refuse.
+ * one runs against a real schema on a real PostgreSQL (see
+ * {@link PostgresDataJpaTest}), where the constraint exists and can refuse.
  *
  * <p>It deliberately asserts the raw persistence behaviour rather than going
  * through {@code CompanyService}: the first test pins <em>why</em> the service
@@ -32,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * and deletes the service logic, this fails and explains itself instead of
  * silently passing for a new reason.
  */
-@DataJpaTest
+@PostgresDataJpaTest
 class CompanyDeletionSchemaTest {
 
     @Autowired CompanyRepository companyRepository;

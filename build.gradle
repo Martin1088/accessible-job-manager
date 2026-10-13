@@ -53,6 +53,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
     testRuntimeOnly 'com.h2database:h2'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
     testImplementation 'org.verapdf:validation-model:1.30.2'
     testImplementation libs.org.springframework.security.spring.security.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
