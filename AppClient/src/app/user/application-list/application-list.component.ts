@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Injector, OnInit, ViewChild, afterNextRender, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 
@@ -11,7 +11,7 @@ import { Application, ApplicationRequest, ApplicationStatus } from '../../model/
 import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
-import { DefaultDocument, Document, defaultFor } from '../../model/document';
+import { DefaultDocument, Document, DocumentLanguage, DocumentType, defaultFor } from '../../model/document';
 import { DocumentService } from '../../services/document.service';
 import { byMostRecent } from '../../shared/sort';
 import { Company, CompanyPosition } from '../../model/company';
@@ -27,6 +27,28 @@ export interface TemplateOption {
   id: string;
   label: string;
   provider: 'WORD' | 'HTML';
+}
+
+/**
+ * What can go with an application, in the order it is read - mirrors the server's
+ * `ApplicationDocumentService.ENCLOSABLE`. Each type is one group of checkboxes.
+ */
+const ENCLOSABLE: readonly { type: DocumentType; legend: string }[] = [
+  { type: 'CV',          legend: 'APPLICATIONS.DOCUMENTS_GROUP_CV' },
+  { type: 'CERTIFICATE', legend: 'APPLICATIONS.DOCUMENTS_GROUP_CERTIFICATE' },
+  { type: 'OTHER',       legend: 'APPLICATIONS.DOCUMENTS_GROUP_OTHER' },
+];
+
+const LANGUAGE_KEY: Record<DocumentLanguage, string> = {
+  ENGLISH: 'LANGUAGE.EN',
+  GERMAN:  'LANGUAGE.DE',
+  DUTCH:   'LANGUAGE.NL',
+  SPANISH: 'LANGUAGE.ES',
+};
+
+/** The server's reading order within a type: oldest upload first. */
+function byUpload(a: Document, b: Document): number {
+  return (a.createdAt ?? '').localeCompare(b.createdAt ?? '') || a.label.localeCompare(b.label);
 }
 
 // The list has no attachment editor; attachments are chosen in the template editor.
@@ -90,6 +112,21 @@ export class ApplicationListComponent implements OnInit {
 
   @ViewChild('previewPanel') private previewPanel?: ElementRef<HTMLElement>;
   @ViewChild('detailsHeading') private detailsHeading?: ElementRef<HTMLElement>;
+  @ViewChild('documentsHeading') private documentsHeading?: ElementRef<HTMLElement>;
+
+  // --- Enclosed documents --------------------------------------------------
+  /** The documents enclosed with each application, by application id. */
+  private enclosures = new Map<number, Document[]>();
+  /** The row whose documents are being chosen; null while the panel is closed. */
+  documentsFor: any | null = null;
+  /** The user's enclosable documents, grouped by type; loaded once, on first open. */
+  documentGroups: { legend: string; documents: Document[] }[] | null = null;
+  documentSelection = new Set<string>();
+  /** The language whose defaults were preselected, already translated; null when nothing was. */
+  prefilledLanguage: string | null = null;
+  savingDocuments = false;
+  documentsError = '';
+  private readonly injector = inject(Injector);
 
   /** The company and position behind each application, keyed by position id. */
   private positions = new Map<number, { company: Company; position: CompanyPosition }>();
@@ -126,6 +163,7 @@ export class ApplicationListComponent implements OnInit {
     { label: 'APPLICATIONS.COL_STATUS',   field: 'statusLabel'  },
     { label: 'APPLICATIONS.COL_APPLIED',  field: 'appliedDate'  },
     { label: 'APPLICATIONS.COL_NOTES',    field: 'notes'        },
+    { label: 'APPLICATIONS.COL_DOCUMENTS', field: 'documentsLabel' },
   ];
 
   // A stable field, not a getter: *ngFor identity-diffs sortedRows, so rows
@@ -162,6 +200,7 @@ export class ApplicationListComponent implements OnInit {
     this.loadApplications();
     this.loadTemplates();
     this.loadPositions();
+    this.loadEnclosures();
   }
 
   /** Whether a row's company name can open its details. */
@@ -182,6 +221,115 @@ export class ApplicationListComponent implements OnInit {
   closeDetails(): void {
     this.details = null;
     this.lastFocusedDetailsElement?.focus();
+  }
+
+  // --- Enclosed documents --------------------------------------------------
+
+  /**
+   * Same panel pattern as the details: focus lands on the heading, closing returns
+   * it to the button that opened it. With nothing enclosed yet, the user's defaults
+   * in the position's language are ticked - a suggestion, saved only on "Save".
+   */
+  openDocuments(row: any): void {
+    this.documentsFor = row;
+    this.documentsError = '';
+    this.prefilledLanguage = null;
+    this.documentSelection = new Set((this.enclosures.get(row.id) ?? []).map(d => d.id));
+    this.loadDocumentGroups(() => this.prefillDocuments(row));
+    // After the panel has rendered - a timeout can run before it exists.
+    afterNextRender(() => this.documentsHeading?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  /**
+   * Focus goes back to the row's "Documents" button, found again by id: saving
+   * rebuilds the rows, so the element that opened the panel may no longer exist.
+   */
+  closeDocuments(): void {
+    const row = this.documentsFor;
+    this.documentsFor = null;
+    if (!row) return;
+    afterNextRender(() => document.getElementById(this.documentsButtonId(row))?.focus(), { injector: this.injector });
+  }
+
+  documentsButtonId(row: any): string {
+    return `documents-${row.id}`;
+  }
+
+  goToDocuments(): void {
+    this.router.navigate(['/documents']);
+  }
+
+  toggleDocument(id: string, checked: boolean): void {
+    if (checked) this.documentSelection.add(id);
+    else this.documentSelection.delete(id);
+  }
+
+  saveDocuments(event?: Event): void {
+    event?.preventDefault();
+    const row = this.documentsFor;
+    if (!row || this.savingDocuments) return;
+    this.savingDocuments = true;
+    this.documentsError = '';
+    this.applicationService.setDocuments(row.id, [...this.documentSelection]).subscribe({
+      next: (saved) => {
+        this.savingDocuments = false;
+        this.enclosures.set(saved.applicationId, saved.documents);
+        this.rows = this.toRows(this.applications);
+        this.announcer.announce(this.translate.instant('APPLICATIONS.DOCUMENTS_SAVED',
+          { company: row.companyName, count: saved.documents.length }), 'polite');
+        this.closeDocuments();
+      },
+      error: () => {
+        this.savingDocuments = false;
+        this.documentsError = this.translate.instant('APPLICATIONS.ERROR_DOCUMENTS_SAVE');
+      },
+    });
+  }
+
+  documentLanguage(document: Document): string {
+    return this.translate.instant(LANGUAGE_KEY[document.language]);
+  }
+
+  private loadDocumentGroups(then: () => void): void {
+    if (this.documentGroups) { then(); return; }
+    this.documentService.getAll().subscribe({
+      next: (documents) => {
+        this.documentGroups = ENCLOSABLE
+          .map(({ type, legend }) => ({ legend, documents: documents.filter(d => d.type === type).sort(byUpload) }))
+          .filter(group => group.documents.length > 0);
+        then();
+      },
+      error: () => this.documentsError = this.translate.instant('APPLICATIONS.ERROR_DOCUMENTS_LOAD'),
+    });
+  }
+
+  private prefillDocuments(row: any): void {
+    if (this.documentSelection.size > 0) return;
+    const language = this.positions.get(row.companyPositionId)?.position.applyLanguage;
+    if (!language) return;
+    const ids = (['CV', 'CERTIFICATE'] as const)
+      .map(type => defaultFor(this.defaults, type, language))
+      .filter((id): id is string => !!id);
+    if (!ids.length) return;
+    ids.forEach(id => this.documentSelection.add(id));
+    this.prefilledLanguage = this.translate.instant(LANGUAGE_KEY[language]);
+  }
+
+  // Quiet on failure: the column simply shows no counts, the table works without it.
+  private loadEnclosures(): void {
+    this.applicationService.getDocuments().subscribe({
+      next: (all) => {
+        this.enclosures = new Map(all.map(e => [e.applicationId, e.documents]));
+        this.rows = this.toRows(this.applications);
+      },
+      error: () => {},
+    });
+  }
+
+  private documentsLabel(applicationId: number | undefined): string {
+    const count = applicationId == null ? 0 : this.enclosures.get(applicationId)?.length ?? 0;
+    if (count === 0) return '—';
+    return this.translate.instant(count === 1 ? 'APPLICATIONS.DOCUMENTS_COUNT_ONE' : 'APPLICATIONS.DOCUMENTS_COUNT_OTHER', { count });
   }
 
   // Quiet on failure: the names simply stay plain text, the table works without it.
@@ -338,9 +486,11 @@ export class ApplicationListComponent implements OnInit {
     }
 
     if (!this.sortField || !this.sortDir) return source;
-    const field = this.sortField;
+    // The documents column shows "2 documents"; it sorts by the number, or 10 would precede 2.
+    const field = this.sortField === 'documentsLabel' ? 'documentsCount' : this.sortField;
     const dir = this.sortDir === 'asc' ? 1 : -1;
     return [...source].sort((a, b) => {
+      if (typeof a[field] === 'number' && typeof b[field] === 'number') return (a[field] - b[field]) * dir;
       const av = (a[field] ?? '').toString().toLowerCase();
       const bv = (b[field] ?? '').toString().toLowerCase();
       return av < bv ? -dir : av > bv ? dir : 0;
@@ -578,6 +728,8 @@ export class ApplicationListComponent implements OnInit {
       appliedDate:       a.appliedDate ?? '—',
       appliedDateRaw:    a.appliedDate ?? '',
       notes:             a.notes ?? '',
+      documentsLabel:    this.documentsLabel(a.id),
+      documentsCount:    a.id == null ? 0 : this.enclosures.get(a.id)?.length ?? 0,
       createdAt:         a.createdAt ?? null,
       updatedAt:         a.updatedAt ?? a.createdAt ?? null,
     })).sort(byMostRecent('updatedAt'));

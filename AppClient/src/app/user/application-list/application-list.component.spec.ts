@@ -2,8 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { EMPTY, of } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 import { provideTranslateService } from '@ngx-translate/core';
+
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 import { ApplicationListComponent } from './application-list.component';
 import { ApplicationService } from '../../services/application.service';
@@ -57,8 +59,10 @@ describe('ApplicationListComponent', () => {
 
   beforeEach(async () => {
     companies = [COMPANY];
-    applicationServiceSpy = jasmine.createSpyObj('ApplicationService', ['getAll', 'create', 'update', 'delete']);
+    applicationServiceSpy = jasmine.createSpyObj('ApplicationService',
+      ['getAll', 'create', 'update', 'delete', 'getDocuments', 'setDocuments']);
     applicationServiceSpy.getAll.and.returnValue(of([APPLICATION]));
+    applicationServiceSpy.getDocuments.and.returnValue(of([]));
     applicationServiceSpy.update.and.returnValue(of(APPLICATION));
 
     coverLetterServiceSpy = jasmine.createSpyObj('CoverLetterService',
@@ -276,6 +280,137 @@ describe('ApplicationListComponent', () => {
       // The defaults arrive after the user has already chosen.
       httpMock.match('/api/documents/defaults').at(-1)!.flush([germanDefault]);
       expect(own.componentInstance.selectedTemplate[APPLICATION.id!]).toBe(chosen);
+    });
+  });
+
+  describe('documents enclosed with an application', () => {
+    const doc = (over: Partial<Document>): Document => ({
+      id: 'x', label: 'X', filename: 'x.pdf', mimeType: 'application/pdf',
+      type: 'CV', language: 'GERMAN', createdAt: '2026-01-01T10:00:00', ...over,
+    });
+    const CV = doc({ id: 'cv', label: 'Lebenslauf' });
+    const CERT = doc({ id: 'cert', label: 'Zeugnis', type: 'CERTIFICATE' });
+    const OLD_CERT = doc({ id: 'cert-old', label: 'Ausbildung', type: 'CERTIFICATE', createdAt: '2020-01-01T10:00:00' });
+    const LETTER = doc({ id: 'letter', label: 'Vorlage', type: 'COVER_LETTER_TEMPLATE' });
+
+    /** A fresh instance whose position is applied for in `language`, with these enclosures and defaults. */
+    function createWith(options: {
+      language?: 'GERMAN' | 'ENGLISH';
+      enclosed?: Document[];
+      defaults?: DefaultDocument[];
+    }) {
+      companies = [{ ...COMPANY, positions: [{ ...COMPANY.positions[0], applyLanguage: options.language }] }];
+      applicationServiceSpy.getDocuments.and.returnValue(of(
+        options.enclosed ? [{ applicationId: APPLICATION.id!, documents: options.enclosed }] : []));
+      const own = TestBed.createComponent(ApplicationListComponent);
+      own.detectChanges();
+      httpMock.match(r => r.url === '/api/documents').at(-1)!.flush([WORD_TEMPLATE]);
+      httpMock.match('/api/documents/defaults').at(-1)!.flush(options.defaults ?? []);
+      own.detectChanges();
+      return own;
+    }
+
+    function open(own: ComponentFixture<ApplicationListComponent>, documents: Document[] = [CV, CERT, OLD_CERT, LETTER]) {
+      own.componentInstance.openDocuments(own.componentInstance.rows[0]);
+      httpMock.expectOne(r => r.url === '/api/documents' && !r.params.has('type')).flush(documents);
+      own.detectChanges();
+      return own.nativeElement as HTMLElement;
+    }
+
+    const checked = (el: HTMLElement) => Array.from(el.querySelectorAll<HTMLInputElement>('.documents-panel input[type=checkbox]'))
+      .filter(i => i.checked).map(i => i.closest('label')!.querySelector('.document-name')!.textContent!.trim());
+
+    it('counts the enclosed documents in their own column', () => {
+      const el: HTMLElement = createWith({ enclosed: [CV, CERT] }).nativeElement;
+      expect(el.querySelector('td[data-label="APPLICATIONS.COL_DOCUMENTS"]')?.textContent?.trim())
+        .toBe('APPLICATIONS.DOCUMENTS_COUNT_OTHER');
+    });
+
+    it('groups what can be enclosed by type, in reading order, and leaves templates out', () => {
+      const el = open(createWith({ enclosed: [CV] }));
+      expect(Array.from(el.querySelectorAll('.documents-panel legend')).map(l => l.textContent!.trim()))
+        .toEqual(['APPLICATIONS.DOCUMENTS_GROUP_CV', 'APPLICATIONS.DOCUMENTS_GROUP_CERTIFICATE']);
+      expect(Array.from(el.querySelectorAll('.document-option')).map(l => l.textContent!.replace(/\s+/g, ' ').trim()))
+        .toEqual(['Lebenslauf (LANGUAGE.DE)', 'Ausbildung (LANGUAGE.DE)', 'Zeugnis (LANGUAGE.DE)']);
+      expect(el.textContent).not.toContain('Vorlage');
+      expect(checked(el)).toEqual(['Lebenslauf']);
+    });
+
+    it('suggests the defaults in the position\'s language when nothing is enclosed yet, without saving', () => {
+      const own = createWith({
+        language: 'GERMAN',
+        defaults: [
+          { type: 'CV', language: 'GERMAN', document: CV },
+          { type: 'CERTIFICATE', language: 'GERMAN', document: CERT },
+          { type: 'CV', language: 'ENGLISH', document: doc({ id: 'cv-en', language: 'ENGLISH' }) },
+        ],
+      });
+      const el = open(own);
+      expect(checked(el)).toEqual(['Lebenslauf', 'Zeugnis']);
+      expect(el.querySelector('#documents-prefilled')).not.toBeNull();
+      expect(applicationServiceSpy.setDocuments).not.toHaveBeenCalled();
+    });
+
+    it('suggests nothing once documents are enclosed', () => {
+      const el = open(createWith({
+        language: 'GERMAN', enclosed: [OLD_CERT],
+        defaults: [{ type: 'CV', language: 'GERMAN', document: CV }],
+      }));
+      expect(checked(el)).toEqual(['Ausbildung']);
+      expect(el.querySelector('#documents-prefilled')).toBeNull();
+    });
+
+    it('saves the chosen set, updates the count and announces it', () => {
+      const announcer = TestBed.inject(LiveAnnouncer);
+      spyOn(announcer, 'announce');
+      const own = createWith({});
+      open(own);
+      applicationServiceSpy.setDocuments.and.returnValue(of({ applicationId: APPLICATION.id!, documents: [CV] }));
+
+      own.componentInstance.toggleDocument('cv', true);
+      own.componentInstance.saveDocuments();
+      own.detectChanges();
+
+      expect(applicationServiceSpy.setDocuments).toHaveBeenCalledWith(APPLICATION.id!, ['cv']);
+      expect(own.componentInstance.documentsFor).toBeNull();
+      expect(own.componentInstance.rows[0].documentsLabel).toBe('APPLICATIONS.DOCUMENTS_COUNT_ONE');
+      expect(announcer.announce).toHaveBeenCalledWith('APPLICATIONS.DOCUMENTS_SAVED', 'polite');
+    });
+
+    it('moves focus to the panel heading, and back to the row\'s button after saving', async () => {
+      const own = createWith({});
+      document.body.appendChild(own.nativeElement);
+      try {
+        open(own);
+        await own.whenStable();
+        expect(document.activeElement?.id).toBe('documents-heading');
+
+        applicationServiceSpy.setDocuments.and.returnValue(of({ applicationId: APPLICATION.id!, documents: [] }));
+        own.componentInstance.saveDocuments();
+        own.detectChanges();
+        await own.whenStable();
+        expect(document.activeElement?.id).toBe(`documents-${APPLICATION.id}`);
+      } finally {
+        own.nativeElement.remove();
+      }
+    });
+
+    it('keeps the panel open with an alert when saving fails', () => {
+      const own = createWith({});
+      const el = open(own);
+      applicationServiceSpy.setDocuments.and.returnValue(throwError(() => new Error('boom')));
+
+      own.componentInstance.saveDocuments();
+      own.detectChanges();
+
+      expect(own.componentInstance.documentsFor).not.toBeNull();
+      expect(el.querySelector('.documents-panel [role="alert"]')?.textContent).toContain('APPLICATIONS.ERROR_DOCUMENTS_SAVE');
+    });
+
+    it('has no axe-detectable accessibility violations with the panel open', async () => {
+      const own = createWith({ language: 'GERMAN', defaults: [{ type: 'CV', language: 'GERMAN', document: CV }] });
+      open(own);
+      await expectNoAxeViolations(own);
     });
   });
 

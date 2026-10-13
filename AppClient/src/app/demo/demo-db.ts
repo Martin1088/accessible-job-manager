@@ -8,7 +8,7 @@ import { Relationship } from '../model/relationship';
 import { UserProfile } from '../model/user-profile';
 import { UserPreferences } from '../model/user-preferences';
 
-import { APPLICATIONS } from './seed/applications';
+import { APPLICATIONS, DemoEnclosure, ENCLOSURES } from './seed/applications';
 import { COMPANIES } from './seed/companies';
 import { DEFAULTS, DOCUMENTS, DemoDefault, DemoShare, SHARES } from './seed/documents';
 import { LETTER_TEMPLATES } from './seed/cover-letters';
@@ -46,6 +46,7 @@ export class DemoDb {
 
   readonly companies = signal<Company[]>(copy(COMPANIES));
   readonly applications = signal<Application[]>(copy(APPLICATIONS));
+  readonly enclosures = signal<DemoEnclosure[]>(copy(ENCLOSURES));
   readonly documents = signal<Document[]>(copy(DOCUMENTS));
   readonly shares = signal<DemoShare[]>(copy(SHARES));
   readonly defaults = signal<DemoDefault[]>(copy(DEFAULTS));
@@ -92,6 +93,7 @@ export class DemoDb {
     this.role.set('USER');
     this.companies.set(copy(COMPANIES));
     this.applications.set(copy(APPLICATIONS));
+    this.enclosures.set(copy(ENCLOSURES));
     this.documents.set(copy(DOCUMENTS));
     this.shares.set(copy(SHARES));
     this.defaults.set(copy(DEFAULTS));

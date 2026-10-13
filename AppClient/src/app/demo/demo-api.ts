@@ -1,4 +1,4 @@
-import { Application } from '../model/application';
+import { Application, ApplicationDocuments } from '../model/application';
 import { Company } from '../model/company';
 import { DEFAULTABLE_TYPES, DefaultDocument, Document, DocumentType } from '../model/document';
 import { HtmlLetterTemplate } from '../model/cover-letter';
@@ -184,7 +184,41 @@ route('PUT', '/api/applications/:id', (req, db) => {
 route('DELETE', '/api/applications/:id', (req, db) => {
   const id = Number(req.params[0]);
   db.applications.update(all => all.filter(a => a.id !== id));
+  db.enclosures.update(all => all.filter(e => e.applicationId !== id));
   return null;
+});
+
+// Documents enclosed with an application, in the server's reading order:
+// CV, then certificates, then the rest, oldest upload first within each.
+const ENCLOSABLE: readonly DocumentType[] = ['CV', 'CERTIFICATE', 'OTHER'];
+
+function enclosed(db: DemoDb, applicationId: number): ApplicationDocuments {
+  const ids = new Set(db.enclosures().filter(e => e.applicationId === applicationId).map(e => e.documentId));
+  const documents = db.documents()
+    .filter(d => ids.has(d.id))
+    .sort((a, b) => ENCLOSABLE.indexOf(a.type) - ENCLOSABLE.indexOf(b.type)
+      || (a.createdAt ?? '').localeCompare(b.createdAt ?? '')
+      || a.label.localeCompare(b.label));
+  return { applicationId, documents };
+}
+
+route('GET', '/api/applications/documents', (_req, db) =>
+  [...new Set(db.enclosures().map(e => e.applicationId))]
+    .sort((a, b) => a - b)
+    .map(id => enclosed(db, id))
+    .filter(e => e.documents.length > 0));
+
+route('PUT', '/api/applications/:id/documents', (req, db) => {
+  const applicationId = Number(req.params[0]);
+  const requested = (req.body as { documentIds?: string[] } | null)?.documentIds ?? [];
+  // The page offers only enclosable documents; the server answers anything else with a 400.
+  const allowed = new Set(db.documents().filter(d => ENCLOSABLE.includes(d.type)).map(d => d.id));
+  const documentIds = [...new Set(requested)].filter(id => allowed.has(id));
+  db.enclosures.update(all => [
+    ...all.filter(e => e.applicationId !== applicationId),
+    ...documentIds.map(documentId => ({ applicationId, documentId })),
+  ]);
+  return enclosed(db, applicationId);
 });
 
 /** The two denormalised labels the applications list shows, looked up by position id. */
@@ -242,6 +276,7 @@ route('DELETE', '/api/documents/:id', (req, db) => {
   const id = req.params[0];
   db.documents.update(all => all.filter(d => d.id !== id));
   db.shares.update(all => all.filter(s => s.documentId !== id));
+  db.enclosures.update(all => all.filter(e => e.documentId !== id));
   vacateDefault(db, id);
   return null;
 });

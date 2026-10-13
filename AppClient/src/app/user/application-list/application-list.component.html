@@ -58,6 +58,58 @@
     </section>
   }
 
+  @if (documentsFor) {
+    <section class="documents-panel" aria-labelledby="documents-heading">
+      <h2 id="documents-heading" #documentsHeading tabindex="-1" class="section-tab">
+        {{ 'APPLICATIONS.DOCUMENTS_HEADING' | translate: { company: documentsFor.companyName, position: documentsFor.positionTitle } }}
+      </h2>
+      <p class="documents-lead">{{ 'APPLICATIONS.DOCUMENTS_LEAD' | translate }}</p>
+
+      @if (documentGroups === null) {
+        @if (!documentsError) {
+          <p role="status" class="hint">{{ 'APPLICATIONS.DOCUMENTS_LOADING' | translate }}</p>
+        }
+      } @else if (documentGroups.length === 0) {
+        <p class="hint">{{ 'APPLICATIONS.DOCUMENTS_EMPTY' | translate }}</p>
+        <button type="button" class="btn-secondary" (click)="goToDocuments()">{{ 'APPLICATIONS.DOCUMENTS_EMPTY_ACTION' | translate }}</button>
+      } @else {
+        @if (prefilledLanguage) {
+          <p id="documents-prefilled" class="hint">{{ 'APPLICATIONS.DOCUMENTS_PREFILLED' | translate: { language: prefilledLanguage } }}</p>
+        }
+        <form class="documents-form" (submit)="saveDocuments($event)">
+          @for (group of documentGroups; track group.legend) {
+            <fieldset>
+              <legend>{{ group.legend | translate }}</legend>
+              @for (doc of group.documents; track doc.id) {
+                <label class="document-option">
+                  <input type="checkbox" [checked]="documentSelection.has(doc.id)"
+                    (change)="toggleDocument(doc.id, $any($event.target).checked)">
+                  <!-- The space is spelled out: Angular drops whitespace between elements,
+                       and the accessible name would read "Lebenslauf(Deutsch)". -->
+                  <span class="document-name">{{ doc.label }}</span>{{ ' ' }}<span class="document-meta">({{ documentLanguage(doc) }})</span>
+                </label>
+              }
+            </fieldset>
+          }
+          <div class="documents-actions">
+            <button type="submit" class="btn-primary" [disabled]="savingDocuments"
+              [attr.aria-describedby]="prefilledLanguage ? 'documents-prefilled' : null">
+              {{ (savingDocuments ? 'APPLICATIONS.SAVING' : 'APPLICATIONS.DOCUMENTS_SAVE') | translate }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="closeDocuments()">{{ 'COMMON.CANCEL' | translate }}</button>
+          </div>
+        </form>
+      }
+
+      @if (documentsError) {
+        <p role="alert" class="notice notice--error">{{ documentsError }}</p>
+        @if (documentGroups === null) {
+          <button type="button" class="btn-secondary" (click)="closeDocuments()">{{ 'COMMON.CLOSE' | translate }}</button>
+        }
+      }
+    </section>
+  }
+
   <div class="filter-bar" role="search" [attr.aria-label]="'APPLICATIONS.FILTER_ARIA' | translate">
     <fieldset class="filter-fieldset">
       <legend class="sr-only">{{ 'APPLICATIONS.FILTER_ARIA' | translate }}</legend>
@@ -215,6 +267,10 @@
             }
           </td>
           <td class="actions-cell" [attr.data-label]="'TABLE.ACTIONS' | translate">
+            <button type="button" class="btn-secondary" [id]="documentsButtonId(row)" (click)="openDocuments(row)"
+              [attr.aria-label]="'APPLICATIONS.ACTION_DOCUMENTS_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
+              {{ 'APPLICATIONS.ACTION_DOCUMENTS' | translate }}
+            </button>
             <button type="button" class="btn-secondary" (click)="startEdit(row)"
               [attr.aria-label]="'APPLICATIONS.ACTION_EDIT_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
               {{ 'APPLICATIONS.ACTION_EDIT' | translate }}
