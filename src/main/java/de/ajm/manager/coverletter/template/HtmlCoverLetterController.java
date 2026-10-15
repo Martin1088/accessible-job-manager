@@ -1,5 +1,6 @@
 package de.ajm.manager.coverletter.template;
 
+import de.ajm.manager.application.attachment.ApplicationBundleService;
 import de.ajm.manager.coverletter.CoverLetterEmailDto;
 import de.ajm.manager.coverletter.CoverLetterTemplate;
 import de.ajm.manager.coverletter.render.CoverLetterHtmlService;
@@ -37,6 +38,7 @@ public class HtmlCoverLetterController {
 
     private final CoverLetterHtmlService coverLetterHtmlService;
     private final HtmlLetterTemplateService htmlLetterTemplateService;
+    private final ApplicationBundleService applicationBundleService;
     private final MessageSource messageSource;
 
     /** The DIN 5008 Form B defaults, so the style form can render its initial values. */
@@ -141,6 +143,31 @@ public class HtmlCoverLetterController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition(rendered))
                 .contentType(contentType(rendered.format()))
                 .body(rendered.content());
+    }
+
+    /**
+     * The application as one PDF: this letter, then the documents enclosed with the
+     * application. Not stored either - it is assembled again on every request.
+     */
+    @PostMapping("/{applicationId}/bundle/{templateId}")
+    public ResponseEntity<byte[]> bundle(
+            @PathVariable Long applicationId,
+            @PathVariable UUID templateId,
+            @RequestBody(required = false) CoverLetterRenderRequest request,
+            @AuthenticationPrincipal OidcUser user) {
+
+        CoverLetterTemplate template =
+                htmlLetterTemplateService.asCoverLetterTemplate(templateId, request, user.getSubject());
+        CoverLetterHtmlService.RenderedLetter letter =
+                coverLetterHtmlService.render(applicationId, template, RenderFormat.PDF, user.getSubject());
+
+        ApplicationBundleService.Bundle bundle = applicationBundleService.bundle(
+                applicationId, letter.content(), letter.language(), user.getSubject());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + bundle.filename() + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(bundle.content());
     }
 
     /**

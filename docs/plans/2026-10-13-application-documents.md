@@ -1,6 +1,6 @@
 # Plan: Unterlagen einer Bewerbung (Anlagen)
 
-Stand: feature/test, 13.10.2026 – Phase 1 fast fertig, nichts committet.
+Stand: feature/test, 15.10.2026 – Phase 1–3 umgesetzt und grün, Phase 1 in `81d6cf8`, 2 und 3 noch nicht committet.
 
 ## Ziel
 
@@ -75,58 +75,62 @@ Letzter Lauf: 319 Frontend-Tests, `lint:a11y`, `ng build`, `build:demo`,
 Demo-Build: Vorauswahl, Speichern, Zählung, Ansage und Fokus wie geplant; 375px
 ohne horizontales Scrollen.
 
-### Offen in Phase 1
+### Abgeschlossen am 15.10.
 
-1. **Mobiler Umbruch der Checkbox-Zeile** (Screenshot 375px, Deutsch): „(Deutsch)“
-   bricht unter die Checkbox statt unter den Namen. Fix in
-   `application-list.component.html/.scss`: Name und Sprache in **einen** Textblock
-   neben der Checkbox:
-   ```html
-   <label class="document-option">
-     <input type="checkbox" …>
-     <span class="document-text"><span class="document-name">{{ doc.label }}</span>{{ ' ' }}<span class="document-meta">(…)</span></span>
-   </label>
-   ```
-   `.document-option`: `flex-wrap: nowrap; align-items: flex-start;` Checkbox mit
-   kleinem `margin-block-start`, damit sie zur ersten Textzeile passt. Spec-Selektor
-   `.document-name` bleibt gültig.
-2. Danach erneut: `npx ng test --watch=false --include="**/application-list/*.spec.ts"`,
-   `npm run lint:a11y`, `npm run build:demo` + `check:demo`, Screenshot 375px Deutsch.
-3. **CHANGELOG** unter `[Unreleased]` / Added: „Eine Bewerbung kann ihre Unterlagen
-   festhalten (Lebenslauf, Zeugnisse, weitere PDFs) …; die Standards in der Sprache
-   der Stelle werden vorgeschlagen.“ – noch nicht eingetragen.
-4. Optional: `CLAUDE.md` kurz ergänzen (Paket `application/attachment/`, Cascade-
-   Regel wie bei `DefaultDocument`).
+Der mobile Umbruch ist behoben: `.document-text` fasst Name und Sprache zusammen, `nowrap`
+und `flex-start`. Probe bei 375px auf Deutsch: „(Deutsch)“ bricht unter den Namen,
+nicht unter die Checkbox, kein horizontales Scrollen. CHANGELOG und CLAUDE.md
+(Abschnitt „Application documents“) sind ergänzt.
 
-## Phase 2 – Anlagenvermerk (geplant)
+## Phase 2 – Anlagenvermerk (umgesetzt)
 
-- `HtmlLetterTemplateService` (`render…`, Zeile ~139 nutzt `request.attachments()`):
-  wenn die Bewerbung Unterlagen hat, deren **Bezeichnungen** an die Zeilen aus
-  Request/Vorlage **anhängen** (Entscheidung oben), Dubletten (gleiche Zeile,
-  case-insensitiv) überspringen.
-- Reihenfolge der Sanitize/Substitute-Regel einhalten: Labels sind Nutzereingabe
-  und müssen escaped ankommen (`MarkupSanitizer` → `PlaceholderResolver`).
-- Word-Provider unverändert (kein Anlagenfeld in den Serienbrief-Vorlagen).
-- `TextCoverLetterRenderer` übernimmt das automatisch (gleiches Modell), Vorschau
-  und PDF bleiben deckungsgleich.
-- Tests: Assembler-/Service-Test (anhängen, Dubletten, Escaping eines Labels mit
-  `<`), `Din5008PdfGeometryTest` bleibt grün.
+- `ApplicationDocumentService.enclosed(applicationId, userId)` prüft das Eigentum und
+  liefert die Dokumente in `READING_ORDER`.
+- `CoverLetterHtmlService.withEnclosures` hängt die Labels nach `assemble` an die Zeilen
+  aus dem Request an (`CoverLetterModel.withAttachments`). Dubletten werden case-insensitiv
+  übersprungen, leere Labels ignoriert.
+- **Abweichung vom ursprünglichen Plan:** Die Labels laufen weder durch `MarkupSanitizer`
+  noch durch `PlaceholderResolver`. Anlagen-Zeilen sind Klartext (`th:text`), und ein Label
+  `{{company}}` soll wörtlich bleiben.
+- Betroffen sind `render` (PDF/HTML/Text) und `renderAsEmail`, `renderSample` nicht.
+  Word-Provider unverändert.
+- Tests: `CoverLetterHtmlServiceTest` (8), `ApplicationDocumentServiceTest` +2.
 
-## Phase 3 – Bewerbungs-PDF (geplant)
+## Phase 3 – Bewerbungs-PDF (umgesetzt)
 
-- `GET /api/applications/{id}/bundle?templateId=…&provider=HTML|WORD`.
-- Anschreiben-PDF über die bestehenden Wege, dann die angehängten PDFs in
-  Lesereihenfolge per `PDFMergerUtility`, mit Datei-Puffer statt RAM.
-- Jede Datei über `DocumentService.bytes` (Eigentumsprüfung, kein presigned URL).
-- Verschlüsseltes/kaputtes PDF → klare Fehlermeldung mit Dokumentnamen
-  (`ApiException`-Subtyp), nie 500.
-- Frontend: Button „Bewerbungs-PDF herunterladen“ neben dem Anschreiben-Download.
-- Demo: liefert `SAMPLE_PDF`.
-- Tests: Merge mit PDFBox-generierten PDFs (Seitenzahl/Reihenfolge), kaputtes PDF.
+- **Abweichung:** Der Nutzer hat klargestellt, dass das Anschreiben auch eine .docx-Vorlage
+  sein kann. Daher gibt es zwei Endpunkte, je Provider einen, statt `?provider=`:
+  `POST /api/html/cover-letter/{applicationId}/bundle/{templateId}` (mit
+  `CoverLetterRenderRequest`) und `POST /api/word/cover-letter/{applicationId}/fill/{documentId}/bundle`.
+- `ApplicationBundleService` (`application/attachment/`) ist provider-unabhängig: Er nimmt
+  das fertige Anschreiben-PDF und die Sprache und hängt die Unterlagen über
+  `DocumentService.bytes` an. Gemergt wird mit `PDFMergerUtility` und
+  `IOUtils.createTempFileOnlyStreamCache()`. Dateiname: `coverLetter.bundleFileLabel` + Firma.
+- Ein verschlüsseltes oder kaputtes PDF wird vorab geöffnet und ergibt einen 400 mit dem
+  Dokumentnamen (`error.application.bundle.unreadable`).
+- Die Word-`RenderedDocument` trägt jetzt die Sprache des Briefs.
+- Frontend: Button „Bewerbungs-PDF“ je Zeile der Bewerbungsliste für beide Provider. Der
+  Dateiname kommt aus `Content-Disposition`. Die Server-Begründung wird per
+  `readBlobMessage` (nach `core/http-error.ts` verschoben) über `app-error-text` gezeigt.
+- Demo: beide Routen liefern `SAMPLE_PDF`.
+- Tests: `ApplicationBundleServiceTest` (6, echte PDFBox-PDFs inkl. verschlüsseltem),
+  `CoverLetterBundleEndpointTest` (3), Specs für die Bewerbungsliste (+3) und `readBlobMessage` (+3).
+
+## Nebenbei behoben
+
+Uploads zu Garage scheiterten seit AWS SDK 2.55 mit `Invalid payload signature`
+(CRC32-Checksumme als `aws-chunked`). Lösung: `S3Config` mit
+`requestChecksumCalculation`/`responseChecksumValidation` `WHEN_REQUIRED`.
+
+## Letzter Lauf (15.10.)
+
+326 Frontend-Tests, `lint:a11y`, `ng build`, `build:demo`, `check:demo`;
+`./gradlew check` unter CI-Bedingungen: 551 Tests, 7 übersprungen (Gotenberg/Ollama),
+Zeilenabdeckung 69,02 %, alles grün. Nicht live geprüft: der Merge gegen das
+echte Gotenberg und Garage, mit Anschreiben aus beiden Providern.
 
 ## Arbeitsbaum
 
-Uncommittet liegen vier Features übereinander: CV-Abgleich auf der Demo-Startseite,
-Bewerbungsfrist, Standard-Dokumente, Unterlagen (Phase 1). `cv-match.component.ts`
-und dessen Spec enthalten Änderungen aus CV-Abgleich **und** Standards – getrennte
-Commits brauchen `git add -p`.
+Phase 1 und die früheren Features sind committet. Uncommittet liegen Phase 2, Phase 3
+und der S3-Fix. Getrennte Commits sind möglich: Der S3-Fix steckt nur in `S3Config.java`
+plus seinem CHANGELOG-/CLAUDE.md-Absatz.

@@ -405,6 +405,8 @@
     "DOWNLOADING": "…",
     "DOWNLOAD_PDF": "Descargar PDF",
     "DOWNLOAD_ARIA": "Descargar la carta de presentación para {{company}} en PDF",
+    "DOWNLOAD_BUNDLE": "PDF de la solicitud",
+    "DOWNLOAD_BUNDLE_ARIA": "Descargar la solicitud para {{company}} como un solo PDF: carta y documentos",
     "DOWNLOAD_WORD": "Descargar Word",
     "DOWNLOAD_WORD_ARIA": "Descargar la carta de presentación para {{company}} como documento Word",
     "SEND_EMAIL": "Enviar por correo electrónico",
@@ -414,7 +416,8 @@
     "UPDATE_STATUS_ARIA": "Guardar el nuevo estado de {{company}}",
     "ERROR_CREATE": "No se pudo crear la candidatura.",
     "ERROR_LOAD": "No se pudieron cargar las candidaturas.",
-    "ERROR_COVER_LETTER": "No se pudo generar la carta de presentación."
+    "ERROR_COVER_LETTER": "No se pudo generar la carta de presentación.",
+    "ERROR_BUNDLE": "No se pudo crear el PDF de la solicitud."
   },
   "COMPANIES": {
     "TITLE": "Empresas",
@@ -641,7 +644,7 @@
     "CLOSING_LABEL": "Fórmula de despedida",
     "CLOSING_HELP": "Rellenada previamente según el idioma de la carta.",
     "ATTACHMENTS_LEGEND": "Adjuntos",
-    "ATTACHMENTS_HELP": "Una línea por adjunto, listada bajo «Adjuntos» al final de la carta.",
+    "ATTACHMENTS_HELP": "Una línea por adjunto, listada bajo «Adjuntos» al final de la carta. Los documentos que haya adjuntado a la solicitud se añaden automáticamente.",
     "ATTACHMENT_LABEL": "Adjunto {{number}}",
     "ADD_ATTACHMENT": "Añadir adjunto",
     "REMOVE_ATTACHMENT": "Quitar el adjunto {{number}}",

@@ -105,6 +105,30 @@ Unauthenticated `text/html` requests are redirected to OAuth; API requests recei
 
 `DocumentAccess` entity stores `(documentId, reviewerSubject)` pairs. Users grant reviewers access via `POST /api/documents/{id}/access`. `ReviewerController` queries `DocumentAccess` to build a grouped view of users who have shared documents with the caller.
 
+### Application documents (enclosures)
+
+`de.ajm.manager.application.attachment` links an application to the documents sent with
+it (`application_documents`, unique `(application_id, document_id)`). Rules that are easy
+to break:
+
+- **Only `ENCLOSABLE` types** (CV, CERTIFICATE, OTHER) can be linked, all of them PDFs;
+  templates, posting snapshots and reviews are working material. **`READING_ORDER`**
+  (CV, certificates, others; oldest upload first, then label) is the one order the list,
+  the cover letter's enclosure lines and the application PDF all follow.
+- **Both foreign keys carry `@OnDelete(CASCADE)`**, as `DefaultDocument` does, so
+  deleting a document or an application cannot be blocked by a link.
+  `ApplicationDocumentSchemaTest` (`@PostgresDataJpaTest`) is the guard.
+- **Enclosure lines are appended, never replaced.** `CoverLetterHtmlService` adds the
+  labels after the lines the caller wrote, skipping case-insensitive duplicates, and only
+  for a letter tied to an application (`renderSample` has none). Labels bypass
+  `PlaceholderResolver` - a document named `{{company}}` stays literal - and need no
+  sanitizing, because enclosure lines are plain text printed with `th:text`.
+- **The application PDF is provider-independent.** `ApplicationBundleService` takes the
+  letter already printed - by the HTML template or the filled `.docx` - and appends the
+  enclosures via PDFBox's `PDFMergerUtility` with a temp-file stream cache. Each enclosure
+  is opened before the merge, so an encrypted or broken one is reported by name as a 400
+  instead of the merger's anonymous 500.
+
 ### Object storage
 
 Two providers sit behind the `StorageService` interface, selected by `storage.provider`: `GarageStorageService` (S3 via AWS SDK v2, the default) and `AzureBlobStorageService`. Object keys are `{userId}/{type_lowercase}/{uuid}.{ext}`, so the owning subject is in the key prefix.
@@ -118,6 +142,10 @@ Two providers sit behind the `StorageService` interface, selected by `storage.pr
 - **`contentLength` stays the plaintext length.** SSE-C encrypts server-side, so the object is stored and reported at the size sent. Client-side encryption would break that contract, which is why it was not chosen.
 - **`presignedGet` throws when encryption is on.** A browser following the URL cannot send the headers, and signing them in would mean shipping the master key to the browser.
 - **The key is validated at startup** (`S3Properties.Encryption`), so a missing or malformed key fails the boot instead of the first upload — including under `storage.provider=azure`, since `S3Config` is not conditional. `Encryption.toString()` is masked; note that the sibling `secretKey` is not, and that adding `spring-boot-starter-actuator` would expose both through `/actuator/configprops`.
+- **Checksums are `WHEN_REQUIRED`** (`S3Config`). Since AWS SDK 2.30 every `PutObject`
+  carries a CRC32 by default, sent as an `aws-chunked` body with a trailer; Garage
+  rejects that with `Invalid payload signature` (400). Dropping the setting breaks
+  every upload against Garage, and nothing in the unit tests notices.
 - **Multipart is not covered.** Every upload today is a single `PutObject` under the 20MB limit; multipart would have to repeat the headers on create, every part, and complete.
 
 ### Cover letter generation

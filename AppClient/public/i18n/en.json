@@ -405,6 +405,8 @@
     "DOWNLOADING": "…",
     "DOWNLOAD_PDF": "Download PDF",
     "DOWNLOAD_ARIA": "Download cover letter for {{company}} as PDF",
+    "DOWNLOAD_BUNDLE": "Application PDF",
+    "DOWNLOAD_BUNDLE_ARIA": "Download the application for {{company}} as one PDF: cover letter and documents",
     "DOWNLOAD_WORD": "Download Word",
     "DOWNLOAD_WORD_ARIA": "Download cover letter for {{company}} as Word document",
     "SEND_EMAIL": "Send as email",
@@ -414,7 +416,8 @@
     "UPDATE_STATUS_ARIA": "Save new status for {{company}}",
     "ERROR_CREATE": "Failed to create application.",
     "ERROR_LOAD": "Failed to load applications.",
-    "ERROR_COVER_LETTER": "Failed to generate cover letter."
+    "ERROR_COVER_LETTER": "Failed to generate cover letter.",
+    "ERROR_BUNDLE": "The application PDF could not be created."
   },
   "COMPANIES": {
     "TITLE": "Companies",
@@ -641,7 +644,7 @@
     "CLOSING_LABEL": "Closing formula",
     "CLOSING_HELP": "Prefilled from the letter language.",
     "ATTACHMENTS_LEGEND": "Attachments",
-    "ATTACHMENTS_HELP": "One line per attachment, listed under \"Attachments\" at the end of the letter.",
+    "ATTACHMENTS_HELP": "One line per attachment, listed under \"Attachments\" at the end of the letter. Documents you have enclosed with the application are added automatically.",
     "ATTACHMENT_LABEL": "Attachment {{number}}",
     "ADD_ATTACHMENT": "Add attachment",
     "REMOVE_ATTACHMENT": "Remove attachment {{number}}",

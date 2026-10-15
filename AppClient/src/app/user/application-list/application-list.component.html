@@ -5,6 +5,10 @@
     <p role="alert" class="notice notice--error">{{ errorMessage }}</p>
   }
 
+  @if (bundleFailure) {
+    <p role="alert" class="notice notice--error"><app-error-text [failure]="bundleFailure" fallbackKey="APPLICATIONS.ERROR_BUNDLE" /></p>
+  }
+
   @if (showForm) {
     <section class="create-form" aria-labelledby="create-heading">
       <h2 id="create-heading" class="section-tab">{{ (editingId ? 'APPLICATIONS.EDIT_HEADING' : 'APPLICATIONS.CREATE_HEADING') | translate }}</h2>
@@ -86,7 +90,7 @@
                     (change)="toggleDocument(doc.id, $any($event.target).checked)">
                   <!-- The space is spelled out: Angular drops whitespace between elements,
                        and the accessible name would read "Lebenslauf(Deutsch)". -->
-                  <span class="document-name">{{ doc.label }}</span>{{ ' ' }}<span class="document-meta">({{ documentLanguage(doc) }})</span>
+                  <span class="document-text"><span class="document-name">{{ doc.label }}</span>{{ ' ' }}<span class="document-meta">({{ documentLanguage(doc) }})</span></span>
                 </label>
               }
             </fieldset>
@@ -247,6 +251,13 @@
               (click)="downloadCoverLetter(row.id)"
               [attr.aria-label]="'APPLICATIONS.DOWNLOAD_ARIA' | translate: { company: row.companyName }">
               {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_PDF') | translate }}
+            </button>
+            <button type="button"
+              class="btn-secondary"
+              [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
+              (click)="downloadBundle(row.id)"
+              [attr.aria-label]="'APPLICATIONS.DOWNLOAD_BUNDLE_ARIA' | translate: { company: row.companyName }">
+              {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_BUNDLE') | translate }}
             </button>
             <button type="button"
               class="btn-secondary"

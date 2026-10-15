@@ -405,6 +405,8 @@
     "DOWNLOADING": "…",
     "DOWNLOAD_PDF": "PDF herunterladen",
     "DOWNLOAD_ARIA": "Anschreiben für {{company}} als PDF herunterladen",
+    "DOWNLOAD_BUNDLE": "Bewerbungs-PDF",
+    "DOWNLOAD_BUNDLE_ARIA": "Bewerbung für {{company}} als ein PDF herunterladen: Anschreiben und Unterlagen",
     "DOWNLOAD_WORD": "Word herunterladen",
     "DOWNLOAD_WORD_ARIA": "Anschreiben für {{company}} als Word-Dokument herunterladen",
     "SEND_EMAIL": "Als E-Mail senden",
@@ -414,7 +416,8 @@
     "UPDATE_STATUS_ARIA": "Neuen Status für {{company}} speichern",
     "ERROR_CREATE": "Bewerbung konnte nicht erstellt werden.",
     "ERROR_LOAD": "Bewerbungen konnten nicht geladen werden.",
-    "ERROR_COVER_LETTER": "Anschreiben konnte nicht erstellt werden."
+    "ERROR_COVER_LETTER": "Anschreiben konnte nicht erstellt werden.",
+    "ERROR_BUNDLE": "Das Bewerbungs-PDF konnte nicht erstellt werden."
   },
   "COMPANIES": {
     "TITLE": "Unternehmen",
@@ -641,7 +644,7 @@
     "CLOSING_LABEL": "Grußformel",
     "CLOSING_HELP": "Aus der Briefsprache vorbelegt.",
     "ATTACHMENTS_LEGEND": "Anlagen",
-    "ATTACHMENTS_HELP": "Eine Zeile je Anlage, am Briefende unter „Anlagen“ aufgeführt.",
+    "ATTACHMENTS_HELP": "Eine Zeile je Anlage, am Briefende unter „Anlagen“ aufgeführt. Unterlagen, die Sie der Bewerbung beigefügt haben, werden automatisch angefügt.",
     "ATTACHMENT_LABEL": "Anlage {{number}}",
     "ADD_ATTACHMENT": "Anlage hinzufügen",
     "REMOVE_ATTACHMENT": "Anlage {{number}} entfernen",

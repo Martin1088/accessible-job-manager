@@ -48,6 +48,20 @@ export function describeHttpFailure(err: HttpErrorResponse, serverMessage?: stri
 }
 
 /**
+ * The server's sentence from the error body of a `responseType: 'blob'` request,
+ * which arrives as a Blob rather than parsed JSON. Empty when there is none - pass
+ * the result to {@link describeHttpFailure} as its `serverMessage`.
+ */
+export async function readBlobMessage(body: unknown): Promise<string> {
+  if (!(body instanceof Blob)) return '';
+  try {
+    return messageOf(JSON.parse(await body.text()));
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Reads the `message` out of this application's `{status, error, message}`
  * error body.
  *

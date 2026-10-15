@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EMPTY, of, throwError } from 'rxjs';
+import { HttpErrorResponse, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { provideTranslateService } from '@ngx-translate/core';
 
 import { LiveAnnouncer } from '@angular/cdk/a11y';
@@ -66,7 +67,7 @@ describe('ApplicationListComponent', () => {
     applicationServiceSpy.update.and.returnValue(of(APPLICATION));
 
     coverLetterServiceSpy = jasmine.createSpyObj('CoverLetterService',
-      ['listTemplates', 'renderPdf', 'renderText', 'renderEmail']);
+      ['listTemplates', 'renderPdf', 'renderText', 'renderEmail', 'renderBundle']);
     coverLetterServiceSpy.listTemplates.and.returnValue(of([HTML_TEMPLATE]));
 
     await TestBed.configureTestingModule({
@@ -165,6 +166,57 @@ describe('ApplicationListComponent', () => {
     expect(anchor.download).toBe('Anschreiben_Acme_GmbH.pdf');
     expect(anchor.click).toHaveBeenCalled();
     httpMock.expectNone(r => r.url.startsWith('/api/word/'));
+  });
+
+  it('downloads the application PDF from the word provider, named as the server names it', () => {
+    const anchor = stubAnchor();
+    component.selectedTemplate[7] = component.wordTemplates[0];
+
+    component.downloadBundle(7);
+    httpMock.expectOne('/api/word/cover-letter/7/fill/word-1/bundle').flush(new Blob(['pdf']),
+      { headers: { 'Content-Disposition': 'attachment; filename="Bewerbung_Acme_GmbH.pdf"' } });
+
+    expect(coverLetterServiceSpy.renderBundle).not.toHaveBeenCalled();
+    expect(anchor.download).toBe('Bewerbung_Acme_GmbH.pdf');
+    expect(anchor.click).toHaveBeenCalled();
+  });
+
+  it('downloads the application PDF from the html provider for a letter template', () => {
+    const anchor = stubAnchor();
+    coverLetterServiceSpy.renderBundle.and.returnValue(of(new HttpResponse({
+      body: new Blob(['pdf']),
+      headers: new HttpHeaders({ 'Content-Disposition': 'attachment; filename="Application_Acme_GmbH.pdf"' }),
+    })));
+    component.selectedTemplate[7] = component.htmlTemplates[0];
+
+    component.downloadBundle(7);
+
+    expect(coverLetterServiceSpy.renderBundle).toHaveBeenCalledWith(7, 'html-1', { attachments: [] });
+    expect(anchor.download).toBe('Application_Acme_GmbH.pdf');
+    httpMock.expectNone(r => r.url.startsWith('/api/word/'));
+  });
+
+  it('shows the server\'s reason when an enclosed document cannot go into the application PDF', async () => {
+    const reason = 'The document "Zeugnis" is encrypted or not a readable PDF';
+    coverLetterServiceSpy.renderBundle.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 400,
+      error: new Blob([JSON.stringify({ status: 400, error: 'Bad Request', message: reason })]),
+    })));
+    component.selectedTemplate[7] = component.htmlTemplates[0];
+
+    component.downloadBundle(7);
+    // The reason is read out of a Blob, which resolves on the browser's schedule -
+    // wait for the outcome rather than a fixed delay (see job-posting-import's spec).
+    const deadline = Date.now() + 2000;
+    while (!component.bundleFailure && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 5));
+    }
+    fixture.detectChanges();
+
+    const alert: HTMLElement = fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alert.textContent).toContain(reason);
+    expect(component.downloading[7]).toBeFalse();
+    await expectNoAxeViolations(fixture);
   });
 
   it('emails a letter template through the html provider', () => {

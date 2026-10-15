@@ -130,4 +130,25 @@ class ApplicationDocumentServiceTest {
         assertThat(result).extracting(ApplicationDocumentsDto::applicationId).containsExactly(3L, 7L);
         assertThat(result.get(1).documents()).extracting(DocumentDto::label).containsExactly("Lebenslauf", "Zeugnis");
     }
+
+    @Test
+    void enclosed_returnsTheDocumentsOfOneApplicationInReadingOrder() {
+        Application seven = application(7L);
+        Document cert = document(DocumentType.CERTIFICATE, "Zeugnis", LocalDateTime.now());
+        Document cv = document(DocumentType.CV, "Lebenslauf", LocalDateTime.now());
+        when(applicationService.findOwned(7L, "u1")).thenReturn(seven);
+        when(repository.findByApplication_Id(7L)).thenReturn(List.of(
+                new ApplicationDocument(seven, cert), new ApplicationDocument(seven, cv)));
+
+        assertThat(service.enclosed(7L, "u1")).extracting(Document::getLabel).containsExactly("Lebenslauf", "Zeugnis");
+    }
+
+    @Test
+    void enclosed_refusesSomeoneElsesApplication() {
+        when(applicationService.findOwned(7L, "u2")).thenThrow(new ApiException.Forbidden());
+
+        assertThatThrownBy(() -> service.enclosed(7L, "u2")).isInstanceOf(ApiException.Forbidden.class);
+
+        verifyNoInteractions(repository);
+    }
 }

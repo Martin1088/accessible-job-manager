@@ -406,6 +406,10 @@ route('POST', '/api/html/cover-letter/template/:id/preview', req =>
 route('POST', '/api/html/cover-letter/:applicationId/render/:templateId', req =>
   req.query.get('format') === 'text' ? SAMPLE_PREVIEW_TEXT : SAMPLE_PDF);
 
+// The application PDF is the letter plus the enclosed documents; the demo has one
+// sample PDF for both, and the browser has nothing to merge them with.
+route('POST', '/api/html/cover-letter/:applicationId/bundle/:templateId', () => SAMPLE_PDF);
+
 route('POST', '/api/html/cover-letter/:applicationId/email/:templateId', () => ({
   to: 'security-jobs@aurum.example',
   subject: 'Bewerbung als IT-Sicherheitsanalystin',
@@ -527,6 +531,7 @@ route('POST', '/api/matching/text', req => {
 // ---------------------------------------------------------------------------
 
 route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId', () => SAMPLE_PDF);
+route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/bundle', () => SAMPLE_PDF);
 route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/word', () => OUT_OF_SCOPE);
 route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/text', () => SAMPLE_PREVIEW_TEXT);
 route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/email', () => ({

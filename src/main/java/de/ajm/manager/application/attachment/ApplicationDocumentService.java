@@ -59,6 +59,22 @@ public class ApplicationDocumentService {
     }
 
     /**
+     * The documents enclosed with one of the caller's applications, in reading order -
+     * the order the cover letter lists them in and the bundle prints them in.
+     *
+     * @throws ApiException.NotFound  the application does not exist
+     * @throws ApiException.Forbidden it belongs to someone else
+     */
+    @Transactional(readOnly = true)
+    public List<Document> enclosed(Long applicationId, String userId) {
+        applicationService.findOwned(applicationId, userId);
+        return repository.findByApplication_Id(applicationId).stream()
+                .map(ApplicationDocument::getDocument)
+                .sorted(READING_ORDER)
+                .toList();
+    }
+
+    /**
      * Replaces the documents enclosed with one application. All of them are checked
      * before anything is written, so a refused document leaves the set as it was.
      *

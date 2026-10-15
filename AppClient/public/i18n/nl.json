@@ -405,6 +405,8 @@
     "DOWNLOADING": "…",
     "DOWNLOAD_PDF": "PDF downloaden",
     "DOWNLOAD_ARIA": "Motivatiebrief voor {{company}} als PDF downloaden",
+    "DOWNLOAD_BUNDLE": "Sollicitatie-pdf",
+    "DOWNLOAD_BUNDLE_ARIA": "Sollicitatie bij {{company}} als één pdf downloaden: brief en documenten",
     "DOWNLOAD_WORD": "Word downloaden",
     "DOWNLOAD_WORD_ARIA": "Motivatiebrief voor {{company}} als Word-document downloaden",
     "SEND_EMAIL": "Als e-mail verzenden",
@@ -414,7 +416,8 @@
     "UPDATE_STATUS_ARIA": "Nieuwe status voor {{company}} opslaan",
     "ERROR_CREATE": "Sollicitatie kon niet worden aangemaakt.",
     "ERROR_LOAD": "Sollicitaties konden niet worden geladen.",
-    "ERROR_COVER_LETTER": "Motivatiebrief kon niet worden gegenereerd."
+    "ERROR_COVER_LETTER": "Motivatiebrief kon niet worden gegenereerd.",
+    "ERROR_BUNDLE": "De sollicitatie-pdf kon niet worden gemaakt."
   },
   "COMPANIES": {
     "TITLE": "Bedrijven",
@@ -641,7 +644,7 @@
     "CLOSING_LABEL": "Slotformule",
     "CLOSING_HELP": "Vooringevuld op basis van de brieftaal.",
     "ATTACHMENTS_LEGEND": "Bijlagen",
-    "ATTACHMENTS_HELP": "Eén regel per bijlage, onderaan de brief vermeld onder \"Bijlagen\".",
+    "ATTACHMENTS_HELP": "Eén regel per bijlage, onderaan de brief vermeld onder \"Bijlagen\". Documenten die u bij de sollicitatie hebt gevoegd, worden automatisch toegevoegd.",
     "ATTACHMENT_LABEL": "Bijlage {{number}}",
     "ADD_ATTACHMENT": "Bijlage toevoegen",
     "REMOVE_ATTACHMENT": "Bijlage {{number}} verwijderen",

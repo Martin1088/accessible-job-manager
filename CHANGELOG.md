@@ -18,6 +18,25 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- An application records which documents go with it: CVs, certificates and other PDFs,
+  chosen per application in the Applications list ("Documents" action). The list shows
+  how many each application has. When the panel opens for an application with nothing
+  enclosed yet, the default CV and certificate in the position's language are
+  preselected; nothing is stored until "Save documents". Endpoints:
+  `GET /api/applications/documents`, `PUT /api/applications/{id}/documents`. Deleting a
+  document or an application removes the link (new table `application_documents`, both
+  foreign keys `ON DELETE CASCADE`).
+- A cover letter lists the documents enclosed with its application under "Enclosures",
+  after any lines written in the letter form; a label already among those lines is not
+  repeated. The text preview, the PDF and the email draft show the same list. HTML
+  templates only - a Word template has no enclosures field.
+- "Application PDF" in the Applications list: the cover letter followed by the enclosed
+  documents in reading order (CV, certificates, others), as one PDF to attach to a mail
+  or upload to an application form. Works for HTML and Word templates alike
+  (`POST /api/html/cover-letter/{applicationId}/bundle/{templateId}`,
+  `POST /api/word/cover-letter/{applicationId}/fill/{documentId}/bundle`). An encrypted
+  or unreadable enclosure is refused with its name rather than failing the whole request.
+
 - A position has an application deadline. The deadline a job posting states
   (`validThrough`) is carried from the import into the company form, can be edited
   there, and is shown in the position's details and copied along with an advisor's
@@ -93,6 +112,11 @@ orientation, not as a record of releases that happened.
 
 ### Fixed
 
+- Uploading a document to Garage failed with `Invalid payload signature` (400) since
+  the AWS SDK update to 2.55: the SDK now sends a CRC32 checksum on every upload as an
+  `aws-chunked` body, which Garage does not accept. The S3 client sends checksums only
+  where S3 requires them again (`requestChecksumCalculation`/`responseChecksumValidation`
+  `WHEN_REQUIRED`).
 - In the Applications table, a long status ("Vorstellungsgespräch geplant") and the
   edit/delete buttons are no longer cut off at high zoom. Columns now grow to fit their
   content, and a table too wide for the screen scrolls sideways; the scroll area can be

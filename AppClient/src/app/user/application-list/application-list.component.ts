@@ -4,7 +4,7 @@ import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Application, ApplicationRequest, ApplicationStatus } from '../../model/application';
@@ -13,6 +13,8 @@ import { CoverLetterService } from '../../services/cover-letter.service';
 import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
 import { DefaultDocument, Document, DocumentLanguage, DocumentType, defaultFor } from '../../model/document';
 import { DocumentService } from '../../services/document.service';
+import { HttpFailure, describeHttpFailure, readBlobMessage } from '../../core/http-error';
+import { ErrorTextComponent } from '../../shared/error-text/error-text.component';
 import { byMostRecent } from '../../shared/sort';
 import { Company, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
@@ -54,6 +56,17 @@ function byUpload(a: Document, b: Document): number {
 // The list has no attachment editor; attachments are chosen in the template editor.
 const NO_ATTACHMENTS: CoverLetterRenderRequest = { attachments: [] };
 
+function saveBlob(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function filenameOf(contentDisposition: string | null): string | null {
+  return contentDisposition ? /filename="?([^";]+)"?/.exec(contentDisposition)?.[1]?.trim() ?? null : null;
+}
+
 function yearOf(iso: string | null | undefined): number | null {
   if (!iso) return null;
   const y = parseInt(iso.substring(0, 4), 10);
@@ -76,7 +89,7 @@ function matchesFilter(iso: string | null | undefined, filterYear: number | '', 
 @Component({
   selector: 'app-application-list',
   standalone: true,
-  imports: [FormsModule, PositionDetailsComponent, TranslatePipe],
+  imports: [FormsModule, PositionDetailsComponent, TranslatePipe, ErrorTextComponent],
   templateUrl: './application-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './application-list.component.scss',
@@ -96,6 +109,8 @@ export class ApplicationListComponent implements OnInit {
   statusDraft: Record<number, ApplicationStatus> = {};
   updatingStatus: Record<number, boolean> = {};
   errorMessage = '';
+  /** Why the last application PDF failed; kept apart because it can carry the server's reason. */
+  bundleFailure: HttpFailure | null = null;
   submitting = false;
 
   // pre-filled create form (shown when navigating from company list)
@@ -554,6 +569,38 @@ export class ApplicationListComponent implements OnInit {
       : this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}`, null, { responseType: 'blob' }));
   }
 
+  /**
+   * The letter followed by the documents enclosed with the application, as one PDF
+   * to attach to a mail or upload to a form. Either provider prints the letter.
+   */
+  downloadBundle(appId: number): void {
+    const template = this.selectedTemplate[appId];
+    if (!template) return;
+    const request: Observable<HttpResponse<Blob>> = template.provider === 'HTML'
+      ? this.coverLetterService.renderBundle(appId, template.id, NO_ATTACHMENTS)
+      : this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}/bundle`, null,
+          { responseType: 'blob', observe: 'response' });
+
+    this.bundleFailure = null;
+    this.downloading[appId] = true;
+    request.subscribe({
+      next: (response) => {
+        const row = this.rows.find(r => r.id === appId);
+        const name = filenameOf(response.headers.get('Content-Disposition'))
+          ?? `${(row?.companyName ?? 'application').replace(/\s+/g, '_')}.pdf`;
+        saveBlob(response.body!, name);
+        this.downloading[appId] = false;
+        if (row) this.markAppliedToday(row);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.downloading[appId] = false;
+        // Blob request: the server's reason - which enclosed document it could not
+        // read - has to be read out of the body before it can be shown.
+        readBlobMessage(err.error).then(message => this.bundleFailure = describeHttpFailure(err, message));
+      },
+    });
+  }
+
   downloadCoverLetterWord(appId: number): void {
     const template = this.selectedTemplate[appId];
     if (!template || template.provider !== 'WORD') return;
@@ -628,10 +675,7 @@ export class ApplicationListComponent implements OnInit {
       next: (blob) => {
         const row = this.rows.find(r => r.id === appId);
         const name = `Anschreiben_${(row?.companyName ?? 'cover_letter').replace(/\s+/g, '_')}.${extension}`;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = name; a.click();
-        URL.revokeObjectURL(url);
+        saveBlob(blob, name);
         this.downloading[appId] = false;
         if (row) this.markAppliedToday(row);
       },

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
-import { HttpFailure, describeHttpFailure } from '../../core/http-error';
+import { HttpFailure, describeHttpFailure, readBlobMessage } from '../../core/http-error';
 import { Company, Gender } from '../../model/company';
 import { JobPostingImportStore } from '../../services/job-posting-import.store';
 import { ErrorTextComponent } from '../error-text/error-text.component';
@@ -412,7 +412,7 @@ export class JobPostingImportComponent implements OnDestroy {
       },
       error: (err: HttpErrorResponse) => {
         this.checkingSnapshot = false;
-        this.readBlobMessage(err.error).then(message => {
+        readBlobMessage(err.error).then(message => {
           this.snapshotRenderFailure = describeHttpFailure(err, message);
         });
       },
@@ -442,20 +442,11 @@ export class JobPostingImportComponent implements OnDestroy {
         // This request asks for a blob, so its error body arrives as a Blob
         // rather than parsed JSON - the server's reason has to be read out of
         // it before the failure can be classified.
-        this.readBlobMessage(err.error).then(message => {
+        readBlobMessage(err.error).then(message => {
           this.snapshotRenderFailure = describeHttpFailure(err, message);
         });
       },
     });
-  }
-
-  private async readBlobMessage(body: unknown): Promise<string> {
-    if (!(body instanceof Blob)) return '';
-    try {
-      return JSON.parse(await body.text())?.message ?? '';
-    } catch {
-      return '';
-    }
   }
 
   private releasePreviewObjectUrl(): void {

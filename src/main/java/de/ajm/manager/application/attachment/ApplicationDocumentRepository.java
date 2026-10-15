@@ -14,6 +14,9 @@ public interface ApplicationDocumentRepository extends JpaRepository<Application
     @EntityGraph(attributePaths = {"application", "document"})
     List<ApplicationDocument> findByApplication_UserId(String userId);
 
+    @EntityGraph(attributePaths = "document")
+    List<ApplicationDocument> findByApplication_Id(Long applicationId);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void deleteByApplication_Id(Long applicationId);
 }
