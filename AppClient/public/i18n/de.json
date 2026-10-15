@@ -751,6 +751,8 @@
     "UPLOAD": ".docx hochladen",
     "NEW_TEMPLATE_HEADING": "Neue Vorlage",
     "EDIT_TEMPLATE_HEADING": "Vorlage bearbeiten",
+    "NEW_DOCUMENT_HEADING": "Neues Dokument",
+    "EDIT_DOCUMENT_HEADING": "Dokument bearbeiten",
     "FILE_LABEL": "Datei:",
     "LABEL_FIELD": "Bezeichnung",
     "LABEL_PLACEHOLDER": "z. B. Standardanschreiben DE",

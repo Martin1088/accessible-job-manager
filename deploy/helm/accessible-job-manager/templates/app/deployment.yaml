@@ -81,6 +81,10 @@ spec:
               value: "http://{{ include "ajm.fullname" . }}-ollama:11434"
             - name: OLLAMA_MODEL
               value: {{ .Values.llm.ollama.model | quote }}
+            {{- if .Values.llm.ollama.matchingModel }}
+            - name: CV_MATCHING_MODEL
+              value: {{ .Values.llm.ollama.matchingModel | quote }}
+            {{- end }}
             {{- end }}
           {{- if .Values.legal.documents }}
           volumeMounts:

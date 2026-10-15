@@ -131,7 +131,7 @@ test {
     failOnNoDiscoveredTests = false
     exclude '**/AngularTemplateApplicationTests.class'
     jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}", "-Dnet.bytebuddy.experimental=true"
-    ['posting.url', 'gotenberg.url', 'ollama.url', 'ollama.model',
+    ['posting.url', 'gotenberg.url', 'ollama.url', 'ollama.model', 'matching.live',
      'llm.connect-timeout-seconds', 'llm.read-timeout-seconds', 'llm.max-output-tokens'].each { key ->
         def value = providers.systemProperty(key)
         if (value.present) {

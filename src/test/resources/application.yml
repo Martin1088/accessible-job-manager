@@ -52,6 +52,13 @@ job-posting:
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       api-key: ${AZURE_OPENAI_API_KEY:}
 
+# Same fallbacks as the main application.yml: this file replaces it, and without the
+# block CvMatchingProperties would bind empty and fail its own validation.
+cv-matching:
+  provider: ${CV_MATCHING_LLM_PROVIDER:${job-posting.parser.provider:ollama}}
+  ollama-url: ${CV_MATCHING_OLLAMA_URL:${job-posting.parser.ollama-url:http://localhost:11434}}
+  model: ${CV_MATCHING_MODEL:${job-posting.parser.model:qwen2.5:3b}}
+
 storage:
   provider: ${STORAGE_PROVIDER:s3}
   s3:

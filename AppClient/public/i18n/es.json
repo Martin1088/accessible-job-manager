@@ -751,6 +751,8 @@
     "UPLOAD": "Subir .docx",
     "NEW_TEMPLATE_HEADING": "Plantilla nueva",
     "EDIT_TEMPLATE_HEADING": "Editar plantilla",
+    "NEW_DOCUMENT_HEADING": "Documento nuevo",
+    "EDIT_DOCUMENT_HEADING": "Editar documento",
     "FILE_LABEL": "Archivo:",
     "LABEL_FIELD": "Etiqueta",
     "LABEL_PLACEHOLDER": "p. ej. Carta de presentación estándar ES",

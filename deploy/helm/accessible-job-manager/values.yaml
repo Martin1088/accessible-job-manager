@@ -104,6 +104,10 @@ llm:
     enabled: true
     image: ollama/ollama:0.34.2
     model: qwen2.5:3b
+    # The CV matching's own model. Empty uses `model` above; a larger one (e.g.
+    # qwen2.5:14b) judges a CV noticeably better, at the cost of memory and time.
+    # Pulled alongside `model`, so mind storage.size.
+    matchingModel: ""
     storage:
       size: 30Gi
       storageClass: hcloud-volumes

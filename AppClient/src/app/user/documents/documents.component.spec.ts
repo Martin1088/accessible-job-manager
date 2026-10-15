@@ -34,7 +34,7 @@ describe('DocumentsComponent', () => {
 
   beforeEach(async () => {
     documents = jasmine.createSpyObj<DocumentService>('DocumentService',
-      ['getAll', 'getSharedWithMe', 'getDefaults', 'makeDefault', 'clearDefault']);
+      ['getAll', 'getSharedWithMe', 'getDefaults', 'makeDefault', 'clearDefault', 'upload', 'update']);
     documents.getAll.and.returnValue(of([CV_DE, CV_DE_2, OTHER, LETTER]));
     documents.getSharedWithMe.and.returnValue(of([]));
     documents.getDefaults.and.returnValue(of([slot(CV_DE)]));
@@ -135,5 +135,63 @@ describe('DocumentsComponent', () => {
 
   it('has no axe-detectable accessibility violations', async () => {
     await expectNoAxeViolations(fixture);
+  });
+  describe('the upload form', () => {
+    const pdfButton = () => Array.from(el().querySelectorAll<HTMLButtonElement>('button.btn-upload'))
+      .find(b => b.textContent!.includes('DOCUMENTS.UPLOAD_PDF'))!;
+
+    /** What the hidden file input does once the dialog closes: the button it was opened from keeps focus. */
+    async function choosePdf(): Promise<void> {
+      pdfButton().focus();
+      const input = { files: [new File(['%PDF'], 'Lebenslauf 2026.pdf', { type: 'application/pdf' })], value: 'x' };
+      fixture.componentInstance.onFileSelected({ target: input } as unknown as Event, 'DOCUMENT');
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+
+    it('takes focus to the form when a PDF has been chosen, named as a document', async () => {
+      await choosePdf();
+
+      const heading = el().querySelector<HTMLElement>('#upload-heading')!;
+      expect(document.activeElement).toBe(heading);
+      expect(heading.textContent!.trim()).toBe('DOCUMENTS.NEW_DOCUMENT_HEADING');
+      expect(el().querySelector<HTMLInputElement>('#doc-label')!.value).toBe('Lebenslauf 2026');
+    });
+
+    it('hands focus back to the upload button when cancelled', async () => {
+      await choosePdf();
+      fixture.componentInstance.cancelUpload();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(el().querySelector('#upload-heading')).toBeNull();
+      expect(document.activeElement).toBe(pdfButton());
+    });
+
+    it('hands focus back to the upload button once the document is stored', async () => {
+      documents.upload.and.returnValue(of(CV_DE));
+      await choosePdf();
+
+      fixture.componentInstance.confirmUpload();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(documents.upload).toHaveBeenCalledWith(jasmine.any(File), 'Lebenslauf 2026', 'CV', 'ENGLISH');
+      expect(document.activeElement).toBe(pdfButton());
+    });
+
+    it('takes focus to the form for an edit too, named as a document', async () => {
+      click('Lebenslauf', 'DOCUMENTS.ACTION_EDIT');
+      await fixture.whenStable();
+
+      const heading = el().querySelector<HTMLElement>('#upload-heading')!;
+      expect(document.activeElement).toBe(heading);
+      expect(heading.textContent!.trim()).toBe('DOCUMENTS.EDIT_DOCUMENT_HEADING');
+    });
+
+    it('has no axe-detectable accessibility violations while open', async () => {
+      await choosePdf();
+      await expectNoAxeViolations(fixture);
+    });
   });
 });

@@ -30,20 +30,17 @@ export interface SkillGroup {
 const GROUP_ORDER: readonly SkillStatus[] = ['MISSING', 'PARTIAL', 'MET'];
 
 /**
- * Holds one of the user's CVs against a job posting and shows, requirement by
+ * Holds the user's default CV against a job posting and shows, requirement by
  * requirement, what the CV covers and what is missing.
  *
  * Presentation only. The level, the statuses and every sentence come from the
  * server; this groups and orders them, and decides nothing about the fit -
  * a score computed here would be a second opinion that disagrees with the first.
  *
- * Built as the demo's showcase first: only `DemoBackend` answers
- * `/api/matching` so far.
- *
  * Two places show it. As its own page (`/matching`) it is the page's `<main>`
- * and `<h1>`. `embedded` puts it on the demo's user home instead, as one more
- * sheet under the posting import: no second `<main>`, and every heading one
- * level deeper, so the home page's outline stays a single tree.
+ * and `<h1>`. `embedded` puts it on the user home instead, opened from the
+ * posting import as one more sheet under it: no second `<main>`, and every
+ * heading one level deeper, so the home page's outline stays a single tree.
  */
 @Component({
   selector: 'app-cv-match',

@@ -751,6 +751,8 @@
     "UPLOAD": ".docx uploaden",
     "NEW_TEMPLATE_HEADING": "Nieuw sjabloon",
     "EDIT_TEMPLATE_HEADING": "Sjabloon bewerken",
+    "NEW_DOCUMENT_HEADING": "Nieuw document",
+    "EDIT_DOCUMENT_HEADING": "Document bewerken",
     "FILE_LABEL": "Bestand:",
     "LABEL_FIELD": "Label",
     "LABEL_PLACEHOLDER": "bijv. Standaard motivatiebrief NL",

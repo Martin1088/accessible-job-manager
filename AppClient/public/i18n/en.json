@@ -751,6 +751,8 @@
     "UPLOAD": "Upload .docx",
     "NEW_TEMPLATE_HEADING": "New template",
     "EDIT_TEMPLATE_HEADING": "Edit template",
+    "NEW_DOCUMENT_HEADING": "New document",
+    "EDIT_DOCUMENT_HEADING": "Edit document",
     "FILE_LABEL": "File:",
     "LABEL_FIELD": "Label",
     "LABEL_PLACEHOLDER": "e.g. Standard cover letter EN",

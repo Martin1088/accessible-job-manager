@@ -176,6 +176,17 @@ public class JobPostingParserService {
      * follows links out of the page, which needs the page.
      */
     public JobPostingExtraction overviewFromText(String postingText) {
+        return llmClient.extract(requirePostingText(postingText));
+    }
+
+    /**
+     * Posting text as every model call here wants it: present, long enough to be a
+     * posting, and cut to the length the models are given. Public so the CV matching
+     * applies the same rules rather than a copy of them.
+     *
+     * @throws ApiException.BadRequest the text is empty or too short to be a posting
+     */
+    public String requirePostingText(String postingText) {
         if (postingText == null || postingText.isBlank()) {
             throw new ApiException.BadRequest(message("error.postingText.empty"));
         }
@@ -186,7 +197,7 @@ public class JobPostingParserService {
         if (text.length() < MIN_TEXT_CHARS) {
             throw new ApiException.BadRequest(message("error.postingText.tooShort", MIN_TEXT_CHARS));
         }
-        return llmClient.extract(truncateText(text));
+        return truncateText(text);
     }
 
     /**

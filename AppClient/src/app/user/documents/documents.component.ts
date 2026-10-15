@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, Injector, OnInit, ChangeDetectionStrategy, afterNextRender, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
@@ -97,6 +97,12 @@ export class DocumentsComponent implements OnInit {
   uploadMode: UploadMode = 'TEMPLATE';
   showUploadForm = false;
   editingId: string | null = null;
+
+  /** A PDF is a document, not a template - the form's heading says which. */
+  get formHeadingKey(): string {
+    const kind = this.uploadMode === 'DOCUMENT' ? 'DOCUMENT' : 'TEMPLATE';
+    return `DOCUMENTS.${this.editingId ? 'EDIT' : 'NEW'}_${kind}_HEADING`;
+  }
 
   /** Rows of the second table: the user's uploaded PDFs. */
   documentRows: any[] = [];
@@ -233,6 +239,14 @@ export class DocumentsComponent implements OnInit {
   private readonly documentService = inject(DocumentService);
   private readonly relationships = inject(RelationshipService);
   private readonly announcer = inject(LiveAnnouncer);
+  private readonly injector = inject(Injector);
+
+  /**
+   * The control that opened the upload/edit form, to hand focus back to when it
+   * closes. Captured at opening: the file dialog returns focus to the upload button,
+   * and an edit starts from its row's button.
+   */
+  private formOpener: HTMLElement | null = null;
 
   constructor(private translate: TranslateService) {
     this.translate.onLangChange.pipe(takeUntilDestroyed()).subscribe(() => this.rebuildRows());
@@ -446,8 +460,8 @@ export class DocumentsComponent implements OnInit {
     this.pendingLabel = file.name.replace(/\.(docx|pdf)$/i, '');
     this.pendingLanguage = 'ENGLISH';
     if (mode === 'DOCUMENT') this.pendingType = 'CV';
-    this.showUploadForm = true;
     input.value = '';
+    this.openForm();
   }
 
   private startEdit(row: any): void {
@@ -457,7 +471,42 @@ export class DocumentsComponent implements OnInit {
     this.pendingLabel = row.label;
     this.pendingLanguage = row.language;
     if (row.type) this.pendingType = row.type;
+    this.openForm();
+  }
+
+  /**
+   * Shows the form and moves focus to its heading. The form sits at the top of the
+   * page while the PDF upload button and the row actions can be far below, so
+   * without this a keyboard or screen reader user is left at the button with no
+   * sign that a form to finish the upload has opened - and focusing it scrolls it
+   * into view for everyone else.
+   */
+  private openForm(): void {
+    const active = document.activeElement;
+    this.formOpener = active instanceof HTMLElement && active !== document.body ? active : null;
     this.showUploadForm = true;
+    afterNextRender(() => {
+      const heading = document.getElementById('upload-heading');
+      // Focus alone scrolls only until the heading peeks in at the bottom edge,
+      // leaving the fields below it out of view; start the form at the top instead.
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: 'start' });
+    }, { injector: this.injector });
+  }
+
+  /**
+   * Hands focus back to what opened the form. A row's button may be gone by then -
+   * saving rebuilds the tables - so the heading of the table the document lives in
+   * is the fallback.
+   */
+  private restoreFocus(mode: UploadMode): void {
+    const opener = this.formOpener;
+    this.formOpener = null;
+    const fallback = mode === 'DOCUMENT' ? 'documents-heading' : 'templates-heading';
+    afterNextRender(() => {
+      const target = opener?.isConnected ? opener : document.getElementById(fallback);
+      target?.focus();
+    }, { injector: this.injector });
   }
 
   /**
@@ -542,6 +591,7 @@ export class DocumentsComponent implements OnInit {
         this.editingId = null;
         this.pendingLabel = '';
         this.pendingLanguage = 'ENGLISH';
+        this.restoreFocus(this.uploadMode);
         this.ngOnInit();
       },
       error: () => {
@@ -595,6 +645,7 @@ export class DocumentsComponent implements OnInit {
         this.pendingFile = null;
         this.pendingLabel = '';
         this.pendingLanguage = 'ENGLISH';
+        this.restoreFocus(this.uploadMode);
         this.ngOnInit();
       },
       error: () => {
@@ -605,6 +656,7 @@ export class DocumentsComponent implements OnInit {
   }
 
   cancelUpload(): void {
+    this.restoreFocus(this.uploadMode);
     this.showUploadForm = false;
     this.editingId = null;
     this.pendingFile = null;

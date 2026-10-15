@@ -129,6 +129,37 @@ to break:
   is opened before the merge, so an encrypted or broken one is reported by name as a 400
   instead of the merger's anonymous 500.
 
+### CV matching ("Check my fit")
+
+`de.ajm.manager.matching` holds the caller's CV against a posting
+(`POST /api/matching?url=…`, `POST /api/matching/text`). The page compares the user's
+default CV in the interface language. Rules that are easy to break:
+
+- **The model is configured separately, and falls back.** `cv-matching` in
+  `application.yml` mirrors `job-posting.parser`, and every value is a placeholder whose
+  default is the parser's, so a deployment that sets nothing compares with the parser's
+  model. Read timeout (300 s), output tokens (4000) and Ollama's `context-window`
+  (16384, sent as `num_ctx`) are the matching's own. The default `num_ctx` cuts a
+  posting plus a CV off without an error. `CvMatchingProperties` fails startup on an
+  unknown provider or a provider without its settings. In an `.env` file, leave a
+  variable commented out rather than empty: an empty one counts as set and defeats the
+  fallback.
+- **Its client is not a `JobPostingLlmClient` bean.** `CvMatchingModelConfig` builds an
+  own instance of the parser's Ollama or Azure client and wraps it in `CvMatchingModel`.
+  A second bean of the client type would make the parser's injection ambiguous.
+- **The answer is mapped onto strings (`CvMatchSpec.RawMatch`) and cleaned by
+  `CvMatchGuard`**, a pure function. One bad enum value drops one requirement, not the
+  answer. A `postingQuote` or `cvEvidence` that does not occur in its source (compared
+  ignoring case and line breaks) becomes null. The page shows quotes as the texts' own
+  words, and small models paraphrase. An unusable `level` is derived from the
+  requirements.
+- **Properties are ordered in the schema**: requirements first, level and summary last.
+  Ollama generates in schema order.
+- The posting is read through `JobPostingParserService.renderedPostingText` /
+  `requirePostingText`, the CV through `PostingPdfTextExtractor`, after `findOwned(…, CV)`.
+  `CvMatchingLiveTest` runs the prompt against a real model, opt-in:
+  `./gradlew test --tests "*CvMatchingLiveTest" -Dmatching.live=true -Dollama.model=…`.
+
 ### Object storage
 
 Two providers sit behind the `StorageService` interface, selected by `storage.provider`: `GarageStorageService` (S3 via AWS SDK v2, the default) and `AzureBlobStorageService`. Object keys are `{userId}/{type_lowercase}/{uuid}.{ext}`, so the owning subject is in the key prefix.

@@ -43,13 +43,20 @@ orientation, not as a record of releases that happened.
   suggestion. It is stored in a new `date` column, `application_deadline`; the old,
   never-written `deadline` timestamp column on `company_positions` can be dropped by
   hand (`ALTER TABLE company_positions DROP COLUMN deadline;`).
-- A "Check my fit" page (`/matching`, linked from the home page) holds one of the
-  user's CVs against a job posting and lists, requirement by requirement, what the CV
-  covers and which skills are missing, each with the posting's wording, an assessment
-  and a suggestion. First draft for the demo only: the demo answers with a fixed
-  example result, and the backend for `POST /api/matching` is not built yet. In the
-  demo the check sits directly on the home page, under the posting import, with the
-  posting and the CV side by side.
+- "Check my fit" holds the user's CV against a job posting and lists, requirement by
+  requirement, what the CV covers and which skills are missing, each with the posting's
+  wording, the CV passage that shows it, an assessment and a suggestion
+  (`POST /api/matching`, `POST /api/matching/text`). Quotes the model did not take
+  word for word from the posting or the CV are left out rather than shown as theirs.
+  The demo answers with a fixed example result.
+- The CV matching can use its own model, configured under `cv-matching` in
+  `application.yml` (`CV_MATCHING_MODEL`, `CV_MATCHING_LLM_PROVIDER`, …). Every value
+  falls back to the job posting extraction's, so nothing has to be set; a larger model
+  than the 3B default judges a CV noticeably better, and the provider may differ
+  (Ollama for the extraction, Azure OpenAI for the matching, or the other way round).
+  Read timeout, output tokens and Ollama's context window (`num_ctx`, 16384) have
+  their own defaults. The Helm chart takes `llm.ollama.matchingModel` and pulls it
+  alongside the extraction's model.
 - The new-company form has a "Create and apply" button next to "Create": it saves the company
   and opens the application form for its first position.
 - A document can be marked as the default CV, certificate or cover letter template for
@@ -90,8 +97,7 @@ orientation, not as a record of releases that happened.
   posting's link (or pasted text) already filled in. "Use for new company" is repeated
   under the check, so the company can be created from there. The check is no longer
   always shown in the demo, and the teaser link to `/matching` is gone (the page
-  itself remains). Outside the demo the check still ends in an error until the
-  backend for `/api/matching` exists.
+  itself remains).
 - Table column headings and captions are larger and easier to read, in every table and
   in the mobile card layout.
 - Companies, Applications and Documents now list the most recently changed entry first.
@@ -123,6 +129,12 @@ orientation, not as a record of releases that happened.
 
 ### Fixed
 
+- On the Documents page, choosing a file to upload, or editing a document, now moves
+  focus to the form that has to be completed - scrolled to the top of the screen -
+  and back to the button it came from once the form is saved or cancelled. Before,
+  focus stayed on the upload button far down the page and the form opened unnoticed
+  at the top. A PDF's form is titled "New document" / "Edit document" rather than
+  "New template".
 - On a phone, the posting import's result list pushed the home page about 45px
   sideways: a long website URL could not wrap. Values in the list now wrap anywhere.
 - Uploading a document to Garage failed with `Invalid payload signature` (400) since
