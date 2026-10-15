@@ -81,6 +81,17 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+- "Check my fit" no longer asks which CV to compare. It always compares the default CV
+  in the interface language, names it on the page, and follows a language switch. Without
+  a default CV in that language it says so and links to Documents; it no longer falls
+  back to a default in another language or to the newest upload.
+- On the home page, the CV check is now opened from the posting import: "Check against
+  my CV" sits next to "Use for new company" and shows the check on the page with the
+  posting's link (or pasted text) already filled in. "Use for new company" is repeated
+  under the check, so the company can be created from there. The check is no longer
+  always shown in the demo, and the teaser link to `/matching` is gone (the page
+  itself remains). Outside the demo the check still ends in an error until the
+  backend for `/api/matching` exists.
 - Table column headings and captions are larger and easier to read, in every table and
   in the mobile card layout.
 - Companies, Applications and Documents now list the most recently changed entry first.
@@ -112,6 +123,8 @@ orientation, not as a record of releases that happened.
 
 ### Fixed
 
+- On a phone, the posting import's result list pushed the home page about 45px
+  sideways: a long website URL could not wrap. Values in the list now wrap anywhere.
 - Uploading a document to Garage failed with `Invalid payload signature` (400) since
   the AWS SDK update to 2.55: the SDK now sends a CRC32 checksum on every upload as an
   `aws-chunked` body, which Garage does not accept. The S3 client sends checksums only

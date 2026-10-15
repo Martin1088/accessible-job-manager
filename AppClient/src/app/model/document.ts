@@ -17,6 +17,14 @@ export function uiToLetterLanguage(uiLang: string | null | undefined): DocumentL
   return UI_TO_DOCUMENT_LANGUAGE[uiLang ?? ''] ?? 'ENGLISH';
 }
 
+/** The translation key naming a document language, e.g. `LANGUAGE.DE` → "Deutsch". */
+export const DOCUMENT_LANGUAGE_KEY: Record<DocumentLanguage, string> = {
+  ENGLISH: 'LANGUAGE.EN',
+  GERMAN:  'LANGUAGE.DE',
+  DUTCH:   'LANGUAGE.NL',
+  SPANISH: 'LANGUAGE.ES',
+};
+
 export interface Document {
   id: string;
   label: string;

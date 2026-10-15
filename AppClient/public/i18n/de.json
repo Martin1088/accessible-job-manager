@@ -582,6 +582,7 @@
     "MERGE_SOURCE_FULL_CHAIN": "vollständige Extraktion",
     "MERGE_SOURCE_OVERVIEW": "Kurzübersicht",
     "USE_FOR_NEW_COMPANY": "Für neues Unternehmen verwenden",
+    "MATCH_ACTION": "Mit Lebenslauf abgleichen",
     "PROFILE_ERROR": "Profil konnte nicht geladen werden.",
     "NAV_HEADING": "Wohin möchten Sie?",
     "NAV_COMPANIES_TITLE": "Unternehmen",
@@ -879,8 +880,10 @@
   },
   "MATCHING": {
     "TITLE": "Passung zu einer Stelle prüfen",
-    "LEAD": "Halten Sie einen Ihrer Lebensläufe gegen eine Stellenanzeige. Ein KI-Modell vergleicht beide Anforderung für Anforderung und zeigt, was Ihr Lebenslauf schon abdeckt und welche Kenntnisse fehlen.",
+    "LEAD": "Ihr Standard-Lebenslauf in der eingestellten Sprache wird mit der Stellenanzeige verglichen. Ein KI-Modell geht dabei Anforderung für Anforderung durch und zeigt, was Ihr Lebenslauf schon abdeckt und welche Kenntnisse fehlen.",
     "POSTING_HEADING": "Stellenanzeige",
+    "POSTING_PRESET_URL": "Verglichen wird die Anzeige:",
+    "POSTING_PRESET_TEXT": "Verglichen wird der eingefügte Text der Anzeige.",
     "SOURCE_LEGEND": "Wo ist die Anzeige?",
     "SOURCE_URL": "Link zur Anzeige",
     "SOURCE_TEXT": "Text der Anzeige einfügen",
@@ -888,11 +891,11 @@
     "TEXT_LABEL": "Text der Stellenanzeige",
     "TEXT_HELP": "Für eine Anzeige, deren Link hier nicht gelesen werden kann, etwa hinter einer Anmeldung. Kopieren Sie den ganzen Text, einschließlich der Anforderungen.",
     "CV_HEADING": "Ihr Lebenslauf",
-    "CV_LEGEND": "Welcher Lebenslauf soll verglichen werden?",
+    "CV_DEFAULT": "Verglichen wird Ihr Standard-Lebenslauf:",
+    "NO_DEFAULT_CV": "Sie haben keinen Standard-Lebenslauf auf {{language}} festgelegt. Ohne ihn ist kein Abgleich möglich.",
+    "NO_DEFAULT_CV_LINK": "Unter Dokumente festlegen",
     "CVS_LOADING": "Ihre Lebensläufe werden geladen …",
     "CVS_ERROR": "Ihre Lebensläufe konnten nicht geladen werden. Bitte laden Sie die Seite neu.",
-    "NO_CV": "Sie haben noch keinen Lebenslauf hinterlegt.",
-    "NO_CV_LINK": "Lebenslauf unter Dokumente hochladen",
     "PRIVACY": "Ihr Lebenslauf und die Anzeige werden an das KI-Modell gesendet, das auf diesem Server eingerichtet ist. Das Ergebnis wird automatisch erzeugt und kann falsch sein – nutzen Sie es als Hinweis, nicht als Urteil.",
     "RUN": "Passung prüfen",
     "RUNNING": "Wird geprüft …",
@@ -918,8 +921,6 @@
     "REASONING": "Einschätzung",
     "SUGGESTION": "So schließen Sie die Lücke",
     "DISCLAIMER": "Von einem KI-Modell erzeugt. Es kann übersehen, was Ihr Lebenslauf mit anderen Worten sagt, oder mehr in die Anzeige hineinlesen, als dort steht.",
-    "ANNOUNCE": "{{level}}: {{met}} von {{total}} Anforderungen erfüllt, {{partial}} teilweise, {{missing}} fehlen.",
-    "TEASER_TITLE": "Passung prüfen",
-    "TEASER_DESC": "Lebenslauf mit einer Stellenanzeige vergleichen und sehen, welche Kenntnisse fehlen."
+    "ANNOUNCE": "{{level}}: {{met}} von {{total}} Anforderungen erfüllt, {{partial}} teilweise, {{missing}} fehlen."
   }
 }

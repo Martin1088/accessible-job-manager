@@ -41,10 +41,13 @@ export interface DemoDefault {
 }
 
 /**
- * The German CV and the German letter template are the applicant's defaults, so
- * the CV matching and the applications' template picker open preselected.
+ * The German and the English CV and the German letter template are the
+ * applicant's defaults. The CV check compares the default CV in the interface
+ * language, so it runs in German and English and shows its "no default CV"
+ * notice in Dutch and Spanish.
  */
 export const DEFAULTS: DemoDefault[] = [
   { type: 'CV',                    language: 'GERMAN', documentId: 'doc-cv' },
+  { type: 'CV',                    language: 'ENGLISH', documentId: 'doc-cv-en' },
   { type: 'COVER_LETTER_TEMPLATE', language: 'GERMAN', documentId: 'doc-letter-de' },
 ];

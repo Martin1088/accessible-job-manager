@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Output, ViewChild, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Output, ViewChild, booleanAttribute, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
@@ -6,6 +6,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { HttpFailure, describeHttpFailure, readBlobMessage } from '../../core/http-error';
 import { Company, Gender } from '../../model/company';
+import { PostingSource } from '../../model/cv-match';
 import { JobPostingImportStore } from '../../services/job-posting-import.store';
 import { ErrorTextComponent } from '../error-text/error-text.component';
 import { normalizeJobUrl } from './job-url';
@@ -99,6 +100,16 @@ export class JobPostingImportComponent implements OnDestroy {
   @Input() submitting = false;
 
   @Output() readonly imported = new EventEmitter<ImportedPosting>();
+
+  /** Offers "check against my CV" next to the finish button. */
+  @Input({ transform: booleanAttribute }) offerMatch = false;
+
+  /**
+   * The posting to hold against the CV: the link when there is one, else the pasted
+   * text, else null - a posting read from an uploaded PDF has neither, and the
+   * matching then asks for one itself.
+   */
+  @Output() readonly matchRequested = new EventEmitter<PostingSource | null>();
 
   // Same platform gating as AppComponent's global shortcuts: Windows screen
   // readers reserve bare letters for their own browse-mode navigation.
@@ -476,6 +487,12 @@ export class JobPostingImportComponent implements OnDestroy {
     const a = overviewValue?.trim();
     const b = fullChainValue?.trim();
     return !!a && !!b && a.toLowerCase() !== b.toLowerCase();
+  }
+
+  requestMatch(): void {
+    const url = this.jobUrl.trim();
+    const text = this.postingText.trim();
+    this.matchRequested.emit(url ? { kind: 'url', url } : text ? { kind: 'text', text } : null);
   }
 
   submit(): void {

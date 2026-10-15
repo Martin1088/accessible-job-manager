@@ -111,6 +111,49 @@ describe('JobPostingImportComponent', () => {
     });
   });
 
+  describe('the offer to check against the CV', () => {
+    function showResult() {
+      search();
+      http.expectOne(r => r.url === '/api/posting/overview').flush(
+        { title: 'Backend Engineer', company: 'MetalBear', location: null, employmentType: null });
+      http.expectOne(r => r.url === '/api/posting/full-chain').flush(
+        { company: null, sourceJobId: null, postedAt: null, deadline: null, employmentType: null });
+      flushSnapshotCheck();
+      fixture.detectChanges();
+    }
+
+    const matchButton = () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.merge-actions button'))
+      .find(b => b.textContent!.includes('HOME.MATCH_ACTION')) as HTMLButtonElement | undefined;
+
+    it('is not made unless the host asks for it', () => {
+      showResult();
+      expect(matchButton()).toBeUndefined();
+    });
+
+    it('sits next to the finish button and hands over the link', () => {
+      fixture.componentRef.setInput('offerMatch', true);
+      showResult();
+      let requested: unknown;
+      component.matchRequested.subscribe(p => requested = p);
+
+      matchButton()!.click();
+
+      expect(requested).toEqual({ kind: 'url', url: 'https://jobs.example.com/42' });
+    });
+
+    it('hands over the pasted text when there is no link, and nothing when there is neither', () => {
+      const requested: unknown[] = [];
+      component.matchRequested.subscribe(p => requested.push(p));
+
+      component.postingText = '  We are hiring  ';
+      component.requestMatch();
+      component.postingText = '';
+      component.requestMatch();
+
+      expect(requested).toEqual([{ kind: 'text', text: 'We are hiring' }, null]);
+    });
+  });
+
   it('emits nothing when there is no result to submit', () => {
     let emitted = false;
     component.imported.subscribe(() => emitted = true);

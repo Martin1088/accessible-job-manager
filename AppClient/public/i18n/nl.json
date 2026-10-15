@@ -582,6 +582,7 @@
     "MERGE_SOURCE_FULL_CHAIN": "volledige extractie",
     "MERGE_SOURCE_OVERVIEW": "snel overzicht",
     "USE_FOR_NEW_COMPANY": "Gebruiken voor nieuw bedrijf",
+    "MATCH_ACTION": "Vergelijken met mijn cv",
     "PROFILE_ERROR": "Profiel kon niet worden geladen.",
     "NAV_HEADING": "Waar wilt u naartoe?",
     "NAV_COMPANIES_TITLE": "Bedrijven",
@@ -879,8 +880,10 @@
   },
   "MATCHING": {
     "TITLE": "Mijn match met een vacature controleren",
-    "LEAD": "Leg een van uw cv's naast een vacature. Een AI-model vergelijkt ze eis voor eis en laat zien wat uw cv al dekt en welke vaardigheden ontbreken.",
+    "LEAD": "Uw standaard-cv in de ingestelde taal wordt vergeleken met de vacature. Een AI-model loopt die eis voor eis na en laat zien wat uw cv al dekt en welke vaardigheden ontbreken.",
     "POSTING_HEADING": "Vacature",
+    "POSTING_PRESET_URL": "De vergeleken vacature:",
+    "POSTING_PRESET_TEXT": "De geplakte vacaturetekst wordt vergeleken.",
     "SOURCE_LEGEND": "Waar staat de vacature?",
     "SOURCE_URL": "Link naar de vacature",
     "SOURCE_TEXT": "Tekst van de vacature plakken",
@@ -888,11 +891,11 @@
     "TEXT_LABEL": "Tekst van de vacature",
     "TEXT_HELP": "Voor een vacature waarvan de link hier niet gelezen kan worden, bijvoorbeeld achter een login. Kopieer de hele tekst, inclusief de eisen.",
     "CV_HEADING": "Uw cv",
-    "CV_LEGEND": "Welk cv moet worden vergeleken?",
+    "CV_DEFAULT": "Uw standaard-cv wordt vergeleken:",
+    "NO_DEFAULT_CV": "U hebt geen standaard-cv in het {{language}}. Zonder standaard-cv is de vergelijking niet mogelijk.",
+    "NO_DEFAULT_CV_LINK": "Instellen onder Documenten",
     "CVS_LOADING": "Uw cv's worden geladen…",
     "CVS_ERROR": "Uw cv's konden niet worden geladen. Laad de pagina opnieuw.",
-    "NO_CV": "U hebt nog geen cv opgeslagen.",
-    "NO_CV_LINK": "Upload een cv onder Documenten",
     "PRIVACY": "Uw cv en de vacature worden naar het AI-model gestuurd dat op deze server is ingesteld. Het resultaat wordt automatisch gemaakt en kan onjuist zijn — gebruik het als aanwijzing, niet als oordeel.",
     "RUN": "Match controleren",
     "RUNNING": "Bezig met controleren…",
@@ -918,8 +921,6 @@
     "REASONING": "Beoordeling",
     "SUGGESTION": "Zo dicht u het gat",
     "DISCLAIMER": "Gemaakt door een AI-model. Het kan missen wat uw cv in andere woorden zegt, of meer in de vacature lezen dan er staat.",
-    "ANNOUNCE": "{{level}}: {{met}} van {{total}} eisen voldaan, {{partial}} deels, {{missing}} ontbreken.",
-    "TEASER_TITLE": "Match controleren",
-    "TEASER_DESC": "Vergelijk een cv met een vacature en zie welke vaardigheden ontbreken."
+    "ANNOUNCE": "{{level}}: {{met}} van {{total}} eisen voldaan, {{partial}} deels, {{missing}} ontbreken."
   }
 }

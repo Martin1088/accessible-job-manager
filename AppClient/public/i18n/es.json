@@ -582,6 +582,7 @@
     "MERGE_SOURCE_FULL_CHAIN": "extracción completa",
     "MERGE_SOURCE_OVERVIEW": "resumen rápido",
     "USE_FOR_NEW_COMPANY": "Usar para la nueva empresa",
+    "MATCH_ACTION": "Comparar con mi CV",
     "PROFILE_ERROR": "No se pudo cargar el perfil.",
     "NAV_HEADING": "¿Adónde quiere ir?",
     "NAV_COMPANIES_TITLE": "Empresas",
@@ -879,8 +880,10 @@
   },
   "MATCHING": {
     "TITLE": "Comprobar mi encaje con una oferta",
-    "LEAD": "Compare uno de sus currículums con una oferta de empleo. Un modelo de IA los compara requisito por requisito y muestra lo que su currículum ya cubre y qué conocimientos faltan.",
+    "LEAD": "Su CV predeterminado en el idioma actual se compara con la oferta de empleo. Un modelo de IA la revisa requisito por requisito y muestra lo que su CV ya cubre y qué conocimientos faltan.",
     "POSTING_HEADING": "Oferta de empleo",
+    "POSTING_PRESET_URL": "Se compara la oferta:",
+    "POSTING_PRESET_TEXT": "Se compara el texto de la oferta que ha pegado.",
     "SOURCE_LEGEND": "¿Dónde está la oferta?",
     "SOURCE_URL": "Enlace a la oferta",
     "SOURCE_TEXT": "Pegar el texto de la oferta",
@@ -888,11 +891,11 @@
     "TEXT_LABEL": "Texto de la oferta de empleo",
     "TEXT_HELP": "Para una oferta cuyo enlace no se puede leer aquí, por ejemplo detrás de un inicio de sesión. Copie el texto completo, requisitos incluidos.",
     "CV_HEADING": "Su currículum",
-    "CV_LEGEND": "¿Qué currículum se debe comparar?",
+    "CV_DEFAULT": "Se compara su CV predeterminado:",
+    "NO_DEFAULT_CV": "No tiene un CV predeterminado para el idioma «{{language}}». La comparación lo necesita.",
+    "NO_DEFAULT_CV_LINK": "Definirlo en Documentos",
     "CVS_LOADING": "Cargando sus currículums…",
     "CVS_ERROR": "No se pudieron cargar sus currículums. Vuelva a cargar la página.",
-    "NO_CV": "Todavía no ha guardado ningún currículum.",
-    "NO_CV_LINK": "Suba un currículum en Documentos",
     "PRIVACY": "Su currículum y la oferta se envían al modelo de IA configurado en este servidor. El resultado se genera automáticamente y puede ser erróneo: úselo como orientación, no como veredicto.",
     "RUN": "Comprobar encaje",
     "RUNNING": "Comprobando…",
@@ -918,8 +921,6 @@
     "REASONING": "Valoración",
     "SUGGESTION": "Cómo cerrar la brecha",
     "DISCLAIMER": "Generado por un modelo de IA. Puede pasar por alto lo que su currículum dice con otras palabras o leer en la oferta más de lo que pone.",
-    "ANNOUNCE": "{{level}}: {{met}} de {{total}} requisitos cumplidos, {{partial}} en parte, {{missing}} faltan.",
-    "TEASER_TITLE": "Comprobar encaje",
-    "TEASER_DESC": "Compare un currículum con una oferta y vea qué conocimientos faltan."
+    "ANNOUNCE": "{{level}}: {{met}} de {{total}} requisitos cumplidos, {{partial}} en parte, {{missing}} faltan."
   }
 }

@@ -56,13 +56,18 @@ describe('CvMatchComponent', () => {
 
   // Injecting instantiates the test module, so it waits until a test has had
   // its chance to override a provider (the demo case below).
-  function create(cvs: Document[] = [cv()], embedded = false, defaults: DefaultDocument[] | 'error' = []) {
+  const defaultCv = (document: Document): DefaultDocument =>
+    ({ type: 'CV', language: document.language, document });
+
+  /** The interface runs in English, so this is the CV that is compared. */
+  const ENGLISH_CV = cv({ id: 'cv-1', label: 'CV', language: 'ENGLISH' });
+
+  function create(embedded = false, defaults: DefaultDocument[] | 'error' = [defaultCv(ENGLISH_CV)]) {
     http = TestBed.inject(HttpTestingController);
     TestBed.inject(TranslateService).use('en');
     const fixture = TestBed.createComponent(CvMatchComponent);
     fixture.componentRef.setInput('embedded', embedded);
     fixture.detectChanges();
-    http.expectOne(r => r.url === '/api/documents' && r.params.get('type') === 'CV').flush(cvs);
     const defaultsRequest = http.expectOne('/api/documents/defaults');
     if (defaults === 'error') {
       defaultsRequest.flush(null, { status: 500, statusText: 'Server Error' });
@@ -73,9 +78,6 @@ describe('CvMatchComponent', () => {
     return fixture;
   }
 
-  const defaultCv = (document: Document): DefaultDocument =>
-    ({ type: 'CV', language: document.language, document });
-
   function runWithUrl(fixture: ReturnType<typeof create>, body: CvMatchResult = result()) {
     fixture.componentInstance.postingUrl.set('https://jobs.example/1');
     fixture.componentInstance.run();
@@ -85,40 +87,99 @@ describe('CvMatchComponent', () => {
     return req;
   }
 
-  it('preselects the newest CV', () => {
-    const fixture = create([cv({ id: 'old', createdAt: '2025-01-01' }), cv({ id: 'new', createdAt: '2026-06-01' })]);
-    expect(fixture.componentInstance.cvId()).toBe('new');
+  describe('the CV that is compared', () => {
+    const german = cv({ id: 'cv-de', label: 'Lebenslauf', language: 'GERMAN' });
+
+    it('is the default CV in the interface language, named on the page', () => {
+      const fixture = create(false, [defaultCv(german), defaultCv(ENGLISH_CV)]);
+      expect(fixture.componentInstance.cv()?.id).toBe('cv-1');
+      const text = (fixture.nativeElement as HTMLElement).querySelector('.cv-default')!.textContent!;
+      expect(text).toContain('CV');
+      expect(text).toContain('LANGUAGE.EN');
+    });
+
+    it('follows a switch of the interface language', () => {
+      const fixture = create(false, [defaultCv(german), defaultCv(ENGLISH_CV)]);
+      TestBed.inject(TranslateService).use('de');
+      fixture.detectChanges();
+      expect(fixture.componentInstance.cv()?.id).toBe('cv-de');
+    });
+
+    it('is not taken from another language: the page asks for a default and cannot run', () => {
+      const fixture = create(false, [defaultCv(german)]);
+      fixture.componentInstance.postingUrl.set('https://jobs.example/1');
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement;
+      expect(fixture.componentInstance.cv()).toBeNull();
+      expect(el.textContent).toContain('MATCHING.NO_DEFAULT_CV');
+      expect(el.querySelector('a[href="/documents"]')).not.toBeNull();
+      expect(fixture.componentInstance.canRun()).toBeFalse();
+    });
+
+    it('reports when the defaults cannot be read', () => {
+      const fixture = create(false, 'error');
+      expect(fixture.componentInstance.cvsError()).toBeTrue();
+      expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')).not.toBeNull();
+      expect(fixture.componentInstance.canRun()).toBeFalse();
+    });
   });
 
-  describe('preselection from the default CVs', () => {
-    const older = cv({ id: 'de', language: 'GERMAN', createdAt: '2025-01-01' });
-    const olderEn = cv({ id: 'en', language: 'ENGLISH', createdAt: '2025-02-01' });
-    const newest = cv({ id: 'new', language: 'GERMAN', createdAt: '2026-06-01' });
+  describe('with the posting handed in by the page', () => {
+    const PRESET = { kind: 'url', url: 'https://jobs.example/preset' } as const;
 
-    it('takes the default in the interface language over the newest', () => {
-      const fixture = create([older, olderEn, newest], false, [defaultCv(older), defaultCv(olderEn)]);
-      expect(fixture.componentInstance.cvId()).toBe('en');
+    function createWithPreset(focusOnOpen = false) {
+      http = TestBed.inject(HttpTestingController);
+      TestBed.inject(TranslateService).use('en');
+      const fixture = TestBed.createComponent(CvMatchComponent);
+      fixture.componentRef.setInput('embedded', true);
+      fixture.componentRef.setInput('presetPosting', PRESET);
+      fixture.componentRef.setInput('focusOnOpen', focusOnOpen);
+      fixture.detectChanges();
+      http.expectOne('/api/documents/defaults').flush([defaultCv(ENGLISH_CV)]);
+      fixture.detectChanges();
+      return fixture;
+    }
+
+    it('names it instead of asking for it again', () => {
+      const el: HTMLElement = createWithPreset().nativeElement;
+      expect(el.querySelector('#match-url')).toBeNull();
+      expect(el.querySelector('input[name="match-source"]')).toBeNull();
+      expect(el.querySelector('.posting-preset')!.textContent).toContain('https://jobs.example/preset');
     });
 
-    it('takes a default in another language when there is none in the interface language', () => {
-      const fixture = create([older, newest], false, [defaultCv(older)]);
-      expect(fixture.componentInstance.cvId()).toBe('de');
+    it('compares it', () => {
+      const fixture = createWithPreset();
+      expect(fixture.componentInstance.canRun()).toBeTrue();
+      fixture.componentInstance.run();
+      const req = http.expectOne(r => r.url === '/api/matching');
+      expect(req.request.params.get('url')).toBe('https://jobs.example/preset');
+      req.flush(result());
     });
 
-    it('falls back to the newest when the defaults cannot be read', () => {
-      const fixture = create([older, newest], false, 'error');
-      expect(fixture.componentInstance.cvId()).toBe('new');
-      expect(fixture.componentInstance.cvsError()).toBeFalse();
-    });
-  });
+    it('drops the result of the previous posting when another one is handed in', () => {
+      const fixture = createWithPreset();
+      fixture.componentInstance.run();
+      http.expectOne(r => r.url === '/api/matching').flush(result());
+      fixture.detectChanges();
+      expect(fixture.componentInstance.result()).not.toBeNull();
 
-  it('links to the documents page when there is no CV, and cannot run', () => {
-    const fixture = create([]);
-    fixture.componentInstance.postingUrl.set('https://jobs.example/1');
-    fixture.detectChanges();
-    const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('a[href="/documents"]')).not.toBeNull();
-    expect(fixture.componentInstance.canRun()).toBeFalse();
+      fixture.componentRef.setInput('presetPosting', { kind: 'text', text: 'Another posting' });
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.result()).toBeNull();
+      expect((fixture.nativeElement as HTMLElement).querySelector('.posting-preset')!.textContent)
+        .toContain('MATCHING.POSTING_PRESET_TEXT');
+    });
+
+    it('takes focus to its heading when the page has just opened it', async () => {
+      const fixture = createWithPreset(true);
+      await fixture.whenStable();
+      expect(document.activeElement?.id).toBe('match-heading');
+    });
+
+    it('has no axe-detectable accessibility violations', async () => {
+      await expectNoAxeViolations(createWithPreset());
+    });
   });
 
   it('sends the URL, the chosen CV and the interface language', () => {
@@ -211,7 +272,7 @@ describe('CvMatchComponent', () => {
       Array.from(el.querySelectorAll(selector)).map(h => h.id);
 
     it('is a section under the page\'s own h1, not a second main', () => {
-      const el: HTMLElement = create([cv()], true).nativeElement;
+      const el: HTMLElement = create(true).nativeElement;
       expect(el.querySelector('main')).toBeNull();
       expect(el.querySelector('h1')).toBeNull();
       const section = el.querySelector('section.match-sheet');
@@ -220,7 +281,7 @@ describe('CvMatchComponent', () => {
     });
 
     it('puts every heading one level deeper', () => {
-      const fixture = create([cv()], true);
+      const fixture = create(true);
       runWithUrl(fixture);
       const el: HTMLElement = fixture.nativeElement;
       expect(headings(el, 'h2')).toEqual(['match-heading']);
@@ -229,7 +290,7 @@ describe('CvMatchComponent', () => {
     });
 
     it('still moves focus to the result heading', async () => {
-      const fixture = create([cv()], true);
+      const fixture = create(true);
       runWithUrl(fixture);
       await fixture.whenStable();
       expect(document.activeElement?.id).toBe('match-result-heading');
@@ -237,7 +298,7 @@ describe('CvMatchComponent', () => {
     });
 
     it('has no axe-detectable accessibility violations with a result', async () => {
-      const fixture = create([cv()], true);
+      const fixture = create(true);
       runWithUrl(fixture);
       await expectNoAxeViolations(fixture);
     });

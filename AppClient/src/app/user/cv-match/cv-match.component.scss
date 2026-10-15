@@ -488,3 +488,10 @@ h1 {
   .skill__importance { margin-inline-start: 0; }
   .skill__details { padding-inline-start: 0.9rem; }
 }
+
+// A posting handed in by the page is named, not edited. A URL has no break
+// opportunities of its own, so it may break anywhere rather than overflow.
+.posting-preset__url {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
