@@ -23,7 +23,7 @@
 import puppeteer from 'puppeteer';
 
 const PORT = process.env.DEMO_PORT ?? '8099';
-const BASE = `http://127.0.0.1:${PORT}/accessible-job-manager/`;
+const BASE = `http://127.0.0.1:${PORT}/`;
 const CHROME = process.env.CHROME_BIN ?? undefined;
 
 /**
