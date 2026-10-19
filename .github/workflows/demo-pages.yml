@@ -64,11 +64,8 @@ jobs:
       # the built bundle and prove it makes no request to /api/.
       - name: Verify the demo makes no backend calls
         run: |
-          # The bundle is built with --base-href=/accessible-job-manager/, so it
-          # has to be served under that path for its asset URLs to resolve.
-          mkdir -p serve && ln -sfn "$PWD/dist/demo/browser" serve/accessible-job-manager
           npx --yes http-server serve -p 8099 --silent &
-          npx --yes wait-on -t 30000 http://127.0.0.1:8099/accessible-job-manager/
+          npx --yes wait-on -t 30000 http://127.0.0.1:8099/
           npm run check:demo
 
       - name: Upload Pages artifact
