@@ -9,7 +9,7 @@
     "test": "ng test",
     "lint": "eslint . --format unix",
     "lint:a11y": "eslint \"src/**/*.html\" --format unix --max-warnings 0",
-    "build:demo": "ng build --configuration demo --base-href=/accessible-job-manager/",
+    "build:demo": "ng build --configuration demo --base-href=/",
     "check:demo": "node tools/demo-network-check.mjs"
   },
   "private": true,
