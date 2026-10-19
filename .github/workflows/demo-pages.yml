@@ -64,7 +64,7 @@ jobs:
       # the built bundle and prove it makes no request to /api/.
       - name: Verify the demo makes no backend calls
         run: |
-          npx --yes http-server serve -p 8099 --silent &
+          npx --yes http-server dist/demo/browser -p 8099 --silent &
           npx --yes wait-on -t 30000 http://127.0.0.1:8099/
           npm run check:demo
 
