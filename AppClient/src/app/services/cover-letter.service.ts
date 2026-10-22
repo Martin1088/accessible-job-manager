@@ -100,6 +100,17 @@ export class CoverLetterService {
   }
 
   /**
+   * The whole application as one PDF: this letter, then the documents enclosed with
+   * the application. The filename comes from the server, in the letter's language.
+   */
+  renderBundle(applicationId: number, templateId: string, request: CoverLetterRenderRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/${applicationId}/bundle/${templateId}`, request, {
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
+  /**
    * The letter prepared for the user's own mail client. Nothing is sent from the
    * server; the caller turns this into a mailto: link.
    */

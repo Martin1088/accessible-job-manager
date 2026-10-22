@@ -1,13 +1,11 @@
 spring:
   datasource:
     url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
     username: sa
     password:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.H2Dialect
   security:
     oauth2:
       client:
@@ -25,6 +23,12 @@ spring:
             user-info-uri: http://localhost:9000/userinfo
             jwk-set-uri: http://localhost:9000/jwks
             user-name-attribute: sub
+
+# Image for @PostgresDataJpaTest. Matches the compose stacks in dev/ and deploy/;
+# override with POSTGRES_TEST_IMAGE to test against the version a cluster runs.
+testing:
+  postgres:
+    image: "${POSTGRES_TEST_IMAGE:postgres:16-alpine}"
 
 # Everything below this line is not test-slice configuration but the minimum the
 # *whole* context needs to refresh, which is what `./gradlew bootTestRun` does.
@@ -47,6 +51,17 @@ job-posting:
       deployment: ${AZURE_OPENAI_DEPLOYMENT:}
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       api-key: ${AZURE_OPENAI_API_KEY:}
+    openai:
+      base-url: ${OPENAI_BASE_URL:}
+      model: ${OPENAI_MODEL:}
+      api-key: ${OPENAI_API_KEY:}
+
+# Same fallbacks as the main application.yml: this file replaces it, and without the
+# block CvMatchingProperties would bind empty and fail its own validation.
+cv-matching:
+  provider: ${CV_MATCHING_LLM_PROVIDER:${job-posting.parser.provider:ollama}}
+  ollama-url: ${CV_MATCHING_OLLAMA_URL:${job-posting.parser.ollama-url:http://localhost:11434}}
+  model: ${CV_MATCHING_MODEL:${job-posting.parser.model:qwen2.5:3b}}
 
 storage:
   provider: ${STORAGE_PROVIDER:s3}

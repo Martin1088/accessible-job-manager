@@ -28,6 +28,10 @@
     <dt>{{ 'COMPANIES.APPLY_METHOD' | translate }}</dt>
     <dd>{{ ('COMPANIES.APPLY_METHOD_' + m) | translate }}</dd>
   }
+  @if (position().deadline; as deadline) {
+    <dt>{{ 'COMPANIES.DEADLINE' | translate }}</dt>
+    <dd>{{ deadline }}</dd>
+  }
   @if (position().applyLanguage; as lang) {
     <dt>{{ 'COMPANIES.APPLY_LANGUAGE' | translate }}</dt>
     <dd>{{ ('COMPANIES.LANGUAGE_' + lang) | translate }}</dd>

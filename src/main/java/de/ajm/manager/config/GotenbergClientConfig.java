@@ -26,14 +26,23 @@ import java.time.Duration;
  * the page that hung; a client that gave up first would replace that with a
  * transport exception and lose the reason. This timeout is the backstop for a
  * Gotenberg that stopped answering at all, not the render budget.
+ *
+ * <p>A Gotenberg that is not reachable from the open network (a private Scaleway
+ * container) wants a token in {@code X-Auth-Token}. It is set once here, as a default
+ * header, so the three call sites cannot disagree about it; unset, nothing is sent, which
+ * is what the compose files' unauthenticated Gotenberg expects.
  */
 @Configuration
 public class GotenbergClientConfig {
 
+    /** The header Scaleway's IAM-protected containers read the caller's key from. */
+    static final String AUTH_HEADER = "X-Auth-Token";
+
     @Bean
     public RestClient gotenbergRestClient(
             @Value("${gotenberg.connect-timeout-seconds:5}") int connectTimeoutSeconds,
-            @Value("${gotenberg.read-timeout-seconds:60}") int readTimeoutSeconds) {
+            @Value("${gotenberg.read-timeout-seconds:60}") int readTimeoutSeconds,
+            @Value("${gotenberg.auth-token:}") String authToken) {
 
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
@@ -41,6 +50,10 @@ public class GotenbergClientConfig {
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(Duration.ofSeconds(readTimeoutSeconds));
 
-        return RestClient.builder().requestFactory(requestFactory).build();
+        RestClient.Builder builder = RestClient.builder().requestFactory(requestFactory);
+        if (!authToken.isBlank()) {
+            builder.defaultHeader(AUTH_HEADER, authToken);
+        }
+        return builder.build();
     }
 }

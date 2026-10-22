@@ -17,6 +17,7 @@ const FULL: CompanyPosition = {
   title: 'Developer',
   contactTitle: 'Dr.',
   contactLastName: 'Schmidt',
+  deadline: '2026-09-30',
   email: 'jobs@acme.example',
   website: 'https://acme.example/jobs/5',
   applicationMethod: 'EMAIL',
@@ -52,8 +53,10 @@ describe('PositionDetailsComponent', () => {
     expect(terms(el)).toEqual([
       'COMPANIES.COL_NAME', 'COMPANIES.COL_POSITION', 'COMPANIES.LOCATIONS_HEADING',
       'COMPANIES.CONTACT_LAST_NAME', 'COMPANIES.EMAIL', 'COMPANIES.WEBSITE',
-      'COMPANIES.APPLY_METHOD', 'COMPANIES.APPLY_LANGUAGE', 'COMPANIES.COL_ADDED', 'COMPANIES.NOTES',
+      'COMPANIES.APPLY_METHOD', 'COMPANIES.DEADLINE', 'COMPANIES.APPLY_LANGUAGE', 'COMPANIES.COL_ADDED',
+      'COMPANIES.NOTES',
     ]);
+    expect(el.textContent).toContain('2026-09-30');
     expect(el.querySelector('a[href="mailto:jobs@acme.example"]')).toBeTruthy();
   });
 

@@ -49,6 +49,17 @@ final class LlmFailures {
     }
 
     /**
+     * The model answered, but stopped at its output limit with the JSON unfinished. Not a
+     * transport failure and not a malformed answer: the remedy is the limit (or a model
+     * that answers more briefly), so the message names it.
+     *
+     * @param tokens how many tokens the answer ran to, as the provider reported it
+     */
+    static ApiException truncated(MessageSource messages, int tokens) {
+        return new ApiException.BadGateway(message(messages, "error.llm.truncated", tokens));
+    }
+
+    /**
      * Spring wraps the transport failure, so the timeout is never the exception
      * handed to the caller - it is somewhere below it.
      */

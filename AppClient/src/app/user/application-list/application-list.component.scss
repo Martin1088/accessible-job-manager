@@ -67,7 +67,8 @@ h1 {
 
 .create-form,
 .letter-preview,
-.position-details {
+.position-details,
+.documents-panel {
   padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
   border: 1px solid var(--rule);
   border-radius: 2px;
@@ -85,6 +86,75 @@ h1 {
 .position-details {
   h2:focus-visible { outline: 3px solid var(--color-focus); }
   .btn-secondary { margin-block-start: 1rem; }
+}
+
+// --- Documents enclosed with an application ------------------------------
+// One fieldset per type, in the order the enclosures are read. Its heading
+// takes focus on open, like the details sheet's.
+
+.documents-panel {
+  h2:focus-visible { outline: 3px solid var(--color-focus); }
+
+  .hint {
+    margin: 0 0 1rem;
+    max-width: 62ch;
+    font-size: 0.92rem;
+    color: var(--color-text-muted);
+  }
+  .notice { margin-block: 1rem 0; }
+}
+
+.documents-lead {
+  margin: 0 0 1rem;
+  max-width: 62ch;
+}
+
+.documents-form fieldset {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 0.4rem;
+    @extend %overline;
+    font-size: 0.72rem;
+  }
+}
+
+// Checkbox and one text block: on a narrow screen the language wraps under the
+// name, not under the checkbox.
+.document-option {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding-block: 0.6rem;
+  min-block-size: 44px;
+  cursor: pointer;
+
+  input {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    flex: none;
+    margin: 0.2rem 0 0;
+    accent-color: var(--ink);
+  }
+
+  input:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+.document-meta {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.documents-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .section-tab {

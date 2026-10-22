@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Document, DocumentLanguage, DocumentType } from '../model/document';
+import { DefaultDocument, Document, DocumentLanguage, DocumentType } from '../model/document';
 
 /** The editable metadata of a stored document; every field is optional. */
 export interface UpdateDocumentRequest {
@@ -30,6 +30,21 @@ export class DocumentService {
 
   private readonly apiUrl = '/api/documents';
   private readonly http = inject(HttpClient);
+
+  /** The caller's defaults: at most one document per type and language. */
+  getDefaults(): Observable<DefaultDocument[]> {
+    return this.http.get<DefaultDocument[]>(`${this.apiUrl}/defaults`);
+  }
+
+  /** Makes this document the default for its own type and language, replacing the previous one. */
+  makeDefault(id: string): Observable<DefaultDocument> {
+    return this.http.put<DefaultDocument>(`${this.apiUrl}/${id}/default`, null);
+  }
+
+  /** Stops this document being a default. */
+  clearDefault(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/default`);
+  }
 
   /** All of the caller's documents, or only those of one type. */
   getAll(type?: DocumentType): Observable<Document[]> {

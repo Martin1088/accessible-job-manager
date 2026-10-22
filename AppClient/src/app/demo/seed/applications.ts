@@ -23,3 +23,23 @@ export const APPLICATIONS: Application[] = [
   { id: 14, companyPositionId: 63, companyName: 'Aurum Fintech SE',            positionTitle: 'Produktmanagerin Zahlungsverkehr', status: 'DRAFT',                                          notes: 'Auf Vorschlag von Jonas Reinhardt.', createdAt: '2026-08-28T11:15:00' },
   { id: 15, companyPositionId: 11, companyName: 'Nordlicht Datentechnik GmbH', positionTitle: 'Softwareentwicklerin Backend',     status: 'WITHDRAWN',           appliedDate: '2026-01-12', notes: 'Erste Bewerbungsrunde, zurückgezogen.', createdAt: '2026-01-12T09:00:00' },
 ];
+
+/** One document enclosed with one application, as the demo stores it. */
+export interface DemoEnclosure {
+  readonly applicationId: number;
+  readonly documentId: string;
+}
+
+/**
+ * The applications already sent carry their documents, so the list's documents
+ * column is not empty on arrival; the drafts have none, which is where the
+ * defaults get suggested.
+ */
+export const ENCLOSURES: DemoEnclosure[] = [
+  { applicationId: 1, documentId: 'doc-cv' },
+  { applicationId: 1, documentId: 'doc-cert-1' },
+  { applicationId: 1, documentId: 'doc-cert-2' },
+  { applicationId: 3, documentId: 'doc-cv' },
+  { applicationId: 3, documentId: 'doc-cert-1' },
+  { applicationId: 6, documentId: 'doc-cv-en' },
+];

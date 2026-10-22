@@ -214,8 +214,15 @@
       }
     }
 
-    <button type="button" class="btn-primary" [disabled]="submitting" (click)="submit()">
-      {{ submitLabelKey | translate }}
-    </button>
+    <div class="merge-actions">
+      <button type="button" class="btn-primary" [disabled]="submitting" (click)="submit()">
+        {{ submitLabelKey | translate }}
+      </button>
+      @if (offerMatch) {
+        <button type="button" class="btn-secondary" (click)="requestMatch()">
+          {{ 'HOME.MATCH_ACTION' | translate }}
+        </button>
+      }
+    </div>
   </div>
 }

@@ -18,18 +18,62 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
-- A "Check my fit" page (`/matching`, linked from the home page) holds one of the
-  user's CVs against a job posting and lists, requirement by requirement, what the CV
-  covers and which skills are missing, each with the posting's wording, an assessment
-  and a suggestion. First draft for the demo only: the demo answers with a fixed
-  example result, and the backend for `POST /api/matching` is not built yet.
+- `GOTENBERG_AUTH_TOKEN` is sent to Gotenberg as `X-Auth-Token`, so a Gotenberg behind
+  Scaleway's IAM (a private Serverless Container) can be called. Unset, no header is sent.
+- `JOB_POSTING_LLM_PROVIDER=openai` talks to any OpenAI-compatible `/chat/completions`
+  endpoint in structured-output mode, e.g. Scaleway Generative APIs. Configured with
+  `OPENAI_BASE_URL`, `OPENAI_MODEL` and `OPENAI_API_KEY` (bearer token); the CV matching
+  inherits them or takes its own `CV_MATCHING_OPENAI_*`. Until now `openai` was an unknown
+  provider and failed startup.
+- An application records which documents go with it: CVs, certificates and other PDFs,
+  chosen per application in the Applications list ("Documents" action). The list shows
+  how many each application has. When the panel opens for an application with nothing
+  enclosed yet, the default CV and certificate in the position's language are
+  preselected; nothing is stored until "Save documents". Endpoints:
+  `GET /api/applications/documents`, `PUT /api/applications/{id}/documents`. Deleting a
+  document or an application removes the link (new table `application_documents`, both
+  foreign keys `ON DELETE CASCADE`).
+- A cover letter lists the documents enclosed with its application under "Enclosures",
+  after any lines written in the letter form; a label already among those lines is not
+  repeated. The text preview, the PDF and the email draft show the same list. HTML
+  templates only - a Word template has no enclosures field.
+- "Application PDF" in the Applications list: the cover letter followed by the enclosed
+  documents in reading order (CV, certificates, others), as one PDF to attach to a mail
+  or upload to an application form. Works for HTML and Word templates alike
+  (`POST /api/html/cover-letter/{applicationId}/bundle/{templateId}`,
+  `POST /api/word/cover-letter/{applicationId}/fill/{documentId}/bundle`). An encrypted
+  or unreadable enclosure is refused with its name rather than failing the whole request.
+
+- A position has an application deadline. The deadline a job posting states
+  (`validThrough`) is carried from the import into the company form, can be edited
+  there, and is shown in the position's details and copied along with an advisor's
+  suggestion. It is stored in a new `date` column, `application_deadline`; the old,
+  never-written `deadline` timestamp column on `company_positions` can be dropped by
+  hand (`ALTER TABLE company_positions DROP COLUMN deadline;`).
+- "Check my fit" holds the user's CV against a job posting and lists, requirement by
+  requirement, what the CV covers and which skills are missing, each with the posting's
+  wording, the CV passage that shows it, an assessment and a suggestion
+  (`POST /api/matching`, `POST /api/matching/text`). Quotes the model did not take
+  word for word from the posting or the CV are left out rather than shown as theirs.
+  The demo answers with a fixed example result.
+- The CV matching can use its own model, configured under `cv-matching` in
+  `application.yml` (`CV_MATCHING_MODEL`, `CV_MATCHING_LLM_PROVIDER`, …). Every value
+  falls back to the job posting extraction's, so nothing has to be set; a larger model
+  than the 3B default judges a CV noticeably better, and the provider may differ
+  (Ollama for the extraction, Azure OpenAI for the matching, or the other way round).
+  Read timeout, output tokens and Ollama's context window (`num_ctx`, 16384) have
+  their own defaults. The Helm chart takes `llm.ollama.matchingModel` and pulls it
+  alongside the extraction's model.
 - The new-company form has a "Create and apply" button next to "Create": it saves the company
   and opens the application form for its first position.
 - A document can be marked as the default CV, certificate or cover letter template for
   its language - one default of each per language (`GET /api/documents/defaults`,
   `PUT`/`DELETE /api/documents/{id}/default`). Deleting the document, or changing its
-  type or language, removes it as a default. The interface for choosing defaults is
-  not built yet.
+  type or language, removes it as a default. On the Documents page each CV,
+  certificate and Word template has a "Make default" / "Remove default" action and a
+  Default column. The default CV in the interface language is preselected when
+  checking your fit for a job, and the default Word template in the language a
+  position is applied in is preselected in the applications' cover letter picker.
 - In Companies and Applications, a company's name now opens its details: locations,
   contact, email, website, how and in which language to apply, and notes. Only the
   fields that are filled in are shown.
@@ -51,6 +95,16 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+- "Check my fit" no longer asks which CV to compare. It always compares the default CV
+  in the interface language, names it on the page, and follows a language switch. Without
+  a default CV in that language it says so and links to Documents; it no longer falls
+  back to a default in another language or to the newest upload.
+- On the home page, the CV check is now opened from the posting import: "Check against
+  my CV" sits next to "Use for new company" and shows the check on the page with the
+  posting's link (or pasted text) already filled in. "Use for new company" is repeated
+  under the check, so the company can be created from there. The check is no longer
+  always shown in the demo, and the teaser link to `/matching` is gone (the page
+  itself remains).
 - Table column headings and captions are larger and easier to read, in every table and
   in the mobile card layout.
 - Companies, Applications and Documents now list the most recently changed entry first.
@@ -82,6 +136,19 @@ orientation, not as a record of releases that happened.
 
 ### Fixed
 
+- On the Documents page, choosing a file to upload, or editing a document, now moves
+  focus to the form that has to be completed - scrolled to the top of the screen -
+  and back to the button it came from once the form is saved or cancelled. Before,
+  focus stayed on the upload button far down the page and the form opened unnoticed
+  at the top. A PDF's form is titled "New document" / "Edit document" rather than
+  "New template".
+- On a phone, the posting import's result list pushed the home page about 45px
+  sideways: a long website URL could not wrap. Values in the list now wrap anywhere.
+- Uploading a document to Garage failed with `Invalid payload signature` (400) since
+  the AWS SDK update to 2.55: the SDK now sends a CRC32 checksum on every upload as an
+  `aws-chunked` body, which Garage does not accept. The S3 client sends checksums only
+  where S3 requires them again (`requestChecksumCalculation`/`responseChecksumValidation`
+  `WHEN_REQUIRED`).
 - In the Applications table, a long status ("Vorstellungsgespräch geplant") and the
   edit/delete buttons are no longer cut off at high zoom. Columns now grow to fit their
   content, and a table too wide for the screen scrolls sideways; the scroll area can be

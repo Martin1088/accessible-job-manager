@@ -23,7 +23,7 @@ export const COMPANIES: Company[] = [
       },
       {
         id: 12, title: 'Werkstudentin Qualitätssicherung',
-        contactGender: 'MALE', contactLastName: 'Ohlsen',
+        contactGender: 'MALE', contactLastName: 'Ohlsen', deadline: '2026-11-15',
         applyLanguage: 'GERMAN', email: 'jobs@nordlicht.example',
         applicationMethod: 'EMAIL', createdAt: '2026-05-04T08:05:00',
       },

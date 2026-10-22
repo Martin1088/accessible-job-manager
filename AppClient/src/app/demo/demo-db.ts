@@ -8,9 +8,9 @@ import { Relationship } from '../model/relationship';
 import { UserProfile } from '../model/user-profile';
 import { UserPreferences } from '../model/user-preferences';
 
-import { APPLICATIONS } from './seed/applications';
+import { APPLICATIONS, DemoEnclosure, ENCLOSURES } from './seed/applications';
 import { COMPANIES } from './seed/companies';
-import { DOCUMENTS, DemoShare, SHARES } from './seed/documents';
+import { DEFAULTS, DOCUMENTS, DemoDefault, DemoShare, SHARES } from './seed/documents';
 import { LETTER_TEMPLATES } from './seed/cover-letters';
 import { RELATIONSHIPS, PEOPLE } from './seed/people';
 import { DemoRole } from './demo-mode';
@@ -46,8 +46,10 @@ export class DemoDb {
 
   readonly companies = signal<Company[]>(copy(COMPANIES));
   readonly applications = signal<Application[]>(copy(APPLICATIONS));
+  readonly enclosures = signal<DemoEnclosure[]>(copy(ENCLOSURES));
   readonly documents = signal<Document[]>(copy(DOCUMENTS));
   readonly shares = signal<DemoShare[]>(copy(SHARES));
+  readonly defaults = signal<DemoDefault[]>(copy(DEFAULTS));
   readonly templates = signal<HtmlLetterTemplate[]>(copy(LETTER_TEMPLATES));
   readonly relationships = signal<Relationship[]>(copy(RELATIONSHIPS));
   readonly suggestions = signal<SuggestionDto[]>(copy(SUGGESTIONS));
@@ -91,8 +93,10 @@ export class DemoDb {
     this.role.set('USER');
     this.companies.set(copy(COMPANIES));
     this.applications.set(copy(APPLICATIONS));
+    this.enclosures.set(copy(ENCLOSURES));
     this.documents.set(copy(DOCUMENTS));
     this.shares.set(copy(SHARES));
+    this.defaults.set(copy(DEFAULTS));
     this.templates.set(copy(LETTER_TEMPLATES));
     this.relationships.set(copy(RELATIONSHIPS));
     this.suggestions.set(copy(SUGGESTIONS));

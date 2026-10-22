@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,6 +18,7 @@ public class CompanyPositionDto {
     private Gender contactGender;
     private String contactTitle;
     private String contactLastName;
+    private LocalDate deadline;
     private Language applyLanguage;
     @Email(message = "{error.company.position.email.invalid}")
     private String email;

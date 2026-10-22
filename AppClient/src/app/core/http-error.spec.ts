@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { describeHttpFailure } from './http-error';
+import { describeHttpFailure, readBlobMessage } from './http-error';
 
 /**
  * The distinction these tests protect is the one that cost a debugging session:
@@ -89,5 +89,22 @@ describe('describeHttpFailure', () => {
     const failure = describeHttpFailure(error({ status: 0, error: new Blob() }), '');
 
     expect(failure.kind).toBe('offline');
+  });
+});
+
+describe('readBlobMessage', () => {
+
+  it('reads the message out of a JSON error blob', async () => {
+    const body = new Blob([JSON.stringify({ status: 400, error: 'Bad Request', message: 'Zeugnis is encrypted' })]);
+    expect(await readBlobMessage(body)).toBe('Zeugnis is encrypted');
+  });
+
+  it('yields nothing for a blob that is not this application\'s error body', async () => {
+    expect(await readBlobMessage(new Blob(['<html>proxy error</html>']))).toBe('');
+    expect(await readBlobMessage(new Blob([JSON.stringify({ message: 42 })]))).toBe('');
+  });
+
+  it('yields nothing when the body is not a blob at all', async () => {
+    expect(await readBlobMessage(null)).toBe('');
   });
 });
