@@ -116,6 +116,11 @@ public class AzureJobPostingLlmClient implements JobPostingLlmClient {
             // response, a quota error with a 200 envelope) must fail as "unparsable",
             // not throw a NullPointerException that skips past this catch block.
             String content = root.path("choices").path(0).path("message").path("content").asText();
+            // Blank content parses to a missing node that maps to an all-null object, which
+            // would pass for "the posting states nothing" - it has to fail instead.
+            if (content.isBlank()) {
+                throw new ApiException.BadGateway(message("error.llm.unparsable"));
+            }
             JsonNode fields = truncateFields(objectMapper.readTree(content), spec.maxFieldLength());
             return objectMapper.treeToValue(fields, spec.type());
         } catch (IOException e) {

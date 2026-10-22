@@ -18,6 +18,13 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- `GOTENBERG_AUTH_TOKEN` is sent to Gotenberg as `X-Auth-Token`, so a Gotenberg behind
+  Scaleway's IAM (a private Serverless Container) can be called. Unset, no header is sent.
+- `JOB_POSTING_LLM_PROVIDER=openai` talks to any OpenAI-compatible `/chat/completions`
+  endpoint in structured-output mode, e.g. Scaleway Generative APIs. Configured with
+  `OPENAI_BASE_URL`, `OPENAI_MODEL` and `OPENAI_API_KEY` (bearer token); the CV matching
+  inherits them or takes its own `CV_MATCHING_OPENAI_*`. Until now `openai` was an unknown
+  provider and failed startup.
 - An application records which documents go with it: CVs, certificates and other PDFs,
   chosen per application in the Applications list ("Documents" action). The list shows
   how many each application has. When the panel opens for an application with nothing

@@ -98,9 +98,49 @@ class CvMatchingPropertiesTest {
 
     @Test
     void anUnknownProviderFailsStartup() {
-        runner.withPropertyValues("CV_MATCHING_LLM_PROVIDER=openai")
+        runner.withPropertyValues("CV_MATCHING_LLM_PROVIDER=gemini")
                 .run(context -> assertThat(context).getFailure()
-                        .rootCause().hasMessageContaining("'ollama' or 'azure'"));
+                        .rootCause().hasMessageContaining("'ollama', 'azure' or 'openai'"));
+    }
+
+    @Test
+    void canUseAnOpenAiCompatibleEndpoint() {
+        runner.withPropertyValues(
+                        "CV_MATCHING_LLM_PROVIDER=openai",
+                        "CV_MATCHING_OPENAI_BASE_URL=https://api.scaleway.ai/v1",
+                        "CV_MATCHING_OPENAI_MODEL=mistral-small-3.2-24b-instruct-2506",
+                        "CV_MATCHING_OPENAI_API_KEY=secret")
+                .run(context -> {
+                    CvMatchingProperties props = context.getBean(CvMatchingProperties.class);
+                    assertThat(props.isOpenai()).isTrue();
+                    assertThat(props.openai().model()).isEqualTo("mistral-small-3.2-24b-instruct-2506");
+                    assertThat(props.openai().toString()).doesNotContain("secret");
+                    assertThat(props.describe()).doesNotContain("secret")
+                            .contains("mistral-small-3.2-24b-instruct-2506");
+                });
+    }
+
+    @Test
+    void inheritsTheParsersOpenAiSettingsWithTheProvider() {
+        runner.withPropertyValues(
+                        "job-posting.parser.provider=openai",
+                        "job-posting.parser.openai.base-url=https://api.scaleway.ai/v1",
+                        "job-posting.parser.openai.model=llama-3.3-70b-instruct",
+                        "job-posting.parser.openai.api-key=k")
+                .run(context -> {
+                    CvMatchingProperties props = context.getBean(CvMatchingProperties.class);
+                    assertThat(props.isOpenai()).isTrue();
+                    assertThat(props.openai().baseUrl()).isEqualTo("https://api.scaleway.ai/v1");
+                });
+    }
+
+    @Test
+    void openAiWithoutAKeyFailsStartup() {
+        runner.withPropertyValues("CV_MATCHING_LLM_PROVIDER=openai",
+                        "CV_MATCHING_OPENAI_BASE_URL=https://api.scaleway.ai/v1",
+                        "CV_MATCHING_OPENAI_MODEL=mistral-small-3.2-24b-instruct-2506")
+                .run(context -> assertThat(context).getFailure()
+                        .rootCause().hasMessageContaining("api-key"));
     }
 
     @Test

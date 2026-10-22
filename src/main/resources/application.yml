@@ -42,6 +42,9 @@ spring:
 
 gotenberg:
   url: ${GOTENBERG_URL:http://localhost:3000}
+  # Sent as X-Auth-Token when set: a private Scaleway container takes the caller's IAM
+  # secret key there. Empty sends no header.
+  auth-token: ${GOTENBERG_AUTH_TOKEN:}
   # Longer than Gotenberg's own --api-timeout (30s in the compose files) on
   # purpose: Gotenberg answers an over-long render with an error naming the page
   # that hung, and a client that gave up first would lose that reason. This is
@@ -73,6 +76,12 @@ job-posting:
       deployment: ${AZURE_OPENAI_DEPLOYMENT:}
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       api-key: ${AZURE_OPENAI_API_KEY:}
+    # Any OpenAI-compatible /chat/completions endpoint, e.g. Scaleway Generative APIs
+    # (https://api.scaleway.ai/v1). The model travels in the body; the key is a bearer token.
+    openai:
+      base-url: ${OPENAI_BASE_URL:}
+      model: ${OPENAI_MODEL:}
+      api-key: ${OPENAI_API_KEY:}
     extended:
       field-extraction: true
 
@@ -99,6 +108,10 @@ cv-matching:
     deployment: ${CV_MATCHING_AZURE_OPENAI_DEPLOYMENT:${job-posting.parser.azure.deployment:}}
     api-version: ${CV_MATCHING_AZURE_OPENAI_API_VERSION:${job-posting.parser.azure.api-version:2024-08-01-preview}}
     api-key: ${CV_MATCHING_AZURE_OPENAI_API_KEY:${job-posting.parser.azure.api-key:}}
+  openai:
+    base-url: ${CV_MATCHING_OPENAI_BASE_URL:${job-posting.parser.openai.base-url:}}
+    model: ${CV_MATCHING_OPENAI_MODEL:${job-posting.parser.openai.model:}}
+    api-key: ${CV_MATCHING_OPENAI_API_KEY:${job-posting.parser.openai.api-key:}}
 
 job-source:
   adzuna:

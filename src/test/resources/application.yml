@@ -51,6 +51,10 @@ job-posting:
       deployment: ${AZURE_OPENAI_DEPLOYMENT:}
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       api-key: ${AZURE_OPENAI_API_KEY:}
+    openai:
+      base-url: ${OPENAI_BASE_URL:}
+      model: ${OPENAI_MODEL:}
+      api-key: ${OPENAI_API_KEY:}
 
 # Same fallbacks as the main application.yml: this file replaces it, and without the
 # block CvMatchingProperties would bind empty and fail its own validation.
