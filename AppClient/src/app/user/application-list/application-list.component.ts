@@ -1,17 +1,20 @@
-import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Injector, OnInit, ViewChild, afterNextRender, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Application, ApplicationRequest, ApplicationStatus } from '../../model/application';
 import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
-import { Document } from '../../model/document';
+import { DefaultDocument, Document, DocumentLanguage, DocumentType, defaultFor } from '../../model/document';
+import { DocumentService } from '../../services/document.service';
+import { HttpFailure, describeHttpFailure, readBlobMessage } from '../../core/http-error';
+import { ErrorTextComponent } from '../../shared/error-text/error-text.component';
 import { byMostRecent } from '../../shared/sort';
 import { Company, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
@@ -28,8 +31,41 @@ export interface TemplateOption {
   provider: 'WORD' | 'HTML';
 }
 
+/**
+ * What can go with an application, in the order it is read - mirrors the server's
+ * `ApplicationDocumentService.ENCLOSABLE`. Each type is one group of checkboxes.
+ */
+const ENCLOSABLE: readonly { type: DocumentType; legend: string }[] = [
+  { type: 'CV',          legend: 'APPLICATIONS.DOCUMENTS_GROUP_CV' },
+  { type: 'CERTIFICATE', legend: 'APPLICATIONS.DOCUMENTS_GROUP_CERTIFICATE' },
+  { type: 'OTHER',       legend: 'APPLICATIONS.DOCUMENTS_GROUP_OTHER' },
+];
+
+const LANGUAGE_KEY: Record<DocumentLanguage, string> = {
+  ENGLISH: 'LANGUAGE.EN',
+  GERMAN:  'LANGUAGE.DE',
+  DUTCH:   'LANGUAGE.NL',
+  SPANISH: 'LANGUAGE.ES',
+};
+
+/** The server's reading order within a type: oldest upload first. */
+function byUpload(a: Document, b: Document): number {
+  return (a.createdAt ?? '').localeCompare(b.createdAt ?? '') || a.label.localeCompare(b.label);
+}
+
 // The list has no attachment editor; attachments are chosen in the template editor.
 const NO_ATTACHMENTS: CoverLetterRenderRequest = { attachments: [] };
+
+function saveBlob(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function filenameOf(contentDisposition: string | null): string | null {
+  return contentDisposition ? /filename="?([^";]+)"?/.exec(contentDisposition)?.[1]?.trim() ?? null : null;
+}
 
 function yearOf(iso: string | null | undefined): number | null {
   if (!iso) return null;
@@ -53,7 +89,7 @@ function matchesFilter(iso: string | null | undefined, filterYear: number | '', 
 @Component({
   selector: 'app-application-list',
   standalone: true,
-  imports: [FormsModule, PositionDetailsComponent, TranslatePipe],
+  imports: [FormsModule, PositionDetailsComponent, TranslatePipe, ErrorTextComponent],
   templateUrl: './application-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './application-list.component.scss',
@@ -64,12 +100,17 @@ export class ApplicationListComponent implements OnInit {
   wordTemplates: TemplateOption[] = [];
   htmlTemplates: TemplateOption[] = [];
   selectedTemplate: Record<number, TemplateOption | undefined> = {};
+  /** The user's default documents; their cover letter templates preselect the picker. */
+  private defaults: DefaultDocument[] = [];
+  private readonly documentService = inject(DocumentService);
   downloading: Record<number, boolean> = {};
   previewing: Record<number, boolean> = {};
   preview: { company: string; template: string; text: string } | null = null;
   statusDraft: Record<number, ApplicationStatus> = {};
   updatingStatus: Record<number, boolean> = {};
   errorMessage = '';
+  /** Why the last application PDF failed; kept apart because it can carry the server's reason. */
+  bundleFailure: HttpFailure | null = null;
   submitting = false;
 
   // pre-filled create form (shown when navigating from company list)
@@ -86,6 +127,21 @@ export class ApplicationListComponent implements OnInit {
 
   @ViewChild('previewPanel') private previewPanel?: ElementRef<HTMLElement>;
   @ViewChild('detailsHeading') private detailsHeading?: ElementRef<HTMLElement>;
+  @ViewChild('documentsHeading') private documentsHeading?: ElementRef<HTMLElement>;
+
+  // --- Enclosed documents --------------------------------------------------
+  /** The documents enclosed with each application, by application id. */
+  private enclosures = new Map<number, Document[]>();
+  /** The row whose documents are being chosen; null while the panel is closed. */
+  documentsFor: any | null = null;
+  /** The user's enclosable documents, grouped by type; loaded once, on first open. */
+  documentGroups: { legend: string; documents: Document[] }[] | null = null;
+  documentSelection = new Set<string>();
+  /** The language whose defaults were preselected, already translated; null when nothing was. */
+  prefilledLanguage: string | null = null;
+  savingDocuments = false;
+  documentsError = '';
+  private readonly injector = inject(Injector);
 
   /** The company and position behind each application, keyed by position id. */
   private positions = new Map<number, { company: Company; position: CompanyPosition }>();
@@ -122,6 +178,7 @@ export class ApplicationListComponent implements OnInit {
     { label: 'APPLICATIONS.COL_STATUS',   field: 'statusLabel'  },
     { label: 'APPLICATIONS.COL_APPLIED',  field: 'appliedDate'  },
     { label: 'APPLICATIONS.COL_NOTES',    field: 'notes'        },
+    { label: 'APPLICATIONS.COL_DOCUMENTS', field: 'documentsLabel' },
   ];
 
   // A stable field, not a getter: *ngFor identity-diffs sortedRows, so rows
@@ -158,6 +215,7 @@ export class ApplicationListComponent implements OnInit {
     this.loadApplications();
     this.loadTemplates();
     this.loadPositions();
+    this.loadEnclosures();
   }
 
   /** Whether a row's company name can open its details. */
@@ -180,6 +238,115 @@ export class ApplicationListComponent implements OnInit {
     this.lastFocusedDetailsElement?.focus();
   }
 
+  // --- Enclosed documents --------------------------------------------------
+
+  /**
+   * Same panel pattern as the details: focus lands on the heading, closing returns
+   * it to the button that opened it. With nothing enclosed yet, the user's defaults
+   * in the position's language are ticked - a suggestion, saved only on "Save".
+   */
+  openDocuments(row: any): void {
+    this.documentsFor = row;
+    this.documentsError = '';
+    this.prefilledLanguage = null;
+    this.documentSelection = new Set((this.enclosures.get(row.id) ?? []).map(d => d.id));
+    this.loadDocumentGroups(() => this.prefillDocuments(row));
+    // After the panel has rendered - a timeout can run before it exists.
+    afterNextRender(() => this.documentsHeading?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  /**
+   * Focus goes back to the row's "Documents" button, found again by id: saving
+   * rebuilds the rows, so the element that opened the panel may no longer exist.
+   */
+  closeDocuments(): void {
+    const row = this.documentsFor;
+    this.documentsFor = null;
+    if (!row) return;
+    afterNextRender(() => document.getElementById(this.documentsButtonId(row))?.focus(), { injector: this.injector });
+  }
+
+  documentsButtonId(row: any): string {
+    return `documents-${row.id}`;
+  }
+
+  goToDocuments(): void {
+    this.router.navigate(['/documents']);
+  }
+
+  toggleDocument(id: string, checked: boolean): void {
+    if (checked) this.documentSelection.add(id);
+    else this.documentSelection.delete(id);
+  }
+
+  saveDocuments(event?: Event): void {
+    event?.preventDefault();
+    const row = this.documentsFor;
+    if (!row || this.savingDocuments) return;
+    this.savingDocuments = true;
+    this.documentsError = '';
+    this.applicationService.setDocuments(row.id, [...this.documentSelection]).subscribe({
+      next: (saved) => {
+        this.savingDocuments = false;
+        this.enclosures.set(saved.applicationId, saved.documents);
+        this.rows = this.toRows(this.applications);
+        this.announcer.announce(this.translate.instant('APPLICATIONS.DOCUMENTS_SAVED',
+          { company: row.companyName, count: saved.documents.length }), 'polite');
+        this.closeDocuments();
+      },
+      error: () => {
+        this.savingDocuments = false;
+        this.documentsError = this.translate.instant('APPLICATIONS.ERROR_DOCUMENTS_SAVE');
+      },
+    });
+  }
+
+  documentLanguage(document: Document): string {
+    return this.translate.instant(LANGUAGE_KEY[document.language]);
+  }
+
+  private loadDocumentGroups(then: () => void): void {
+    if (this.documentGroups) { then(); return; }
+    this.documentService.getAll().subscribe({
+      next: (documents) => {
+        this.documentGroups = ENCLOSABLE
+          .map(({ type, legend }) => ({ legend, documents: documents.filter(d => d.type === type).sort(byUpload) }))
+          .filter(group => group.documents.length > 0);
+        then();
+      },
+      error: () => this.documentsError = this.translate.instant('APPLICATIONS.ERROR_DOCUMENTS_LOAD'),
+    });
+  }
+
+  private prefillDocuments(row: any): void {
+    if (this.documentSelection.size > 0) return;
+    const language = this.positions.get(row.companyPositionId)?.position.applyLanguage;
+    if (!language) return;
+    const ids = (['CV', 'CERTIFICATE'] as const)
+      .map(type => defaultFor(this.defaults, type, language))
+      .filter((id): id is string => !!id);
+    if (!ids.length) return;
+    ids.forEach(id => this.documentSelection.add(id));
+    this.prefilledLanguage = this.translate.instant(LANGUAGE_KEY[language]);
+  }
+
+  // Quiet on failure: the column simply shows no counts, the table works without it.
+  private loadEnclosures(): void {
+    this.applicationService.getDocuments().subscribe({
+      next: (all) => {
+        this.enclosures = new Map(all.map(e => [e.applicationId, e.documents]));
+        this.rows = this.toRows(this.applications);
+      },
+      error: () => {},
+    });
+  }
+
+  private documentsLabel(applicationId: number | undefined): string {
+    const count = applicationId == null ? 0 : this.enclosures.get(applicationId)?.length ?? 0;
+    if (count === 0) return '—';
+    return this.translate.instant(count === 1 ? 'APPLICATIONS.DOCUMENTS_COUNT_ONE' : 'APPLICATIONS.DOCUMENTS_COUNT_OTHER', { count });
+  }
+
   // Quiet on failure: the names simply stay plain text, the table works without it.
   private loadPositions(): void {
     this.companyService.getAll().subscribe({
@@ -188,6 +355,7 @@ export class ApplicationListComponent implements OnInit {
           company.positions
             .filter(p => p.id != null)
             .map(position => [position.id!, { company, position }] as const)));
+        this.preselectTemplates();
       },
       error: () => {},
     });
@@ -333,9 +501,11 @@ export class ApplicationListComponent implements OnInit {
     }
 
     if (!this.sortField || !this.sortDir) return source;
-    const field = this.sortField;
+    // The documents column shows "2 documents"; it sorts by the number, or 10 would precede 2.
+    const field = this.sortField === 'documentsLabel' ? 'documentsCount' : this.sortField;
     const dir = this.sortDir === 'asc' ? 1 : -1;
     return [...source].sort((a, b) => {
+      if (typeof a[field] === 'number' && typeof b[field] === 'number') return (a[field] - b[field]) * dir;
       const av = (a[field] ?? '').toString().toLowerCase();
       const bv = (b[field] ?? '').toString().toLowerCase();
       return av < bv ? -dir : av > bv ? dir : 0;
@@ -397,6 +567,38 @@ export class ApplicationListComponent implements OnInit {
     this.saveCoverLetter(appId, 'pdf', template.provider === 'HTML'
       ? this.coverLetterService.renderPdf(appId, template.id, NO_ATTACHMENTS).pipe(map(res => res.body!))
       : this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}`, null, { responseType: 'blob' }));
+  }
+
+  /**
+   * The letter followed by the documents enclosed with the application, as one PDF
+   * to attach to a mail or upload to a form. Either provider prints the letter.
+   */
+  downloadBundle(appId: number): void {
+    const template = this.selectedTemplate[appId];
+    if (!template) return;
+    const request: Observable<HttpResponse<Blob>> = template.provider === 'HTML'
+      ? this.coverLetterService.renderBundle(appId, template.id, NO_ATTACHMENTS)
+      : this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}/bundle`, null,
+          { responseType: 'blob', observe: 'response' });
+
+    this.bundleFailure = null;
+    this.downloading[appId] = true;
+    request.subscribe({
+      next: (response) => {
+        const row = this.rows.find(r => r.id === appId);
+        const name = filenameOf(response.headers.get('Content-Disposition'))
+          ?? `${(row?.companyName ?? 'application').replace(/\s+/g, '_')}.pdf`;
+        saveBlob(response.body!, name);
+        this.downloading[appId] = false;
+        if (row) this.markAppliedToday(row);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.downloading[appId] = false;
+        // Blob request: the server's reason - which enclosed document it could not
+        // read - has to be read out of the body before it can be shown.
+        readBlobMessage(err.error).then(message => this.bundleFailure = describeHttpFailure(err, message));
+      },
+    });
   }
 
   downloadCoverLetterWord(appId: number): void {
@@ -473,10 +675,7 @@ export class ApplicationListComponent implements OnInit {
       next: (blob) => {
         const row = this.rows.find(r => r.id === appId);
         const name = `Anschreiben_${(row?.companyName ?? 'cover_letter').replace(/\s+/g, '_')}.${extension}`;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = name; a.click();
-        URL.revokeObjectURL(url);
+        saveBlob(blob, name);
         this.downloading[appId] = false;
         if (row) this.markAppliedToday(row);
       },
@@ -513,13 +712,40 @@ export class ApplicationListComponent implements OnInit {
   // written with either, so one being unavailable must not empty the whole picker.
   private loadTemplates(): void {
     this.http.get<Document[]>('/api/documents', { params: { type: 'COVER_LETTER_TEMPLATE' } }).subscribe({
-      next: (docs) => this.wordTemplates = docs.map(
-        doc => ({ id: doc.id, label: doc.label, provider: 'WORD' })),
+      next: (docs) => {
+        this.wordTemplates = docs.map(doc => ({ id: doc.id, label: doc.label, provider: 'WORD' }));
+        this.preselectTemplates();
+      },
+    });
+    // Quiet on failure: without defaults nothing is preselected, as before.
+    this.documentService.getDefaults().subscribe({
+      next: (defaults) => {
+        this.defaults = defaults;
+        this.preselectTemplates();
+      },
+      error: () => {},
     });
     this.coverLetterService.listTemplates().subscribe({
       next: (letters) => this.htmlTemplates = letters.map(
         letter => ({ id: letter.id, label: letter.name, provider: 'HTML' })),
     });
+  }
+
+  /**
+   * Fills an untouched picker with the default Word template for the language the
+   * position is applied in. Runs after each of the four loads it depends on, since
+   * they arrive in any order; a row the user has chosen for is never changed, and
+   * a position without a language gets no guess.
+   */
+  private preselectTemplates(): void {
+    for (const application of this.applications) {
+      if (application.id == null || this.selectedTemplate[application.id] !== undefined) continue;
+      const language = this.positions.get(application.companyPositionId)?.position.applyLanguage;
+      if (!language) continue;
+      const id = defaultFor(this.defaults, 'COVER_LETTER_TEMPLATE', language);
+      const template = this.wordTemplates.find(t => t.id === id);
+      if (template) this.selectedTemplate[application.id] = template;
+    }
   }
 
   private loadApplications(): void {
@@ -529,6 +755,7 @@ export class ApplicationListComponent implements OnInit {
         this.rows = this.toRows(data);
         this.statusDraft = {};
         data.forEach(a => { if (a.id != null) this.statusDraft[a.id] = a.status; });
+        this.preselectTemplates();
       },
       error: () => this.errorMessage = this.translate.instant('APPLICATIONS.ERROR_LOAD'),
     });
@@ -545,6 +772,8 @@ export class ApplicationListComponent implements OnInit {
       appliedDate:       a.appliedDate ?? '—',
       appliedDateRaw:    a.appliedDate ?? '',
       notes:             a.notes ?? '',
+      documentsLabel:    this.documentsLabel(a.id),
+      documentsCount:    a.id == null ? 0 : this.enclosures.get(a.id)?.length ?? 0,
       createdAt:         a.createdAt ?? null,
       updatedAt:         a.updatedAt ?? a.createdAt ?? null,
     })).sort(byMostRecent('updatedAt'));

@@ -37,6 +37,8 @@ export interface CompanyPosition {
   contactGender?: Gender;
   contactTitle?: string;
   contactLastName?: string;
+  /** The application deadline, `yyyy-MM-dd` - a day, never a time. */
+  deadline?: string;
   applyLanguage?: Language;
   email?: string;
   /** Also holds the application link when applicationMethod is WEB_FORM. */

@@ -5,6 +5,10 @@
     <p role="alert" class="notice notice--error">{{ errorMessage }}</p>
   }
 
+  @if (bundleFailure) {
+    <p role="alert" class="notice notice--error"><app-error-text [failure]="bundleFailure" fallbackKey="APPLICATIONS.ERROR_BUNDLE" /></p>
+  }
+
   @if (showForm) {
     <section class="create-form" aria-labelledby="create-heading">
       <h2 id="create-heading" class="section-tab">{{ (editingId ? 'APPLICATIONS.EDIT_HEADING' : 'APPLICATIONS.CREATE_HEADING') | translate }}</h2>
@@ -55,6 +59,58 @@
       </h2>
       <app-position-details [company]="details.company" [position]="details.position" />
       <button type="button" class="btn-secondary" (click)="closeDetails()">{{ 'COMMON.CLOSE' | translate }}</button>
+    </section>
+  }
+
+  @if (documentsFor) {
+    <section class="documents-panel" aria-labelledby="documents-heading">
+      <h2 id="documents-heading" #documentsHeading tabindex="-1" class="section-tab">
+        {{ 'APPLICATIONS.DOCUMENTS_HEADING' | translate: { company: documentsFor.companyName, position: documentsFor.positionTitle } }}
+      </h2>
+      <p class="documents-lead">{{ 'APPLICATIONS.DOCUMENTS_LEAD' | translate }}</p>
+
+      @if (documentGroups === null) {
+        @if (!documentsError) {
+          <p role="status" class="hint">{{ 'APPLICATIONS.DOCUMENTS_LOADING' | translate }}</p>
+        }
+      } @else if (documentGroups.length === 0) {
+        <p class="hint">{{ 'APPLICATIONS.DOCUMENTS_EMPTY' | translate }}</p>
+        <button type="button" class="btn-secondary" (click)="goToDocuments()">{{ 'APPLICATIONS.DOCUMENTS_EMPTY_ACTION' | translate }}</button>
+      } @else {
+        @if (prefilledLanguage) {
+          <p id="documents-prefilled" class="hint">{{ 'APPLICATIONS.DOCUMENTS_PREFILLED' | translate: { language: prefilledLanguage } }}</p>
+        }
+        <form class="documents-form" (submit)="saveDocuments($event)">
+          @for (group of documentGroups; track group.legend) {
+            <fieldset>
+              <legend>{{ group.legend | translate }}</legend>
+              @for (doc of group.documents; track doc.id) {
+                <label class="document-option">
+                  <input type="checkbox" [checked]="documentSelection.has(doc.id)"
+                    (change)="toggleDocument(doc.id, $any($event.target).checked)">
+                  <!-- The space is spelled out: Angular drops whitespace between elements,
+                       and the accessible name would read "Lebenslauf(Deutsch)". -->
+                  <span class="document-text"><span class="document-name">{{ doc.label }}</span>{{ ' ' }}<span class="document-meta">({{ documentLanguage(doc) }})</span></span>
+                </label>
+              }
+            </fieldset>
+          }
+          <div class="documents-actions">
+            <button type="submit" class="btn-primary" [disabled]="savingDocuments"
+              [attr.aria-describedby]="prefilledLanguage ? 'documents-prefilled' : null">
+              {{ (savingDocuments ? 'APPLICATIONS.SAVING' : 'APPLICATIONS.DOCUMENTS_SAVE') | translate }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="closeDocuments()">{{ 'COMMON.CANCEL' | translate }}</button>
+          </div>
+        </form>
+      }
+
+      @if (documentsError) {
+        <p role="alert" class="notice notice--error">{{ documentsError }}</p>
+        @if (documentGroups === null) {
+          <button type="button" class="btn-secondary" (click)="closeDocuments()">{{ 'COMMON.CLOSE' | translate }}</button>
+        }
+      }
     </section>
   }
 
@@ -198,6 +254,13 @@
             </button>
             <button type="button"
               class="btn-secondary"
+              [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
+              (click)="downloadBundle(row.id)"
+              [attr.aria-label]="'APPLICATIONS.DOWNLOAD_BUNDLE_ARIA' | translate: { company: row.companyName }">
+              {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.DOWNLOAD_BUNDLE') | translate }}
+            </button>
+            <button type="button"
+              class="btn-secondary"
               [disabled]="!supportsWord(row.id) || downloading[row.id]"
               (click)="downloadCoverLetterWord(row.id)"
               [attr.aria-label]="'APPLICATIONS.DOWNLOAD_WORD_ARIA' | translate: { company: row.companyName }">
@@ -215,6 +278,10 @@
             }
           </td>
           <td class="actions-cell" [attr.data-label]="'TABLE.ACTIONS' | translate">
+            <button type="button" class="btn-secondary" [id]="documentsButtonId(row)" (click)="openDocuments(row)"
+              [attr.aria-label]="'APPLICATIONS.ACTION_DOCUMENTS_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
+              {{ 'APPLICATIONS.ACTION_DOCUMENTS' | translate }}
+            </button>
             <button type="button" class="btn-secondary" (click)="startEdit(row)"
               [attr.aria-label]="'APPLICATIONS.ACTION_EDIT_ARIA' | translate: { company: row.companyName, position: row.positionTitle }">
               {{ 'APPLICATIONS.ACTION_EDIT' | translate }}

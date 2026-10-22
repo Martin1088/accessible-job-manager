@@ -1,16 +1,16 @@
-import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, Injector, OnInit, ChangeDetectionStrategy, afterNextRender, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { catchError, forkJoin, of } from 'rxjs';
+import { Observable, catchError, forkJoin, of, switchMap } from 'rxjs';
 import { DataTableComponent, TableColumn, TableAction } from '../../shared/data-table/data-table.component';
 import { CoverLetterService } from '../../services/cover-letter.service';
 import { DocumentService, SharedWithMeDocument } from '../../services/document.service';
 import { RelationshipService } from '../../services/relationship.service';
-import { Document, DocumentLanguage, DocumentType } from '../../model/document';
+import { DEFAULTABLE_TYPES, DefaultDocument, Document, DocumentLanguage, DocumentType } from '../../model/document';
 import { HtmlLetterTemplate, LayoutLetterKey } from '../../model/cover-letter';
 import { Relationship } from '../../model/relationship';
 import { byMostRecent } from '../../shared/sort';
@@ -39,6 +39,13 @@ const LAYOUT_KEY: Record<LayoutLetterKey, string> = {
   DIN5008_COVER_LETTER_A: 'DOCUMENTS.LAYOUT_DIN5008_A',
   DIN5008_COVER_LETTER_B: 'DOCUMENTS.LAYOUT_DIN5008_B',
   DIN5008_CV:             'DOCUMENTS.LAYOUT_DIN5008_CV',
+};
+
+/** How a default's slot is named in a sentence: "the default for CVs (German)". */
+const SLOT_KEY: Partial<Record<DocumentType, string>> = {
+  CV:                    'DOCUMENTS.SLOT_CV',
+  CERTIFICATE:           'DOCUMENTS.SLOT_CERTIFICATE',
+  COVER_LETTER_TEMPLATE: 'DOCUMENTS.SLOT_COVER_LETTER_TEMPLATE',
 };
 
 /** Columns an HTML template has no equivalent for; it is edited, never uploaded. */
@@ -76,6 +83,8 @@ function monthOf(iso: string | null | undefined): number | null {
 export class DocumentsComponent implements OnInit {
 
   private documents: Document[] = [];
+  /** Ids of the documents that fill a default slot. */
+  private defaultIds = new Set<string>();
   private htmlTemplates: HtmlLetterTemplate[] = [];
   allRows: any[] = [];
   errorMessage = '';
@@ -88,6 +97,12 @@ export class DocumentsComponent implements OnInit {
   uploadMode: UploadMode = 'TEMPLATE';
   showUploadForm = false;
   editingId: string | null = null;
+
+  /** A PDF is a document, not a template - the form's heading says which. */
+  get formHeadingKey(): string {
+    const kind = this.uploadMode === 'DOCUMENT' ? 'DOCUMENT' : 'TEMPLATE';
+    return `DOCUMENTS.${this.editingId ? 'EDIT' : 'NEW'}_${kind}_HEADING`;
+  }
 
   /** Rows of the second table: the user's uploaded PDFs. */
   documentRows: any[] = [];
@@ -112,6 +127,7 @@ export class DocumentsComponent implements OnInit {
     { label: 'DOCUMENTS.COL_FILENAME', field: 'filename',     sortable: true },
     { label: 'DOCUMENTS.COL_LANGUAGE', field: 'languageLabel', sortable: true },
     { label: 'DOCUMENTS.COL_UPLOADED', field: 'createdAt',    sortable: true },
+    { label: 'DOCUMENTS.COL_DEFAULT',  field: 'defaultLabel', sortable: true },
   ];
 
   documentActions: TableAction[] = [
@@ -130,6 +146,7 @@ export class DocumentsComponent implements OnInit {
       ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_DELETE_ARIA', { label: row.label }),
       handler: (row) => this.deleteDocument(row),
     },
+    ...this.defaultActions(),
   ];
 
   sharedWithMeColumns: TableColumn[] = [
@@ -176,6 +193,7 @@ export class DocumentsComponent implements OnInit {
     { label: 'DOCUMENTS.COL_FILENAME', field: 'filename',     sortable: true  },
     { label: 'DOCUMENTS.COL_LANGUAGE', field: 'languageLabel', sortable: true },
     { label: 'DOCUMENTS.COL_UPLOADED', field: 'createdAt',    sortable: true  },
+    { label: 'DOCUMENTS.COL_DEFAULT',  field: 'defaultLabel', sortable: true  },
   ];
 
   // Edit and delete act on the uploaded file, which only a Word row has; an HTML
@@ -213,6 +231,7 @@ export class DocumentsComponent implements OnInit {
       handler: (row) => this.deleteHtmlTemplate(row),
       visible: (row) => row.kind === 'HTML',
     },
+    ...this.defaultActions(),
   ];
 
   private readonly router = inject(Router);
@@ -220,6 +239,14 @@ export class DocumentsComponent implements OnInit {
   private readonly documentService = inject(DocumentService);
   private readonly relationships = inject(RelationshipService);
   private readonly announcer = inject(LiveAnnouncer);
+  private readonly injector = inject(Injector);
+
+  /**
+   * The control that opened the upload/edit form, to hand focus back to when it
+   * closes. Captured at opening: the file dialog returns focus to the upload button,
+   * and an edit starts from its row's button.
+   */
+  private formOpener: HTMLElement | null = null;
 
   constructor(private translate: TranslateService) {
     this.translate.onLangChange.pipe(takeUntilDestroyed()).subscribe(() => this.rebuildRows());
@@ -320,7 +347,9 @@ export class DocumentsComponent implements OnInit {
       templates: this.coverLetters.listTemplates().pipe(catchError(() => of(null))),
       sharedWithMe: this.documentService.getSharedWithMe().pipe(catchError(() => of([]))),
       reviewers: this.relationships.mine().pipe(catchError(() => of([]))),
-    }).subscribe(({ documents, templates, sharedWithMe, reviewers }) => {
+      // Without the defaults the tables still work; they just show none.
+      defaults: this.documentService.getDefaults().pipe(catchError(() => of([] as DefaultDocument[]))),
+    }).subscribe(({ documents, templates, sharedWithMe, reviewers, defaults }) => {
       this.errorMessage = documents && templates
         ? ''
         : this.translate.instant('DOCUMENTS.ERROR_LOAD');
@@ -328,6 +357,7 @@ export class DocumentsComponent implements OnInit {
       this.htmlTemplates = templates ?? [];
       this.sharedWithMe = sharedWithMe;
       this.reviewers = reviewers.filter(r => r.kind === 'REVIEWER' && r.status === 'ACTIVE');
+      this.setDefaults(defaults);
       this.rebuildRows();
     });
   }
@@ -380,6 +410,10 @@ export class DocumentsComponent implements OnInit {
       createdAt:     d.createdAt ? d.createdAt.substring(0, 10) : NOT_APPLICABLE,
       rawCreatedAt:  d.createdAt ?? null,
       rawChangedAt:  d.updatedAt ?? d.createdAt ?? null,
+      docType:       d.type,
+      defaultable:   DEFAULTABLE_TYPES.includes(d.type),
+      isDefault:     this.defaultIds.has(d.id),
+      defaultLabel:  this.defaultIds.has(d.id) ? this.translate.instant('DOCUMENTS.DEFAULT_MARK') : '',
     };
   }
 
@@ -402,6 +436,10 @@ export class DocumentsComponent implements OnInit {
         createdAt:     changedAt ? changedAt.substring(0, 10) : NOT_APPLICABLE,
         rawCreatedAt:  changedAt ?? null,
         rawChangedAt:  changedAt ?? null,
+        // Not a stored document, so it cannot fill a default slot.
+        defaultable:   false,
+        isDefault:     false,
+        defaultLabel:  '',
       };
     });
   }
@@ -422,8 +460,8 @@ export class DocumentsComponent implements OnInit {
     this.pendingLabel = file.name.replace(/\.(docx|pdf)$/i, '');
     this.pendingLanguage = 'ENGLISH';
     if (mode === 'DOCUMENT') this.pendingType = 'CV';
-    this.showUploadForm = true;
     input.value = '';
+    this.openForm();
   }
 
   private startEdit(row: any): void {
@@ -433,7 +471,42 @@ export class DocumentsComponent implements OnInit {
     this.pendingLabel = row.label;
     this.pendingLanguage = row.language;
     if (row.type) this.pendingType = row.type;
+    this.openForm();
+  }
+
+  /**
+   * Shows the form and moves focus to its heading. The form sits at the top of the
+   * page while the PDF upload button and the row actions can be far below, so
+   * without this a keyboard or screen reader user is left at the button with no
+   * sign that a form to finish the upload has opened - and focusing it scrolls it
+   * into view for everyone else.
+   */
+  private openForm(): void {
+    const active = document.activeElement;
+    this.formOpener = active instanceof HTMLElement && active !== document.body ? active : null;
     this.showUploadForm = true;
+    afterNextRender(() => {
+      const heading = document.getElementById('upload-heading');
+      // Focus alone scrolls only until the heading peeks in at the bottom edge,
+      // leaving the fields below it out of view; start the form at the top instead.
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: 'start' });
+    }, { injector: this.injector });
+  }
+
+  /**
+   * Hands focus back to what opened the form. A row's button may be gone by then -
+   * saving rebuilds the tables - so the heading of the table the document lives in
+   * is the fallback.
+   */
+  private restoreFocus(mode: UploadMode): void {
+    const opener = this.formOpener;
+    this.formOpener = null;
+    const fallback = mode === 'DOCUMENT' ? 'documents-heading' : 'templates-heading';
+    afterNextRender(() => {
+      const target = opener?.isConnected ? opener : document.getElementById(fallback);
+      target?.focus();
+    }, { injector: this.injector });
   }
 
   /**
@@ -518,6 +591,7 @@ export class DocumentsComponent implements OnInit {
         this.editingId = null;
         this.pendingLabel = '';
         this.pendingLanguage = 'ENGLISH';
+        this.restoreFocus(this.uploadMode);
         this.ngOnInit();
       },
       error: () => {
@@ -571,6 +645,7 @@ export class DocumentsComponent implements OnInit {
         this.pendingFile = null;
         this.pendingLabel = '';
         this.pendingLanguage = 'ENGLISH';
+        this.restoreFocus(this.uploadMode);
         this.ngOnInit();
       },
       error: () => {
@@ -581,11 +656,74 @@ export class DocumentsComponent implements OnInit {
   }
 
   cancelUpload(): void {
+    this.restoreFocus(this.uploadMode);
     this.showUploadForm = false;
     this.editingId = null;
     this.pendingFile = null;
     this.pendingLabel = '';
     this.pendingLanguage = 'ENGLISH';
     this.uploadMode = 'TEMPLATE';
+  }
+
+  // --- Defaults ---------------------------------------------------------
+
+  /**
+   * "Make default" and "Remove default", shown one at a time. Both tables carry the
+   * pair; `defaultable` keeps them off HTML templates and other PDFs.
+   */
+  private defaultActions(): TableAction[] {
+    return [
+      {
+        label: 'DOCUMENTS.ACTION_MAKE_DEFAULT',
+        ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_MAKE_DEFAULT_ARIA', this.slotParams(row)),
+        handler: (row) => this.makeDefault(row),
+        visible: (row) => row.defaultable && !row.isDefault,
+      },
+      {
+        label: 'DOCUMENTS.ACTION_CLEAR_DEFAULT',
+        ariaLabel: (row) => this.translate.instant('DOCUMENTS.ACTION_CLEAR_DEFAULT_ARIA', this.slotParams(row)),
+        handler: (row) => this.clearDefault(row),
+        visible: (row) => row.isDefault,
+      },
+    ];
+  }
+
+  makeDefault(row: any): void {
+    this.changeDefault(this.documentService.makeDefault(row.id),
+      this.translate.instant('DOCUMENTS.DEFAULT_SET', this.slotParams(row)));
+  }
+
+  clearDefault(row: any): void {
+    this.changeDefault(this.documentService.clearDefault(row.id),
+      this.translate.instant('DOCUMENTS.DEFAULT_CLEARED', { label: row.label }));
+  }
+
+  /**
+   * Re-reads every slot afterwards rather than patching one row: making a document
+   * the default silently takes the slot from whichever document held it before.
+   */
+  private changeDefault(change: Observable<unknown>, announcement: string): void {
+    this.errorMessage = '';
+    change.pipe(switchMap(() => this.documentService.getDefaults())).subscribe({
+      next: (defaults) => {
+        this.setDefaults(defaults);
+        this.rebuildRows();
+        this.announcer.announce(announcement, 'polite');
+      },
+      error: () => this.errorMessage = this.translate.instant('DOCUMENTS.ERROR_DEFAULT'),
+    });
+  }
+
+  private setDefaults(defaults: DefaultDocument[]): void {
+    this.defaultIds = new Set(defaults.map(d => d.document.id));
+  }
+
+  private slotParams(row: any): { label: string; slot: string; language: string } {
+    const slot = SLOT_KEY[row.docType as DocumentType];
+    return {
+      label: row.label,
+      slot: slot ? this.translate.instant(slot) : '',
+      language: row.languageLabel,
+    };
   }
 }

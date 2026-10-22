@@ -5,13 +5,13 @@ import de.ajm.manager.company.CompanyPosition;
 import de.ajm.manager.company.CompanyRepository;
 import de.ajm.manager.config.JpaAuditingConfig;
 import de.ajm.manager.security.OidcAuditorAware;
+import de.ajm.manager.testing.PostgresDataJpaTest;
 import jakarta.persistence.EntityManager;
 import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * where a test needs it - the end of its lambda is where the persistence context closes.
  * The data is really committed, hence the cleanup.
  */
-@DataJpaTest
+@PostgresDataJpaTest
 @Import({JpaAuditingConfig.class, OidcAuditorAware.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class ApplicationLifecycleTest {

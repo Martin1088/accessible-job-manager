@@ -1,3 +1,5 @@
+import { Document } from './document';
+
 export type ApplicationStatus =
   | 'DRAFT'
   | 'SENT'
@@ -25,4 +27,10 @@ export interface ApplicationRequest {
   status: ApplicationStatus;
   appliedDate?: string | null;
   notes?: string | null;
+}
+
+/** Mirrors `ApplicationDocumentsDto`: the documents enclosed with one application, in reading order. */
+export interface ApplicationDocuments {
+  applicationId: number;
+  documents: Document[];
 }

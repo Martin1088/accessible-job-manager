@@ -76,6 +76,30 @@ job-posting:
     extended:
       field-extraction: true
 
+# The model that holds a CV against a job posting ("Check my fit"). Every value falls
+# back to the posting parser's above, so nothing has to be set - but a 3B model that
+# reads four fields off a posting well is usually too small to judge a CV requirement
+# by requirement. Set CV_MATCHING_MODEL (and, for another provider, the rest) to give
+# the matching a model of its own; Ollama for the parser and Azure OpenAI here, or the
+# other way round, works too.
+cv-matching:
+  provider: ${CV_MATCHING_LLM_PROVIDER:${job-posting.parser.provider:ollama}}
+  ollama-url: ${CV_MATCHING_OLLAMA_URL:${job-posting.parser.ollama-url:http://localhost:11434}}
+  model: ${CV_MATCHING_MODEL:${job-posting.parser.model:qwen2.5:3b}}
+  connect-timeout-seconds: ${CV_MATCHING_CONNECT_TIMEOUT_SECONDS:${job-posting.parser.connect-timeout-seconds:5}}
+  # Its own values, not the parser's: a result runs to thousands of tokens and a local
+  # model takes minutes for it, where the parser answers four fields in seconds.
+  read-timeout-seconds: ${CV_MATCHING_READ_TIMEOUT_SECONDS:300}
+  max-output-tokens: ${CV_MATCHING_MAX_OUTPUT_TOKENS:4000}
+  # Ollama's num_ctx. Its default (2048-4096 tokens) cuts a posting plus a CV off without
+  # an error; 0 leaves the model's default. Not used by Azure.
+  context-window: ${CV_MATCHING_CONTEXT_WINDOW:16384}
+  azure:
+    endpoint: ${CV_MATCHING_AZURE_OPENAI_ENDPOINT:${job-posting.parser.azure.endpoint:}}
+    deployment: ${CV_MATCHING_AZURE_OPENAI_DEPLOYMENT:${job-posting.parser.azure.deployment:}}
+    api-version: ${CV_MATCHING_AZURE_OPENAI_API_VERSION:${job-posting.parser.azure.api-version:2024-08-01-preview}}
+    api-key: ${CV_MATCHING_AZURE_OPENAI_API_KEY:${job-posting.parser.azure.api-key:}}
+
 job-source:
   adzuna:
     base-url: ${JOBSOURCE_ADZUNA_BASE_URL:https://api.adzuna.com/v1/api}

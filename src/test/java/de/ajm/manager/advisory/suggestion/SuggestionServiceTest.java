@@ -96,6 +96,7 @@ class SuggestionServiceTest {
     @Test
     void answer_acceptingCopiesTheCompanyAndPositionIntoTheUsersOwnCatalogue() {
         CompanyPosition sourcePosition = positionWithLocation(5L, "Developer", "Acme", "Berlin");
+        sourcePosition.setDeadline(java.time.LocalDate.of(2026, 9, 30));
         Suggestion stored = suggestion(1L, user("user-1", "Jane Doe"), sourcePosition);
         when(suggestionRepository.findById(1L)).thenReturn(Optional.of(stored));
         when(suggestionRepository.save(stored)).thenReturn(stored);
@@ -112,7 +113,10 @@ class SuggestionServiceTest {
         assertThat(imported.getLocations()).singleElement()
                 .satisfies(l -> assertThat(l.getCity()).isEqualTo("Berlin"));
         assertThat(imported.getPositions()).singleElement()
-                .satisfies(p -> assertThat(p.getTitle()).isEqualTo("Developer"));
+                .satisfies(p -> {
+                    assertThat(p.getTitle()).isEqualTo("Developer");
+                    assertThat(p.getDeadline()).isEqualTo(java.time.LocalDate.of(2026, 9, 30));
+                });
         // The clone is its own row, never the advisor's original entity.
         assertThat(imported.getPositions().get(0)).isNotSameAs(sourcePosition);
 

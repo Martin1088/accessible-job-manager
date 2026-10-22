@@ -117,6 +117,7 @@ public class SuggestionService {
         position.setContactGender(sourcePosition.getContactGender());
         position.setContactTitle(sourcePosition.getContactTitle());
         position.setContactLastName(sourcePosition.getContactLastName());
+        position.setDeadline(sourcePosition.getDeadline());
         position.setApplyLanguage(sourcePosition.getApplyLanguage());
         position.setApplicationMethod(sourcePosition.getApplicationMethod());
         position.setEmail(sourcePosition.getEmail());

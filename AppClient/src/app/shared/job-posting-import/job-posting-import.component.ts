@@ -1,11 +1,12 @@
-import { Component, ChangeDetectionStrategy, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Output, ViewChild, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Output, ViewChild, booleanAttribute, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
-import { HttpFailure, describeHttpFailure } from '../../core/http-error';
+import { HttpFailure, describeHttpFailure, readBlobMessage } from '../../core/http-error';
 import { Company, Gender } from '../../model/company';
+import { PostingSource } from '../../model/cv-match';
 import { JobPostingImportStore } from '../../services/job-posting-import.store';
 import { ErrorTextComponent } from '../error-text/error-text.component';
 import { normalizeJobUrl } from './job-url';
@@ -44,6 +45,19 @@ interface JobPostingFullChain {
   postedAt: string | null;
   deadline: string | null;
   employmentType: string | null;
+}
+
+/**
+ * The day a posting's deadline falls on, as `yyyy-MM-dd`, or `undefined`.
+ *
+ * schema.org's `validThrough` arrives as a date or as a full timestamp with an
+ * offset (`2026-10-31T23:59:59+02:00`). The leading date is the posting's own
+ * calendar day - converting through `Date` would move it into the browser's
+ * time zone. Anything else is dropped rather than guessed; the form field
+ * stays empty and can be typed in.
+ */
+export function deadlineDate(value: string | null | undefined): string | undefined {
+  return value?.trim().match(/^\d{4}-\d{2}-\d{2}(?=$|T)/)?.[0];
 }
 
 /** What a finished import hands to whichever page hosted it. */
@@ -86,6 +100,16 @@ export class JobPostingImportComponent implements OnDestroy {
   @Input() submitting = false;
 
   @Output() readonly imported = new EventEmitter<ImportedPosting>();
+
+  /** Offers "check against my CV" next to the finish button. */
+  @Input({ transform: booleanAttribute }) offerMatch = false;
+
+  /**
+   * The posting to hold against the CV: the link when there is one, else the pasted
+   * text, else null - a posting read from an uploaded PDF has neither, and the
+   * matching then asks for one itself.
+   */
+  @Output() readonly matchRequested = new EventEmitter<PostingSource | null>();
 
   // Same platform gating as AppComponent's global shortcuts: Windows screen
   // readers reserve bare letters for their own browse-mode navigation.
@@ -399,7 +423,7 @@ export class JobPostingImportComponent implements OnDestroy {
       },
       error: (err: HttpErrorResponse) => {
         this.checkingSnapshot = false;
-        this.readBlobMessage(err.error).then(message => {
+        readBlobMessage(err.error).then(message => {
           this.snapshotRenderFailure = describeHttpFailure(err, message);
         });
       },
@@ -429,20 +453,11 @@ export class JobPostingImportComponent implements OnDestroy {
         // This request asks for a blob, so its error body arrives as a Blob
         // rather than parsed JSON - the server's reason has to be read out of
         // it before the failure can be classified.
-        this.readBlobMessage(err.error).then(message => {
+        readBlobMessage(err.error).then(message => {
           this.snapshotRenderFailure = describeHttpFailure(err, message);
         });
       },
     });
-  }
-
-  private async readBlobMessage(body: unknown): Promise<string> {
-    if (!(body instanceof Blob)) return '';
-    try {
-      return JSON.parse(await body.text())?.message ?? '';
-    } catch {
-      return '';
-    }
   }
 
   private releasePreviewObjectUrl(): void {
@@ -474,6 +489,12 @@ export class JobPostingImportComponent implements OnDestroy {
     return !!a && !!b && a.toLowerCase() !== b.toLowerCase();
   }
 
+  requestMatch(): void {
+    const url = this.jobUrl.trim();
+    const text = this.postingText.trim();
+    this.matchRequested.emit(url ? { kind: 'url', url } : text ? { kind: 'text', text } : null);
+  }
+
   submit(): void {
     const company = this.buildCompanyPrefill();
     if (!company) return;
@@ -502,6 +523,7 @@ export class JobPostingImportComponent implements OnDestroy {
         contactGender: this.mapGender(fcPosition?.contactGender),
         contactTitle: fcPosition?.contactTitle ?? undefined,
         contactLastName: fcPosition?.contactLastName ?? undefined,
+        deadline: deadlineDate(this.fullChainResult?.deadline),
         email: fcPosition?.email ?? undefined,
         // If neither extraction found a company website, fall back to the job
         // posting URL the user searched for rather than leaving it blank. `||`,

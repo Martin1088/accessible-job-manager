@@ -8,7 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 ./gradlew compileJava          # compile only
-./gradlew test                 # unit tests (excludes AngularTemplateApplicationTests which needs a live DB)
+./gradlew test                 # unit tests (excludes AngularTemplateApplicationTests which needs a live DB;
+                               # @PostgresDataJpaTest classes need Docker)
+./gradlew check                # tests + JaCoCo report + coverage gate
+                               # report: build/reports/jacoco/test/html/index.html
 ./gradlew bootRun              # starts backend + builds Angular first (port 8060)
 
 # Run a single test class
@@ -102,6 +105,61 @@ Unauthenticated `text/html` requests are redirected to OAuth; API requests recei
 
 `DocumentAccess` entity stores `(documentId, reviewerSubject)` pairs. Users grant reviewers access via `POST /api/documents/{id}/access`. `ReviewerController` queries `DocumentAccess` to build a grouped view of users who have shared documents with the caller.
 
+### Application documents (enclosures)
+
+`de.ajm.manager.application.attachment` links an application to the documents sent with
+it (`application_documents`, unique `(application_id, document_id)`). Rules that are easy
+to break:
+
+- **Only `ENCLOSABLE` types** (CV, CERTIFICATE, OTHER) can be linked, all of them PDFs;
+  templates, posting snapshots and reviews are working material. **`READING_ORDER`**
+  (CV, certificates, others; oldest upload first, then label) is the one order the list,
+  the cover letter's enclosure lines and the application PDF all follow.
+- **Both foreign keys carry `@OnDelete(CASCADE)`**, as `DefaultDocument` does, so
+  deleting a document or an application cannot be blocked by a link.
+  `ApplicationDocumentSchemaTest` (`@PostgresDataJpaTest`) is the guard.
+- **Enclosure lines are appended, never replaced.** `CoverLetterHtmlService` adds the
+  labels after the lines the caller wrote, skipping case-insensitive duplicates, and only
+  for a letter tied to an application (`renderSample` has none). Labels bypass
+  `PlaceholderResolver` - a document named `{{company}}` stays literal - and need no
+  sanitizing, because enclosure lines are plain text printed with `th:text`.
+- **The application PDF is provider-independent.** `ApplicationBundleService` takes the
+  letter already printed - by the HTML template or the filled `.docx` - and appends the
+  enclosures via PDFBox's `PDFMergerUtility` with a temp-file stream cache. Each enclosure
+  is opened before the merge, so an encrypted or broken one is reported by name as a 400
+  instead of the merger's anonymous 500.
+
+### CV matching ("Check my fit")
+
+`de.ajm.manager.matching` holds the caller's CV against a posting
+(`POST /api/matching?url=…`, `POST /api/matching/text`). The page compares the user's
+default CV in the interface language. Rules that are easy to break:
+
+- **The model is configured separately, and falls back.** `cv-matching` in
+  `application.yml` mirrors `job-posting.parser`, and every value is a placeholder whose
+  default is the parser's, so a deployment that sets nothing compares with the parser's
+  model. Read timeout (300 s), output tokens (4000) and Ollama's `context-window`
+  (16384, sent as `num_ctx`) are the matching's own. The default `num_ctx` cuts a
+  posting plus a CV off without an error. `CvMatchingProperties` fails startup on an
+  unknown provider or a provider without its settings. In an `.env` file, leave a
+  variable commented out rather than empty: an empty one counts as set and defeats the
+  fallback.
+- **Its client is not a `JobPostingLlmClient` bean.** `CvMatchingModelConfig` builds an
+  own instance of the parser's Ollama or Azure client and wraps it in `CvMatchingModel`.
+  A second bean of the client type would make the parser's injection ambiguous.
+- **The answer is mapped onto strings (`CvMatchSpec.RawMatch`) and cleaned by
+  `CvMatchGuard`**, a pure function. One bad enum value drops one requirement, not the
+  answer. A `postingQuote` or `cvEvidence` that does not occur in its source (compared
+  ignoring case and line breaks) becomes null. The page shows quotes as the texts' own
+  words, and small models paraphrase. An unusable `level` is derived from the
+  requirements.
+- **Properties are ordered in the schema**: requirements first, level and summary last.
+  Ollama generates in schema order.
+- The posting is read through `JobPostingParserService.renderedPostingText` /
+  `requirePostingText`, the CV through `PostingPdfTextExtractor`, after `findOwned(…, CV)`.
+  `CvMatchingLiveTest` runs the prompt against a real model, opt-in:
+  `./gradlew test --tests "*CvMatchingLiveTest" -Dmatching.live=true -Dollama.model=…`.
+
 ### Object storage
 
 Two providers sit behind the `StorageService` interface, selected by `storage.provider`: `GarageStorageService` (S3 via AWS SDK v2, the default) and `AzureBlobStorageService`. Object keys are `{userId}/{type_lowercase}/{uuid}.{ext}`, so the owning subject is in the key prefix.
@@ -115,6 +173,10 @@ Two providers sit behind the `StorageService` interface, selected by `storage.pr
 - **`contentLength` stays the plaintext length.** SSE-C encrypts server-side, so the object is stored and reported at the size sent. Client-side encryption would break that contract, which is why it was not chosen.
 - **`presignedGet` throws when encryption is on.** A browser following the URL cannot send the headers, and signing them in would mean shipping the master key to the browser.
 - **The key is validated at startup** (`S3Properties.Encryption`), so a missing or malformed key fails the boot instead of the first upload — including under `storage.provider=azure`, since `S3Config` is not conditional. `Encryption.toString()` is masked; note that the sibling `secretKey` is not, and that adding `spring-boot-starter-actuator` would expose both through `/actuator/configprops`.
+- **Checksums are `WHEN_REQUIRED`** (`S3Config`). Since AWS SDK 2.30 every `PutObject`
+  carries a CRC32 by default, sent as an `aws-chunked` body with a trailer; Garage
+  rejects that with `Invalid payload signature` (400). Dropping the setting breaks
+  every upload against Garage, and nothing in the unit tests notices.
 - **Multipart is not covered.** Every upload today is a single `PutObject` under the 20MB limit; multipart would have to repeat the headers on create, every part, and complete.
 
 ### Cover letter generation
@@ -219,6 +281,28 @@ The build is configured with `-Dnet.bytebuddy.experimental=true` and the Mockito
 
 `AngularTemplateApplicationTests` (full `@SpringBootTest`) is excluded because it requires a live PostgreSQL and OIDC server. Add `@SpringBootTest` integration tests to the same exclusion pattern only when a test DB is available.
 
+### Coverage (JaCoCo)
+
+`test` is finalized by `jacocoTestReport` (HTML + XML), and `check` runs
+`jacocoTestCoverageVerification`, a **line-coverage minimum of 64 %**. CI uploads the
+HTML report as the `jacoco-report` artifact of `build.yml`. Rules that are easy to break:
+
+- **The minimum is measured under CI conditions**, Gotenberg and Ollama unreachable,
+  so the tests that need them skip as they do on GitHub's runners:
+  `GOTENBERG_URL=http://127.0.0.1:9 OLLAMA_URL=http://127.0.0.1:9 ./gradlew test`.
+  Baseline on 2026-10-13: 66.35 % lines, 56.96 % branches; with the dev services up,
+  67.29 % / 57.02 %. A local number is therefore not the number the gate sees.
+- **Raise the minimum, don't lower it** without a reason in the commit message.
+- **`toolVersion = '0.8.15'`** is the first JaCoCo with official Java 26 support; don't
+  drop the pin in favour of Gradle's bundled default.
+- **`lombok.config` sets `lombok.addLombokGeneratedAnnotation`**, which is what keeps
+  generated getters, builders and `equals` out of the count. Without it the figure
+  drops and the gate fails for code nobody wrote.
+- A failing test skips `jacocoTestReport` (it depends on `test`). To read coverage from
+  a red run, `./gradlew jacocoTestReport -x test` rebuilds it from the existing
+  `build/jacoco/test.exec`. Without exec data (the Docker build's `-x test`) the gate
+  task skips itself rather than failing.
+
 ### @WebMvcTest setup
 
 `src/test/resources/application.yml` provides:
@@ -228,6 +312,50 @@ The build is configured with `-Dnet.bytebuddy.experimental=true` and the Mockito
 `@WebMvcTest` on controllers needs `@MockitoBean` for `CompanyService`, `RoleCheckSuccessHandler`, and `GroupsGrantedAuthoritiesMapper` (the latter two are referenced by `SecurityConfig`). Use `SecurityMockMvcRequestPostProcessors.oidcLogin()` to supply a test principal, with `.authorities(…)` to give it a role.
 
 `oidcLogin()` sets authorities directly and so bypasses the authorities mapper. To exercise the group-name-to-role translation together with the `hasRole` checks, import the real `GroupsGrantedAuthoritiesMapper` and run the claim through it to build the authorities — `RenamedGroupAuthorizationTest` does this, and is the regression guard for a deployment that renames its IdP groups.
+
+### Database tests: H2 or PostgreSQL
+
+`@DataJpaTest` runs on H2, which is right for tests of mapping and repository logic.
+A test whose subject is the database itself - a foreign key refusing, transaction
+semantics, the generated schema - uses `@PostgresDataJpaTest`
+(`src/test/java/de/ajm/manager/testing/`) instead, which starts PostgreSQL through
+Testcontainers as a `@ServiceConnection` bean. Today that is `CompanyDeletionSchemaTest`
+and `ApplicationLifecycleTest`. Rules that are easy to break:
+
+- **Without Docker these tests fail, they do not skip.** That is the opposite of
+  `DevServices` on purpose: falling back to H2 silently would hide exactly the
+  difference they exist to catch. The devcontainer (`docker-in-docker`) and CI
+  (`ubuntu-latest`) both have Docker.
+- **Do not put `driver-class-name` or `database-platform` back into the test
+  `application.yml`.** `@ServiceConnection` replaces URL and credentials only; a fixed
+  `H2Dialect` would stay in effect and send H2 SQL to PostgreSQL. Both are detected
+  from the URL.
+- **The image is `testing.postgres.image`** in the test `application.yml`
+  (`POSTGRES_TEST_IMAGE` overrides it), not a literal in code. Its default matches the
+  compose stacks; production's CNPG image is whatever `postgres.imageName` in the Helm
+  values says, or the operator's default when that is empty.
+- **Each distinct `@Import` set is its own context and its own container** (about 2 s
+  each). Keep extra imports uniform once there are more such tests.
+- **Test methods declared in an abstract base class lose the test transaction.** Spring
+  looks for the class-level `@Transactional` (which `@DataJpaTest` carries) on the
+  method's *declaring* class, so annotating only the subclass leaves each repository
+  call committing on its own.
+
+Differences observed between the two (details in
+`docs/plans/2026-10-13-testcontainers-postgres.md`): Hibernate maps `@Enumerated(STRING)`
+to a native `enum` type on H2 but to `varchar` plus a check constraint on PostgreSQL. The
+check constraint is not altered by production's `ddl-auto: update`. After a failed flush
+PostgreSQL aborts the transaction (`25P02`), and on both databases the session is
+unusable, because Hibernate re-runs the failed statement on the next auto-flush. A
+constraint violation reaches the caller as `DataIntegrityViolationException` only through
+a repository proxy; through the shared `EntityManager` it is Hibernate's own
+`ConstraintViolationException`. SQLState (`23503`) is the same on both; vendor error code,
+message text and the case of the constraint name are not.
+
+To verify the no-Docker failure, `DOCKER_HOST=…` is not enough:
+`~/.testcontainers.properties` caches the Unix-socket strategy, which finds
+`/var/run/docker.sock` anyway. Hide the socket instead
+(`unshare -m sh -c 'mount --bind /dev/null /var/run/docker.sock && ./gradlew test …'`).
 
 ### Job posting fixtures
 

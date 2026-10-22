@@ -3,7 +3,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { DocumentService } from './document.service';
-import { Document } from '../model/document';
+import { DefaultDocument, Document, defaultFor } from '../model/document';
 
 describe('DocumentService', () => {
   let service: DocumentService;
@@ -138,6 +138,52 @@ describe('DocumentService', () => {
       const blob = new Blob(['pdf bytes'], { type: 'application/pdf' });
       req.flush(blob);
       expect(received).toBe(blob);
+    });
+  });
+
+  describe('defaults', () => {
+    it('reads the caller\'s defaults', () => {
+      const slot: DefaultDocument = { type: 'CV', language: 'ENGLISH', document: cv };
+      let received: DefaultDocument[] | undefined;
+      service.getDefaults().subscribe(d => received = d);
+
+      const req = httpMock.expectOne('/api/documents/defaults');
+      expect(req.request.method).toBe('GET');
+      req.flush([slot]);
+      expect(received).toEqual([slot]);
+    });
+
+    it('makes a document the default with a PUT on its own default resource', () => {
+      service.makeDefault('doc-1').subscribe();
+
+      const req = httpMock.expectOne('/api/documents/doc-1/default');
+      expect(req.request.method).toBe('PUT');
+      req.flush({ type: 'CV', language: 'ENGLISH', document: cv });
+    });
+
+    it('clears a default with a DELETE on the same resource', () => {
+      service.clearDefault('doc-1').subscribe();
+
+      const req = httpMock.expectOne('/api/documents/doc-1/default');
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null);
+    });
+  });
+
+  describe('defaultFor()', () => {
+    const defaults: DefaultDocument[] = [
+      { type: 'CV', language: 'ENGLISH', document: cv },
+      { type: 'COVER_LETTER_TEMPLATE', language: 'GERMAN', document: { ...cv, id: 'doc-2', type: 'COVER_LETTER_TEMPLATE' } },
+    ];
+
+    it('finds the document filling one type and language', () => {
+      expect(defaultFor(defaults, 'CV', 'ENGLISH')).toBe('doc-1');
+      expect(defaultFor(defaults, 'COVER_LETTER_TEMPLATE', 'GERMAN')).toBe('doc-2');
+    });
+
+    it('is null for an empty slot - another language of the same type does not count', () => {
+      expect(defaultFor(defaults, 'CV', 'GERMAN')).toBeNull();
+      expect(defaultFor([], 'CV', 'ENGLISH')).toBeNull();
     });
   });
 });

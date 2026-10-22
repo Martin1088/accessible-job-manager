@@ -182,6 +182,7 @@ public class CompanyService {
         dto.setContactGender(p.getContactGender());
         dto.setContactTitle(p.getContactTitle());
         dto.setContactLastName(p.getContactLastName());
+        dto.setDeadline(p.getDeadline());
         dto.setApplyLanguage(p.getApplyLanguage());
         dto.setEmail(p.getEmail());
         dto.setWebsite(p.getWebsite());
@@ -222,6 +223,7 @@ public class CompanyService {
         p.setContactGender(dto.getContactGender());
         p.setContactTitle(dto.getContactTitle());
         p.setContactLastName(dto.getContactLastName());
+        p.setDeadline(dto.getDeadline());
         p.setApplyLanguage(dto.getApplyLanguage());
         p.setEmail(dto.getEmail());
         p.setWebsite(dto.getWebsite());
