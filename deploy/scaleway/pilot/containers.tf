@@ -13,8 +13,9 @@ resource "scaleway_container" "gotenberg" {
   port         = 3000
   privacy      = "private"
 
-  cpu_limit          = 500 # mvCPU, also 0,5 vCPU
-  memory_limit_bytes = 1 * local.gib
+  # Chromium rendert auf 0,5 vCPU eine schwere Seite in ~26 s (Access-Log).
+  cpu_limit          = 1000 # mvCPU, also 1 vCPU
+  memory_limit_bytes = 2 * local.gib
   min_scale          = 0
   max_scale          = 1
   timeout            = 120
@@ -22,7 +23,9 @@ resource "scaleway_container" "gotenberg" {
   https_connections_only = true
 
   command = ["gotenberg"]
-  args    = ["--chromium-deny-private-ips", "--api-timeout=30s"]
+  # 60 s statt 30 s: der erste Aufruf nach Ruhe startet Container und Chromium
+  # (min_scale = 0) und lief sonst in "exceeded the time limit".
+  args = ["--chromium-deny-private-ips", "--api-timeout=60s"]
 }
 
 # --- Pocket ID: Anmeldung per Passkey -------------------------------------------
@@ -91,6 +94,8 @@ resource "scaleway_container" "app" {
     S3_SSE_C_MODE    = "sse-c"
 
     GOTENBERG_URL = scaleway_container.gotenberg.public_endpoint
+    # Länger als Gotenbergs --api-timeout, damit dessen Fehlertext ankommt.
+    GOTENBERG_READ_TIMEOUT_SECONDS = "90"
 
     JOB_POSTING_LLM_PROVIDER = "openai"
     OPENAI_BASE_URL          = "https://api.scaleway.ai/v1"
@@ -106,7 +111,7 @@ resource "scaleway_container" "app" {
     GROUP_REVIEWER    = "Reviewer"
 
     COOKIE_SECURE         = "true"
-    DIAGNOSTICS_LOG_LEVEL = "OFF"
+    DIAGNOSTICS_LOG_LEVEL = "INFO"
   }
 
   secret_environment_variables = {
