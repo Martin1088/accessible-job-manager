@@ -16,16 +16,26 @@ resource "scaleway_container" "gotenberg" {
   # Chromium rendert auf 0,5 vCPU eine schwere Seite in ~26 s (Access-Log).
   cpu_limit          = 1000 # mvCPU, also 1 vCPU
   memory_limit_bytes = 2 * local.gib
-  min_scale          = 0
-  max_scale          = 1
-  timeout            = 120
+  min_scale          = var.gotenberg_min_scale
+  # Ein Import startet mehrere Renderings gleichzeitig. Auf einer Instanz teilen
+  # sie sich eine vCPU und laufen beide ins Zeitlimit (503, "context deadline
+  # exceeded"). concurrent_requests_threshold ist nur ein Hinweis fürs Hochskalieren,
+  # keine harte Grenze: Kommen zwei Anfragen gleichzeitig an einen kalten Container,
+  # landen beide auf der ersten Instanz, bevor die zweite läuft (Log 15:37:19/20).
+  # Mit gotenberg_min_scale >= 2 stehen warme Instanzen bereit.
+  max_scale = 3
+  timeout   = 180
+
+  scaling_option {
+    concurrent_requests_threshold = 1
+  }
 
   https_connections_only = true
 
   command = ["gotenberg"]
-  # 60 s statt 30 s: der erste Aufruf nach Ruhe startet Container und Chromium
-  # (min_scale = 0) und lief sonst in "exceeded the time limit".
-  args = ["--chromium-deny-private-ips", "--api-timeout=60s"]
+  # 120 s: eine schwere Seite braucht warm ~28 s, zwei gleichzeitige auf einer
+  # vCPU mit Kaltstart von Chromium mehr als die früheren 60 s.
+  args = ["--chromium-deny-private-ips", "--api-timeout=120s"]
 }
 
 # --- Pocket ID: Anmeldung per Passkey -------------------------------------------
@@ -79,11 +89,17 @@ resource "scaleway_container" "app" {
   memory_limit_bytes = 2 * local.gib
   min_scale          = var.app_min_scale
   max_scale          = 2
-  timeout            = 120
+  # Der CV-Abgleich darf laut application.yml bis zu 300 s auf das Modell warten;
+  # ein kürzeres Limit kappt die Verbindung vorher (Browser: Status 0).
+  timeout = 300
 
   https_connections_only = true
 
-  environment_variables = {
+  # Ein leeres CV_MATCHING_OPENAI_MODEL zählt als gesetzt und hebelt den Rückfall auf
+  # das Modell des Parsers aus. Deshalb kommt die Variable nur mit Wert hinein.
+  environment_variables = merge(var.cv_matching_model == "" ? {} : {
+    CV_MATCHING_OPENAI_MODEL = var.cv_matching_model
+    }, {
     MANAGER_DB_URL  = local.ajm_jdbc_url
     MANAGER_DB_USER = scaleway_iam_application.app.id
 
@@ -95,11 +111,13 @@ resource "scaleway_container" "app" {
 
     GOTENBERG_URL = scaleway_container.gotenberg.public_endpoint
     # Länger als Gotenbergs --api-timeout, damit dessen Fehlertext ankommt.
-    GOTENBERG_READ_TIMEOUT_SECONDS = "90"
+    GOTENBERG_READ_TIMEOUT_SECONDS = "150"
 
     JOB_POSTING_LLM_PROVIDER = "openai"
-    OPENAI_BASE_URL          = "https://api.scaleway.ai/v1"
-    OPENAI_MODEL             = var.llm_model
+    # Mit Projekt-ID im Pfad: ohne sie antwortet api.scaleway.ai mit 403, auch bei
+    # gültigem Schlüssel mit GenerativeApisModelAccess.
+    OPENAI_BASE_URL = "https://api.scaleway.ai/${var.project_id}/v1"
+    OPENAI_MODEL    = var.llm_model
 
     OIDC_ISSUER_URI   = "https://${local.id_host}"
     OIDC_AUTH_URI     = "https://${local.id_host}/authorize"
@@ -112,7 +130,7 @@ resource "scaleway_container" "app" {
 
     COOKIE_SECURE         = "true"
     DIAGNOSTICS_LOG_LEVEL = "INFO"
-  }
+  })
 
   secret_environment_variables = {
     MANAGER_DB_PASSWORD  = scaleway_iam_api_key.app.secret_key

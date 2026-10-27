@@ -77,7 +77,9 @@ job-posting:
       api-version: ${AZURE_OPENAI_API_VERSION:2024-08-01-preview}
       api-key: ${AZURE_OPENAI_API_KEY:}
     # Any OpenAI-compatible /chat/completions endpoint, e.g. Scaleway Generative APIs
-    # (https://api.scaleway.ai/v1). The model travels in the body; the key is a bearer token.
+    # (https://api.scaleway.ai/{project-id}/v1 - without the project id Scaleway answers 403
+    # for a key that is only valid in one project). The model travels in the body; the key
+    # is a bearer token.
     openai:
       base-url: ${OPENAI_BASE_URL:}
       model: ${OPENAI_MODEL:}
