@@ -187,7 +187,7 @@ public class HtmlCoverLetterController {
         CoverLetterHtmlService.EmailDraft draft =
                 coverLetterHtmlService.renderAsEmail(applicationId, template, user.getSubject());
 
-        return new CoverLetterEmailDto(draft.to(), draft.subject(), draft.body());
+        return new CoverLetterEmailDto(draft.to(), draft.subject(), draft.body(), draft.shortBody());
     }
 
     private RenderFormat renderFormat(String format) {

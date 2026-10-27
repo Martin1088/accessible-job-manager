@@ -123,6 +123,19 @@ class CoverLetterHtmlServiceTest {
         assertThat(service.renderAsEmail(7L, template(), "u1").body()).contains("Lebenslauf");
     }
 
+    /** The short note lists the attached files only - not a free-text line that names no file. */
+    @Test
+    void theEmailDraftsShortBodyListsOnlyTheEnclosedDocuments() {
+        enclose(document("Lebenslauf"));
+
+        String shortBody = service.renderAsEmail(7L, template("Arbeitsproben auf Anfrage"), "u1").shortBody();
+
+        assertThat(shortBody).startsWith("Sehr geehrte Frau Meier,")
+                .contains("- Anschreiben\n- Lebenslauf\n")
+                .doesNotContain("Arbeitsproben")
+                .endsWith("Jane Doe");
+    }
+
     @Test
     void theSamplePreviewHasNoApplicationAndLooksNothingUp() {
         service.renderSample(template("Referenzen"), RenderFormat.TEXT, Language.GERMAN);

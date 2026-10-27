@@ -39,6 +39,8 @@ sections:
           - "An identity provider (Authentik) for login and role assignment."
           - "S3-compatible object storage (Garage) for uploaded and generated documents."
           - "A document conversion service (Gotenberg) used to turn cover letter documents into PDF."
+      - type: paragraph
+        text: "When you send an application by email, the application assembles the cover letter and enclosures only in your browser and hands them to your own mail app. It sends no email itself and does not store the assembled message; the files are discarded as soon as you close the dialog. The email is sent through your own email account."
   - heading: "Storage duration"
     blocks:
       - type: paragraph

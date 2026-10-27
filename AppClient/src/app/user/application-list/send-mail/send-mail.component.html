@@ -1,0 +1,131 @@
+<section class="send-mail" aria-labelledby="send-mail-heading">
+  <h2 id="send-mail-heading" #heading tabindex="-1" class="section-tab">
+    {{ 'APPLICATIONS.MAIL_HEADING' | translate: { company: application().companyName, position: application().positionTitle } }}
+  </h2>
+
+  @switch (step()) {
+    @case ('LOADING') {
+      <p role="status" class="hint">{{ 'APPLICATIONS.MAIL_PREPARING' | translate }}</p>
+    }
+
+    @case ('FAILED') {
+      <p role="alert" class="notice">{{ 'APPLICATIONS.MAIL_PREPARE_ERROR' | translate }}</p>
+      <div class="actions">
+        <button type="button" class="btn-secondary" (click)="prepare()">{{ 'APPLICATIONS.MAIL_RETRY' | translate }}</button>
+        <button type="button" class="btn-secondary" (click)="close()">{{ 'COMMON.CLOSE' | translate }}</button>
+      </div>
+    }
+
+    @case ('READY') {
+      @if (mail(); as m) {
+        <!-- Announced once through LiveAnnouncer when it appears, so no live region here. -->
+        <p class="summary">
+          {{ 'APPLICATIONS.MAIL_READY' | translate: { count: m.attachments.length, size: size() } }}
+        </p>
+        <ul class="attachments" [attr.aria-label]="'APPLICATIONS.MAIL_ATTACHMENTS' | translate">
+          @for (a of m.attachments; track a.file.name) {
+            <li>{{ a.file.name }}</li>
+          }
+        </ul>
+        @if (tooLarge()) {
+          <p class="notice">{{ 'APPLICATIONS.MAIL_SIZE_WARNING' | translate: { size: size() } }}</p>
+        }
+        @if (shareFailed()) {
+          <p role="alert" class="notice">{{ 'APPLICATIONS.MAIL_SHARE_FAILED' | translate }}</p>
+        }
+
+        <fieldset class="routes">
+          <legend>{{ 'APPLICATIONS.MAIL_ROUTE_LEGEND' | translate }}</legend>
+          @for (r of routes(); track r; let first = $first) {
+            <div class="route-option">
+              <input type="radio" name="send-mail-route" [id]="'send-mail-route-' + r" [value]="r"
+                [checked]="route() === r" (change)="route.set(r)" [attr.aria-describedby]="routeHelpId(r)">
+              <label [for]="'send-mail-route-' + r">
+                {{ 'APPLICATIONS.MAIL_ROUTE_' + r | translate }}
+                @if (first) { {{ 'APPLICATIONS.MAIL_RECOMMENDED' | translate }} }
+              </label>
+              <p [id]="routeHelpId(r)" class="hint">{{ 'APPLICATIONS.MAIL_ROUTE_' + r + '_HELP' | translate }}</p>
+            </div>
+          }
+        </fieldset>
+
+        @switch (route()) {
+          @case ('SHARE') {
+            <p class="hint">{{ 'APPLICATIONS.MAIL_SHARE_LEAD' | translate }}</p>
+            <div class="copy-field">
+              <label for="send-mail-to">{{ 'APPLICATIONS.MAIL_TO' | translate }}</label>
+              <input id="send-mail-to" type="text" readonly [value]="m.to">
+              <button type="button" class="btn-secondary" [disabled]="!m.to"
+                [attr.aria-label]="'APPLICATIONS.MAIL_COPY_TO_ARIA' | translate"
+                (click)="copy(m.to, 'APPLICATIONS.MAIL_COPIED_TO')">{{ 'APPLICATIONS.MAIL_COPY' | translate }}</button>
+            </div>
+            <div class="copy-field">
+              <label for="send-mail-subject">{{ 'APPLICATIONS.MAIL_SUBJECT' | translate }}</label>
+              <input id="send-mail-subject" type="text" readonly [value]="m.subject">
+              <button type="button" class="btn-secondary"
+                [attr.aria-label]="'APPLICATIONS.MAIL_COPY_SUBJECT_ARIA' | translate"
+                (click)="copy(m.subject, 'APPLICATIONS.MAIL_COPIED_SUBJECT')">{{ 'APPLICATIONS.MAIL_COPY' | translate }}</button>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn-primary" (click)="share()">{{ 'APPLICATIONS.MAIL_SHARE' | translate }}</button>
+            </div>
+          }
+
+          @case ('EML') {
+            <div class="actions">
+              <button type="button" class="btn-primary" (click)="downloadEml()">{{ 'APPLICATIONS.MAIL_EML_DOWNLOAD' | translate }}</button>
+            </div>
+            <h3 class="steps-heading">{{ 'APPLICATIONS.MAIL_EML_STEPS' | translate }}</h3>
+            <ul class="steps">
+              <li>{{ 'APPLICATIONS.MAIL_EML_OUTLOOK' | translate }}</li>
+              <li>{{ 'APPLICATIONS.MAIL_EML_APPLE' | translate }}</li>
+              <li>{{ 'APPLICATIONS.MAIL_EML_THUNDERBIRD' | translate }}</li>
+            </ul>
+          }
+
+          @case ('MAILTO') {
+            @if (mailto(); as link) {
+              @if (link.short) {
+                <p class="hint">{{ 'APPLICATIONS.MAIL_MAILTO_SHORT' | translate }}</p>
+              }
+              <div class="actions">
+                <a class="btn-primary" [href]="link.url" (click)="handedOver()">{{ 'APPLICATIONS.MAIL_MAILTO_OPEN' | translate }}</a>
+              </div>
+              <h3 class="steps-heading">{{ 'APPLICATIONS.MAIL_MAILTO_ATTACH' | translate }}</h3>
+              <ul class="downloads">
+                @for (a of m.attachments; track a.file.name) {
+                  <li>
+                    <button type="button" class="btn-secondary" (click)="downloadAttachment(a)"
+                      [attr.aria-label]="'APPLICATIONS.MAIL_DOWNLOAD_ATTACHMENT_ARIA' | translate: { name: a.file.name }">
+                      {{ a.file.name }}
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        }
+
+        <div class="actions">
+          <button type="button" class="btn-secondary" (click)="close()">{{ 'COMMON.CANCEL' | translate }}</button>
+        </div>
+      }
+    }
+
+    @case ('CONFIRM') {
+      <h3 id="send-mail-confirm" #confirmHeading tabindex="-1" class="steps-heading">
+        {{ 'APPLICATIONS.MAIL_CONFIRM_QUESTION' | translate }}
+      </h3>
+      <p class="hint">{{ 'APPLICATIONS.MAIL_CONFIRM_HELP' | translate }}</p>
+      <div class="actions">
+        <button type="button" class="btn-primary" [disabled]="saving()" (click)="markSent()">
+          {{ (saving() ? 'APPLICATIONS.SAVING' : 'APPLICATIONS.MAIL_CONFIRM_YES') | translate }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="close()">{{ 'APPLICATIONS.MAIL_CONFIRM_NO' | translate }}</button>
+      </div>
+      @if (saveFailed()) {
+        <p role="alert" class="notice">{{ 'APPLICATIONS.MAIL_MARK_ERROR' | translate }}</p>
+      }
+    }
+  }
+</section>

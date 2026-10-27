@@ -62,6 +62,11 @@
     </section>
   }
 
+  @if (mailFor) {
+    <app-send-mail [application]="mailFor.application" [template]="mailFor.template"
+      [enclosures]="mailFor.enclosures" [letterLang]="mailFor.lang" (closed)="closeMail($event)" />
+  }
+
   @if (documentsFor) {
     <section class="documents-panel" aria-labelledby="documents-heading">
       <h2 id="documents-heading" #documentsHeading tabindex="-1" class="section-tab">
@@ -268,10 +273,11 @@
             </button>
             <button type="button"
               class="btn-secondary"
+              [id]="mailButtonId(row.id)"
               [disabled]="!selectedTemplate[row.id] || downloading[row.id]"
               (click)="emailCoverLetter(row.id)"
               [attr.aria-label]="'APPLICATIONS.SEND_EMAIL_ARIA' | translate: { company: row.companyName }">
-              {{ (downloading[row.id] ? 'APPLICATIONS.DOWNLOADING' : 'APPLICATIONS.SEND_EMAIL') | translate }}
+              {{ 'APPLICATIONS.SEND_EMAIL' | translate }}
             </button>
             @if (selectedTemplate[row.id] && !supportsWord(row.id)) {
               <p class="template-note">{{ 'APPLICATIONS.WORD_UNAVAILABLE' | translate }}</p>

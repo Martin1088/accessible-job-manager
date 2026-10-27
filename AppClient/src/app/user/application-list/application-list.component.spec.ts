@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { EMPTY, of, throwError } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { HttpErrorResponse, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { provideTranslateService } from '@ngx-translate/core';
 
@@ -219,24 +219,43 @@ describe('ApplicationListComponent', () => {
     await expectNoAxeViolations(fixture);
   });
 
-  it('emails a letter template through the html provider', () => {
-    coverLetterServiceSpy.renderEmail.and.returnValue(EMPTY);
+  it('opens the send-by-email panel for the row, with its template and language', () => {
+    coverLetterServiceSpy.renderEmail.and.returnValue(NEVER);
+    coverLetterServiceSpy.renderPdf.and.returnValue(NEVER);
     component.selectedTemplate[7] = component.htmlTemplates[0];
 
     component.emailCoverLetter(7);
+    fixture.detectChanges();
 
+    expect(component.mailFor).toEqual(jasmine.objectContaining({
+      application: jasmine.objectContaining({ id: 7, companyName: 'Acme GmbH', status: 'DRAFT' }),
+      template: component.htmlTemplates[0],
+      enclosures: [],
+      lang: 'de',
+    }));
+    expect(fixture.nativeElement.querySelector('app-send-mail')).not.toBeNull();
     expect(coverLetterServiceSpy.renderEmail).toHaveBeenCalledWith(7, 'html-1', { attachments: [] });
-    httpMock.expectNone(r => r.url.startsWith('/api/word/'));
   });
 
-  it('emails a word template through the word provider', () => {
+  // Whether the mail went out is the user's answer to give, so opening the panel
+  // must not move the applied date the way a download does.
+  it('leaves the applied date alone when the panel opens', () => {
     component.selectedTemplate[7] = component.wordTemplates[0];
 
     component.emailCoverLetter(7);
 
-    // Left unflushed: answering it would send the browser to a mailto: URL.
-    httpMock.expectOne('/api/word/cover-letter/7/fill/word-1/email');
-    expect(coverLetterServiceSpy.renderEmail).not.toHaveBeenCalled();
+    expect(applicationServiceSpy.update).not.toHaveBeenCalled();
+  });
+
+  it('reloads the applications once the panel reports the mail as sent', () => {
+    component.selectedTemplate[7] = component.wordTemplates[0];
+    component.emailCoverLetter(7);
+    applicationServiceSpy.getAll.calls.reset();
+
+    component.closeMail(true);
+
+    expect(component.mailFor).toBeNull();
+    expect(applicationServiceSpy.getAll).toHaveBeenCalled();
   });
 
   it('previews a letter template through the html provider', () => {
