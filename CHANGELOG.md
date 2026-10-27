@@ -22,6 +22,15 @@ orientation, not as a record of releases that happened.
   (`GET /api/export/job-postings`), one folder per company, each PDF named by position,
   date and label. A posting whose stored file cannot be read is listed in `MISSING.txt`
   instead of failing the download.
+- "Send as email" in the Applications list sends the whole application through the
+  user's own mail app: recipient, subject, the letter as text, the letter as a PDF and
+  every enclosed document. The attachments are assembled in the browser and never stored
+  or sent by the server. Three routes, the one this device supports best offered first:
+  the system share sheet (Web Share API with files), a downloadable `.eml` draft
+  (`X-Unsent`, so classic Outlook opens it ready to send; Apple Mail and Thunderbird
+  need "Send again" / "Edit as new"), or `mailto:` with the files downloaded to attach
+  by hand. The email draft endpoints return a `shortBody` for `mailto:`, which a full
+  letter would overflow. The bundled privacy policy says how this works.
 - `GOTENBERG_AUTH_TOKEN` is sent to Gotenberg as `X-Auth-Token`, so a Gotenberg behind
   Scaleway's IAM (a private Serverless Container) can be called. Unset, no header is sent.
 - `JOB_POSTING_LLM_PROVIDER=openai` talks to any OpenAI-compatible `/chat/completions`
@@ -99,6 +108,9 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+- "Send as email" no longer sets the applied date by itself. After the hand-over it asks
+  whether the application went out, and only "Yes, mark as sent" sets the date to today
+  and a draft to `SENT`.
 - "Check my fit" no longer asks which CV to compare. It always compares the default CV
   in the interface language, names it on the page, and follows a language switch. Without
   a default CV in that language it says so and links to Documents; it no longer falls

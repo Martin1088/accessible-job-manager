@@ -1,8 +1,8 @@
 import {
-  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnInit,
-  afterNextRender, computed, inject, input, output, signal, viewChild,
+  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector,
+  afterNextRender, computed, effect, inject, input, output, signal, untracked, viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
@@ -46,7 +46,7 @@ type Step = 'LOADING' | 'FAILED' | 'READY' | 'CONFIRM';
   styleUrl: './send-mail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SendMailComponent implements OnInit {
+export class SendMailComponent {
   readonly application = input.required<MailApplication>();
   readonly template = input.required<TemplateOption>();
   readonly enclosures = input<Document[]>([]);
@@ -60,7 +60,7 @@ export class SendMailComponent implements OnInit {
   private readonly announcer = inject(LiveAnnouncer);
   private readonly translate = inject(TranslateService);
   private readonly injector = inject(Injector);
-  private readonly destroyRef = inject(DestroyRef);
+  private preparing?: Subscription;
 
   private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');
   private readonly confirmHeading = viewChild<ElementRef<HTMLElement>>('confirmHeading');
@@ -80,15 +80,27 @@ export class SendMailComponent implements OnInit {
     return mail ? this.mails.mailto(mail) : null;
   });
 
-  ngOnInit(): void {
-    this.prepare();
-    afterNextRender(() => this.heading()?.nativeElement.focus(), { injector: this.injector });
+  constructor() {
+    // Runs again when the list points the open panel at another application or
+    // template - the component is reused then, and must not keep the old attachments.
+    effect(() => {
+      this.application();
+      this.template();
+      this.enclosures();
+      untracked(() => {
+        this.shareFailed.set(false);
+        this.prepare();
+        afterNextRender(() => this.heading()?.nativeElement.focus(), { injector: this.injector });
+      });
+    });
+    inject(DestroyRef).onDestroy(() => this.preparing?.unsubscribe());
   }
 
   prepare(): void {
+    this.preparing?.unsubscribe();
+    this.mail.set(null);
     this.step.set('LOADING');
-    this.mails.prepare(this.application().id, this.template(), this.enclosures())
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.preparing = this.mails.prepare(this.application().id, this.template(), this.enclosures())
       .subscribe({
         next: mail => {
           this.mail.set(mail);

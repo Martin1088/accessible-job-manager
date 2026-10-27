@@ -39,6 +39,8 @@ sections:
           - "Einen Identity-Provider (Authentik) für Anmeldung und Rollenzuweisung."
           - "S3-kompatiblen Objektspeicher (Garage) für hochgeladene und erzeugte Dokumente."
           - "Einen Dokumentkonvertierungsdienst (Gotenberg), der Anschreiben in PDF umwandelt."
+      - type: paragraph
+        text: "Wenn Sie eine Bewerbung per E-Mail versenden, stellt die Anwendung Anschreiben und Anlagen nur in Ihrem Browser zusammen und übergibt sie an Ihre eigene Mail-App. Die Anwendung versendet dabei keine E-Mail und speichert die zusammengestellte Nachricht nicht; die Dateien werden verworfen, sobald Sie den Dialog schließen. Der Versand läuft über Ihr eigenes E-Mail-Konto."
   - heading: "Speicherdauer"
     blocks:
       - type: paragraph
