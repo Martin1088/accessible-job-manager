@@ -83,6 +83,25 @@ variable "llm_model" {
   default     = "mistral-small-3.2-24b-instruct-2506"
 }
 
+variable "cv_matching_model" {
+  description = <<-EOT
+    Modell nur für den CV-Abgleich bei Scaleway Generative APIs. Leer = wie llm_model.
+    Das Einlesen von Anzeigen bleibt beim kleineren llm_model.
+  EOT
+  type        = string
+  default     = ""
+}
+
+variable "gotenberg_min_scale" {
+  description = <<-EOT
+    Wie viele Gotenberg-Instanzen immer warm laufen. 0 = Scale-to-Zero (günstig, aber jeder
+    Import startet kalt und zwei gleichzeitige Renderings können sich eine Instanz teilen).
+    2 hält zwei warme Instanzen bereit und kostet Dauerbetrieb.
+  EOT
+  type        = number
+  default     = 0
+}
+
 variable "app_min_scale" {
   description = "0 = Scale-to-Zero; 1 = immer warm"
   type        = number

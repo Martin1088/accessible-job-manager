@@ -11,6 +11,9 @@ base_domain        = "ajm.example"
 
 app_image = "rg.fr-par.scw.cloud/ajm-pilot/accessible-job-manager-pilot:0.0.0"
 
+# Optional: größeres Modell nur für den CV-Abgleich (leer = wie llm_model)
+# cv_matching_model = "qwen3-235b-a22b-instruct-2507"
+
 # Phase 1b: nachdem der CNAME aus "tofu output dns_id" gesetzt ist
 # enable_id_domain = true
 

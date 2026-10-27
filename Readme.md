@@ -327,6 +327,14 @@ Container App is internal-only, and passes the same flags. The Compose stack now
 matches it. Azure still has no egress rules of its own, so on that deployment the
 flag is the only address-level control there is.
 
+### Scaleway Deployment
+
+`deploy/scaleway/` holds an OpenTofu configuration for a pilot platform on Scaleway
+(Serverless Containers for the app, Pocket ID and Gotenberg, Serverless SQL Database,
+Object Storage with SSE-C, Generative APIs, Transactional Email). The full walkthrough,
+the order of the phases and the errors met on the way are in
+**[docs/scaleway.md](docs/scaleway.md)**.
+
 ### Azure Deployment
 
 `dev/azure/main.bicep` provisions a demo deployment to Azure Container Apps. It creates:

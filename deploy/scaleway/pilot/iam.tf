@@ -31,6 +31,10 @@ resource "scaleway_iam_policy" "app" {
 resource "scaleway_iam_api_key" "app" {
   application_id = scaleway_iam_application.app.id
   description    = "AJM-Backend"
+
+  # Object Storage ordnet Anfragen dem Standardprojekt des Schlüssels zu. Ohne
+  # diese Angabe landet "ajm-pilot-documents" im falschen Projekt: AccessDenied.
+  default_project_id = var.project_id
 }
 
 # --- Aufruf des privaten Gotenberg-Containers ---------------------------------
