@@ -13,15 +13,19 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.OutputStream;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -41,6 +45,7 @@ class ExportControllerTest {
     @Autowired MockMvc mvc;
 
     @MockitoBean ExportService exportService;
+    @MockitoBean PostingArchiveService postingArchiveService;
     @MockitoBean RoleCheckSuccessHandler roleCheckSuccessHandler;
     @MockitoBean GroupsGrantedAuthoritiesMapper groupsGrantedAuthoritiesMapper;
 
@@ -117,6 +122,46 @@ class ExportControllerTest {
     @Test
     void exportCompanies_requiresAuthentication() throws Exception {
         mvc.perform(get("/api/export/companies"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void exportJobPostings_streamsTheArchive() throws Exception {
+        List<PostingArchiveService.Entry> entries =
+                List.of(new PostingArchiveService.Entry("test-sub/job_posting_snapshot/a.pdf", "Acme/Dev.pdf"));
+        when(postingArchiveService.entries("test-sub")).thenReturn(entries);
+        doAnswer(inv -> {
+            inv.<OutputStream>getArgument(1).write(new byte[]{'P', 'K'});
+            return null;
+        }).when(postingArchiveService).write(eq(entries), any());
+
+        MvcResult started = mvc.perform(get("/api/export/job-postings")
+                        .with(oidcLogin().idToken(t -> t.subject("test-sub"))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        mvc.perform(asyncDispatch(started))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/zip"))
+                .andExpect(content().bytes(new byte[]{'P', 'K'}))
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                        org.hamcrest.Matchers.matchesPattern("attachment; filename=job-postings-export-.*\\.zip")));
+    }
+
+    /** Same negotiation trap as the spreadsheet: `produces` is ZIP, the error must still be JSON. */
+    @Test
+    void exportJobPostings_answers404AsJson_whenNothingIsStored() throws Exception {
+        when(postingArchiveService.entries("test-sub")).thenReturn(List.of());
+
+        mvc.perform(get("/api/export/job-postings")
+                        .with(oidcLogin().idToken(t -> t.subject("test-sub"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void exportJobPostings_requiresAuthentication() throws Exception {
+        mvc.perform(get("/api/export/job-postings"))
                 .andExpect(status().is4xxClientError());
     }
 }

@@ -2,9 +2,11 @@ package de.ajm.manager.coverletter.word;
 
 import de.ajm.manager.application.Application;
 import de.ajm.manager.application.ApplicationService;
+import de.ajm.manager.application.attachment.ApplicationDocumentService;
 import de.ajm.manager.company.CompanyLocation;
 import de.ajm.manager.company.CompanyPosition;
 import de.ajm.manager.coverletter.CoverLetterEmailDto;
+import de.ajm.manager.coverletter.CoverLetterLabels;
 import de.ajm.manager.coverletter.CoverLetterTemplate;
 import de.ajm.manager.document.Document;
 import de.ajm.manager.document.DocumentService;
@@ -35,22 +37,25 @@ public class WordLetterTemplateService {
     private final StorageService storageService;
     private final DocumentService documentService;
     private final ApplicationService applicationService;
+    private final ApplicationDocumentService applicationDocumentService;
+    private final CoverLetterLabels labels;
     private final UserProfileRepository userProfileRepository;
     private final MessageSource messageSource;
 
-    public record RenderedDocument(byte[] content, String filename) {}
+    /** {@code language} is the letter's: the template document's, which the label and filename follow. */
+    public record RenderedDocument(byte[] content, String filename, Language language) {}
 
     @Transactional(readOnly = true)
     public RenderedDocument fillAsPdf(Long applicationId, UUID documentId, String userId) {
         FillContext ctx = loadAndValidate(applicationId, documentId, userId);
         byte[] pdf = wordCoverLetterService.toPdf(fill(ctx));
-        return new RenderedDocument(pdf, baseName(ctx) + ".pdf");
+        return new RenderedDocument(pdf, baseName(ctx) + ".pdf", ctx.doc().getLanguage());
     }
 
     @Transactional(readOnly = true)
     public RenderedDocument fillAsWord(Long applicationId, UUID documentId, String userId) {
         FillContext ctx = loadAndValidate(applicationId, documentId, userId);
-        return new RenderedDocument(fill(ctx), baseName(ctx) + ".docx");
+        return new RenderedDocument(fill(ctx), baseName(ctx) + ".docx", ctx.doc().getLanguage());
     }
 
     /**
@@ -70,7 +75,12 @@ public class WordLetterTemplateService {
         String body = unchecked(() -> wordCoverLetterService.extractPlainText(fill(ctx)));
         String subject = wordCoverLetterService.label("coverLetter.subjectPrefix", ctx.doc().getLanguage())
                 + " " + ctx.pos().getTitle();
-        return new CoverLetterEmailDto(ctx.pos().getEmail(), subject, body);
+        List<String> enclosures = applicationDocumentService.enclosed(applicationId, userId).stream()
+                .map(document -> orEmpty(document.getLabel()).trim())
+                .filter(label -> !label.isEmpty())
+                .toList();
+        String shortBody = labels.shortEmailBody(ctx.pos(), ctx.doc().getLanguage(), enclosures, sender(userId).name());
+        return new CoverLetterEmailDto(ctx.pos().getEmail(), subject, body, shortBody);
     }
 
     /**
@@ -83,7 +93,7 @@ public class WordLetterTemplateService {
         byte[] template = unchecked(() ->
                 wordCoverLetterService.createTemplateWithHeader(sender(userId), language));
         String baseName = wordCoverLetterService.label("coverLetter.fileLabel", language) + "_personal";
-        return new RenderedDocument(template, baseName + ".docx");
+        return new RenderedDocument(template, baseName + ".docx", language);
     }
 
     /** The sender block is the caller's profile; see {@link HtmlLetterTemplateService}. */

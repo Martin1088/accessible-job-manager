@@ -72,7 +72,8 @@ h3,
   }
 }
 
-.job-import-actions {
+.job-import-actions,
+.merge-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -202,7 +203,8 @@ h3,
 
 .job-result-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  // min(): on a phone the column may be narrower than 240px rather than overflow.
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 1.5rem;
   margin-top: 1.25rem;
   padding-top: 1rem;
@@ -216,7 +218,9 @@ h3 {
 
 .job-result {
   display: grid;
-  grid-template-columns: auto 1fr;
+  // minmax(0, …): a plain 1fr column is never narrower than its longest word, and a
+  // website URL is one word - at 375px it pushed the page 45px sideways.
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.5rem 1.25rem;
   font-size: 0.95rem;
 
@@ -226,7 +230,10 @@ h3 {
     padding-top: 0.15rem;
   }
 
-  dd { margin: 0; }
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
 }
 
 // --- Merge panel -------------------------------------------

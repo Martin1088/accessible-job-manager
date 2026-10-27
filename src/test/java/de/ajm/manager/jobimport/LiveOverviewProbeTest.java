@@ -129,7 +129,7 @@ class LiveOverviewProbeTest {
         }
         JobPostingLlmClient client = new OllamaJobPostingLlmClient(
                 DevServices.ollamaUrl(), DevServices.ollamaModel(),
-                CONNECT_TIMEOUT_SECONDS, READ_TIMEOUT_SECONDS, MAX_OUTPUT_TOKENS,
+                CONNECT_TIMEOUT_SECONDS, READ_TIMEOUT_SECONDS, MAX_OUTPUT_TOKENS, 0,
                 new ObjectMapper(), messages);
         // Elapsed time is reported either way. A model that answers correctly in
         // four minutes and one that answers in ten seconds look identical in the

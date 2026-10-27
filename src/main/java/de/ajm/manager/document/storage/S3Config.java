@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -46,6 +48,12 @@ public class S3Config {
                         AwsBasicCredentials.create(props.accessKey(), props.secretKey())
                 ))
                 .forcePathStyle(true)
+                // Since SDK 2.30 every PutObject carries a CRC32 by default, sent as an
+                // aws-chunked body with a trailing checksum. Garage does not accept that
+                // encoding and answers "Invalid payload signature" (400). WHEN_REQUIRED
+                // restores the pre-2.30 behaviour: a checksum only where S3 demands one.
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .build();
     }
 

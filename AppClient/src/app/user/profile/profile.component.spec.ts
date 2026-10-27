@@ -185,6 +185,59 @@ describe('ProfileComponent', () => {
       expect(fixture.componentInstance.exporting).toBeNull();
       expect(saved).toEqual([]);
     });
+
+    describe('job postings archive', () => {
+      function postingsRequest() {
+        return http.expectOne(r => r.url === '/api/export/job-postings');
+      }
+
+      it('requests the ZIP and saves it under its server-given name', () => {
+        const saved = stubDownload();
+        const fixture = create();
+        http.expectOne('/api/profile').flush(baseProfile);
+
+        fixture.componentInstance.exportPostings();
+        expect(fixture.componentInstance.exporting).toBe('ZIP');
+
+        const req = postingsRequest();
+        expect(req.request.headers.get('Accept')).toBe('application/zip');
+        req.flush(new Blob([]), {
+          headers: { 'Content-Disposition': 'attachment; filename=job-postings-export-2026-10-27.zip' },
+        });
+
+        expect(saved).toEqual(['job-postings-export-2026-10-27.zip']);
+        expect(fixture.componentInstance.exporting).toBeNull();
+      });
+
+      it('reports "nothing archived" as a status, not an error', async () => {
+        const saved = stubDownload();
+        const fixture = create();
+        http.expectOne('/api/profile').flush(baseProfile);
+
+        fixture.componentInstance.exportPostings();
+        postingsRequest().flush(new Blob([]), { status: 404, statusText: 'Not Found' });
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.exportEmpty).toBeTrue();
+        expect(fixture.componentInstance.exportError).toBeFalse();
+        expect(fixture.componentInstance.exporting).toBeNull();
+        expect(saved).toEqual([]);
+        expect(fixture.nativeElement.querySelector('.export [role="status"]')).not.toBeNull();
+        await expectNoAxeViolations(fixture);
+      });
+
+      it('surfaces any other failure as an error', () => {
+        stubDownload();
+        const fixture = create();
+        http.expectOne('/api/profile').flush(baseProfile);
+
+        fixture.componentInstance.exportPostings();
+        postingsRequest().flush(new Blob([]), { status: 500, statusText: 'Server Error' });
+
+        expect(fixture.componentInstance.exportError).toBeTrue();
+        expect(fixture.componentInstance.exportEmpty).toBeFalse();
+      });
+    });
   });
 
   it('has no axe-detectable accessibility violations', async () => {

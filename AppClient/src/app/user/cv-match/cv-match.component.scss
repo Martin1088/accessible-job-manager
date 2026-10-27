@@ -62,6 +62,13 @@ h1 {
   gap: 1.25rem;
 }
 
+// On its own page the posting and the CV are two sheets, one under the other.
+.match-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
 // --- Section shell (each one a sheet on the desk) -----------------
 
 .sheet {
@@ -92,6 +99,46 @@ h1 {
   color: var(--ink-soft);
 
   &:empty { display: none; }
+}
+
+// --- Embedded on the demo's user home -------------------------------
+// One sheet, quieter than the framed import above it. The posting and the CV
+// lie side by side on it, split by a rule - the layout says what the feature
+// does: hold the one against the other. The result stays a sheet of its own,
+// laid on top once it exists.
+
+.match-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: clamp(1.1rem, 0.7rem + 2vw, 1.5rem);
+
+  > .section-tab {
+    align-self: flex-start;
+    margin: 0;
+  }
+
+  .match-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border-block: 1px solid var(--rule);
+
+    > .sheet {
+      background: none;
+      border: 0;
+      border-radius: 0;
+      padding: 1.25rem 1.5rem 1.25rem 0;
+    }
+
+    > .sheet + .sheet {
+      border-inline-start: 1px solid var(--rule);
+      padding-inline: 1.5rem 0;
+    }
+  }
 }
 
 // --- Notices ----------------------------------------------------
@@ -424,7 +471,27 @@ h1 {
 }
 
 @include bp.mobile {
+  // Stacked, the rule between posting and CV turns horizontal.
+  .match-sheet .match-pair {
+    grid-template-columns: minmax(0, 1fr);
+
+    > .sheet { padding-inline: 0; }
+
+    > .sheet + .sheet {
+      padding-inline: 0;
+      border-inline-start: 0;
+      border-block-start: 1px solid var(--rule);
+    }
+  }
+
   .actions button { flex: 1 1 100%; }
   .skill__importance { margin-inline-start: 0; }
   .skill__details { padding-inline-start: 0.9rem; }
+}
+
+// A posting handed in by the page is named, not edited. A URL has no break
+// opportunities of its own, so it may break anywhere rather than overflow.
+.posting-preset__url {
+  overflow-wrap: anywhere;
+  font-weight: 600;
 }

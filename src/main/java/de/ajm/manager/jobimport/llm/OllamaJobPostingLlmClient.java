@@ -15,6 +15,7 @@ import org.springframework.web.client.RestClientException;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,18 +34,27 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
     private final String ollamaModel;
     private final int readTimeoutSeconds;
     private final int maxOutputTokens;
+    private final int contextWindow;
 
+    /**
+     * @param contextWindow Ollama's {@code num_ctx}; 0 leaves the model's own default,
+     *                      which is what the posting parser has always run with. A CV
+     *                      held against a posting does not fit that default, and Ollama
+     *                      cuts the input off silently rather than refusing it.
+     */
     public OllamaJobPostingLlmClient(@Value("${job-posting.parser.ollama-url}") String ollamaUrl,
                                       @Value("${job-posting.parser.model}") String ollamaModel,
                                       @Value("${job-posting.parser.connect-timeout-seconds:5}") int connectTimeoutSeconds,
                                       @Value("${job-posting.parser.read-timeout-seconds:120}") int readTimeoutSeconds,
                                       @Value("${job-posting.parser.max-output-tokens:300}") int maxOutputTokens,
+                                      @Value("${job-posting.parser.context-window:0}") int contextWindow,
                                       ObjectMapper objectMapper,
                                       MessageSource messageSource) {
         this.ollamaUrl = ollamaUrl;
         this.ollamaModel = ollamaModel;
         this.readTimeoutSeconds = readTimeoutSeconds;
         this.maxOutputTokens = maxOutputTokens;
+        this.contextWindow = contextWindow;
         this.objectMapper = objectMapper;
         this.messageSource = messageSource;
 
@@ -87,10 +97,17 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
                 "required", spec.requiredFields()
         );
 
+        Map<String, Object> options = new LinkedHashMap<>();
+        options.put("temperature", 0);
+        options.put("num_predict", maxOutputTokens);
+        if (contextWindow > 0) {
+            options.put("num_ctx", contextWindow);
+        }
+
         Map<String, Object> body = Map.of(
                 "model", ollamaModel,
                 "stream", false,
-                "options", Map.of("temperature", 0, "num_predict", maxOutputTokens),
+                "options", options,
                 "messages", List.of(
                         Map.of("role", "system", "content", spec.systemPrompt()),
                         Map.of("role", "user", "content", postingText)
@@ -112,6 +129,11 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
 
         try {
             JsonNode root = objectMapper.readTree(response);
+            // num_predict reached: the answer stops mid-JSON and would only ever fail
+            // as "unparsable", which names neither the cause nor the setting to change.
+            if ("length".equals(root.path("done_reason").asText())) {
+                throw LlmFailures.truncated(messageSource, root.path("eval_count").asInt(maxOutputTokens));
+            }
             String content = root.path("message").path("content").asText();
             JsonNode fields = truncateFields(objectMapper.readTree(content), spec.maxFieldLength());
             // Belt and braces. The grammar should make an out-of-vocabulary enum
@@ -121,7 +143,7 @@ public class OllamaJobPostingLlmClient implements JobPostingLlmClient {
             fields = JobPostingLlmPrompt.coerceEnums(fields, spec.properties());
             return objectMapper.treeToValue(fields, spec.type());
         } catch (IOException e) {
-            throw new ApiException.BadGateway(message("error.llm.unparsable"));
+            throw new ApiException.BadGateway(message("error.llm.unparsable"), e);
         }
     }
 

@@ -11,6 +11,7 @@ import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -30,7 +31,9 @@ public class CompanyPosition {
     private Gender contactGender;
     private String contactTitle;
     private String contactLastName;
-    private LocalDateTime deadline;
+
+    @Column(name = "application_deadline")
+    private LocalDate deadline;
 
     @Enumerated(EnumType.STRING)
     private Language applyLanguage;

@@ -40,7 +40,8 @@ spec:
           command: ["/bin/sh", "-eu", "-c"]
           args:
             - |
-              MODEL={{ .Values.llm.ollama.model | quote }}
+              # The parser's model, plus the CV matching's when it has its own.
+              MODELS={{ trim (printf "%s %s" .Values.llm.ollama.model (.Values.llm.ollama.matchingModel | default "")) | quote }}
               /bin/ollama serve &
               SERVER=$!
               i=0
@@ -52,12 +53,14 @@ spec:
                 fi
                 sleep 2
               done
-              if /bin/ollama list | grep -q "$MODEL"; then
-                echo "==> $MODEL already present"
-              else
-                echo "==> pulling $MODEL"
-                /bin/ollama pull "$MODEL"
-              fi
+              for MODEL in $MODELS; do
+                if /bin/ollama list | grep -q "$MODEL"; then
+                  echo "==> $MODEL already present"
+                else
+                  echo "==> pulling $MODEL"
+                  /bin/ollama pull "$MODEL"
+                fi
+              done
               kill "$SERVER"
           volumeMounts:
             - name: models

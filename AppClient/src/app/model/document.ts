@@ -17,6 +17,19 @@ export function uiToLetterLanguage(uiLang: string | null | undefined): DocumentL
   return UI_TO_DOCUMENT_LANGUAGE[uiLang ?? ''] ?? 'ENGLISH';
 }
 
+/** The BCP 47 tag of a letter language, for a `lang` attribute. */
+export function letterLanguageTag(language: DocumentLanguage): string {
+  return Object.entries(UI_TO_DOCUMENT_LANGUAGE).find(([, value]) => value === language)![0];
+}
+
+/** The translation key naming a document language, e.g. `LANGUAGE.DE` → "Deutsch". */
+export const DOCUMENT_LANGUAGE_KEY: Record<DocumentLanguage, string> = {
+  ENGLISH: 'LANGUAGE.EN',
+  GERMAN:  'LANGUAGE.DE',
+  DUTCH:   'LANGUAGE.NL',
+  SPANISH: 'LANGUAGE.ES',
+};
+
 export interface Document {
   id: string;
   label: string;
@@ -26,4 +39,24 @@ export interface Document {
   language: DocumentLanguage;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** The types a default can be picked for - mirrors the backend's `DocumentService.DEFAULTABLE`. */
+export const DEFAULTABLE_TYPES: readonly DocumentType[] = ['CV', 'CERTIFICATE', 'COVER_LETTER_TEMPLATE'];
+
+/**
+ * The document a user picked as their default of one type in one language -
+ * "my German CV". At most one per type and language; the server enforces it.
+ */
+export interface DefaultDocument {
+  type: DocumentType;
+  language: DocumentLanguage;
+  document: Document;
+}
+
+/** The id of the default for one type and language, or `null` when that slot is empty. */
+export function defaultFor(
+  defaults: readonly DefaultDocument[], type: DocumentType, language: DocumentLanguage,
+): string | null {
+  return defaults.find(d => d.type === type && d.language === language)?.document.id ?? null;
 }

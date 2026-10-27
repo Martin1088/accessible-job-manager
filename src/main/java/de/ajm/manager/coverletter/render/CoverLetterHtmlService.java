@@ -1,6 +1,7 @@
 package de.ajm.manager.coverletter.render;
 
 import de.ajm.manager.application.ApplicationService;
+import de.ajm.manager.application.attachment.ApplicationDocumentService;
 import de.ajm.manager.company.Company;
 import de.ajm.manager.company.CompanyLocation;
 import de.ajm.manager.company.CompanyPosition;
@@ -10,13 +11,18 @@ import de.ajm.manager.coverletter.CoverLetterBlock;
 import de.ajm.manager.coverletter.CoverLetterLabels;
 import de.ajm.manager.coverletter.CoverLetterModel;
 import de.ajm.manager.coverletter.CoverLetterTemplate;
+import de.ajm.manager.document.Document;
 import de.ajm.manager.types.Gender;
 import de.ajm.manager.types.Language;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Entry point for the HTML cover letter provider: loads the application the letter
@@ -31,6 +37,7 @@ import java.util.List;
 public class CoverLetterHtmlService {
 
     private final ApplicationService applicationService;
+    private final ApplicationDocumentService applicationDocumentService;
     private final CoverLetterAssembler assembler;
     private final HtmlCoverLetterRenderer htmlRenderer;
     private final TextCoverLetterRenderer textRenderer;
@@ -40,13 +47,16 @@ public class CoverLetterHtmlService {
     /** A rendered letter together with everything the controller needs to serve it. */
     public record RenderedLetter(RenderFormat format, byte[] content, String filename, Language language) {}
 
-    /** A letter prepared for an email client: recipient, subject line and body text. */
-    public record EmailDraft(String to, String subject, String body) {}
+    /** A letter prepared for an email client: recipient, subject line, body text and the short note. */
+    public record EmailDraft(String to, String subject, String body, String shortBody) {}
 
     @Transactional(readOnly = true)
     public RenderedLetter render(Long applicationId, CoverLetterTemplate template, RenderFormat format, String userId) {
         CompanyPosition position = ownedPosition(applicationId, userId);
-        return renderFor(position, template, format, languageOf(position));
+        Language language = languageOf(position);
+        CoverLetterModel letter = withEnclosures(assembler.assemble(template, position, language),
+                applicationDocumentService.enclosed(applicationId, userId));
+        return output(letter, position, format, language);
     }
 
     /**
@@ -60,8 +70,11 @@ public class CoverLetterHtmlService {
     @Transactional(readOnly = true)
     public EmailDraft renderAsEmail(Long applicationId, CoverLetterTemplate template, String userId) {
         CompanyPosition position = ownedPosition(applicationId, userId);
-        CoverLetterModel letter = assembler.assemble(template, position, languageOf(position));
-        return new EmailDraft(position.getEmail(), letter.subject(), textRenderer.render(letter));
+        Language language = languageOf(position);
+        List<Document> enclosed = applicationDocumentService.enclosed(applicationId, userId);
+        CoverLetterModel letter = withEnclosures(assembler.assemble(template, position, language), enclosed);
+        String shortBody = labels.shortEmailBody(position, language, labelsOf(enclosed), letter.senderName());
+        return new EmailDraft(position.getEmail(), letter.subject(), textRenderer.render(letter), shortBody);
     }
 
     /**
@@ -72,13 +85,46 @@ public class CoverLetterHtmlService {
      */
     public RenderedLetter renderSample(CoverLetterTemplate template, RenderFormat format, Language language) {
         Language letterLanguage = language == null ? Language.GERMAN : language;
-        return renderFor(samplePosition(letterLanguage), template, format, letterLanguage);
+        CompanyPosition position = samplePosition(letterLanguage);
+        return output(assembler.assemble(template, position, letterLanguage), position, format, letterLanguage);
     }
 
-    private RenderedLetter renderFor(CompanyPosition position, CoverLetterTemplate template,
-                                     RenderFormat format, Language language) {
-        CoverLetterModel letter = assembler.assemble(template, position, language);
+    /**
+     * Appends the documents enclosed with the application to the enclosure lines the
+     * caller wrote - appended, not replacing them, so a line for something that is not
+     * an uploaded document ("Arbeitsproben auf Anfrage") survives. A label already among
+     * the lines is not listed twice.
+     * <p>
+     * Labels are taken literally: they are not run through placeholder resolution, so a
+     * document called {@code {{company}}} is listed as such. They need no sanitizing
+     * either - enclosure lines are plain text, which the template prints escaped.
+     */
+    private CoverLetterModel withEnclosures(CoverLetterModel letter, List<Document> enclosed) {
+        List<String> lines = new ArrayList<>(letter.attachments());
+        Set<String> seen = new HashSet<>();
+        lines.forEach(line -> seen.add(key(line)));
+        labelsOf(enclosed).forEach(label -> {
+            if (seen.add(key(label))) {
+                lines.add(label);
+            }
+        });
+        return letter.withAttachments(lines);
+    }
 
+    /** The non-blank labels of the enclosed documents, in reading order. */
+    private static List<String> labelsOf(List<Document> enclosed) {
+        return enclosed.stream()
+                .map(document -> document.getLabel() == null ? "" : document.getLabel().trim())
+                .filter(label -> !label.isEmpty())
+                .toList();
+    }
+
+    private static String key(String line) {
+        return line.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private RenderedLetter output(CoverLetterModel letter, CompanyPosition position,
+                                  RenderFormat format, Language language) {
         return switch (format) {
             case PDF -> new RenderedLetter(format, pdfConverter.toPdf(htmlRenderer.render(letter)),
                     fileBaseName(position, language) + ".pdf", language);

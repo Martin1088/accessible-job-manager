@@ -39,6 +39,8 @@ sections:
           - "Un proveedor de identidad (Authentik) para el inicio de sesión y la asignación de roles."
           - "Almacenamiento de objetos compatible con S3 (Garage) para los documentos subidos y generados."
           - "Un servicio de conversión de documentos (Gotenberg) usado para convertir los documentos de carta de presentación en PDF."
+      - type: paragraph
+        text: "Cuando envía una candidatura por correo electrónico, la aplicación reúne la carta de presentación y los anexos solo en su navegador y los entrega a su propia aplicación de correo. La aplicación no envía ningún correo ni guarda el mensaje reunido; los archivos se descartan en cuanto cierra el diálogo. El envío se realiza desde su propia cuenta de correo."
   - heading: "Duración del almacenamiento"
     blocks:
       - type: paragraph

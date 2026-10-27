@@ -1,0 +1,32 @@
+# Lokaler State und Arbeitsverzeichnisse
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# Echte Werte; nur die .example-Datei gehört ins Repo
+*.tfvars
+!*.tfvars.example
+
+# Die Lock-Datei der Provider-Versionen gehört INS Repo
+!.terraform.lock.hcl
+
+# Variablen als JSON, Absturzprotokolle (können Werte enthalten) und lokale Überschreibungen
+*.tfvars.json
+!*.tfvars.json.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Sperrdatei des State-Locks und Kopien des States
+.terraform.tfstate.lock.info
+*.tfstate.backup
+
+# Ausgaben von `tofu output`/`tofu show`, die Zugangsdaten enthalten können
+*.secret
+.env
+.env.*
+!.env.example

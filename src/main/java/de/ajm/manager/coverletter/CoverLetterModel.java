@@ -24,5 +24,11 @@ public record CoverLetterModel(
         return language.locale().toLanguageTag();
     }
 
+    /** The same letter with a different list of enclosure lines. */
+    public CoverLetterModel withAttachments(List<String> attachments) {
+        return new CoverLetterModel(returnAddressLine, recipientLines, infoLine, subject, greeting, blocks,
+                closing, senderName, attachmentsLabel, List.copyOf(attachments), style, language);
+    }
+
     public record Block(BlockType type, String html, List<String> itemsHtml) {}
 }

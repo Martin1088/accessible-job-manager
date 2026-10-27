@@ -1,5 +1,6 @@
 package de.ajm.manager.coverletter.word;
 
+import de.ajm.manager.application.attachment.ApplicationBundleService;
 import de.ajm.manager.coverletter.CoverLetterEmailDto;
 import de.ajm.manager.coverletter.word.WordLetterTemplateService.RenderedDocument;
 import de.ajm.manager.types.Language;
@@ -29,6 +30,7 @@ public class WordCoverLetterController {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
     private final WordLetterTemplateService wordLetterTemplateService;
+    private final ApplicationBundleService applicationBundleService;
 
     @PostMapping("/{applicationId}/fill/{documentId}")
     public ResponseEntity<byte[]> fillAsPdf(
@@ -38,6 +40,20 @@ public class WordCoverLetterController {
 
         return download(wordLetterTemplateService.fillAsPdf(
                 applicationId, documentId, user.getSubject()), MediaType.APPLICATION_PDF);
+    }
+
+    /** The application as one PDF: the filled letter, then the documents enclosed with it. */
+    @PostMapping("/{applicationId}/fill/{documentId}/bundle")
+    public ResponseEntity<byte[]> fillAsBundle(
+            @PathVariable Long applicationId,
+            @PathVariable UUID documentId,
+            @AuthenticationPrincipal OidcUser user) {
+
+        RenderedDocument letter = wordLetterTemplateService.fillAsPdf(applicationId, documentId, user.getSubject());
+        ApplicationBundleService.Bundle bundle = applicationBundleService.bundle(
+                applicationId, letter.content(), letter.language(), user.getSubject());
+        return download(new RenderedDocument(bundle.content(), bundle.filename(), letter.language()),
+                MediaType.APPLICATION_PDF);
     }
 
     @PostMapping("/{applicationId}/fill/{documentId}/word")

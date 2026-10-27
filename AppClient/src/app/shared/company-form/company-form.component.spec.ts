@@ -104,6 +104,25 @@ describe('CompanyFormComponent', () => {
     expect(component.company.positions[0].title).toBe('');
   });
 
+  it('has a labelled date field for a position\'s deadline, and clearing it unsets the value', async () => {
+    component.addPosition();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const el: HTMLElement = fixture.nativeElement;
+    const input = el.querySelector<HTMLInputElement>('input#deadline-0')!;
+    expect(input.type).toBe('date');
+    expect(el.querySelector('label[for="deadline-0"]')?.textContent).toContain('COMPANIES.DEADLINE');
+
+    input.value = '2026-09-30';
+    input.dispatchEvent(new Event('input'));
+    expect(component.company.positions[0].deadline).toBe('2026-09-30');
+
+    input.value = '';
+    input.dispatchEvent(new Event('input'));
+    expect(component.company.positions[0].deadline).toBeUndefined();
+  });
+
   it('removePosition should remove by index', () => {
     component.addPosition();
     component.addPosition();

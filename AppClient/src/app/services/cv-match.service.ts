@@ -7,9 +7,8 @@ import { CvMatchResult, PostingSource } from '../model/cv-match';
 /**
  * Holds one of the caller's CVs against a job posting, through the AI model the
  * server is configured with. The two paths mirror the posting import's
- * `overview` / `overview-text`.
- *
- * Only the demo answers these endpoints so far - the backend is still to come.
+ * `overview` / `overview-text`. Which model answers is the server's
+ * `cv-matching` configuration; the demo answers with a fixed example.
  */
 @Injectable({ providedIn: 'root' })
 export class CvMatchService {

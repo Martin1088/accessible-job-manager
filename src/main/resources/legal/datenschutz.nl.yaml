@@ -39,6 +39,8 @@ sections:
           - "Een identity provider (Authentik) voor aanmelding en roltoewijzing."
           - "S3-compatibele objectopslag (Garage) voor geüploade en gegenereerde documenten."
           - "Een documentconversiedienst (Gotenberg) die sollicitatiebrieven omzet naar PDF."
+      - type: paragraph
+        text: "Wanneer u een sollicitatie per e-mail verstuurt, stelt de applicatie de sollicitatiebrief en bijlagen alleen in uw browser samen en geeft ze door aan uw eigen mail-app. De applicatie verstuurt zelf geen e-mail en slaat het samengestelde bericht niet op; de bestanden worden verwijderd zodra u het venster sluit. Het versturen gebeurt via uw eigen e-mailaccount."
   - heading: "Bewaartermijn"
     blocks:
       - type: paragraph

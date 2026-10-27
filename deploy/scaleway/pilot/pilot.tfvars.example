@@ -1,0 +1,24 @@
+# Kopieren nach pilot.tfvars (steht in .gitignore) und anpassen.
+# Geheimnisse gehören NICHT hierher, sondern in die Umgebung:
+#   export TF_VAR_state_passphrase=...
+#   export TF_VAR_sse_c_key=$(openssl rand -base64 32)
+#   export TF_VAR_pocketid_encryption_key=$(openssl rand -base64 32)
+#   export TF_VAR_oidc_client_secret=...   (ab Phase 2)
+
+project_id         = "00000000-0000-0000-0000-000000000000"
+operator_principal = "user_id:00000000-0000-0000-0000-000000000000"
+base_domain        = "ajm.example"
+
+app_image = "rg.fr-par.scw.cloud/ajm-pilot/accessible-job-manager-pilot:0.0.0"
+
+# Optional: größeres Modell nur für den CV-Abgleich (leer = wie llm_model)
+# cv_matching_model = "qwen3-235b-a22b-instruct-2507"
+
+# Phase 1b: nachdem der CNAME aus "tofu output dns_id" gesetzt ist
+# enable_id_domain = true
+
+# Phase 2: nach dem Anlegen des OIDC-Clients in Pocket ID
+# oidc_client_id = "..."
+
+# Phase 3: nachdem der CNAME aus "tofu output dns_app" gesetzt ist
+# enable_app_domain = true

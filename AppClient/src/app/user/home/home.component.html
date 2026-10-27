@@ -8,18 +8,22 @@
       <p class="job-import__lead">{{ 'HOME.JOB_IMPORT_LEAD' | translate }}</p>
       <app-job-posting-import
         submitLabelKey="HOME.USE_FOR_NEW_COMPANY"
-        (imported)="onImported($event)" />
+        offerMatch
+        (imported)="onImported($event)"
+        (matchRequested)="onMatchRequested($event)" />
     </section>
 
-    <!-- CV matching - reached from here until it joins the import itself. -->
-    <ul class="quick-nav" role="list">
-      <li>
-        <a routerLink="/matching">
-          <span class="quick-nav__title">{{ 'MATCHING.TEASER_TITLE' | translate }}</span>
-          <span class="quick-nav__desc">{{ 'MATCHING.TEASER_DESC' | translate }}</span>
-        </a>
-      </li>
-    </ul>
+    <!-- CV matching, opened from the import with its posting; loaded on first use. -->
+    @if (matchOpen) {
+      @defer (on immediate) {
+        <app-cv-match #matcher embedded focusOnOpen [presetPosting]="matchPosting" />
+        <div class="match-next">
+          <button type="button" class="btn-primary" (click)="createCompany()">
+            {{ 'HOME.USE_FOR_NEW_COMPANY' | translate }}
+          </button>
+        </div>
+      }
+    }
   }
 
   @if (profileError) {
