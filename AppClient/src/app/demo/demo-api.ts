@@ -410,11 +410,7 @@ route('POST', '/api/html/cover-letter/:applicationId/render/:templateId', req =>
 // sample PDF for both, and the browser has nothing to merge them with.
 route('POST', '/api/html/cover-letter/:applicationId/bundle/:templateId', () => SAMPLE_PDF);
 
-route('POST', '/api/html/cover-letter/:applicationId/email/:templateId', () => ({
-  to: 'security-jobs@aurum.example',
-  subject: 'Bewerbung als IT-Sicherheitsanalystin',
-  body: SAMPLE_PREVIEW_TEXT,
-}));
+route('POST', '/api/html/cover-letter/:applicationId/email/:templateId', () => SAMPLE_EMAIL);
 
 /** The linearized preview, as the backend renders it. Fixed - see the note above. */
 const SAMPLE_PREVIEW_TEXT = [
@@ -439,6 +435,27 @@ const SAMPLE_PREVIEW_TEXT = [
   'Mit freundlichen Grüßen',
   'Sabine Vogt',
 ].join('\n');
+
+/** The draft both email routes answer with; `shortBody` is what a `mailto:` carries. */
+const SAMPLE_EMAIL = {
+  to: 'security-jobs@aurum.example',
+  subject: 'Bewerbung als IT-Sicherheitsanalystin',
+  body: SAMPLE_PREVIEW_TEXT,
+  shortBody: [
+    'Sehr geehrter Herr Dr. Falk,',
+    '',
+    'anbei sende ich Ihnen meine Bewerbung als IT-Sicherheitsanalystin bei Aurum Fintech SE.',
+    '',
+    'Im Anhang finden Sie:',
+    '- Anschreiben',
+    '- Lebenslauf 2026',
+    '',
+    'Über eine Rückmeldung freue ich mich.',
+    '',
+    'Mit freundlichen Grüßen',
+    'Sabine Vogt',
+  ].join('\n'),
+};
 
 // ---------------------------------------------------------------------------
 // Advisor
@@ -534,11 +551,7 @@ route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId', () => SA
 route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/bundle', () => SAMPLE_PDF);
 route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/word', () => OUT_OF_SCOPE);
 route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/text', () => SAMPLE_PREVIEW_TEXT);
-route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/email', () => ({
-  to: 'security-jobs@aurum.example',
-  subject: 'Bewerbung als IT-Sicherheitsanalystin',
-  body: SAMPLE_PREVIEW_TEXT,
-}));
+route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/email', () => SAMPLE_EMAIL);
 route('GET', '/api/word/cover-letter/personalize', () => OUT_OF_SCOPE);
 route('GET', '/api/export/companies', () => OUT_OF_SCOPE);
 route('GET', '/api/export/job-postings', () => OUT_OF_SCOPE);

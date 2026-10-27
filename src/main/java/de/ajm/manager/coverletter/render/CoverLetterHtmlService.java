@@ -11,6 +11,7 @@ import de.ajm.manager.coverletter.CoverLetterBlock;
 import de.ajm.manager.coverletter.CoverLetterLabels;
 import de.ajm.manager.coverletter.CoverLetterModel;
 import de.ajm.manager.coverletter.CoverLetterTemplate;
+import de.ajm.manager.document.Document;
 import de.ajm.manager.types.Gender;
 import de.ajm.manager.types.Language;
 import lombok.RequiredArgsConstructor;
@@ -46,14 +47,15 @@ public class CoverLetterHtmlService {
     /** A rendered letter together with everything the controller needs to serve it. */
     public record RenderedLetter(RenderFormat format, byte[] content, String filename, Language language) {}
 
-    /** A letter prepared for an email client: recipient, subject line and body text. */
-    public record EmailDraft(String to, String subject, String body) {}
+    /** A letter prepared for an email client: recipient, subject line, body text and the short note. */
+    public record EmailDraft(String to, String subject, String body, String shortBody) {}
 
     @Transactional(readOnly = true)
     public RenderedLetter render(Long applicationId, CoverLetterTemplate template, RenderFormat format, String userId) {
         CompanyPosition position = ownedPosition(applicationId, userId);
         Language language = languageOf(position);
-        CoverLetterModel letter = withEnclosures(assembler.assemble(template, position, language), applicationId, userId);
+        CoverLetterModel letter = withEnclosures(assembler.assemble(template, position, language),
+                applicationDocumentService.enclosed(applicationId, userId));
         return output(letter, position, format, language);
     }
 
@@ -68,9 +70,11 @@ public class CoverLetterHtmlService {
     @Transactional(readOnly = true)
     public EmailDraft renderAsEmail(Long applicationId, CoverLetterTemplate template, String userId) {
         CompanyPosition position = ownedPosition(applicationId, userId);
-        CoverLetterModel letter = withEnclosures(
-                assembler.assemble(template, position, languageOf(position)), applicationId, userId);
-        return new EmailDraft(position.getEmail(), letter.subject(), textRenderer.render(letter));
+        Language language = languageOf(position);
+        List<Document> enclosed = applicationDocumentService.enclosed(applicationId, userId);
+        CoverLetterModel letter = withEnclosures(assembler.assemble(template, position, language), enclosed);
+        String shortBody = labels.shortEmailBody(position, language, labelsOf(enclosed), letter.senderName());
+        return new EmailDraft(position.getEmail(), letter.subject(), textRenderer.render(letter), shortBody);
     }
 
     /**
@@ -95,17 +99,24 @@ public class CoverLetterHtmlService {
      * document called {@code {{company}}} is listed as such. They need no sanitizing
      * either - enclosure lines are plain text, which the template prints escaped.
      */
-    private CoverLetterModel withEnclosures(CoverLetterModel letter, Long applicationId, String userId) {
+    private CoverLetterModel withEnclosures(CoverLetterModel letter, List<Document> enclosed) {
         List<String> lines = new ArrayList<>(letter.attachments());
         Set<String> seen = new HashSet<>();
         lines.forEach(line -> seen.add(key(line)));
-        applicationDocumentService.enclosed(applicationId, userId).forEach(document -> {
-            String label = document.getLabel() == null ? "" : document.getLabel().trim();
-            if (!label.isEmpty() && seen.add(key(label))) {
+        labelsOf(enclosed).forEach(label -> {
+            if (seen.add(key(label))) {
                 lines.add(label);
             }
         });
         return letter.withAttachments(lines);
+    }
+
+    /** The non-blank labels of the enclosed documents, in reading order. */
+    private static List<String> labelsOf(List<Document> enclosed) {
+        return enclosed.stream()
+                .map(document -> document.getLabel() == null ? "" : document.getLabel().trim())
+                .filter(label -> !label.isEmpty())
+                .toList();
     }
 
     private static String key(String line) {

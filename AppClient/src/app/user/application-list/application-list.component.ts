@@ -10,8 +10,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Application, ApplicationRequest, ApplicationStatus } from '../../model/application';
 import { ApplicationService } from '../../services/application.service';
 import { CoverLetterService } from '../../services/cover-letter.service';
-import { CoverLetterEmail, CoverLetterRenderRequest } from '../../model/cover-letter';
-import { DefaultDocument, Document, DocumentLanguage, DocumentType, defaultFor } from '../../model/document';
+import { CoverLetterRenderRequest } from '../../model/cover-letter';
+import { DefaultDocument, Document, DocumentLanguage, DocumentType, defaultFor, letterLanguageTag } from '../../model/document';
 import { DocumentService } from '../../services/document.service';
 import { HttpFailure, describeHttpFailure, readBlobMessage } from '../../core/http-error';
 import { ErrorTextComponent } from '../../shared/error-text/error-text.component';
@@ -19,6 +19,7 @@ import { byMostRecent } from '../../shared/sort';
 import { Company, CompanyPosition } from '../../model/company';
 import { CompanyService } from '../../services/company.service';
 import { PositionDetailsComponent } from '../../shared/position-details/position-details.component';
+import { MailApplication, SendMailComponent } from './send-mail/send-mail.component';
 
 /**
  * One entry of the template picker. Both cover letter providers write a letter for
@@ -89,7 +90,7 @@ function matchesFilter(iso: string | null | undefined, filterYear: number | '', 
 @Component({
   selector: 'app-application-list',
   standalone: true,
-  imports: [FormsModule, PositionDetailsComponent, TranslatePipe, ErrorTextComponent],
+  imports: [FormsModule, PositionDetailsComponent, TranslatePipe, ErrorTextComponent, SendMailComponent],
   templateUrl: './application-list.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './application-list.component.scss',
@@ -134,6 +135,8 @@ export class ApplicationListComponent implements OnInit {
   private enclosures = new Map<number, Document[]>();
   /** The row whose documents are being chosen; null while the panel is closed. */
   documentsFor: any | null = null;
+  /** The application being sent by email; null while that panel is closed. */
+  mailFor: { application: MailApplication; template: TemplateOption; enclosures: Document[]; lang: string } | null = null;
   /** The user's enclosable documents, grouped by type; loaded once, on first open. */
   documentGroups: { legend: string; documents: Document[] }[] | null = null;
   documentSelection = new Set<string>();
@@ -608,28 +611,43 @@ export class ApplicationListComponent implements OnInit {
       this.http.post(`/api/word/cover-letter/${appId}/fill/${template.id}/word`, null, { responseType: 'blob' }));
   }
 
+  /**
+   * Opens the "send by email" panel. Unlike the downloads it does not touch the applied
+   * date: whether the mail went out is only known once the user says so, which the
+   * panel asks after the hand-over.
+   */
   emailCoverLetter(appId: number): void {
     const template = this.selectedTemplate[appId];
-    if (!template) return;
-    const draft = template.provider === 'HTML'
-      ? this.coverLetterService.renderEmail(appId, template.id, NO_ATTACHMENTS)
-      : this.http.post<CoverLetterEmail>(`/api/word/cover-letter/${appId}/fill/${template.id}/email`, null);
+    const row = this.rows.find(r => r.id === appId);
+    if (!template || !row) return;
+    const language = this.positions.get(row.companyPositionId)?.position.applyLanguage ?? 'GERMAN';
+    this.mailFor = {
+      application: {
+        id: row.id,
+        companyName: row.companyName,
+        positionTitle: row.positionTitle,
+        companyPositionId: row.companyPositionId,
+        status: row.status,
+        notes: row.notes,
+      },
+      template,
+      enclosures: this.enclosures.get(appId) ?? [],
+      lang: letterLanguageTag(language),
+    };
+  }
 
-    this.downloading[appId] = true;
-    draft.subscribe({
-      next: (res) => {
-        const to = res.to ?? '';
-        const mailto = `mailto:${to}?subject=${encodeURIComponent(res.subject)}&body=${encodeURIComponent(res.body)}`;
-        window.location.href = mailto;
-        this.downloading[appId] = false;
-        const row = this.rows.find(r => r.id === appId);
-        if (row) this.markAppliedToday(row);
-      },
-      error: () => {
-        this.errorMessage = this.translate.instant('APPLICATIONS.ERROR_COVER_LETTER');
-        this.downloading[appId] = false;
-      },
-    });
+  /** Focus goes back to the row's button, found by id since a reload rebuilds the rows. */
+  closeMail(sent: boolean): void {
+    const appId = this.mailFor?.application.id;
+    this.mailFor = null;
+    if (sent) this.loadApplications();
+    if (appId != null) {
+      afterNextRender(() => document.getElementById(this.mailButtonId(appId))?.focus(), { injector: this.injector });
+    }
+  }
+
+  mailButtonId(appId: number): string {
+    return `send-mail-${appId}`;
   }
 
   /**
