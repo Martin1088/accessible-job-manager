@@ -11,6 +11,7 @@ import { ExportFormat, ExportService } from '../../services/export.service';
 import { LanguageService } from '../../core/language.service';
 import { uiToLetterLanguage } from '../../model/document';
 import { saveBlobResponse } from '../../core/file-download';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * The profile form. Its six fields are the sender block of every letter, maintained
@@ -47,8 +48,10 @@ export class ProfileComponent implements OnInit {
   submitted = false;
 
   /** Which export is in flight, so only the button pressed shows its busy label. */
-  exporting: ExportFormat | null = null;
+  exporting: ExportFormat | 'ZIP' | null = null;
   exportError = false;
+  /** The postings archive was asked for, and there are none - not a failure. */
+  exportEmpty = false;
 
   readonly form = this.fb.group({
     name: ['', Validators.required],
@@ -117,6 +120,7 @@ export class ProfileComponent implements OnInit {
       return;
     }
     this.exportError = false;
+    this.exportEmpty = false;
     this.exporting = format;
 
     this.exports.exportCompanies(format, uiToLetterLanguage(this.language.current())).subscribe({
@@ -127,6 +131,32 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.exportError = true;
+        this.exporting = null;
+      },
+    });
+  }
+
+  /** Downloads every archived job posting PDF as one ZIP, one folder per company. */
+  exportPostings(): void {
+    if (this.exporting) {
+      return;
+    }
+    this.exportError = false;
+    this.exportEmpty = false;
+    this.exporting = 'ZIP';
+
+    this.exports.exportJobPostings().subscribe({
+      next: (response) => {
+        saveBlobResponse(response, 'job-postings-export.zip');
+        this.exporting = null;
+        this.announce('PROFILE.EXPORT_STARTED');
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          this.exportEmpty = true;
+        } else {
+          this.exportError = true;
+        }
         this.exporting = null;
       },
     });

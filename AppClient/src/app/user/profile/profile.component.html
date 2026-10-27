@@ -124,6 +124,18 @@
       </button>
     </div>
 
+    <p id="export-postings-help" class="hint">{{ 'PROFILE.EXPORT_POSTINGS_HELP' | translate }}</p>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" [disabled]="!!exporting"
+        aria-describedby="export-postings-help" (click)="exportPostings()">
+        {{ (exporting === 'ZIP' ? 'PROFILE.EXPORTING' : 'PROFILE.EXPORT_POSTINGS') | translate }}
+      </button>
+    </div>
+
+    @if (exportEmpty) {
+      <p role="status" class="hint">{{ 'PROFILE.EXPORT_POSTINGS_EMPTY' | translate }}</p>
+    }
+
     @if (exportError) {
       <p role="alert" class="error">{{ 'PROFILE.EXPORT_ERROR' | translate }}</p>
     }

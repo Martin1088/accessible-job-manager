@@ -18,6 +18,10 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- The profile page downloads every archived job posting as one ZIP
+  (`GET /api/export/job-postings`), one folder per company, each PDF named by position,
+  date and label. A posting whose stored file cannot be read is listed in `MISSING.txt`
+  instead of failing the download.
 - `GOTENBERG_AUTH_TOKEN` is sent to Gotenberg as `X-Auth-Token`, so a Gotenberg behind
   Scaleway's IAM (a private Serverless Container) can be called. Unset, no header is sent.
 - `JOB_POSTING_LLM_PROVIDER=openai` talks to any OpenAI-compatible `/chat/completions`

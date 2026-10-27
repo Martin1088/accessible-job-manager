@@ -541,6 +541,7 @@ route('POST', '/api/word/cover-letter/:applicationId/fill/:documentId/email', ()
 }));
 route('GET', '/api/word/cover-letter/personalize', () => OUT_OF_SCOPE);
 route('GET', '/api/export/companies', () => OUT_OF_SCOPE);
+route('GET', '/api/export/job-postings', () => OUT_OF_SCOPE);
 route('POST', '/api/field-suggestions/company', () => OUT_OF_SCOPE);
 route('POST', '/api/field-suggestions/location', () => OUT_OF_SCOPE);
 route('POST', '/api/field-suggestions/position', () => OUT_OF_SCOPE);
