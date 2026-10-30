@@ -100,6 +100,15 @@ resource "scaleway_container" "app" {
   environment_variables = merge(var.cv_matching_model == "" ? {} : {
     CV_MATCHING_OPENAI_MODEL = var.cv_matching_model
     }, {
+    # Wie oben nur mit Wert. Fehlt einer, zeigt die Seite "nicht hinterlegt".
+    for name, value in {
+      LEGAL_OPERATOR_NAME    = var.legal_operator.name
+      LEGAL_OPERATOR_EMAIL   = var.legal_operator.email
+      LEGAL_OPERATOR_ADDRESS = var.legal_operator.address
+    } : name => value if value != ""
+    }, {
+    LEGAL_DEFAULT_LANGUAGE = "de"
+
     MANAGER_DB_URL  = local.ajm_jdbc_url
     MANAGER_DB_USER = scaleway_iam_application.app.id
 

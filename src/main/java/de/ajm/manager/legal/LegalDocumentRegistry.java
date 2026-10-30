@@ -115,7 +115,8 @@ public class LegalDocumentRegistry {
                 continue;
             }
             try {
-                documents.add(LegalDocumentLoader.load(resource.getInputStream(), key, "legal/" + filename));
+                documents.add(LegalDocumentLoader.load(
+                        resource.getInputStream(), key, "legal/" + filename, properties.operator()));
             } catch (LegalDocumentException | IOException e) {
                 defects.add(e.getMessage());
             }
@@ -149,7 +150,7 @@ public class LegalDocumentRegistry {
                         }
                         try {
                             documents.add(LegalDocumentLoader.load(
-                                    Files.newInputStream(file), key, filename));
+                                    Files.newInputStream(file), key, filename, properties.operator()));
                         } catch (LegalDocumentException | IOException e) {
                             defects.add(e.getMessage());
                         }
@@ -263,6 +264,11 @@ public class LegalDocumentRegistry {
         } else {
             log.info("Legal documents: serving the documents bundled with this build ({}). "
                     + "Set job-manager.legal.documents-dir to publish your own.", describe(bundled));
+            if (properties.operator().isIncomplete()) {
+                log.warn("Legal documents: LEGAL_OPERATOR_NAME and LEGAL_OPERATOR_EMAIL are not both set, so the"
+                        + " imprint and privacy policy name no operator. Fine for trying the application out;"
+                        + " a public deployment must set them, or publish its own documents.");
+            }
         }
     }
 

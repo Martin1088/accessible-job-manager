@@ -193,3 +193,12 @@ job-manager:
     # How often to notice that a mounted ConfigMap changed underneath a running
     # pod. Zero disables re-reading.
     reload-interval: ${LEGAL_RELOAD_INTERVAL:30s}
+    # Who runs this deployment. The bundled documents print these where they name the
+    # person responsible; a document of your own may use {{operator.name}},
+    # {{operator.email}} and {{operator.address}} too. Unset is not an error - the page
+    # says "not provided" and the log warns - so the application can be tried out without
+    # an imprint, but a public deployment must set at least name and email.
+    operator:
+      name: ${LEGAL_OPERATOR_NAME:}
+      email: ${LEGAL_OPERATOR_EMAIL:}
+      address: ${LEGAL_OPERATOR_ADDRESS:}
