@@ -215,10 +215,18 @@ allow-list at load time.
 
 - **Source selection is per slug, never per file.** Supplying any language of a document
   takes that document over completely; a missing language falls back to another language
-  *of the same deployment*. The bundled documents in `src/main/resources/legal/` name the
-  upstream author, so serving the bundled English imprint to an organisation's English
-  visitors would be a false statement about who is legally responsible. `LegalProperties`
+  *of the same deployment*. The bundled documents in `src/main/resources/legal/` describe
+  the stock stack, not this deployment's wording, so serving the bundled English privacy
+  policy next to an organisation's own German one would contradict it. `LegalProperties`
   additionally fails startup when `documents-dir` is set but does not cover every slug.
+- **The bundled documents name nobody.** The image is public. Who runs a deployment comes
+  from `job-manager.legal.operator` (`LEGAL_OPERATOR_NAME`, `_EMAIL`, `_ADDRESS`) through
+  `{{operator.*}}` placeholders, which `LegalPlaceholders` fills *before* validation, so a
+  filled-in `href` still meets the scheme allow-list. `{{key|fallback}}` prints the
+  fallback when unset; a definition left empty is dropped, an `href` with an unset value
+  too, and an unknown key fails the document. Unset is a log warning, not a failed start:
+  trying the application out must not require an imprint. The operator values are part of
+  the ETag, since they change the page without changing the file.
 - **Startup and hot reload have opposite failure policies.** A malformed document fails
   startup — under a rolling update the old ReplicaSet keeps serving, so the operator gets
   the feedback and the users keep the page. A document that breaks during a live ConfigMap

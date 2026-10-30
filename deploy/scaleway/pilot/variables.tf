@@ -92,6 +92,19 @@ variable "cv_matching_model" {
   default     = ""
 }
 
+variable "legal_operator" {
+  description = <<-EOT
+    Betreiber*in, wie Impressum und Datenschutzerklärung sie nennen. Leer zeigen beide
+    Seiten "nicht hinterlegt". Die echten Werte gehören in pilot.tfvars, nicht ins Repo.
+  EOT
+  type = object({
+    name    = optional(string, "")
+    email   = optional(string, "")
+    address = optional(string, "")
+  })
+  default = {}
+}
+
 variable "gotenberg_min_scale" {
   description = <<-EOT
     Wie viele Gotenberg-Instanzen immer warm laufen. 0 = Scale-to-Zero (günstig, aber jeder

@@ -18,6 +18,12 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- The bundled imprint and privacy policy name whoever runs the deployment, from
+  `LEGAL_OPERATOR_NAME`, `LEGAL_OPERATOR_EMAIL` and `LEGAL_OPERATOR_ADDRESS` (Helm:
+  `legal.operator`). Unset, both pages say "not provided" and the log warns, so the
+  application can be tried out without writing an imprint first. Own documents may use
+  the same `{{operator.name}}`, `{{operator.email}}` and `{{operator.address}}`
+  placeholders.
 - The profile page downloads every archived job posting as one ZIP
   (`GET /api/export/job-postings`), one folder per company, each PDF named by position,
   date and label. A posting whose stored file cannot be read is listed in `MISSING.txt`
