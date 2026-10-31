@@ -119,14 +119,18 @@ Alles, was die App braucht, setzt `deploy/scaleway/pilot/containers.tf`. Die wic
 - **Gotenberg:** privat. Die App sendet den Secret Key einer eigenen IAM-Anwendung als `X-Auth-Token`
   (`GOTENBERG_AUTH_TOKEN`). Rechte: Policy `gotenberg_caller`.
 - **Dokumente:** S3 mit Path-Style, SSE-C (`S3_SSE_C_MODE=sse-c`, Schlüssel `S3_SSE_C_KEY`).
-- **Datenbank:** Benutzer ist die ID der IAM-Anwendung, Passwort ist deren Secret Key.
+- **Datenbank:** zwei getrennte Serverless-SQL-Datenbanken (`ajm`, `pocketid`), beide mit `min_cpu = 1` und
+  `max_cpu = 1`, also bewusst immer warm. Benutzer ist die ID der IAM-Anwendung, Passwort ist deren Secret Key.
+  Mit `min_cpu = 0` dauerte der Kaltstart über eine Minute, siehe Stolpersteine.
 - **Anmeldung:** `OIDC_ISSUER_URI=https://id.<basis>`, Gruppen `User`/`Advisor`/`Reviewer`.
 - **Zeitlimits:** App-Container `timeout = 300` (der CV-Abgleich darf bis zu 300 s auf das Modell warten),
-  Gotenberg `--api-timeout=60s`, App → Gotenberg `GOTENBERG_READ_TIMEOUT_SECONDS=90`.
+  Gotenberg `--api-timeout=120s` und Container-`timeout = 180`, App → Gotenberg
+  `GOTENBERG_READ_TIMEOUT_SECONDS=150` (länger als Gotenberg, damit dessen Fehlertext ankommt).
 - **Gotenberg-Skalierung:** `scaling_option { concurrent_requests_threshold = 1 }`, `max_scale = 3`. Ein Import
-  startet mehrere Renderings gleichzeitig. Auf einer Instanz teilen sie sich die CPU und laufen in
-  `context deadline exceeded` (HTTP 503 nach 60 s). Mit einer Anfrage pro Instanz bekommt jede ihre eigene vCPU.
-  Ein kalter Start kostet rund 15 s zusätzlich. Wer das nicht will, setzt `min_scale = 1` (kostet Dauerbetrieb).
+  startet mehrere Renderings gleichzeitig. Der Schwellwert ist nur ein Hinweis zum Hochskalieren, keine harte
+  Grenze: Kommen zwei Anfragen gleichzeitig an einen kalten Container, landen beide auf der ersten Instanz und
+  teilen sich die vCPU (`context deadline exceeded`, HTTP 503). Deshalb die längeren Zeitlimits. Ein Kaltstart
+  kostet rund 15 s zusätzlich. `gotenberg_min_scale = 2` hält zwei Instanzen warm (kostet Dauerbetrieb).
 - **Diagnose:** `DIAGNOSTICS_LOG_LEVEL=INFO` schreibt pro Einlesen eine Zeile `DIAG|host|kategorie|status|…` auf stdout.
 
 ## 5. Logs lesen
@@ -162,7 +166,9 @@ Zeitraum eng wählen (zum Beispiel die letzten 15 Minuten) und direkt nach dem V
 | SMTP-Test in Pocket ID schlägt fehl | TLS-Option passt nicht zum Port | 465 mit TLS, 587 mit StartTLS; nach Schlüsseltausch Passwort erneuern |
 | Browser: `DNS_PROBE_FINISHED_NXDOMAIN`, but `dig @8.8.8.8` resolves | Router/Resolver hat die Absage gemerkt | DNS-Cache leeren, öffentlichen DNS-Server nutzen, oder warten |
 | App: "The server could not be reached. It may be restarting, or your connection dropped" | Status 0 im Browser: die App hat nicht geantwortet (Verbindung gekappt, Container-Timeout) | `timeout` des App-Containers prüfen, App-Log lesen |
-| App: "The job posting page could not be converted to PDF" | Gotenberg antwortet mit HTTP-Fehler (oft 503 nach 60 s) | Gotenberg-Log lesen, siehe Skalierung oben |
+| App: "The job posting page could not be converted to PDF" | Gotenberg antwortet mit HTTP-Fehler (503 `context deadline exceeded`) | Gotenberg-Log lesen, Zeitlimits und `gotenberg_min_scale` siehe oben |
+| Pocket ID: `FATAL: Database took more than 1m0s to start, please retry later (SQLSTATE 57P03)` | Datenbank mit `min_cpu = 0` schläft und startet zu langsam | `min_cpu = 1` in `database.tf` |
+| App container: `Container crashed with exit code 1`, `java.net.SocketTimeoutException: Read timed out` at startup | OIDC-Discovery gegen Pocket ID hängt, weil dessen Datenbank kalt ist | Datenbanken warm halten; ggf. `app_min_scale = 1` |
 | App: "Job posting extraction model returned an error (403)" | `OPENAI_BASE_URL` ohne Projekt-ID | Adresse mit Projekt-ID im Pfad verwenden |
 | Upload: `AccessDenied` on the documents bucket | Schlüssel der App ohne Standardprojekt | `default_project_id` am `scaleway_iam_api_key.app` setzen |
 | `tofu output urls` fails after `-target` runs | `-target` aktualisiert unbeteiligte Outputs nicht | Einmal vollständig anwenden |
@@ -183,7 +189,9 @@ Eintrag sperrt sich der Betreiber selbst aus. `prevent_destroy` verhindert ein v
 
 - `app_min_scale = 0` fährt die App herunter, wenn niemand sie nutzt. Der erste Aufruf danach braucht einen
   Kaltstart. Für Tests `1`.
-- Gotenberg läuft mit 1 vCPU und 2 GiB, aber nur, solange Anfragen laufen (`min_scale = 0`).
+- Gotenberg läuft mit 1 vCPU und 2 GiB, aber nur, solange Anfragen laufen (`gotenberg_min_scale = 0`).
+- Beide Datenbanken laufen dauerhaft mit 1 vCPU. Das ist der größte Kostenpunkt des Piloten. Serverless SQL
+  hat keinen Freibetrag, abgerechnet wird die CPU-Zeit.
 - Abgleich und Einlesen kosten Tokens bei den Generative APIs. Das Modell lässt sich pro Aufgabe wählen.
 - Änderungen immer mit `tofu plan -out=plan.tfplan` ansehen und prüfen, bevor `apply` läuft.
   `destroy`/`replace` an Bucket, Datenbank oder Pocket ID sind ein Warnsignal.
