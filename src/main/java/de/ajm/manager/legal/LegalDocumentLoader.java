@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -49,12 +50,14 @@ public final class LegalDocumentLoader {
     }
 
     /**
-     * Parses and validates. The stream is fully read so the ETag covers exactly the bytes
-     * the document was built from.
+     * Parses, fills the {@code {{operator.*}}} placeholders and validates. The stream is
+     * fully read so the ETag covers exactly the bytes the document was built from - and the
+     * operator values, which change the page without changing the file.
      *
      * @throws LegalDocumentException when the YAML does not parse or the document is invalid
      */
-    public static LoadedDocument load(InputStream in, DocumentKey key, String source) {
+    public static LoadedDocument load(InputStream in, DocumentKey key, String source,
+                                      LegalProperties.Operator operator) {
         byte[] bytes;
         try (InputStream stream = in) {
             bytes = stream.readAllBytes();
@@ -77,7 +80,11 @@ public final class LegalDocumentLoader {
                     + rootCause(e).getMessage(), e);
         }
 
-        var defects = LegalDocumentValidator.validate(document, source, key.language());
+        LegalPlaceholders.Result filled = LegalPlaceholders.apply(document, operator, source);
+        document = filled.document();
+
+        var defects = new ArrayList<>(filled.defects());
+        defects.addAll(LegalDocumentValidator.validate(document, source, key.language()));
         if (!defects.isEmpty()) {
             throw new LegalDocumentException(String.join("\n  ", defects));
         }
@@ -85,7 +92,7 @@ public final class LegalDocumentLoader {
         LegalDocument withLanguage = new LegalDocument(
                 key.language(), document.title(), document.intro(), document.sections());
 
-        return new LoadedDocument(key, withLanguage, etagOf(bytes));
+        return new LoadedDocument(key, withLanguage, etagOf(bytes, operator));
     }
 
     private static Yaml yaml() {
@@ -95,9 +102,18 @@ public final class LegalDocumentLoader {
         return new Yaml(new SafeConstructor(options));
     }
 
-    private static String etagOf(byte[] bytes) {
+    private static String etagOf(byte[] bytes, LegalProperties.Operator operator) {
         try {
-            return "\"" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes)) + "\"";
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(bytes);
+            // A changed LEGAL_OPERATOR_NAME after a restart must not be answered with a 304.
+            for (String value : new String[]{operator.name(), operator.email(), operator.address()}) {
+                digest.update((byte) 0);
+                if (value != null) {
+                    digest.update(value.getBytes(StandardCharsets.UTF_8));
+                }
+            }
+            return "\"" + HexFormat.of().formatHex(digest.digest()) + "\"";
         } catch (Exception e) {
             throw new IllegalStateException("SHA-256 is not available", e);
         }

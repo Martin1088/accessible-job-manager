@@ -40,4 +40,17 @@ export class ExportService {
       observe: 'response',
     });
   }
+
+  /**
+   * Every archived job posting PDF in one ZIP, filed by company. A 404 means the user
+   * has stored none - the server answers that before streaming, rather than sending an
+   * empty archive.
+   */
+  exportJobPostings(): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/job-postings`, {
+      headers: new HttpHeaders({ Accept: 'application/zip' }),
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
 }

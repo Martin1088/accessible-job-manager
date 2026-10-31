@@ -53,12 +53,37 @@ class LegalPropertiesBindingTest {
     }
 
     @Test
+    void bindsTheOperatorAndTreatsEmptyValuesAsUnset() {
+        // docker-compose passes `${LEGAL_OPERATOR_ADDRESS:-}`, i.e. an empty string.
+        runner.withPropertyValues(
+                "job-manager.legal.operator.name= Acme e.V. ",
+                "job-manager.legal.operator.email=imprint@acme.example",
+                "job-manager.legal.operator.address="
+        ).run(context -> {
+            LegalProperties.Operator operator = context.getBean(LegalProperties.class).operator();
+            assertThat(operator.name()).isEqualTo("Acme e.V.");
+            assertThat(operator.email()).isEqualTo("imprint@acme.example");
+            assertThat(operator.address()).isNull();
+            assertThat(operator.isIncomplete()).isFalse();
+        });
+    }
+
+    @Test
+    void noOperatorBlockMeansNoOperatorRatherThanANullPointer() {
+        runner.run(context ->
+                assertThat(context.getBean(LegalProperties.class).operator().isIncomplete()).isTrue());
+    }
+
+    @Test
     void applicationYmlDeclaresTheBlockTheRecordExpects() throws IOException {
         String yaml = Files.readString(Path.of("src/main/resources/application.yml"));
 
         assertThat(yaml)
                 .contains("documents-dir: ${LEGAL_DOCUMENTS_DIR:}")
                 .contains("default-language: ${LEGAL_DEFAULT_LANGUAGE:en}")
-                .contains("reload-interval: ${LEGAL_RELOAD_INTERVAL:30s}");
+                .contains("reload-interval: ${LEGAL_RELOAD_INTERVAL:30s}")
+                .contains("name: ${LEGAL_OPERATOR_NAME:}")
+                .contains("email: ${LEGAL_OPERATOR_EMAIL:}")
+                .contains("address: ${LEGAL_OPERATOR_ADDRESS:}");
     }
 }

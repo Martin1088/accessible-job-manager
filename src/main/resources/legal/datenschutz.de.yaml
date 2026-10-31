@@ -1,6 +1,7 @@
 # Bundled default - the document served when a deployment publishes none of its own.
-# It names the upstream author, so any other deployment must replace it: see
-# job-manager.legal.documents-dir in application.yml.
+# The operator's name, email and address come from LEGAL_OPERATOR_NAME, _EMAIL and
+# _ADDRESS (job-manager.legal.operator); the rest describes the stock stack. A deployment
+# that differs from it publishes its own: see job-manager.legal.documents-dir.
 language: de
 title: "Datenschutzerklärung"
 intro:
@@ -11,10 +12,12 @@ sections:
       - type: definitions
         items:
           - term: "Name"
-            value: "Martin Jurk"
+            value: "{{operator.name|nicht hinterlegt}}"
+          - term: "Anschrift"
+            value: "{{operator.address}}"
           - term: "E-Mail"
-            value: "access.job.manager@gmail.com"
-            href: "mailto:access.job.manager@gmail.com"
+            value: "{{operator.email|nicht hinterlegt}}"
+            href: "mailto:{{operator.email}}"
   - heading: "Welche Daten verarbeitet werden"
     blocks:
       - type: paragraph
@@ -39,6 +42,8 @@ sections:
           - "Einen Identity-Provider (Authentik) für Anmeldung und Rollenzuweisung."
           - "S3-kompatiblen Objektspeicher (Garage) für hochgeladene und erzeugte Dokumente."
           - "Einen Dokumentkonvertierungsdienst (Gotenberg), der Anschreiben in PDF umwandelt."
+      - type: paragraph
+        text: "Wenn Sie eine Bewerbung per E-Mail versenden, stellt die Anwendung Anschreiben und Anlagen nur in Ihrem Browser zusammen und übergibt sie an Ihre eigene Mail-App. Die Anwendung versendet dabei keine E-Mail und speichert die zusammengestellte Nachricht nicht; die Dateien werden verworfen, sobald Sie den Dialog schließen. Der Versand läuft über Ihr eigenes E-Mail-Konto."
   - heading: "Speicherdauer"
     blocks:
       - type: paragraph

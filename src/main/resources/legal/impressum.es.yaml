@@ -1,6 +1,7 @@
 # Bundled default - the document served when a deployment publishes none of its own.
-# It names the upstream author, so any other deployment must replace it: see
-# job-manager.legal.documents-dir in application.yml.
+# The operator's name, email and address come from LEGAL_OPERATOR_NAME, _EMAIL and
+# _ADDRESS (job-manager.legal.operator); the rest describes the stock stack. A deployment
+# that differs from it publishes its own: see job-manager.legal.documents-dir.
 language: es
 title: "Aviso legal"
 intro:
@@ -11,10 +12,12 @@ sections:
       - type: definitions
         items:
           - term: "Nombre"
-            value: "Martin Jurk"
+            value: "{{operator.name|no indicado}}"
+          - term: "Dirección"
+            value: "{{operator.address}}"
           - term: "Correo electrónico"
-            value: "access.job.manager@gmail.com"
-            href: "mailto:access.job.manager@gmail.com"
+            value: "{{operator.email|no indicado}}"
+            href: "mailto:{{operator.email}}"
   - heading: "Naturaleza de esta aplicación"
     blocks:
       - type: paragraph

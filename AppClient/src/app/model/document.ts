@@ -17,6 +17,11 @@ export function uiToLetterLanguage(uiLang: string | null | undefined): DocumentL
   return UI_TO_DOCUMENT_LANGUAGE[uiLang ?? ''] ?? 'ENGLISH';
 }
 
+/** The BCP 47 tag of a letter language, for a `lang` attribute. */
+export function letterLanguageTag(language: DocumentLanguage): string {
+  return Object.entries(UI_TO_DOCUMENT_LANGUAGE).find(([, value]) => value === language)![0];
+}
+
 /** The translation key naming a document language, e.g. `LANGUAGE.DE` → "Deutsch". */
 export const DOCUMENT_LANGUAGE_KEY: Record<DocumentLanguage, string> = {
   ENGLISH: 'LANGUAGE.EN',

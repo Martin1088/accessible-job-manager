@@ -44,5 +44,8 @@ export interface CoverLetterRenderRequest {
 export interface CoverLetterEmail {
   to: string;
   subject: string;
+  /** The full letter as text. */
   body: string;
+  /** A short note naming the attachments, for a `mailto:` the full letter would overflow. */
+  shortBody: string;
 }

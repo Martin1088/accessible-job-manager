@@ -1,6 +1,7 @@
 # Bundled default - the document served when a deployment publishes none of its own.
-# It names the upstream author, so any other deployment must replace it: see
-# job-manager.legal.documents-dir in application.yml.
+# The operator's name, email and address come from LEGAL_OPERATOR_NAME, _EMAIL and
+# _ADDRESS (job-manager.legal.operator); the rest describes the stock stack. A deployment
+# that differs from it publishes its own: see job-manager.legal.documents-dir.
 language: es
 title: "Política de privacidad"
 intro:
@@ -11,10 +12,12 @@ sections:
       - type: definitions
         items:
           - term: "Nombre"
-            value: "Martin Jurk"
+            value: "{{operator.name|no indicado}}"
+          - term: "Dirección"
+            value: "{{operator.address}}"
           - term: "Correo electrónico"
-            value: "access.job.manager@gmail.com"
-            href: "mailto:access.job.manager@gmail.com"
+            value: "{{operator.email|no indicado}}"
+            href: "mailto:{{operator.email}}"
   - heading: "Qué datos se procesan"
     blocks:
       - type: paragraph
@@ -39,6 +42,8 @@ sections:
           - "Un proveedor de identidad (Authentik) para el inicio de sesión y la asignación de roles."
           - "Almacenamiento de objetos compatible con S3 (Garage) para los documentos subidos y generados."
           - "Un servicio de conversión de documentos (Gotenberg) usado para convertir los documentos de carta de presentación en PDF."
+      - type: paragraph
+        text: "Cuando envía una candidatura por correo electrónico, la aplicación reúne la carta de presentación y los anexos solo en su navegador y los entrega a su propia aplicación de correo. La aplicación no envía ningún correo ni guarda el mensaje reunido; los archivos se descartan en cuanto cierra el diálogo. El envío se realiza desde su propia cuenta de correo."
   - heading: "Duración del almacenamiento"
     blocks:
       - type: paragraph

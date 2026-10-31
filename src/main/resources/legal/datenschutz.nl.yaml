@@ -1,6 +1,7 @@
 # Bundled default - the document served when a deployment publishes none of its own.
-# It names the upstream author, so any other deployment must replace it: see
-# job-manager.legal.documents-dir in application.yml.
+# The operator's name, email and address come from LEGAL_OPERATOR_NAME, _EMAIL and
+# _ADDRESS (job-manager.legal.operator); the rest describes the stock stack. A deployment
+# that differs from it publishes its own: see job-manager.legal.documents-dir.
 language: nl
 title: "Privacybeleid"
 intro:
@@ -11,10 +12,12 @@ sections:
       - type: definitions
         items:
           - term: "Naam"
-            value: "Martin Jurk"
+            value: "{{operator.name|niet opgegeven}}"
+          - term: "Adres"
+            value: "{{operator.address}}"
           - term: "E-mail"
-            value: "access.job.manager@gmail.com"
-            href: "mailto:access.job.manager@gmail.com"
+            value: "{{operator.email|niet opgegeven}}"
+            href: "mailto:{{operator.email}}"
   - heading: "Welke gegevens worden verwerkt"
     blocks:
       - type: paragraph
@@ -39,6 +42,8 @@ sections:
           - "Een identity provider (Authentik) voor aanmelding en roltoewijzing."
           - "S3-compatibele objectopslag (Garage) voor geüploade en gegenereerde documenten."
           - "Een documentconversiedienst (Gotenberg) die sollicitatiebrieven omzet naar PDF."
+      - type: paragraph
+        text: "Wanneer u een sollicitatie per e-mail verstuurt, stelt de applicatie de sollicitatiebrief en bijlagen alleen in uw browser samen en geeft ze door aan uw eigen mail-app. De applicatie verstuurt zelf geen e-mail en slaat het samengestelde bericht niet op; de bestanden worden verwijderd zodra u het venster sluit. Het versturen gebeurt via uw eigen e-mailaccount."
   - heading: "Bewaartermijn"
     blocks:
       - type: paragraph

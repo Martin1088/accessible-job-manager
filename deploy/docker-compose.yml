@@ -30,9 +30,15 @@ services:
       # Advisor job search stays off unless the operator supplies their own
       JOBSOURCE_ADZUNA_APP_ID: ${JOBSOURCE_ADZUNA_APP_ID:-}
       JOBSOURCE_ADZUNA_APP_KEY: ${JOBSOURCE_ADZUNA_APP_KEY:-}
+      # Who runs this deployment, printed in the bundled imprint and privacy policy.
+      # Unset, both pages say "not provided" - fine for trying it out, not for a
+      # public deployment.
+      LEGAL_OPERATOR_NAME: ${LEGAL_OPERATOR_NAME:-}
+      LEGAL_OPERATOR_EMAIL: ${LEGAL_OPERATOR_EMAIL:-}
+      LEGAL_OPERATOR_ADDRESS: ${LEGAL_OPERATOR_ADDRESS:-}
       # LEGAL_DOCUMENTS_DIR: /etc/ajm/legal
     # Uncomment to publish this deployment's own privacy policy and legal notice
-    # instead of the ones bundled with the image, which name the upstream author.
+    # instead of the bundled ones, which describe the stock stack of this file.
     # The directory holds <slug>.<lang>.yaml files - datenschutz.de.yaml,
     # impressum.de.yaml, ... - and every slug has to be covered or the app will not
     # start. See job-manager.legal in application.yml.

@@ -7,8 +7,12 @@ import { HttpResponse } from '@angular/common/http';
  * has to be handed to the user from memory once it has arrived.
  */
 export function saveBlobResponse(response: HttpResponse<Blob>, fallbackFilename: string): void {
-  const filename = filenameFrom(response.headers.get('Content-Disposition')) ?? fallbackFilename;
-  const url = URL.createObjectURL(response.body!);
+  saveBlob(response.body!, filenameFrom(response.headers.get('Content-Disposition')) ?? fallbackFilename);
+}
+
+/** Hands a blob already in memory to the user as a file named `filename`. */
+export function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
