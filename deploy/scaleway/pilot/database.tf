@@ -1,11 +1,13 @@
-# Zwei getrennte Serverless-SQL-Datenbanken, beide mit min_cpu = 0:
-# im Leerlauf keine Rechenkosten. Der erste Zugriff nach einer Pause
-# dauert ein paar Sekunden länger.
+# Zwei getrennte Serverless-SQL-Datenbanken, beide mit min_cpu = 1: sie bleiben
+# bewusst warm. Mit min_cpu = 0 dauerte der Kaltstart über eine Minute
+# ("Database took more than 1m0s to start, please retry later (SQLSTATE 57P03)").
+# Pocket ID antwortete dann mit 500, und die App stürzte beim OIDC-Discovery
+# gegen Pocket ID ab (SocketTimeoutException: Read timed out). Das kostet Dauerbetrieb.
 
 resource "scaleway_sdb_sql_database" "ajm" {
   name    = "${var.prefix}-ajm"
-  min_cpu = 0
-  max_cpu = 2
+  min_cpu = 1
+  max_cpu = 1 # the pilot does not need 2 vCPU
 
   lifecycle {
     prevent_destroy = true
@@ -14,7 +16,7 @@ resource "scaleway_sdb_sql_database" "ajm" {
 
 resource "scaleway_sdb_sql_database" "pocketid" {
   name    = "${var.prefix}-pocketid"
-  min_cpu = 0
+  min_cpu = 1
   max_cpu = 1
 
   lifecycle {
