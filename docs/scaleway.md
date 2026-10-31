@@ -86,7 +86,16 @@ Danach einen API-Schlüssel mit Standardprojekt `ajm-pilot` anlegen (siehe Vorau
    erlauben. Ohne Gruppe lehnt die App den Login ab.
 3. In `pilot.tfvars`: `oidc_client_id`, `app_image` (mit festem Tag), `app_min_scale = 1` zum Testen.
    Secret per `export TF_VAR_oidc_client_secret='...'`.
-4. App-Image bereitstellen. Die CI baut es nach GHCR, von dort in die eigene Registry umtaggen:
+4. App-Image bereitstellen. Die CI baut es nach GHCR. Das Skript `deploy/scaleway/push-image.sh` holt es
+   von dort, taggt es um, schiebt es in die eigene Registry, trägt `app_image` in `pilot.tfvars` ein und
+   zeigt den Plan (einmalig vorher `docker login`, siehe Phase 1):
+
+   ```sh
+   deploy/scaleway/push-image.sh sha-<commit>            # Plan ansehen
+   deploy/scaleway/push-image.sh sha-<commit> --apply    # und direkt anwenden
+   ```
+
+   Von Hand sind es diese Schritte:
 
    ```sh
    SRC=ghcr.io/martin1088/accessible-job-manager:sha-<commit>
@@ -96,7 +105,8 @@ Danach einen API-Schlüssel mit Standardprojekt `ajm-pilot` anlegen (siehe Vorau
 
    Das Image muss den Stand des Backends enthalten, der den Provider `openai` und den Gotenberg-Token kennt.
 5. `tofu plan -var-file=pilot.tfvars -out=plan.tfplan`, Plan prüfen (**kein `destroy`, kein `replace`** an
-   Bucket, Datenbank oder Pocket ID), dann `tofu apply plan.tfplan`.
+   Bucket, Datenbank oder Pocket ID), dann `tofu apply plan.tfplan`. Das Skript macht den Plan schon
+   mit; `--apply` sollte man erst nach dem Lesen des Plans nehmen.
 
 ### Phase 3: Domain für die App
 
