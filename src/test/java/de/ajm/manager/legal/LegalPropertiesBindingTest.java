@@ -86,4 +86,31 @@ class LegalPropertiesBindingTest {
                 .contains("email: ${LEGAL_OPERATOR_EMAIL:}")
                 .contains("address: ${LEGAL_OPERATOR_ADDRESS:}");
     }
+
+    @Test
+    void bindsTheBucketAndNormalizesThePrefix() {
+        runner.withPropertyValues(
+                "job-manager.legal.s3-bucket=pilot-legal",
+                "job-manager.legal.s3-prefix=/texts/"
+        ).run(context -> {
+            LegalProperties properties = context.getBean(LegalProperties.class);
+            assertThat(properties.hasOverride()).isTrue();
+            assertThat(properties.s3Bucket()).isEqualTo("pilot-legal");
+            assertThat(properties.s3Prefix()).isEqualTo("texts/");
+        });
+    }
+
+    @Test
+    void anEmptyPrefixMeansTheBucketRoot() {
+        runner.withPropertyValues("job-manager.legal.s3-bucket=pilot-legal", "job-manager.legal.s3-prefix=")
+                .run(context -> assertThat(context.getBean(LegalProperties.class).s3Prefix()).isEmpty());
+    }
+
+    @Test
+    void aDirectoryAndABucketTogetherFailStartup(@TempDir Path dir) {
+        runner.withPropertyValues(
+                "job-manager.legal.documents-dir=" + dir,
+                "job-manager.legal.s3-bucket=pilot-legal"
+        ).run(context -> assertThat(context).hasFailed());
+    }
 }

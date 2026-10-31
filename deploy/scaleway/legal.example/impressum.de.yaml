@@ -1,0 +1,25 @@
+# TEMPLATE for the pilot's own legal notice. Copy it into the private legal repo, replace every
+# <placeholder> and have it reviewed - it is a starting structure, not a finished legal text.
+language: de
+title: "Impressum"
+intro:
+  - "Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)."
+sections:
+  - heading: "Verantwortlich für den Inhalt dieser Anwendung"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "<Name>"
+          - term: "Anschrift"
+            value: "<Straße Hausnummer, PLZ Ort>"
+          - term: "E-Mail"
+            value: "<E-Mail-Adresse>"
+  - heading: "Art dieser Anwendung"
+    blocks:
+      - type: paragraph
+        text: "Diese Anwendung ist eine Beta zum Ausprobieren. Sie läuft bis zum <Beta-Ende TT.MM.JJJJ> und wird danach abgeschaltet. Sie dient ausschließlich dazu, Nutzerinnen und Nutzern bei der Organisation ihrer eigenen Bewerbungen zu helfen."
+  - heading: "Haftung für Inhalte und Links"
+    blocks:
+      - type: paragraph
+        text: "Die Anwendung wird nach bestem Wissen gepflegt, ohne Gewähr für Vollständigkeit, Richtigkeit oder ständige Verfügbarkeit. Für Inhalte externer Seiten, auf die verlinkt wird, sind ausschließlich deren Betreiber verantwortlich."

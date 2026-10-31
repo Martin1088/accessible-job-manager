@@ -21,6 +21,10 @@ app_image = "rg.fr-par.scw.cloud/ajm-pilot/accessible-job-manager-pilot:0.0.0"
 #   address = "Straße 1, 12345 Ort"
 # }
 
+# Optional: eigenes Impressum und eigene Datenschutzerklärung (Ordner mit <slug>.<lang>.yaml,
+# Vorlage in ../legal.example/). Leer = Texte aus dem Image.
+# legal_dir = "../../../../ajm-pilot-legal"
+
 # Phase 1b: nachdem der CNAME aus "tofu output dns_id" gesetzt ist
 # enable_id_domain = true
 

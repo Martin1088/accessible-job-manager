@@ -1,0 +1,51 @@
+# TEMPLATE for the pilot's own privacy policy. Copy it into the private legal repo, replace every
+# <placeholder> and have it reviewed - it is a starting structure, not a finished legal text.
+language: de
+title: "Datenschutzerklärung"
+intro:
+  - "Diese Seite erklärt, welche personenbezogenen Daten diese Beta-Anwendung verarbeitet, zu welchem Zweck und welche Rechte Sie haben (DSGVO)."
+sections:
+  - heading: "Verantwortlicher"
+    blocks:
+      - type: definitions
+        items:
+          - term: "Name"
+            value: "<Name>"
+          - term: "Anschrift"
+            value: "<Straße Hausnummer, PLZ Ort>"
+          - term: "E-Mail"
+            value: "<E-Mail-Adresse>"
+  - heading: "Welche Daten verarbeitet werden"
+    blocks:
+      - type: list
+        items:
+          - "Kontodaten aus der Anmeldung (Name, E-Mail-Adresse, interne Kennung, Rolle)."
+          - "Von Ihnen eingegebene Daten: Unternehmen, Ansprechpersonen, Stellen, Bewerbungen und deren Status."
+          - "Von Ihnen hochgeladene Dokumente, etwa Lebenslauf und Zeugnisse, sowie erzeugte Anschreiben."
+          - "Ein technisch notwendiges Sitzungs-Cookie. Es gibt kein Tracking und keine Werbe- oder Analyse-Cookies."
+  - heading: "Besondere Kategorien (Art. 9 DSGVO)"
+    blocks:
+      - type: paragraph
+        text: "Zeugnisse und Nachweise können Angaben zu einer Behinderung enthalten. Diese Angaben werden nur verarbeitet, wenn Sie das Dokument selbst hochladen. Mit dem Hochladen willigen Sie ausdrücklich ein (Art. 9 Abs. 2 lit. a DSGVO). Sie können die Einwilligung jederzeit widerrufen, indem Sie das Dokument löschen."
+  - heading: "Rechtsgrundlage"
+    blocks:
+      - type: paragraph
+        text: "Die Verarbeitung ist zur Bereitstellung der von Ihnen genutzten Funktionen erforderlich (Art. 6 Abs. 1 lit. b DSGVO). Das Teilen eines Dokuments mit Beratenden oder Prüfenden beruht auf Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO)."
+  - heading: "Auftragsverarbeiter und Hosting"
+    blocks:
+      - type: paragraph
+        text: "Die Anwendung läuft bei Scaleway SAS (Frankreich, Region Paris) als Auftragsverarbeiter, mit einem Vertrag zur Auftragsverarbeitung. Genutzt werden Serverless Containers, Serverless SQL Database, Object Storage und Transactional Email. Die Anmeldung läuft über Pocket ID, das in derselben Umgebung betrieben wird. Hochgeladene Dokumente werden zusätzlich verschlüsselt gespeichert."
+  - heading: "KI-gestützte Funktionen"
+    blocks:
+      - type: paragraph
+        text: "Beim Einlesen einer Stellenanzeige und beim Lebenslauf-Abgleich werden die Anzeige und der Text Ihres Lebenslaufs an ein Sprachmodell der Scaleway Generative APIs gesendet. Das geschieht nur, wenn Sie die Funktion auslösen, und nur, um das Ergebnis zu berechnen. Die Daten werden nicht zum Training von Modellen verwendet. Das Ergebnis des Abgleichs ist als KI-Ausgabe gekennzeichnet und kann Fehler enthalten."
+  - heading: "Speicherdauer"
+    blocks:
+      - type: paragraph
+        text: "Ihre Daten werden gespeichert, bis Sie sie selbst löschen, spätestens bis zum Ende der Beta am <Beta-Ende TT.MM.JJJJ>. Es werden keine Sicherungskopien angelegt. Gelöschte Daten sind daher nicht wiederherstellbar."
+  - heading: "Ihre Rechte"
+    blocks:
+      - type: paragraph
+        text: "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Wenden Sie sich dazu an die oben genannte E-Mail-Adresse."
+      - type: paragraph
+        text: "Sie können sich bei einer Aufsichtsbehörde beschweren, zum Beispiel beim Landesbeauftragten für den Datenschutz und die Informationsfreiheit Baden-Württemberg."
