@@ -248,6 +248,20 @@ Die Dokumente sind mit SSE-C verschlüsselt. Ohne den Schlüssel kann auch Scale
 
 Bei Scaleway ist zu klären (Support-Anfrage): Lassen sich die Datenbank-Sicherungen abschalten oder verkürzen? Gibt es weitere Sicherungen oder Replikate, die nach dem Löschen bleiben? Wann sind Daten nach dem Löschen eines Buckets oder einer Datenbank endgültig entfernt?
 
+### Konto eines Nutzers löschen (auf Anfrage)
+
+Die App hat keine Funktion „Konto löschen“. Nutzer*innen können Unternehmen, Bewerbungen, Dokumente und Freigaben selbst löschen, das Konto selbst bleibt bestehen. Die Datenschutzerklärung sagt deshalb: „Für die Löschung Ihres Kontos schreiben Sie uns.“ Das Gesetz verlangt die Antwort innerhalb eines Monats (Art. 12 Abs. 3 DSGVO). So gehst du vor:
+
+1. **Person prüfen.** Die Anfrage muss von der E-Mail-Adresse des Kontos kommen. Im Zweifel nachfragen.
+2. **Kennung ermitteln.** Die Nutzerkennung (`userId`, der OIDC-Subject) ist die ID des Nutzers in Pocket ID. Du findest sie in der Pocket-ID-Oberfläche unter *Users* beim betroffenen Konto, oder in der Datenbank: `SELECT user_id, email FROM user_profiles WHERE email = '<adresse>';`
+3. **Bevorzugt: die Person löscht ihre Inhalte selbst.** Sie löscht in der App ihre Unternehmen, Bewerbungen und Dokumente. Das räumt auch den Objektspeicher auf, denn `DocumentService` entfernt beim Löschen das Objekt. Danach bleiben nur noch Schritt 5 bis 7.
+4. **Sonst: Inhalte selbst entfernen.** Die Daten der Person liegen in diesen Tabellen (Spalte jeweils `user_id`, wenn nicht anders angegeben): `companies` (mit Standorten, Positionen und Kontakten), `applications`, `application_documents` (über die Bewerbung), `documents`, `default_documents`, `html_letter_template`, `relationship` (`applicant_id`, `counterpart_id`, mit `share`), `suggestions` (`advisor_id`, `user_profile_id`), `user_profile_roles` und `user_profiles`. Die Reihenfolge ist durch Fremdschlüssel vorgegeben, und nicht alle Tabellen löschen per Datenbank-Kaskade (Unternehmen kaskadieren nur über JPA). **Das SQL ist nicht gegen die Live-Datenbank erprobt.** Verbinde dich mit `psql` und den Zugangsdaten der App (Benutzer: ID der IAM-Anwendung `app`, Passwort: deren Secret Key; Adresse in der Konsole unter Serverless SQL Database). Arbeite in einer Transaktion, sieh dir mit `\d <tabelle>` die Fremdschlüssel an und führe erst `ROLLBACK` aus, bevor du `COMMIT` setzt.
+5. **Objektspeicher.** Lösche in `ajm-pilot-documents` alle Objekte unter dem Präfix `<userId>/`. Die Schlüssel haben die Form `<userId>/<typ>/<uuid>.<endung>`. Alte Versionen entfernt die Lifecycle-Regel nach 7 Tagen. Die Dokumente sind mit SSE-C verschlüsselt, zum Löschen braucht es den Schlüssel nicht.
+6. **Pocket ID.** In der Oberfläche unter *Users* das Konto löschen.
+7. **Bestätigen.** Antworte der Person, nenne die Frist von 7 Tagen (Datenbank-Sicherungen und alte Objektversionen) und halte fest, dass und wann gelöscht wurde. Notiere nur das Datum, keinen Namen.
+
+Kommen solche Anfragen öfter vor, lohnt sich eine Funktion „Konto löschen“ in der App. Sie würde die Schritte 3 bis 5 in einem Zug erledigen.
+
 ## 9. Offene Punkte
 
 - Der CV-Abgleich ist mit einem Lebenslauf noch nicht live geprüft.
