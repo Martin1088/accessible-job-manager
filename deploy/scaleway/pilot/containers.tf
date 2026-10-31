@@ -99,7 +99,9 @@ resource "scaleway_container" "app" {
   # das Modell des Parsers aus. Deshalb kommt die Variable nur mit Wert hinein.
   environment_variables = merge(var.cv_matching_model == "" ? {} : {
     CV_MATCHING_OPENAI_MODEL = var.cv_matching_model
-    }, {
+    }, local.legal_enabled ? {
+    LEGAL_DOCUMENTS_S3_BUCKET = scaleway_object_bucket.legal[0].name
+    } : {}, {
     # Wie oben nur mit Wert. Fehlt einer, zeigt die Seite "nicht hinterlegt".
     for name, value in {
       LEGAL_OPERATOR_NAME    = var.legal_operator.name
@@ -107,7 +109,8 @@ resource "scaleway_container" "app" {
       LEGAL_OPERATOR_ADDRESS = var.legal_operator.address
     } : name => value if value != ""
     }, {
-    LEGAL_DEFAULT_LANGUAGE = "de"
+    # Visitors whose language the texts do not cover get English.
+    LEGAL_DEFAULT_LANGUAGE = "en"
 
     MANAGER_DB_URL  = local.ajm_jdbc_url
     MANAGER_DB_USER = scaleway_iam_application.app.id
@@ -155,6 +158,7 @@ resource "scaleway_container" "app" {
     scaleway_iam_policy.app,
     scaleway_iam_policy.gotenberg_caller,
     scaleway_object_bucket_policy.documents,
+    scaleway_object.legal,
   ]
 
   lifecycle {

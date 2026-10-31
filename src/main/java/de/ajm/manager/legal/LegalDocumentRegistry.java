@@ -5,22 +5,20 @@ import de.ajm.manager.legal.LegalDocumentLoader.LegalDocumentException;
 import de.ajm.manager.legal.LegalDocumentLoader.LoadedDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
 /**
  * Holds the documents this deployment serves, and decides where they come from.
@@ -52,6 +50,7 @@ public class LegalDocumentRegistry {
     private static final String BUNDLED_LOCATION = "classpath:legal/*.yaml";
 
     private final LegalProperties properties;
+    private final LegalDocumentSource source;
 
     /** slug -> language -> document. Immutable; replaced wholesale on a successful reload. */
     private final Map<String, Map<String, LoadedDocument>> bundled;
@@ -60,14 +59,20 @@ public class LegalDocumentRegistry {
     private volatile String overrideFingerprint;
     private final AtomicLong nextReloadCheck = new AtomicLong();
 
+    /** For a directory source or none; an S3 source needs the client, see the other constructor. */
     public LegalDocumentRegistry(LegalProperties properties) {
+        this(properties, null);
+    }
+
+    @Autowired
+    public LegalDocumentRegistry(LegalProperties properties, S3Client s3) {
         this.properties = properties;
+        this.source = sourceFor(properties, s3);
         this.bundled = loadBundled();
 
-        if (properties.hasOverride()) {
-            Path dir = properties.documentsPath();
-            this.override = loadDirectoryOrThrow(dir);
-            this.overrideFingerprint = fingerprint(dir);
+        if (source != null) {
+            this.override = loadOrThrow(source);
+            this.overrideFingerprint = source.fingerprint();
             requireEverySlugCovered(this.override);
         } else {
             this.override = Map.of();
@@ -91,6 +96,19 @@ public class LegalDocumentRegistry {
     public Set<String> slugs() {
         reloadIfDue();
         return override.isEmpty() ? bundled.keySet() : override.keySet();
+    }
+
+    private static LegalDocumentSource sourceFor(LegalProperties properties, S3Client s3) {
+        if (properties.documentsDir() != null) {
+            return new DirectorySource(properties.documentsPath());
+        }
+        if (properties.s3Bucket() != null) {
+            if (s3 == null) {
+                throw new IllegalStateException("job-manager.legal.s3-bucket is set but no S3 client is available.");
+            }
+            return new S3Source(s3, properties.s3Bucket(), properties.s3Prefix());
+        }
+        return null;
     }
 
     private Map<String, Map<String, LoadedDocument>> loadBundled() {
@@ -135,37 +153,37 @@ public class LegalDocumentRegistry {
         return index(documents);
     }
 
-    private Map<String, Map<String, LoadedDocument>> loadDirectoryOrThrow(Path dir) {
+    private Map<String, Map<String, LoadedDocument>> loadOrThrow(LegalDocumentSource from) {
         List<LoadedDocument> documents = new ArrayList<>();
         List<String> defects = new ArrayList<>();
 
-        try (Stream<Path> files = Files.list(dir)) {
-            files.filter(Files::isRegularFile)
-                    .sorted(Comparator.comparing(path -> path.getFileName().toString()))
-                    .forEach(file -> {
-                        String filename = file.getFileName().toString();
-                        DocumentKey key = LegalDocumentLoader.keyOf(filename);
-                        if (key == null) {
-                            return;
-                        }
-                        try {
-                            documents.add(LegalDocumentLoader.load(
-                                    Files.newInputStream(file), key, filename, properties.operator()));
-                        } catch (LegalDocumentException | IOException e) {
-                            defects.add(e.getMessage());
-                        }
-                    });
-        } catch (IOException e) {
-            throw new IllegalStateException("job-manager.legal.documents-dir '" + dir
+        List<LegalDocumentSource.Entry> entries;
+        try {
+            entries = from.list();
+        } catch (IOException | RuntimeException e) {
+            throw new IllegalStateException(from.property() + " '" + from.location()
                     + "' could not be listed: " + e.getMessage(), e);
         }
 
+        for (LegalDocumentSource.Entry entry : entries) {
+            DocumentKey key = LegalDocumentLoader.keyOf(entry.filename());
+            if (key == null) {
+                continue;
+            }
+            try {
+                documents.add(LegalDocumentLoader.load(
+                        entry.opener().open(), key, entry.filename(), properties.operator()));
+            } catch (IOException | RuntimeException e) {
+                defects.add(e.getMessage());
+            }
+        }
+
         if (!defects.isEmpty()) {
-            throw new IllegalStateException("The legal documents in job-manager.legal.documents-dir are invalid:\n  "
+            throw new IllegalStateException("The legal documents in " + from.property() + " are invalid:\n  "
                     + String.join("\n  ", defects));
         }
         if (documents.isEmpty()) {
-            throw new IllegalStateException("job-manager.legal.documents-dir '" + dir
+            throw new IllegalStateException(from.property() + " '" + from.location()
                     + "' contains no <slug>.<lang>.yaml files. Unset the property to serve the"
                     + " documents bundled with the image.");
         }
@@ -182,7 +200,7 @@ public class LegalDocumentRegistry {
     private void requireEverySlugCovered(Map<String, Map<String, LoadedDocument>> supplied) {
         List<String> missing = bundled.keySet().stream().filter(slug -> !supplied.containsKey(slug)).sorted().toList();
         if (!missing.isEmpty()) {
-            throw new IllegalStateException("job-manager.legal.documents-dir supplies no document for "
+            throw new IllegalStateException(source.property() + " supplies no document for "
                     + String.join(" or ", missing)
                     + ". A deployment that supplies its own legal documents must supply all of them:"
                     + " the bundled ones name the upstream author, not you.");
@@ -207,7 +225,7 @@ public class LegalDocumentRegistry {
      * of hits a day, and avoids introducing scheduling to the application for one feature.
      */
     private void reloadIfDue() {
-        if (!properties.hasOverride() || properties.reloadInterval().isZero()) {
+        if (source == null || properties.reloadInterval().isZero()) {
             return;
         }
         long now = System.nanoTime();
@@ -216,54 +234,31 @@ public class LegalDocumentRegistry {
             return;
         }
 
-        Path dir = properties.documentsPath();
-        String current = fingerprint(dir);
+        String current = source.fingerprint();
         if (current.equals(overrideFingerprint)) {
             return;
         }
 
         try {
-            Map<String, Map<String, LoadedDocument>> reloaded = loadDirectoryOrThrow(dir);
+            Map<String, Map<String, LoadedDocument>> reloaded = loadOrThrow(source);
             requireEverySlugCovered(reloaded);
             this.override = reloaded;
             this.overrideFingerprint = current;
-            log.info("Reloaded legal documents from {}: {}", dir, describe(reloaded));
+            log.info("Reloaded legal documents from {}: {}", source.location(), describe(reloaded));
         } catch (RuntimeException e) {
             this.overrideFingerprint = current;
             log.error("The legal documents in {} changed but could not be loaded. The previous documents"
-                    + " are still being served. {}", dir, e.getMessage());
+                    + " are still being served. {}", source.location(), e.getMessage());
         }
-    }
-
-    /** Name, size and mtime of every candidate file - enough to notice any edit, cheap to take. */
-    private static String fingerprint(Path dir) {
-        StringBuilder out = new StringBuilder();
-        try (Stream<Path> files = Files.list(dir)) {
-            files.filter(Files::isRegularFile)
-                    .filter(file -> LegalDocumentLoader.keyOf(file.getFileName().toString()) != null)
-                    .sorted()
-                    .forEach(file -> {
-                        try {
-                            out.append(file.getFileName()).append(':')
-                                    .append(Files.size(file)).append(':')
-                                    .append(Files.getLastModifiedTime(file).toMillis()).append('\n');
-                        } catch (IOException e) {
-                            out.append(file.getFileName()).append(":unreadable\n");
-                        }
-                    });
-        } catch (IOException e) {
-            return "unreadable";
-        }
-        return out.toString();
     }
 
     private void logSummary() {
-        if (properties.hasOverride()) {
+        if (source != null) {
             log.info("Legal documents: serving this deployment's own from {} ({}). Bundled documents are not used.",
-                    properties.documentsDir(), describe(override));
+                    source.location(), describe(override));
         } else {
             log.info("Legal documents: serving the documents bundled with this build ({}). "
-                    + "Set job-manager.legal.documents-dir to publish your own.", describe(bundled));
+                    + "Set job-manager.legal.documents-dir or s3-bucket to publish your own.", describe(bundled));
             if (properties.operator().isIncomplete()) {
                 log.warn("Legal documents: LEGAL_OPERATOR_NAME and LEGAL_OPERATOR_EMAIL are not both set, so the"
                         + " imprint and privacy policy name no operator. Fine for trying the application out;"

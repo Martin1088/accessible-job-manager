@@ -194,6 +194,12 @@ job-manager:
     # fallback. Startup fails if the directory is set but does not cover every
     # document.
     documents-dir: ${LEGAL_DOCUMENTS_DIR:}
+    # The same files, read from an object-storage bucket instead - for a platform that
+    # cannot mount files into a container (Scaleway Serverless Containers). Set this or
+    # documents-dir, never both. Changes are picked up within reload-interval, with no
+    # restart. Read without SSE-C: the bucket holds public legal text, not user documents.
+    s3-bucket: ${LEGAL_DOCUMENTS_S3_BUCKET:}
+    s3-prefix: ${LEGAL_DOCUMENTS_S3_PREFIX:}
     # Served when a document is not published in the requested language.
     default-language: ${LEGAL_DEFAULT_LANGUAGE:en}
     # How often to notice that a mounted ConfigMap changed underneath a running

@@ -227,6 +227,11 @@ allow-list at load time.
   too, and an unknown key fails the document. Unset is a log warning, not a failed start:
   trying the application out must not require an imprint. The operator values are part of
   the ETag, since they change the page without changing the file.
+- **One source per deployment: a directory (`documents-dir`) or an S3 bucket (`s3-bucket`),
+  never both** - both set fails startup. `LegalDocumentSource` (`DirectorySource`,
+  `S3Source`) is the seam; the registry's failure policies are identical for both. The
+  bucket is read with plain `GetObject`, without SSE-C: it holds public legal text, not the
+  user documents bucket.
 - **Startup and hot reload have opposite failure policies.** A malformed document fails
   startup — under a rolling update the old ReplicaSet keeps serving, so the operator gets
   the feedback and the users keep the page. A document that breaks during a live ConfigMap

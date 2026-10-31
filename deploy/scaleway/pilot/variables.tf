@@ -115,6 +115,15 @@ variable "gotenberg_min_scale" {
   default     = 0
 }
 
+variable "legal_dir" {
+  description = <<-EOT
+    Ordner mit <slug>.<lang>.yaml (Impressum, Datenschutz), z. B. der Checkout eines privaten
+    Repos. Leer = die App zeigt die Texte aus dem Image, die den Betreiber nicht nennen.
+  EOT
+  type        = string
+  default     = ""
+}
+
 variable "app_min_scale" {
   description = "0 = Scale-to-Zero; 1 = immer warm"
   type        = number

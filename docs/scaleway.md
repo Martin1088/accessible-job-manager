@@ -143,6 +143,34 @@ Alles, was die App braucht, setzt `deploy/scaleway/pilot/containers.tf`. Die wic
   kostet rund 15 s zusätzlich. `gotenberg_min_scale = 2` hält zwei Instanzen warm (kostet Dauerbetrieb).
 - **Diagnose:** `DIAGNOSTICS_LOG_LEVEL=INFO` schreibt pro Einlesen eine Zeile `DIAG|host|kategorie|status|…` auf stdout.
 
+### Impressum und Datenschutz
+
+Ohne eigene Texte zeigt der Pilot die Texte aus dem Image. Sie nennen den Betreiber nicht und beschreiben
+Authentik und Garage statt Pocket ID und Scaleway. Der Pilot veröffentlicht deshalb seine eigenen:
+
+- Die Texte liegen **nicht** im öffentlichen Repo, sondern in einem privaten (Arbeitstitel `ajm-pilot-legal`):
+  `impressum.<sprache>.yaml` und `datenschutz.<sprache>.yaml`, mindestens `de`. Die Vorlage mit
+  Platzhaltern steht in `deploy/scaleway/legal.example/`. Sie ist kein fertiger Rechtstext, die Texte sollte
+  eine Fachperson prüfen.
+- In `pilot.tfvars`: `legal_dir = "../../../../ajm-pilot-legal"` (Pfad zum Checkout). Danach `tofu apply`.
+  OpenTofu legt den Bucket `ajm-pilot-legal` an (nur lesend für die App), lädt die Dateien hoch und setzt
+  `LEGAL_DOCUMENTS_S3_BUCKET` an der App.
+- Eine Textänderung ist dasselbe: YAML ändern, `tofu apply`. Die App übernimmt sie nach spätestens 30 s, ohne
+  Neustart.
+- Das Image muss den S3-Zugriff für Rechtstexte enthalten (neuer als die Version vom 31.10.2026).
+
+Fehlerbilder:
+
+| Symptom | Ursache |
+|---|---|
+| `tofu plan`: `legal_dir must contain at least one impressum.<lang>.yaml and one datenschutz.<lang>.yaml.` | Ein Dokument fehlt im Ordner |
+| `tofu plan`: `Every file in legal_dir must be named <slug>.<lang>.yaml, e.g. impressum.de.yaml.` | Dateiname passt nicht |
+| App container exits at startup with `The legal documents in job-manager.legal.s3-bucket are invalid` | Eine YAML-Datei ist fehlerhaft; die Meldung nennt die Datei |
+| Log `The legal documents in … changed but could not be loaded. The previous documents are still being served.` | Eine geänderte Datei ist fehlerhaft; die alte Fassung bleibt online |
+
+Offen: Ob `scaleway_object` mit `file` den Inhalt im State ablegt, ist nicht geprüft. Der State-Bucket ist
+verschlüsselt und privat.
+
 ## 5. Logs lesen
 
 Container-Logs liegen in Scaleway Cockpit (Loki). In der Konsole beim Container unter **Logs** →
@@ -206,8 +234,24 @@ Eintrag sperrt sich der Betreiber selbst aus. `prevent_destroy` verhindert ein v
 - Änderungen immer mit `tofu plan -out=plan.tfplan` ansehen und prüfen, bevor `apply` läuft.
   `destroy`/`replace` an Bucket, Datenbank oder Pocket ID sind ein Warnsignal.
 
+### Löschen und Aufbewahrung
+
+Was nach einem Löschen noch eine Zeit lang liegen bleibt (Stand der Scaleway-Dokumentation, die Datenschutzerklärung nennt dieselben Fristen):
+
+| Wo | Aufbewahrung nach dem Löschen |
+|---|---|
+| Serverless SQL Database | Automatische tägliche Sicherung, 7 Tage. Laut Dokumentation nicht abschaltbar (die Einstellung gibt es nur bei Managed Databases). |
+| Object Storage (`ajm-pilot-documents`) | Der Bucket ist versioniert. Die Lifecycle-Regel `expire-deleted-versions` in `storage.tf` löscht nicht aktuelle Versionen nach 7 Tagen. Ohne sie bliebe eine gelöschte Datei unbegrenzt als alte Version liegen. |
+| Cockpit-Logs | Standard 7 Tage, einstellbar. |
+
+Die Dokumente sind mit SSE-C verschlüsselt. Ohne den Schlüssel kann auch Scaleway alte Versionen nicht lesen.
+
+Bei Scaleway ist zu klären (Support-Anfrage): Lassen sich die Datenbank-Sicherungen abschalten oder verkürzen? Gibt es weitere Sicherungen oder Replikate, die nach dem Löschen bleiben? Wann sind Daten nach dem Löschen eines Buckets oder einer Datenbank endgültig entfernt?
+
 ## 9. Offene Punkte
 
 - Der CV-Abgleich ist mit einem Lebenslauf noch nicht live geprüft.
 - Das Feld „Ort“ wird beim Einlesen von Anzeigen oft nicht gefunden (Qualität von Modell und Prompt).
 - Die Oracle-HCM-Anzeige hat bislang keinen Erfolg gezeigt; Ursache nicht abschließend geklärt.
+- Support-Antwort von Scaleway zu Sicherungen und Löschfristen (siehe „Löschen und Aufbewahrung“); danach die Datenschutzerklärung prüfen.
+- `tofu plan` nach der neuen Lifecycle-Regel ansehen: erwartet wird `update in-place` am Bucket `documents`, kein `replace`.

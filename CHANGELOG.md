@@ -18,6 +18,10 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+- Legal documents can be read from an object-storage bucket instead of a directory
+  (`LEGAL_DOCUMENTS_S3_BUCKET`, optional `LEGAL_DOCUMENTS_S3_PREFIX`), for platforms that
+  cannot mount files into a container, such as Scaleway Serverless Containers. Setting both
+  sources fails startup. Edits are picked up within `reload-interval` without a restart.
 - The bundled imprint and privacy policy name whoever runs the deployment, from
   `LEGAL_OPERATOR_NAME`, `LEGAL_OPERATOR_EMAIL` and `LEGAL_OPERATOR_ADDRESS` (Helm:
   `legal.operator`). Unset, both pages say "not provided" and the log warns, so the
