@@ -18,7 +18,7 @@ Alles ist als OpenTofu-Konfiguration beschrieben (`deploy/scaleway/bootstrap/` u
 | Images | Container Registry, Namespace `ajm-pilot` | App-, Gotenberg- und Pocket-ID-Image |
 | State | Object Storage, Bucket `ajm-pilot-tofu-state` | OpenTofu-State, verschlüsselt |
 
-Domains: `app.<basis>` (Anwendung) und `id.<basis>` (Anmeldung). Der DNS-Anbieter ist
+Domains: `<basis>` (Anwendung, mit `app_subdomain = "app"` stattdessen `app.<basis>`) und `id.<basis>` (Anmeldung). Der DNS-Anbieter ist
 unabhängig von Scaleway (hier Hetzner), die Einträge setzt man von Hand.
 
 ## 2. Voraussetzungen
@@ -81,7 +81,7 @@ Danach einen API-Schlüssel mit Standardprojekt `ajm-pilot` anlegen (siehe Vorau
 
 ### Phase 2: OIDC-Client und App
 
-1. In Pocket ID einen OIDC-Client anlegen. Callback-URL: `https://app.<basis>/login/oauth2/code/authentik`.
+1. In Pocket ID einen OIDC-Client anlegen. Callback-URL: `https://<app-adresse>/login/oauth2/code/authentik` (`https://<basis>/…`, mit Subdomain `https://app.<basis>/…`).
 2. Gruppen `User`, `Advisor`, `Reviewer` anlegen, sich selbst in `User` aufnehmen und die Gruppen beim Client
    erlauben. Ohne Gruppe lehnt die App den Login ab.
 3. In `pilot.tfvars`: `oidc_client_id`, `app_image` (mit festem Tag), `app_min_scale = 1` zum Testen.
@@ -110,9 +110,23 @@ Danach einen API-Schlüssel mit Standardprojekt `ajm-pilot` anlegen (siehe Vorau
 
 ### Phase 3: Domain für die App
 
-1. `tofu output dns_app` → CNAME bei Hetzner eintragen (Ziel mit Punkt am Ende).
+1. `tofu output dns_app` zeigt den Eintrag. Auf der Basisdomain (`app_subdomain = ""`) ist es ein **ALIAS**, auf einer Subdomain ein CNAME. Ziel jeweils mit Punkt am Ende. Ein CNAME auf der Basisdomain ist im DNS nicht erlaubt, ein ALIAS geht nur bei Anbietern, die ihn kennen. Scaleway-DNS kennt ihn, und die Bindung des Containers klappt damit (geprüft mit `barrierefrei-bewerben.eu`; Hetzner nicht geprüft).
 2. `enable_app_domain = true`, planen, anwenden. Das Zertifikat stellt Scaleway aus, das dauert einige Minuten.
-3. `https://app.<basis>` öffnen und anmelden.
+3. Die Adresse der App öffnen und anmelden. Beim ersten Aufruf nach einem DNS-Wechsel kann der lokale Resolver den alten Fehlschlag noch merken (`Could not resolve host`); dann Cache leeren oder ein anderes Netz nehmen.
+
+### Domain wechseln
+
+Ein Wechsel der Basisdomain (`base_domain`) betrifft die Anmeldung, nicht nur die Adresse. Ablauf, wie er für `barrierefrei-bewerben.eu` funktioniert hat:
+
+1. In `pilot.tfvars` `base_domain` ändern, `enable_id_domain` und `enable_app_domain` auf `false`. Liegt die Domain schon in Transactional Email (`scaleway-sdk-go: http error 409 Conflict: Domain already exists`), vorher importieren: `scw tem domain list region=fr-par`, dann `tofu import -var-file=pilot.tfvars scaleway_tem_domain.main fr-par/<id>`. Liegt die DNS-Zone bei Scaleway, trägt `autoconfig = true` SPF, DKIM, DMARC und MX selbst ein.
+2. Plan lesen: keine Datenbank, kein Bucket ersetzt.
+3. In der DNS-Zone die Einträge aus `tofu output dns_id` (CNAME `id`) und `dns_app` (ALIAS auf der Basisdomain, oder CNAME `app` bei `app_subdomain = "app"`) anlegen. **Das Ziel endet mit einem Punkt**, sonst hängt die Konsole die eigene Domain an (`…scw.cloud.barrierefrei-bewerben.eu.`). Prüfen mit `dig +short id.<basis> CNAME @8.8.8.8`.
+4. `enable_id_domain = true`, anwenden.
+5. **Passkeys gelten nur für die Domain, unter der sie angelegt wurden.** Alle Pocket-ID-Konten sind nach dem Wechsel unbrauchbar. Pocket-ID-Tabellen löschen (der Datenbankbenutzer besitzt das Schema nicht, `DROP SCHEMA` scheitert mit `must be owner of schema public`, also jede Tabelle einzeln mit `DROP TABLE … CASCADE`), Pocket ID neu starten (`scw container container deploy <id> region=fr-par`), unter `https://id.<basis>` das Admin-Konto neu anlegen.
+6. In Pocket ID: SMTP (Absender unter der Domain, TLS-Option **StartTLS** bei Port 587), Gruppen `User`, `Advisor`, `Reviewer`, OIDC-Client mit der neuen Callback-URL.
+7. `oidc_client_id` und `TF_VAR_oidc_client_secret` setzen, `enable_app_domain = true`, anwenden. Die App liegt bei `app_subdomain = ""` auf der Basisdomain; die Callback-URL des OIDC-Clients muss zur Adresse der App passen, sonst scheitert der Login an der Redirect-URI.
+
+Die Daten der App bleiben erhalten, hängen aber an den alten Pocket-ID-Nutzerkennungen. Neue Konten sehen sie nicht.
 
 ## 4. Wie die App konfiguriert ist
 

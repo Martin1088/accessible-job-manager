@@ -35,6 +35,12 @@ resource "scaleway_iam_api_key" "app" {
   # Object Storage ordnet Anfragen dem Standardprojekt des Schlüssels zu. Ohne
   # diese Angabe landet "ajm-pilot-documents" im falschen Projekt: AccessDenied.
   default_project_id = var.project_id
+
+  # Scaleway gives a key without expires_at a one-year expiry; the provider reads
+  # that back as a change and would replace the key on every plan.
+  lifecycle {
+    ignore_changes = [expires_at]
+  }
 }
 
 # --- Aufruf des privaten Gotenberg-Containers ---------------------------------
@@ -60,6 +66,12 @@ resource "scaleway_iam_policy" "gotenberg_caller" {
 resource "scaleway_iam_api_key" "gotenberg_caller" {
   application_id = scaleway_iam_application.gotenberg_caller.id
   description    = "X-Auth-Token für Gotenberg"
+
+  # Scaleway gives a key without expires_at a one-year expiry; the provider reads
+  # that back as a change and would replace the key on every plan.
+  lifecycle {
+    ignore_changes = [expires_at]
+  }
 }
 
 # --- Pocket ID: Datenbank und E-Mail-Versand ---------------------------------
@@ -86,4 +98,10 @@ resource "scaleway_iam_policy" "pocketid" {
 resource "scaleway_iam_api_key" "pocketid" {
   application_id = scaleway_iam_application.pocketid.id
   description    = "Pocket ID"
+
+  # Scaleway gives a key without expires_at a one-year expiry; the provider reads
+  # that back as a change and would replace the key on every plan.
+  lifecycle {
+    ignore_changes = [expires_at]
+  }
 }

@@ -5,4 +5,7 @@
 resource "scaleway_tem_domain" "main" {
   name       = var.base_domain
   accept_tos = true
+
+  # The DNS zone is at Scaleway too, so SPF, DKIM and DMARC are written automatically.
+  autoconfig = true
 }
