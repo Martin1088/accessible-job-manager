@@ -18,6 +18,14 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.2.0] - 2026-11-06
+
+### Added
+
 - Legal documents can be read from an object-storage bucket instead of a directory
   (`LEGAL_DOCUMENTS_S3_BUCKET`, optional `LEGAL_DOCUMENTS_S3_PREFIX`), for platforms that
   cannot mount files into a container, such as Scaleway Serverless Containers. Setting both
