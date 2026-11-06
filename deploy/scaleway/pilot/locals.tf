@@ -1,5 +1,6 @@
 locals {
-  app_host = "app.${var.base_domain}"
+  # Empty app_subdomain serves the app on the bare domain.
+  app_host = var.app_subdomain == "" ? var.base_domain : "${var.app_subdomain}.${var.base_domain}"
   id_host  = "id.${var.base_domain}"
 
   # Phase 2 ist erreicht, sobald der OIDC-Client in Pocket ID angelegt ist.

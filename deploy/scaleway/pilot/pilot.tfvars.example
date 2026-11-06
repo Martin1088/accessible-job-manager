@@ -31,5 +31,7 @@ app_image = "rg.fr-par.scw.cloud/ajm-pilot/accessible-job-manager-pilot:0.0.0"
 # Phase 2: nach dem Anlegen des OIDC-Clients in Pocket ID
 # oidc_client_id = "..."
 
-# Phase 3: nachdem der CNAME aus "tofu output dns_app" gesetzt ist
+# Phase 3: nachdem der Eintrag aus "tofu output dns_app" gesetzt ist
+# (app_subdomain = "" legt die App auf die Basisdomain, dann ein ALIAS statt CNAME)
+# app_subdomain     = ""
 # enable_app_domain = true

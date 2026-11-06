@@ -44,6 +44,12 @@ variable "base_domain" {
   type        = string
 }
 
+variable "app_subdomain" {
+  description = "Subdomain der Anwendung. Leer: die App läuft auf der Basisdomain selbst (dann ALIAS statt CNAME)"
+  type        = string
+  default     = "app"
+}
+
 variable "enable_id_domain" {
   description = "Erst true, wenn der CNAME id.<domain> gesetzt ist (Output dns_id)"
   type        = bool
@@ -51,7 +57,7 @@ variable "enable_id_domain" {
 }
 
 variable "enable_app_domain" {
-  description = "Erst true, wenn der CNAME app.<domain> gesetzt ist (Output dns_app)"
+  description = "Erst true, wenn der Eintrag aus dem Output dns_app gesetzt ist"
   type        = bool
   default     = false
 }
