@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 /**
  * The documents shipped in the image are the ones a vanilla deployment serves, so a defect
@@ -50,12 +51,44 @@ class BundledLegalDocumentsTest {
 
     @Test
     void carriesTheControllerContactAsDataRatherThanMarkup() {
-        Map<String, LegalDocumentLoader.LoadedDocument> byLanguage = registry.documentsFor("datenschutz");
-        LegalDocument.Section controller = byLanguage.get("en").document().sections().getFirst();
+        LegalDocumentRegistry named = new LegalDocumentRegistry(new LegalProperties(null, "en", Duration.ZERO,
+                new LegalProperties.Operator("Acme e.V.", "imprint@acme.example", "Main St 1, Springfield")));
 
-        assertThat(controller.blocks()).singleElement()
-                .isInstanceOfSatisfying(LegalDocument.Block.Definitions.class, definitions ->
-                        assertThat(definitions.items())
-                                .anySatisfy(item -> assertThat(item.href()).isEqualTo("mailto:access.job.manager@gmail.com")));
+        for (String slug : named.slugs()) {
+            named.documentsFor(slug).forEach((language, loaded) -> {
+                LegalDocument.Section controller = loaded.document().sections().getFirst();
+                assertThat(controller.blocks()).as("%s.%s", slug, language).singleElement()
+                        .isInstanceOfSatisfying(LegalDocument.Block.Definitions.class, definitions ->
+                                assertThat(definitions.items())
+                                        .extracting(LegalDocument.Definition::value, LegalDocument.Definition::href)
+                                        .containsExactly(
+                                                tuple("Acme e.V.", null),
+                                                tuple("Main St 1, Springfield", null),
+                                                tuple("imprint@acme.example", "mailto:imprint@acme.example")));
+            });
+        }
+    }
+
+    /**
+     * The image is public, so its documents name nobody: somebody trying the application out
+     * must not publish the upstream author's imprint, and must not be stopped by a missing one.
+     */
+    @Test
+    void withoutOperatorDetailsEveryLanguageSaysSoInsteadOfNamingSomebody() {
+        Map<String, String> notProvided = Map.of(
+                "de", "nicht hinterlegt", "en", "not provided", "nl", "niet opgegeven", "es", "no indicado");
+
+        for (String slug : registry.slugs()) {
+            registry.documentsFor(slug).forEach((language, loaded) -> {
+                LegalDocument.Section controller = loaded.document().sections().getFirst();
+                assertThat(controller.blocks()).as("%s.%s", slug, language).singleElement()
+                        .isInstanceOfSatisfying(LegalDocument.Block.Definitions.class, definitions ->
+                                assertThat(definitions.items())
+                                        .extracting(LegalDocument.Definition::value, LegalDocument.Definition::href)
+                                        .containsExactly(
+                                                tuple(notProvided.get(language), null),
+                                                tuple(notProvided.get(language), null)));
+            });
+        }
     }
 }

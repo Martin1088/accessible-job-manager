@@ -8,6 +8,12 @@ spring:
     username: ${MANAGER_DB_USER:manager}
     password: ${MANAGER_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      # Small pool for a pilot; idle connections are closed after 30 s. This also
+      # lets a database that scales to zero sleep, at the price of a slow first query.
+      minimum-idle: ${DB_POOL_MINIMUM_IDLE:0}
+      maximum-pool-size: ${DB_POOL_MAXIMUM_SIZE:5}
+      idle-timeout: ${DB_POOL_IDLE_TIMEOUT_MS:30000}
   jpa:
     hibernate:
       ddl-auto: update
@@ -188,8 +194,23 @@ job-manager:
     # fallback. Startup fails if the directory is set but does not cover every
     # document.
     documents-dir: ${LEGAL_DOCUMENTS_DIR:}
+    # The same files, read from an object-storage bucket instead - for a platform that
+    # cannot mount files into a container (Scaleway Serverless Containers). Set this or
+    # documents-dir, never both. Changes are picked up within reload-interval, with no
+    # restart. Read without SSE-C: the bucket holds public legal text, not user documents.
+    s3-bucket: ${LEGAL_DOCUMENTS_S3_BUCKET:}
+    s3-prefix: ${LEGAL_DOCUMENTS_S3_PREFIX:}
     # Served when a document is not published in the requested language.
     default-language: ${LEGAL_DEFAULT_LANGUAGE:en}
     # How often to notice that a mounted ConfigMap changed underneath a running
     # pod. Zero disables re-reading.
     reload-interval: ${LEGAL_RELOAD_INTERVAL:30s}
+    # Who runs this deployment. The bundled documents print these where they name the
+    # person responsible; a document of your own may use {{operator.name}},
+    # {{operator.email}} and {{operator.address}} too. Unset is not an error - the page
+    # says "not provided" and the log warns - so the application can be tried out without
+    # an imprint, but a public deployment must set at least name and email.
+    operator:
+      name: ${LEGAL_OPERATOR_NAME:}
+      email: ${LEGAL_OPERATOR_EMAIL:}
+      address: ${LEGAL_OPERATOR_ADDRESS:}

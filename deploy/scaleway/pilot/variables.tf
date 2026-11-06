@@ -44,6 +44,12 @@ variable "base_domain" {
   type        = string
 }
 
+variable "app_subdomain" {
+  description = "Subdomain der Anwendung. Leer: die App läuft auf der Basisdomain selbst (dann ALIAS statt CNAME)"
+  type        = string
+  default     = "app"
+}
+
 variable "enable_id_domain" {
   description = "Erst true, wenn der CNAME id.<domain> gesetzt ist (Output dns_id)"
   type        = bool
@@ -51,7 +57,7 @@ variable "enable_id_domain" {
 }
 
 variable "enable_app_domain" {
-  description = "Erst true, wenn der CNAME app.<domain> gesetzt ist (Output dns_app)"
+  description = "Erst true, wenn der Eintrag aus dem Output dns_app gesetzt ist"
   type        = bool
   default     = false
 }
@@ -92,6 +98,19 @@ variable "cv_matching_model" {
   default     = ""
 }
 
+variable "legal_operator" {
+  description = <<-EOT
+    Betreiber*in, wie Impressum und Datenschutzerklärung sie nennen. Leer zeigen beide
+    Seiten "nicht hinterlegt". Die echten Werte gehören in pilot.tfvars, nicht ins Repo.
+  EOT
+  type = object({
+    name    = optional(string, "")
+    email   = optional(string, "")
+    address = optional(string, "")
+  })
+  default = {}
+}
+
 variable "gotenberg_min_scale" {
   description = <<-EOT
     Wie viele Gotenberg-Instanzen immer warm laufen. 0 = Scale-to-Zero (günstig, aber jeder
@@ -100,6 +119,15 @@ variable "gotenberg_min_scale" {
   EOT
   type        = number
   default     = 0
+}
+
+variable "legal_dir" {
+  description = <<-EOT
+    Ordner mit <slug>.<lang>.yaml (Impressum, Datenschutz), z. B. der Checkout eines privaten
+    Repos. Leer = die App zeigt die Texte aus dem Image, die den Betreiber nicht nennen.
+  EOT
+  type        = string
+  default     = ""
 }
 
 variable "app_min_scale" {

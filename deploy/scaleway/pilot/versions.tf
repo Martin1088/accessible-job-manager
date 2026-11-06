@@ -7,6 +7,10 @@ terraform {
       source  = "scaleway/scaleway"
       version = "~> 2.84"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   # State in Scaleway Object Storage, mit Locking über eine Lock-Datei im Bucket.

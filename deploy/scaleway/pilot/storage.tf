@@ -9,6 +9,23 @@ resource "scaleway_object_bucket" "documents" {
     enabled = true
   }
 
+  # Ohne Regel bleibt eine gelöschte Datei als alte Version unbegrenzt liegen. Gelöscht
+  # heißt für Nutzer*innen: nach 7 Tagen weg, gleich lang wie die Datenbank-Sicherungen.
+  # Der Text der Datenschutzerklärung nennt diese Frist.
+  lifecycle_rule {
+    id      = "expire-deleted-versions"
+    enabled = true
+    prefix  = ""
+
+    noncurrent_version_expiration {
+      noncurrent_days = 7
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+
   # Echte Bewerberdaten: ein versehentliches "tofu destroy" darf sie nicht löschen.
   lifecycle {
     prevent_destroy = true

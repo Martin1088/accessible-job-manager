@@ -11,10 +11,10 @@ output "dns_id" {
 }
 
 output "dns_app" {
-  description = "CNAME für die Anwendung, beim DNS-Anbieter einzutragen"
+  description = "CNAME (ALIAS auf der Basisdomain) für die Anwendung, beim DNS-Anbieter einzutragen"
   value = {
     name   = local.app_host
-    type   = "CNAME"
+    type   = var.app_subdomain == "" ? "ALIAS" : "CNAME"
     target = trimprefix(scaleway_container.app.public_endpoint, "https://")
   }
 }

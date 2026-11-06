@@ -19,6 +19,11 @@ data:
   LEGAL_DOCUMENTS_DIR: /etc/ajm/legal
 {{- end }}
   LEGAL_DEFAULT_LANGUAGE: {{ .Values.legal.defaultLanguage | quote }}
+{{- with .Values.legal.operator }}
+  LEGAL_OPERATOR_NAME: {{ .name | default "" | quote }}
+  LEGAL_OPERATOR_EMAIL: {{ .email | default "" | quote }}
+  LEGAL_OPERATOR_ADDRESS: {{ .address | default "" | quote }}
+{{- end }}
 {{- if eq .Values.storage.provider "s3" }}
 {{- $endpoint := .Values.storage.s3.endpoint }}
 {{- if and (not $endpoint) .Values.storage.s3.deployGarage }}

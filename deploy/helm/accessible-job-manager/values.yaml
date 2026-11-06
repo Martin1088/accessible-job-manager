@@ -145,9 +145,16 @@ resources:
 legal:
   # Language served when a document is not published in the one that was asked for.
   defaultLanguage: en
+  # Who runs this deployment. The bundled documents print these where they name the
+  # person responsible; empty, they say "not provided". Your own documents may use
+  # {{operator.name}}, {{operator.email}} and {{operator.address}} as well.
+  operator:
+    name: ""
+    email: ""
+    address: ""
   # This deployment's own privacy policy and legal notice. Empty serves the documents
-  # bundled with the image - those name the upstream author, which is correct for the
-  # original instance and wrong for anybody else running this.
+  # bundled with the image, filled with `operator` above - they describe the stock
+  # stack (Authentik, Garage, Gotenberg), so a deployment that differs publishes its own.
   #
   # Supplying ANY language of a document takes that document over completely: no
   # language of it falls back to the bundled text, because half of somebody else's

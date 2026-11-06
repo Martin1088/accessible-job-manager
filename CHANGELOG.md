@@ -18,6 +18,24 @@ orientation, not as a record of releases that happened.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.2.0] - 2026-11-06
+
+### Added
+
+- Legal documents can be read from an object-storage bucket instead of a directory
+  (`LEGAL_DOCUMENTS_S3_BUCKET`, optional `LEGAL_DOCUMENTS_S3_PREFIX`), for platforms that
+  cannot mount files into a container, such as Scaleway Serverless Containers. Setting both
+  sources fails startup. Edits are picked up within `reload-interval` without a restart.
+- The bundled imprint and privacy policy name whoever runs the deployment, from
+  `LEGAL_OPERATOR_NAME`, `LEGAL_OPERATOR_EMAIL` and `LEGAL_OPERATOR_ADDRESS` (Helm:
+  `legal.operator`). Unset, both pages say "not provided" and the log warns, so the
+  application can be tried out without writing an imprint first. Own documents may use
+  the same `{{operator.name}}`, `{{operator.email}}` and `{{operator.address}}`
+  placeholders.
 - The profile page downloads every archived job posting as one ZIP
   (`GET /api/export/job-postings`), one folder per company, each PDF named by position,
   date and label. A posting whose stored file cannot be read is listed in `MISSING.txt`
@@ -108,6 +126,10 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+- The Scaleway pilot infrastructure now uses one Managed Database for PostgreSQL (`DB-DEV-S`,
+  no backups) in a Private Network instead of two always-warm Serverless SQL databases, which
+  cost about €195 a month. This removes the cold start (SQLSTATE 57P03). It is a fresh start
+  without data migration; see `docs/scaleway.md`.
 - "Send as email" no longer sets the applied date by itself. After the hand-over it asks
   whether the application went out, and only "Yes, mark as sent" sets the date to today
   and a draft to `SENT`.

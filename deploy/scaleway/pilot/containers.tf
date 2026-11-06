@@ -54,6 +54,7 @@ resource "scaleway_container" "pocketid" {
   timeout            = 60
 
   https_connections_only = true
+  private_network_id     = scaleway_vpc_private_network.main.id
 
   environment_variables = {
     APP_URL            = "https://${local.id_host}"
@@ -73,7 +74,10 @@ resource "scaleway_container" "pocketid" {
 
   # Der Container nutzt den Schlüssel, aber nicht die Policy direkt.
   # Ohne depends_on könnte er starten, bevor seine Rechte existieren.
-  depends_on = [scaleway_iam_policy.pocketid]
+  depends_on = [
+    scaleway_iam_policy.pocketid,
+    scaleway_rdb_privilege.pocketid, # sonst startet er, bevor sein Nutzer Rechte hat
+  ]
 }
 
 # --- AJM-Anwendung ----------------------------------------------------------------
@@ -94,14 +98,27 @@ resource "scaleway_container" "app" {
   timeout = 300
 
   https_connections_only = true
+  private_network_id     = scaleway_vpc_private_network.main.id
 
   # Ein leeres CV_MATCHING_OPENAI_MODEL zählt als gesetzt und hebelt den Rückfall auf
   # das Modell des Parsers aus. Deshalb kommt die Variable nur mit Wert hinein.
   environment_variables = merge(var.cv_matching_model == "" ? {} : {
     CV_MATCHING_OPENAI_MODEL = var.cv_matching_model
+    }, local.legal_enabled ? {
+    LEGAL_DOCUMENTS_S3_BUCKET = scaleway_object_bucket.legal[0].name
+    } : {}, {
+    # Wie oben nur mit Wert. Fehlt einer, zeigt die Seite "nicht hinterlegt".
+    for name, value in {
+      LEGAL_OPERATOR_NAME    = var.legal_operator.name
+      LEGAL_OPERATOR_EMAIL   = var.legal_operator.email
+      LEGAL_OPERATOR_ADDRESS = var.legal_operator.address
+    } : name => value if value != ""
     }, {
+    # Visitors whose language the texts do not cover get English.
+    LEGAL_DEFAULT_LANGUAGE = "en"
+
     MANAGER_DB_URL  = local.ajm_jdbc_url
-    MANAGER_DB_USER = scaleway_iam_application.app.id
+    MANAGER_DB_USER = scaleway_rdb_user.ajm.name
 
     STORAGE_PROVIDER = "s3"
     S3_ENDPOINT      = "https://s3.${var.region}.scw.cloud"
@@ -133,7 +150,7 @@ resource "scaleway_container" "app" {
   })
 
   secret_environment_variables = {
-    MANAGER_DB_PASSWORD  = scaleway_iam_api_key.app.secret_key
+    MANAGER_DB_PASSWORD  = random_password.db_ajm.result
     ACCESS_KEY           = scaleway_iam_api_key.app.access_key
     SECRET_KEY           = scaleway_iam_api_key.app.secret_key
     S3_SSE_C_KEY         = var.sse_c_key
@@ -145,7 +162,9 @@ resource "scaleway_container" "app" {
   depends_on = [
     scaleway_iam_policy.app,
     scaleway_iam_policy.gotenberg_caller,
+    scaleway_rdb_privilege.ajm,
     scaleway_object_bucket_policy.documents,
+    scaleway_object.legal,
   ]
 
   lifecycle {
