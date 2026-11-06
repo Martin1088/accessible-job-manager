@@ -118,6 +118,10 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+- The Scaleway pilot infrastructure now uses one Managed Database for PostgreSQL (`DB-DEV-S`,
+  no backups) in a Private Network instead of two always-warm Serverless SQL databases, which
+  cost about €195 a month. This removes the cold start (SQLSTATE 57P03). It is a fresh start
+  without data migration; see `docs/scaleway.md`.
 - "Send as email" no longer sets the applied date by itself. After the hand-over it asks
   whether the application went out, and only "Yes, mark as sent" sets the date to today
   and a draft to `SENT`.

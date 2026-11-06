@@ -34,7 +34,7 @@ sections:
   - heading: "Auftragsverarbeiter und Hosting"
     blocks:
       - type: paragraph
-        text: "Die Anwendung läuft bei Scaleway SAS (Frankreich, Region Paris) als Auftragsverarbeiter, mit einem Vertrag zur Auftragsverarbeitung. Genutzt werden Serverless Containers, Serverless SQL Database, Object Storage und Transactional Email. Die Anmeldung läuft über Pocket ID, das in derselben Umgebung betrieben wird. Hochgeladene Dokumente werden zusätzlich verschlüsselt gespeichert."
+        text: "Die Anwendung läuft bei Scaleway SAS (Frankreich, Region Paris) als Auftragsverarbeiter, mit einem Vertrag zur Auftragsverarbeitung. Genutzt werden Serverless Containers, Managed Database for PostgreSQL, Object Storage und Transactional Email. Die Anmeldung läuft über Pocket ID, das in derselben Umgebung betrieben wird. Hochgeladene Dokumente werden zusätzlich verschlüsselt gespeichert."
   - heading: "KI-gestützte Funktionen"
     blocks:
       - type: paragraph

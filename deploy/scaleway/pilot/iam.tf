@@ -1,14 +1,15 @@
 # Ein Schlüssel pro Zweck. Wird einer kompromittiert, ist der Schaden begrenzt,
 # und er lässt sich einzeln erneuern.
 #
-# Grenze von Scaleway IAM: Regeln gelten pro Projekt, nicht pro Datenbank.
-# Die Bucket-Policy in storage.tf grenzt den Dokumenten-Zugriff zusätzlich ein.
+# Die Datenbanktrennung leisten die Postgres-Nutzer in database.tf (jeder sieht nur
+# seine eigene Datenbank), nicht IAM. Die Bucket-Policy in storage.tf grenzt den
+# Dokumenten-Zugriff zusätzlich ein.
 
-# --- AJM-Anwendung: Datenbank, Dokumente, LLM --------------------------------
+# --- AJM-Anwendung: Dokumente, LLM -------------------------------------------
 
 resource "scaleway_iam_application" "app" {
   name        = "${var.prefix}-app"
-  description = "AJM-Backend: Serverless SQL, Object Storage, Generative APIs"
+  description = "AJM-Backend: Object Storage, Generative APIs"
   tags        = local.tags
 }
 
@@ -19,7 +20,6 @@ resource "scaleway_iam_policy" "app" {
   rule {
     project_ids = [var.project_id]
     permission_set_names = [
-      "ServerlessSQLDatabaseReadWrite",
       "ObjectStorageObjectsRead",
       "ObjectStorageObjectsWrite",
       "ObjectStorageObjectsDelete",
@@ -74,11 +74,11 @@ resource "scaleway_iam_api_key" "gotenberg_caller" {
   }
 }
 
-# --- Pocket ID: Datenbank und E-Mail-Versand ---------------------------------
+# --- Pocket ID: E-Mail-Versand -----------------------------------------------
 
 resource "scaleway_iam_application" "pocketid" {
   name        = "${var.prefix}-pocketid"
-  description = "Pocket ID: Serverless SQL und SMTP"
+  description = "Pocket ID: SMTP"
   tags        = local.tags
 }
 
@@ -87,11 +87,8 @@ resource "scaleway_iam_policy" "pocketid" {
   application_id = scaleway_iam_application.pocketid.id
 
   rule {
-    project_ids = [var.project_id]
-    permission_set_names = [
-      "ServerlessSQLDatabaseReadWrite",
-      "TransactionalEmailEmailSmtpCreate",
-    ]
+    project_ids          = [var.project_id]
+    permission_set_names = ["TransactionalEmailEmailSmtpCreate"]
   }
 }
 

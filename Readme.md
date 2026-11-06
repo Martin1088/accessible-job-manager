@@ -330,7 +330,7 @@ flag is the only address-level control there is.
 ### Scaleway Deployment
 
 `deploy/scaleway/` holds an OpenTofu configuration for a pilot platform on Scaleway
-(Serverless Containers for the app, Pocket ID and Gotenberg, Serverless SQL Database,
+(Serverless Containers for the app, Pocket ID and Gotenberg, Managed Database for PostgreSQL,
 Object Storage with SSE-C, Generative APIs, Transactional Email). The full walkthrough,
 the order of the phases and the errors met on the way are in
 **[docs/scaleway.md](docs/scaleway.md)**.
