@@ -20,6 +20,11 @@ orientation, not as a record of releases that happened.
 
 ### Changed
 
+### Removed
+
+- The Scaleway pilot no longer defines the two Serverless SQL databases left over from
+  the move to Managed PostgreSQL; applying it deletes them if they still exist.
+
 ### Fixed
 
 ## [0.2.0] - 2026-11-06
