@@ -1,6 +1,5 @@
-# Managed PostgreSQL statt Serverless SQL. Serverless SQL musste mit min_cpu = 1 warm
-# bleiben (Kaltstart > 1 min, SQLSTATE 57P03) und kostete so ~€195/Monat. Eine
-# DB-DEV-S läuft immer, zum Festpreis, und ist nur im Private Network erreichbar.
+# Eine Managed Database for PostgreSQL (DB-DEV-S) mit den Datenbanken ajm und pocketid.
+# Sie läuft immer, zum Festpreis, ohne Kaltstart, und ist nur im Private Network erreichbar.
 
 resource "random_password" "db_admin" {
   length      = 32
@@ -113,28 +112,4 @@ locals {
     local.db_ip,
     local.db_port,
   )
-}
-
-# --- Alt: Serverless SQL --------------------------------------------------------
-# Bleibt bis Apply 3 (siehe docs/scaleway.md), damit der Rückweg offen ist. Nichts
-# verweist mehr darauf. Danach beide Blöcke komplett löschen (prevent_destroy).
-
-resource "scaleway_sdb_sql_database" "ajm" {
-  name    = "${var.prefix}-ajm"
-  min_cpu = 1
-  max_cpu = 1
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
-resource "scaleway_sdb_sql_database" "pocketid" {
-  name    = "${var.prefix}-pocketid"
-  min_cpu = 1
-  max_cpu = 1
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
